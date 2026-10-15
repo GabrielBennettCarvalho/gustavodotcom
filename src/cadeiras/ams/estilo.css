@@ -1,0 +1,4 @@
+/* Cores dos temas do AMS */
+:root{ --t-sys:#5452C9; --t-req:#8A55C2; --t-arch:#B88A0B; --t-bpm:#2479B8; --t-bpmn:#238A5E; --t-exam:#C2410C; }
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --t-sys:#9C9BFF; --t-req:#C59BF0; --t-arch:#E9C04A; --t-bpm:#6DB8F0; --t-bpmn:#5ACF96; --t-exam:#FF9A62; }}
+:root[data-theme="dark"]{ --t-sys:#9C9BFF; --t-req:#C59BF0; --t-arch:#E9C04A; --t-bpm:#6DB8F0; --t-bpmn:#5ACF96; --t-exam:#FF9A62; }

@@ -1,0 +1,15 @@
+{
+  "titulo": "Estudo IST",
+  "motor": ["motor/nucleo.js", "motor/app_topo.js", "motor/app_resto.js"],
+  "cadeiras": {
+    "ams": {
+      "estilo": ["estilo.css"],
+      "ficheiros": [
+        "render.js", "cadeira.js",
+        "licoes/base.js", "licoes/teste.js",
+        "perguntas/sys.js", "perguntas/req.js", "perguntas/arch.js",
+        "perguntas/bpm.js", "perguntas/bpmn.js", "perguntas/teste.js"
+      ]
+    }
+  }
+}

@@ -2,6 +2,10 @@
 
 App de estudo por cadeiras. Para os colegas é **um único ficheiro**: `dist/estudo.html`.
 
+## Site
+
+Cada push para a `main` corre o build e publica em **https://gabrielbennettcarvalho.github.io/gustavodotcom/** (workflow em `.github/workflows/pages.yml`). Se o build falhar na validação, o site não é atualizado: vê o erro no separador Actions.
+
 ## Gerar o ficheiro
 
 ```

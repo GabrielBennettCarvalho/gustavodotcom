@@ -3,7 +3,7 @@ const FALHA4 = ['A — excesso: relação a mais', 'B — excesso: conceito a ma
 const FALHA6 = [...FALHA4, 'E — omissão: relação em falta', 'F — omissão: conceito(s) em falta'];
 const SRC = 'Teste modelo AMS 2026 · solução oficial';
 
-/* ---------- diagramas do teste modelo ---------- */
+/* ---------- model test diagrams ---------- */
 const Q3 = { kind: 'archimate', w: 540, h: 250, alt: 'Teste modelo Q3: responsabilidades', nodes: [
   { id: 'c1', k: 'actor', dom: 'bus', lb: 'C01: Equipa de atendimento', x: 120, y: 45, w: 160 }, { id: 'c2', k: 'actor', dom: 'bus', lb: 'C02: Equipa técnica', x: 420, y: 45, w: 160 },
   { id: 'c3', k: 'process', dom: 'common', lb: 'C03: Elaborar termo de responsabilidade', x: 120, y: 205, w: 160, h: 58 }, { id: 'c4', k: 'process', dom: 'common', lb: 'C04: Verificar e preparar equipamento', x: 420, y: 205, w: 160, h: 58 }],
@@ -25,7 +25,7 @@ const Q6 = { kind: 'bpmn', w: 700, h: 320, alt: 'Teste modelo Q6: interação co
     { id: 'x21', k: 'end', x: 630, y: 262, lb: 'X21: Pedido cancelado' }],
   edges: [{ f: 'est', t: 'x11', k: 'msg', fx: 300, lb: 'X10: termo assinado', dx: 52 }, { f: 'x3', t: 'x5' }, { f: 'x5', t: 'x8' }, { f: 'x8', t: 'x11' }, { f: 'x11', t: 'x13' }, { f: 'x13', t: 'x15' }, { f: 'x8', t: 'x17' }, { f: 'x17', t: 'x19' }, { f: 'x19', t: 'x21' }] };
 
-/* ---------- diagramas do caso de treino (Piscina) ---------- */
+/* ---------- practice case diagrams (Piscina) ---------- */
 const P1 = { kind: 'archimate', w: 560, h: 250, alt: 'Caso Piscina: responsabilidades', nodes: [
   { id: 'a1', k: 'actor', dom: 'bus', lb: 'C01: Secretaria', x: 130, y: 45, w: 150 }, { id: 'a2', k: 'actor', dom: 'bus', lb: 'C02: Treinadores', x: 420, y: 45, w: 150 },
   { id: 'p1', k: 'process', dom: 'common', lb: 'C03: Validar atestado', x: 70, y: 205, w: 116 }, { id: 'p2', k: 'process', dom: 'common', lb: 'C04: Reservar vaga', x: 205, y: 205, w: 116 },
@@ -49,7 +49,7 @@ const P4 = { kind: 'bpmn', w: 700, h: 320, alt: 'Caso Piscina: interação com o
   edges: [{ f: 'atl', t: 'z4', k: 'msg', fx: 340, lb: 'pagamento', dx: 34 }, { f: 'z1', t: 'z2' }, { f: 'z2', t: 'z3' }, { f: 'z3', t: 'z4' }, { f: 'z4', t: 'z5' }, { f: 'z5', t: 'z10' }, { f: 'z10', t: 'z6' }, { f: 'z3', t: 'z7' }, { f: 'z7', t: 'z8' }, { f: 'z8', t: 'z9' }] };
 
 const Q = [
-/* ===== Teste modelo · Q1 ===== */
+/* ===== Model test · Q1 ===== */
 { id: 'ex-q1-1', t: 'exam', l: 2, ctx: 'exam-uod', les: 'exam-uod', src: SRC + ', Q1.1',
   q: 'Qual das seguintes afirmações é um requisito CONFIRMADO no UoD?',
   o: ['O estudante pode cancelar o pedido inicial em qualquer momento.', 'O Portal deve ser fácil de utilizar.', 'A reserva é cancelada se não houver confirmação nas 48 horas seguintes à notificação.', 'O processo deve tratar a devolução e a avaria do equipamento.'], a: 2, fixed: true,
@@ -67,7 +67,7 @@ const Q = [
   q: 'Porque é que, num diagrama BPMN, é adequado usar um gateway baseado em eventos depois da notificação ao estudante?',
   o: ['Porque a preparação do equipamento e a elaboração do termo são executadas em paralelo.', 'Porque o processo avança segundo o primeiro evento entre confirmação, desistência ou expiração do prazo.', 'Porque o Portal precisa de calcular uma condição de elegibilidade logo que tal seja possível.', 'Porque o estudante é um participante externo e, como tal, senhor absoluto das suas decisões.'], a: 1, fixed: true,
   e: 'O event-based gateway escolhe o caminho pelo **primeiro evento** que ocorre: mensagem de confirmação, mensagem de desistência ou **timer de 48 h**. O paralelismo da opção A pede um AND, e a condição da opção C pede um XOR sobre dados.' },
-/* ===== Teste modelo · Q2 (frases para completar) ===== */
+/* ===== Model test · Q2 (fill in the sentence) ===== */
 { id: 'ex-q2-1', t: 'exam', l: 2, ctx: 'exam-uod', les: 'exam-uod', src: SRC + ', Q2.1',
   q: 'Completa: “A indicação de que o Portal deve ser fácil de utilizar é, no UoD, uma proposta ou preocupação…”',
   o: ['… é um requisito já confirmado e por isso a analisar no âmbito atual', '… fora do âmbito definido para esta versão do problema', '… um requisito já validado por estar explicitamente mencionado no UoD', '… na linguagem ArchiMate, a responsabilidade da equipa pelo processo'], a: 1,
@@ -97,7 +97,7 @@ const Q = [
   o: ['… um fluxo de mensagem na linguagem BPMN', '… um evento temporizador (timer) na linguagem BPMN', '… na linguagem ArchiMate, a responsabilidade da equipa pelo processo', '… uma bifurcação e uma sincronização paralelas'], a: 0,
   e: 'Comunicação **entre participantes** (pools diferentes: Serviço e Estudante) = **message flow**.' },
 
-/* ===== Teste modelo · Q3 (ArchiMate, responsabilidades) ===== */
+/* ===== Model test · Q3 (ArchiMate, responsibilities) ===== */
 { id: 'ex-q3-a', t: 'exam', l: 3, ctx: 'exam-uod', les: 'exam-format', src: SRC + ', Q3', d: Q3,
   q: 'Viewpoint “distribuição de responsabilidades”. Que tipo de falha é a relação **R04** (Equipa técnica → Elaborar termo)?',
   o: FALHA4, a: 0, fixed: true,
@@ -114,7 +114,7 @@ const Q = [
   q: 'Para responder à preocupação (“equipa responsável por **cada** conjunto de atividades”), que omissão do tipo F é mais evidente?',
   o: ["Faltam os processos da equipa de atendimento (verificar, reservar, entregar e registar)", "Falta o Portal de Empréstimos como Application Component ligado às duas equipas", "Falta um Event “Pedido recebido” com triggering para o processo C03 e para C04", "Falta a Gestão Académica como Application Component que serve as duas equipas"], a: 0,
   e: 'Solução oficial: **F C90** “Verificar elegibilidade e disponibilidade; reservar equipamento” e **F C91** “Entregar equipamento e registar empréstimo”, ambos com **assignment** da equipa de atendimento. O professor juntou atividades num só processo por conjunto: chega um processo por conjunto de atividades.' },
-/* ===== Teste modelo · Q4 (ArchiMate, suporte aplicacional) ===== */
+/* ===== Model test · Q4 (ArchiMate, application support) ===== */
 { id: 'ex-q4-a', t: 'exam', l: 3, ctx: 'exam-uod', les: 'exam-format', src: SRC + ', Q4', d: Q4,
   q: 'Viewpoint “suporte aplicacional e informação”. Que tipo de falha é **C02: Equipa técnica** (e a sua relação R08)?',
   o: FALHA4, a: 1, fixed: true,
@@ -135,7 +135,7 @@ const Q = [
   q: 'R05 e R06 (Gestão de Equipamento → Serviço de gestão de reservas; Gestão Académica → Serviço de dados académicos) são…',
   o: ["realizations corretas", "servings com a direção trocada (deviam subir do serviço)", "assignments mal desenhados, porque falta o ponto na origem", "excessos, porque os serviços não fazem parte deste viewpoint"], a: 0,
   e: '“Serviço… **realizado pela** aplicação…” = **realization** da aplicação para o serviço (tracejado com triângulo vazio). Estão corretas.' },
-/* ===== Teste modelo · Q5 (BPMN interno) ===== */
+/* ===== Model test · Q5 (internal BPMN) ===== */
 { id: 'ex-q5-a', t: 'exam', l: 3, ctx: 'exam-uod', les: 'bpmn-gw', src: SRC + ', Q5', d: Q5,
   q: 'Viewpoint “tratamento interno do pedido”. Que falha é o gateway **X06**, a seguir à verificação?',
   o: FALHA4, a: 3, fixed: true,
@@ -152,7 +152,7 @@ const Q = [
   q: 'Na solução oficial, o caminho da recusa (X07) não foi contado como falha. Como aparece no diagrama corrigido?',
   o: ["Como message end event “Pedido recusado” (informa o estudante e termina)", "Ligado ao AND-split X10 para retomar o fluxo da reserva", "Como uma pool própria do estudante, colapsada", "Como um timer intermédio à espera do estudante"], a: 0,
   e: 'No corrigido, X07 é um **message end event** “Pedido recusado”: termina **e** comunica numa só forma. Como não está entre as 4 falhas, não gastes uma linha da tabela com isto: as 4 oficiais são X06 (D), X10 (D), X12 (D) e X90 (F).' },
-/* ===== Teste modelo · Q6 (BPMN colaboração) ===== */
+/* ===== Model test · Q6 (BPMN collaboration) ===== */
 { id: 'ex-q6-a', t: 'exam', l: 3, ctx: 'exam-uod', les: 'bpmn-gw', src: SRC + ', Q6', d: Q6,
   q: 'Viewpoint “interação e resposta à notificação”. Que falha é o gateway **X08**?',
   o: FALHA4, a: 3, fixed: true,
@@ -186,89 +186,89 @@ const Q = [
   q: 'Que falha é **X15** (end event de escalation “Reserva mantida”)?',
   o: FALHA4, a: 3, fixed: true,
   e: 'Solução oficial: **D**. Manter a reserva é uma **conclusão normal** (none end); um end de **escalation** comunica uma situação que requer tratamento superior, o que o UoD não prevê. Olha sempre para o **ícone** dentro dos eventos.' },
-/* ===== Caso de treino (Piscina) · ArchiMate responsabilidades ===== */
-{ id: 'cs-p1-a', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'exam-format', d: P1,
+/* ===== Practice case (Piscina) · ArchiMate responsibilities — reserved for the mock exam ===== */
+{ id: 'cs-p1-a', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'exam-format', d: P1,
   q: 'Viewpoint: responsabilidades (coordenador desportivo quer saber quem faz o quê). Que falha é **R02** (Secretaria → Reservar vaga, desenhada como triggering)?',
   o: FALHA4, a: 2, fixed: true,
   e: 'É de facto a secretaria que reserva a vaga, por isso a ligação faz sentido, mas o **tipo** está errado: “quem executa” é **assignment**, não triggering. Falha **C**.' },
-{ id: 'cs-p1-b', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'exam-format', d: P1,
+{ id: 'cs-p1-b', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'exam-format', d: P1,
   q: 'Que falha é **R03** (Treinadores → Reservar vaga)?',
   o: FALHA4, a: 0, fixed: true,
   e: 'Reservar a vaga é da **secretaria**. Os treinadores avaliam o nível. A relação está **a mais**: **A**.' },
-{ id: 'cs-p1-c', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'arch-common', d: P1,
+{ id: 'cs-p1-c', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'arch-common', d: P1,
   q: 'Que falha é **C06: Avaliar nível**, desenhado como Business Object?',
   o: FALHA4, a: 3, fixed: true,
   e: '“Avaliar nível” é **comportamento** (verbo): é um **Process**, não um objeto passivo. Conceito de tipo errado: **D**.' },
-{ id: 'cs-p1-d', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'exam-format', d: P1,
+{ id: 'cs-p1-d', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'exam-format', d: P1,
   q: 'C05 “Enviar pedido de pagamento” está no diagrama, mas sem ligação. Que falha é e como se corrige?',
   o: ['E: acrescentar R90, assignment da Secretaria a C05', 'B: retirar C05, que está a mais', 'F: acrescentar um novo actor “Tesouraria” para C05', 'C: trocar C05 por um Service'], a: 0,
   e: 'O UoD diz que é a **secretaria** que envia o pedido de pagamento. O conceito existe; falta a **relação**: **E**.' },
-/* ===== Caso de treino · ArchiMate suporte aplicacional ===== */
-{ id: 'cs-p2-a', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'arch-rel', d: P2,
+/* ===== Practice case · ArchiMate application support ===== */
+{ id: 'cs-p2-a', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'arch-rel', d: P2,
   q: 'Viewpoint: suporte aplicacional e informação. Que falha é **R11** (serving do Serviço de Pagamentos para o Gateway de Pagamentos)?',
   o: FALHA4, a: 2, fixed: true,
   e: '“Serviço… **realizado pela** aplicação Gateway”: devia ser **realization** de C13 para C11. Relação de tipo errado: **C**.' },
-{ id: 'cs-p2-b', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'arch-app', d: P2,
+{ id: 'cs-p2-b', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'arch-app', d: P2,
   q: 'Que falha é **C15: Registo de ocupação**, desenhado como Application Component?',
   o: FALHA4, a: 3, fixed: true,
   e: 'O Registo é **informação mantida** pela aplicação: **Data Object**. Uma aplicação faz coisas; um registo é passivo. Falha **D**.' },
-{ id: 'cs-p2-c', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'exam-viewpoints', d: P2,
+{ id: 'cs-p2-c', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'exam-viewpoints', d: P2,
   q: 'Que falha é **C16: Treinadores** com R14?',
   o: FALHA4, a: 1, fixed: true,
   e: 'Equipas humanas não respondem à preocupação de **suporte aplicacional**: conceito **a mais** (com a sua relação), uma só falha **B**.' },
-{ id: 'cs-p2-d', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'exam-format', d: P2,
+{ id: 'cs-p2-d', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'exam-format', d: P2,
   q: 'A App ADC também usa o Serviço de Pagamentos. O que falta?',
   o: ['E: um serving de C11 para C14', 'F: uma nova aplicação de pagamentos', 'A: retirar R12', 'C: trocar R10 por serving'], a: 0,
   e: '“A app **usa** o Serviço de Pagamentos” = o serviço **serve** a app. A relação não existe: **E**.' },
-/* ===== Caso de treino · BPMN interno ===== */
-{ id: 'cs-p3-a', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'bpmn-events', d: P3,
+/* ===== Practice case · internal BPMN ===== */
+{ id: 'cs-p3-a', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'bpmn-events', d: P3,
   q: 'Viewpoint: tratamento interno da inscrição. Que falha é **Y01** (start event de timer “Inscrição recebida”)?',
   o: FALHA4, a: 3, fixed: true,
   e: 'O processo começa quando **chega** a inscrição submetida na app: é um **message start event**, não um timer. Falha **D**.' },
-{ id: 'cs-p3-b', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'bpmn-gw', d: P3,
+{ id: 'cs-p3-b', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'bpmn-gw', d: P3,
   q: 'Que falha é o gateway **Y06**?',
   o: FALHA4, a: 3, fixed: true,
   e: '“**Em simultâneo**, um treinador avalia e a secretaria reserva”: tem de ser **AND-split**. Com um XOR só um dos ramos corria, e o AND-join Y09 ficaria em **deadlock**. Falha **D**.' },
-{ id: 'cs-p3-c', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'bpmn-collab', d: P3,
+{ id: 'cs-p3-c', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'bpmn-collab', d: P3,
   q: 'Que falha é **Y11**, o message flow entre “Reservar vaga” e “Avaliar nível”?',
   o: FALHA4, a: 0, fixed: true,
   e: 'Entre lanes da mesma pool **não há message flows**. E aqui nem é preciso nenhum fluxo, porque as duas tarefas são paralelas e sincronizam no AND-join. Relação a mais: **A**. (Também se pode defender C, se o autor quisesse um sequence flow, mas o paralelo dispensa-o.)' },
-{ id: 'cs-p3-d', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'exam-format', d: P3,
+{ id: 'cs-p3-d', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'exam-format', d: P3,
   q: 'O que falta entre o join Y09 e o fim?',
   o: ["F: “Enviar pedido de pagamento” na Secretaria", "E: um message flow do join Y09 para o end Y10", "F: uma lane “Atleta” com o pagamento e a desistência", "F: um timer de 72 horas na lane dos Treinadores"], a: 0,
   e: '“Quando ambos terminam, a secretaria **envia ao atleta o pedido de pagamento**”. Falta essa atividade (com os seus fluxos). O atleta e o prazo são do viewpoint de interação.' },
-/* ===== Caso de treino · BPMN colaboração ===== */
-{ id: 'cs-p4-a', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'bpmn-collab', d: P4,
+/* ===== Practice case · BPMN collaboration ===== */
+{ id: 'cs-p4-a', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'bpmn-collab', d: P4,
   q: 'Viewpoint: mensagens com o atleta e desfechos. Z02 envia o pedido de pagamento. O que falta?',
   o: ['E: o message flow de Z02 para a pool Atleta', 'D: Z02 devia ser uma receive task', 'A: o sequence flow Z02→Z03 está a mais', 'B: a pool Atleta está a mais'], a: 0,
   e: 'Uma send task sem message flow não mostra **a quem** envia. Falta a relação entre pools: **E**.' },
-{ id: 'cs-p4-b', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'bpmn-events', d: P4,
+{ id: 'cs-p4-b', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'bpmn-events', d: P4,
   q: 'O que está errado em **Z07**?',
   o: ["O prazo: o UoD dá 72 horas", "Devia ser um signal event", "Devia ser non-interrupting", "Nada: está correto"], a: 0,
   e: 'É a armadilha do teste modelo: o tipo (timer) está certo, mas o **valor** não corresponde ao UoD.' },
-{ id: 'cs-p4-c', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'exam-viewpoints', d: P4,
+{ id: 'cs-p4-c', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'exam-viewpoints', d: P4,
   q: 'Que falha é **Z10: Avaliar nível do atleta**, depois do pagamento?',
   o: FALHA4, a: 1, fixed: true,
   e: 'A avaliação de nível acontece **antes** (no tratamento interno) e não é uma interação com o atleta. Neste viewpoint é um **conceito a mais**: **B**.' },
-{ id: 'cs-p4-d', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'bpmn-gw', d: P4,
+{ id: 'cs-p4-d', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'bpmn-gw', d: P4,
   q: 'Que desfecho do UoD falta no event-based gateway Z03?',
   o: ["A desistência do atleta", "A lesão do atleta durante as aulas de natação", "A renovação da inscrição para a época seguinte", "Um segundo pagamento parcial depois de 72 horas"], a: 0,
   e: 'Três desfechos: **pagamento**, **desistência**, **falta de pagamento em 72 h**. Falta o ramo da desistência (que também leva a anular e informar). Lesões e renovações estão fora do âmbito.' },
-{ id: 'cs-p4-e', t: 'exam', l: 2, ctx: 'case-adc', reservada: 'exame', les: 'bpmn-gw', d: P4,
+{ id: 'cs-p4-e', t: 'exam', l: 2, ctx: 'case-adc', reserved: 'exam', les: 'bpmn-gw', d: P4,
   q: 'Z03 é um event-based gateway. Está correto aqui?',
   o: ["Sim: segue o primeiro evento que ocorrer", "Não: devia ser um AND, porque os eventos são simultâneos", "Não: devia ser um XOR com a condição “pagou?”", "Não: devia ser um inclusive gateway com três condições"], a: 0,
   e: 'É o mesmo raciocínio do Q1.4 do teste: respostas de um participante externo ou um prazo → **event-based**. Um XOR com “pagou?” obrigaria o processo a avaliar dados que ainda não existem.' },
 
-/* ===== Viewpoint e âmbito (estilo Q1/Q2) ===== */
-{ id: 'ex-vp-1', t: 'exam', l: 2, ctx: 'case-adc', reservada: 'exame', les: 'exam-viewpoints',
+/* ===== Viewpoint and scope (Q1/Q2 style) ===== */
+{ id: 'ex-vp-1', t: 'exam', l: 2, ctx: 'case-adc', reserved: 'exam', les: 'exam-viewpoints',
   q: 'O coordenador quer perceber que aplicações e informação suportam a consulta de vagas e o pagamento. Que diagrama faz sentido?',
   o: ["ArchiMate: services, aplicações e data objects", "BPMN collaboration com a pool do Atleta e message flows", "ArchiMate: business actors com assignment a processes", "BPMN private com lanes Secretaria e Treinadores"], a: 0,
   e: 'É um viewpoint de **suporte aplicacional e informação**: serviços, aplicações (realization), quem os usa (serving) e dados (access).' },
-{ id: 'ex-vp-2', t: 'exam', l: 2, ctx: 'case-adc', reservada: 'exame', les: 'exam-uod',
+{ id: 'ex-vp-2', t: 'exam', l: 2, ctx: 'case-adc', reserved: 'exam', les: 'exam-uod',
   q: '“Notificações por SMS” no caso da Piscina são…',
   o: ["ideias para o futuro, a não modelar", "um requisito confirmado, a modelar em BPMN já", "um message flow obrigatório para o atleta", "um Data Object do Registo de ocupação"], a: 0,
   e: 'O UoD diz que são **ideias para o futuro**. Pô-las no diagrama seria um **excesso** (A ou B).' },
-{ id: 'ex-vp-3', t: 'exam', l: 2, ctx: 'case-adc', reservada: 'exame', les: 'exam-uod',
+{ id: 'ex-vp-3', t: 'exam', l: 2, ctx: 'case-adc', reserved: 'exam', les: 'exam-uod',
   q: 'Num diagrama BPMN do caso Piscina aparece a tarefa “Registar falta à aula”. Como se classifica?',
   o: ["B: conceito a mais (fora do âmbito)", "D: devia ser um evento intermédio em vez de tarefa", "F: falta todo o ramo das faltas às aulas", "Está correto, porque as faltas acontecem nas aulas"], a: 0,
   e: 'Faltas, renovações e lesões estão **fora do âmbito**: qualquer elemento sobre elas é **excesso** (B, porque é um conceito).' },
@@ -285,7 +285,7 @@ const Q = [
   o: ["Sim: o valor esperado é ≈ +0,17", "Não: o valor esperado passa a ser negativo", "Só compensa se conseguires eliminar duas opções", "É indiferente: o valor esperado é exatamente zero"], a: 0,
   e: 'Com 3 opções: (1/3) × 1 − (2/3) × 0,25 = 0,333 − 0,167 ≈ **+0,17**. Mesmo sem eliminar nenhuma: 0,25 − 0,75 × 0,25 ≈ **+0,06**. Responder tem valor esperado positivo; o risco só é variância.' },
 
-/* ===== Ligações ArchiMate (que relação usar) ===== */
+/* ===== ArchiMate relationships (which one to use) ===== */
 { id: 'lk-a01', t: 'arch', l: 2, les: 'arch-rel', q: 'A aplicação Gestão Académica **realiza** o Serviço de Dados Académicos. Que relação, de onde para onde?', o: ['Realization: Gestão Académica → Serviço', 'Serving: Gestão Académica → Serviço', 'Realization: Serviço → Gestão Académica', 'Composition: Serviço → Gestão Académica'], a: 0, e: 'O concreto (aplicação) **realiza** o abstrato (serviço): tracejado com triângulo vazio a apontar para o serviço.' },
 { id: 'lk-a02', t: 'arch', l: 2, les: 'arch-rel', q: 'A Equipa de atendimento é composta por três funcionários (todos Business Actors). Que relação?', o: ["Composition (ou aggregation)", "Assignment da Equipa para cada funcionário", "Specialization do funcionário para a Equipa", "Serving da Equipa para cada funcionário"], a: 0, e: 'Todo-parte entre actors: **composition** (ou aggregation, se a pessoa puder pertencer a vários grupos). Assignment é estrutura → comportamento, ou actor → role.' },
 { id: 'lk-a03', t: 'arch', l: 2, les: 'arch-business', q: 'O funcionário Rui desempenha o papel de Técnico de Equipamento. Que relação?', o: ["Assignment: Rui → Técnico", "Specialization: Técnico → Rui", "Realization: Rui → Técnico", "Aggregation: Técnico → Rui"], a: 0, e: '**Actor → Role** é assignment: o actor assume o papel.' },
@@ -300,7 +300,7 @@ const Q = [
 { id: 'lk-a12', t: 'arch', l: 3, les: 'arch-common', q: 'As roles Especialista e Atendimento trabalham juntas no tratamento de casos difíceis. Como se modela o conjunto?', o: ['Uma Collaboration que agrega os dois roles', 'Um novo Business Actor composto pelos roles', 'Um Process com assignment dos dois roles e nada mais', 'Uma Interface partilhada'], a: 0, e: 'Nos slides: “High-Risk Claims Adjudication is a **collaboration** of two roles”. Collaboration = agregado de roles para comportamento coletivo.' },
 ];
 
-/* ===== Notação: que símbolo é este? (gerado) ===== */
+/* ===== Notation: which symbol is this? (generated) ===== */
 const ARCH_SYM = [
   ['actor', 'bus', 'Business Actor', 'Entidade organizacional que age: pessoa, equipa ou empresa. Ícone de boneco.', ['Role', 'Stakeholder', 'Collaboration']],
   ['role', 'bus', 'Role', 'Responsabilidade que um actor assume. Ícone de cilindro deitado.', ['Business Actor', 'Collaboration', 'Interface']],
@@ -384,5 +384,5 @@ BPMN_SYM.forEach(([n, name, desc, wrong], i) => {
     q: 'Que símbolo BPMN é este?', o: [name, ...wrong], a: 0, e: `**${name}**: ${desc}` });
 });
 
-ESTUDO.perguntas('ams', Q);
+STUDY.questions('ams', Q);
 })();

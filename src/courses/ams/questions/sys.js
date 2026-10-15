@@ -1,5 +1,5 @@
-ESTUDO.perguntas('ams', [
-/* ===== SISTEMAS & MODELAÇÃO ===== */
+STUDY.questions('ams', [
+/* ===== SYSTEMS & MODELLING ===== */
 { id: 'sys-01', t: 'sys', l: 1, les: 'sys-system', src: 'Slides 00b, p.8–10',
   q: 'Segundo a abordagem do curso, quando é que algo passa a ser um “sistema”?',
   o: ["Quando tem pelo menos um componente de software que o controla", "Quando emerge das concerns de stakeholders sobre algo", "Quando é composto por mais de dois subsistemas em interação", "Sempre: tudo o que existe é um sistema “per si”, com ou sem observador"], a: 1,

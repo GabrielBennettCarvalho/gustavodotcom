@@ -236,10 +236,20 @@ textarea.code{width:100%;min-height:180px;font:12.5px/1.5 var(--f-mono);border:1
 .dg .a-bus{fill:#FFF5B8}.dg .a-app{fill:#C9EDF8}.dg .a-tech{fill:#D3F1C6}.dg .a-mot{fill:#E3D9F5}.dg .a-strat{fill:#F7DFC4}.dg .a-com{fill:#ECEEF2}.dg .a-impl{fill:#FBE0E4}
 
 
-/* menu de cadeiras e revisão */
-.mode.cadeira h3{font-size:22px}
-.mode.cadeira .sigla{font-family:var(--f-display);font-weight:800;font-stretch:120%;letter-spacing:-.01em}
+/* course menu and review picker */
+.mode.course-card h3{font-size:22px}
+.mode.course-card .code{font-family:var(--f-display);font-weight:800;font-stretch:120%;letter-spacing:-.01em}
 .lvl-bar{display:block;height:5px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:6px}
 .lvl-bar span{display:block;height:100%;background:var(--good)}
 .mode[disabled]{opacity:.5;cursor:not-allowed}
 .mode[disabled]:hover{border-color:var(--line)}
+
+/* other device (progress key) */
+.sync-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:4px;align-items:start}
+.sync-grid h3{display:flex;align-items:center;gap:8px}
+.sync-confirm{margin-bottom:16px;border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.sync-list{margin:0;padding-left:18px;display:grid;gap:4px}
+.qr{background:var(--sheet);color:var(--sheet-ink);border:1px solid var(--sheet-line);border-radius:10px;padding:12px;display:grid;place-items:center;min-height:180px;text-align:center}
+.qr svg{display:block;width:100%;max-width:260px;height:auto}
+textarea.key{min-height:84px;word-break:break-all}
+@media (max-width:480px){.hide-narrow{display:none}}

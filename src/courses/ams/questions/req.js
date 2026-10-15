@@ -1,5 +1,5 @@
-ESTUDO.perguntas('ams', [
-/* ===== REQUISITOS ===== */
+STUDY.questions('ams', [
+/* ===== REQUIREMENTS ===== */
 { id: 'req-01', t: 'req', l: 1, les: 'req-basics',
   q: 'Qual é a progressão típica (não linear) da análise de requisitos, segundo as notas?',
   o: ["Requisito → evidência → design → objetivo, nesta ordem fixa", "Evidência → necessidade → objetivo → requisito → design", "Design → requisito → teste → evidência, num ciclo iterativo", "Objetivo → design → requisito → evidência, de cima para baixo"], a: 1,

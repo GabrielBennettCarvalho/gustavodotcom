@@ -1,4 +1,4 @@
-/* ===== Lições do estilo de teste + folhas de notação ===== */
+/* ===== Exam-style lessons + notation sheets ===== */
 (() => {
 const A = (k, dom, lb, x, y) => ({ id: lb, k, dom, lb, x, y, w: 132, h: 50 });
 const archSheet = { kind: 'archimate', w: 600, h: 500, alt: 'Folha de notação ArchiMate', nodes: [
@@ -21,7 +21,7 @@ const bpmnSheet = { kind: 'bpmn', w: 620, h: 628, alt: 'Folha de notação BPMN'
   B({ id: 'd1', k: 'data', x: 60, y: 577, lb: 'Data object' }), B({ id: 'd2', k: 'store', x: 180, y: 577, lb: 'Data store' }), B({ id: 'd3', k: 'task', comp: true, x: 300, y: 577, w: 100, h: 46, lb: 'Compensation' }), B({ id: 'd4', k: 'note', x: 470, y: 577, w: 110, lb: 'Annotation (texto)' })] };
 const rel = (k, al, ak, ad, bl, bk, bd, read) => `<div class="diagram" style="margin-top:6px">${DG.rel(k, { al, ak, ad, bl, bk, bd, read })}</div>`;
 
-ESTUDO.licoes('ams', [
+STUDY.lessons('ams', [
 { id: 'exam-format', t: 'exam', title: 'Como é o teste: viewpoints e falhas A–F',
   html: `<p>O teste dá um <b>UoD</b> (texto do caso) e diagramas ArchiMate e BPMN. Cada diagrama responde a um <b>viewpoint</b>: <b>parte interessada</b> + <b>preocupação</b> (ex.: “diretora do Serviço; identificar a equipa responsável por cada conjunto de atividades”). Cada diagrama tem <b>4 falhas</b>:</p>
   <div class="tbl-wrap"><table><tr><th>Letra</th><th>Tipo</th><th>Exemplo típico</th></tr>

@@ -1,4 +1,4 @@
-ESTUDO.perguntas('ams', [
+STUDY.questions('ams', [
 /* ===== BPM ===== */
 { id: 'bpm-01', t: 'bpm', l: 1, les: 'bpm-process', src: 'Slides 03a-BPM, p.3',
   q: 'Na visão de processo dos slides, pessoas, energia, equipamento, infraestruturas e métodos são…',

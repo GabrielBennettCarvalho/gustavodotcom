@@ -1,9 +1,10 @@
-/* ===== Estudo IST — motor =====
-   Igual para todas as cadeiras: menu de cadeiras, níveis, modos padrão
-   (Aprender, Revisão, Exame simulado, Biblioteca) e gravação do progresso.
-   O conteúdo e as secções extra vêm de cada cadeira (src/cadeiras/<id>). */
+/* ===== Estudo IST — engine =====
+   Shared by every course: course menu, levels, standard modes
+   (Learn, Review, Mock exam, Library) and progress storage.
+   Content and extra sections come from each course (src/courses/<id>).
+   UI text is in Portuguese on purpose: the students are. */
 (() => {
-const REG = window.ESTUDO;
+const REG = window.STUDY;
 const DEFAULT_LEVELS = [
   { n: 1, t: 'Fundamentos', d: 'Definições e símbolos' },
   { n: 2, t: 'Aplicação', d: 'Distinguir e escolher' },
@@ -12,10 +13,10 @@ const DEFAULT_LEVELS = [
 ];
 const XP = { 1: 10, 2: 15, 3: 20, 4: 30 };
 const UNLOCK = 0.6;
-const EXAM_N = 20, EXAM_MIN = 30;   // perguntas e minutos do exame simulado
-const EXAM_CLEAR = 2;               // acertos seguidos para tirar um erro de exame da revisão
+const EXAM_N = 20, EXAM_MIN = 30;   // mock exam: questions and minutes
+const EXAM_CLEAR = 2;               // correct answers in a row to clear an exam mistake from review
 const LS_KEY = 'estudo-ist-v2', LS_PACKS = 'estudo-ist-packs-v2';
-const LEGACY = { state: 'ams-treino-v1', packs: 'ams-treino-packs-v1', cadeira: 'ams' };
+const LEGACY = { state: 'ams-treino-v1', packs: 'ams-treino-packs-v1', course: 'ams' };
 
 const $app = document.getElementById('app');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -25,29 +26,30 @@ const shuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i-
 const ls = { get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
 /* ---------- state ----------
-   G guarda tudo; S aponta para a fatia da cadeira aberta (G.c[id]). */
-const blank = (temas = {}) => ({ stats: {}, notes: {}, xp: 0, settings: { topics: Object.keys(temas), known: Object.keys(temas), unlockAll: false, testDate: '' }, rounds: 0, sessions: [] });
+   G holds everything; S points at the open course's slice (G.c[id]). */
+const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '' }, rounds: 0, sessions: [] });
 let G = ls.get(LS_KEY);
 if (!G || G.v !== 2) {
   G = { v: 2, cur: null, c: {}, updatedAt: 0 };
-  const old = ls.get(LEGACY.state);   // progresso da versão só-AMS
-  if (old && old.stats) { const { bestSprint, v, updatedAt, ...rest } = old; G.c[LEGACY.cadeira] = rest; G.cur = LEGACY.cadeira; G.updatedAt = updatedAt || Date.now(); }
+  const old = ls.get(LEGACY.state);   // progress from the AMS-only version
+  if (old && old.stats) { const { bestSprint, v, updatedAt, ...rest } = old; G.c[LEGACY.course] = rest; G.cur = LEGACY.course; G.updatedAt = updatedAt || Date.now(); }
 }
 let packs = ls.get(LS_PACKS);
-if (!packs) { packs = (ls.get(LEGACY.packs) || []).map(p => Object.assign({ cadeira: LEGACY.cadeira }, p)); ls.set(LS_PACKS, packs); }
+if (!packs) { packs = (ls.get(LEGACY.packs) || []).map(p => Object.assign({ course: LEGACY.course }, p)); ls.set(LS_PACKS, packs); }
+packs.forEach(p => { if (!p.course && p.cadeira) p.course = p.cadeira; });   // packs saved by the first multi-course build
 
 let C = null, S = null, TOPICS = {}, LEVELS = DEFAULT_LEVELS;
 let BANK = [], BYID = {}, LESSONS = [], LBYID = {};
 const renderD = d => !d ? '' : typeof d === 'string' ? d : (C && C.render ? C.render(d) : '');
 
-function openCadeira(id) {
-  C = REG.cadeiras[id]; if (!C) return false;
-  TOPICS = C.temas; LEVELS = C.niveis || DEFAULT_LEVELS;
+function openCourse(id) {
+  C = REG.courses[id]; if (!C) return false;
+  TOPICS = C.topics; LEVELS = C.levels || DEFAULT_LEVELS;
   if (!G.c[id]) G.c[id] = blank(TOPICS);
   S = G.c[id];
   const b = blank(TOPICS); for (const k in b) if (S[k] === undefined) S[k] = b[k];
   S.settings = Object.assign(b.settings, S.settings || {});
-  // temas novos ficam ligados para quem já tinha progresso
+  // new topics start enabled for people who already had progress
   const known = S.settings.known; Object.keys(TOPICS).forEach(k => { if (!known.includes(k)) { known.push(k); if (!S.settings.topics.includes(k)) S.settings.topics.push(k); } });
   S.settings.topics = S.settings.topics.filter(k => TOPICS[k]); if (!S.settings.topics.length) S.settings.topics = Object.keys(TOPICS);
   G.cur = id; rebuildBank(); return true;
@@ -56,10 +58,10 @@ function openCadeira(id) {
 function rebuildBank() {
   const seen = new Set(); BANK = []; BYID = {}; LESSONS = []; LBYID = {};
   const addL = (l, trusted) => { if (!l || !l.id || LBYID[l.id]) return; const x = Object.assign({}, l, { trusted }); LESSONS.push(x); LBYID[l.id] = x; };
-  C.licoes.forEach(l => addL(l, true));
+  C.lessons.forEach(l => addL(l, true));
   const addQ = (q, origin) => { const v = validateQ(q); if (!v.ok) return; let id = q.id; while (seen.has(id)) id = id + '+'; seen.add(id); const x = Object.assign({}, q, { id, origin }); BANK.push(x); BYID[id] = x; };
-  C.perguntas.forEach(q => addQ(q, 'base'));
-  packs.filter(p => p.cadeira === C.id).forEach(p => { (p.lessons || []).forEach(l => addL(l, false)); (p.questions || []).forEach(q => addQ(q, p.name || 'pacote')); });
+  C.questions.forEach(q => addQ(q, 'base'));
+  packs.filter(p => p.course === C.id).forEach(p => { (p.lessons || []).forEach(l => addL(l, false)); (p.questions || []).forEach(q => addQ(q, p.name || 'pacote')); });
 }
 function validateQ(q) {
   if (!q || typeof q !== 'object') return { ok: false, why: 'não é um objeto' };
@@ -77,13 +79,13 @@ function validateQ(q) {
 function save() { G.updatedAt = Date.now(); ls.set(LS_KEY, G); }
 
 /* ---------- stats helpers ----------
-   Por pergunta: c acertos, w erros de treino, box caixa da revisão de treino,
-   ew erros em exame, eb acertos seguidos desde o último erro de exame, last. */
+   Per question: c correct, w training mistakes, box training-review box,
+   ew exam mistakes, eb correct in a row since the last exam mistake, last (timestamp). */
 const ZERO = { c: 0, w: 0, box: 0, ew: 0, eb: 0, last: 0 };
 const st = id => { const s = S.stats[id] || (S.stats[id] = { ...ZERO }); for (const k in ZERO) if (s[k] === undefined) s[k] = 0; return s; };
 const peek = id => Object.assign({}, ZERO, S.stats[id]);
 const inTopics = q => S.settings.topics.includes(q.t);
-const isReserved = q => q.reservada === 'exame';
+const isReserved = q => q.reserved === 'exam';
 const fresh = q => { const s = peek(q.id); return !s.c && !s.w && !s.ew; };
 const trainPool = () => BANK.filter(q => inTopics(q) && !isReserved(q));
 function mastery(level, topics = S.settings.topics) {
@@ -99,8 +101,8 @@ function pick(pool, n) { // unseen first, then weakest, randomized within bands
   const bands = [[], [], []]; pool.forEach(q => { const s = peek(q.id); if (!s.c && !s.w && !s.ew) bands[0].push(q); else if (s.box < 2) bands[1].push(q); else bands[2].push(q); });
   return bands.flatMap(b => shuffle(b)).slice(0, n);
 }
-function cadeiraProgress(c) {
-  const st_ = (G.c[c.id] && G.c[c.id].stats) || {}; const qs = c.perguntas.filter(q => !isReserved(q));
+function courseProgress(c) {
+  const st_ = (G.c[c.id] && G.c[c.id].stats) || {}; const qs = c.questions.filter(q => !isReserved(q));
   const done = qs.filter(q => st_[q.id] && st_[q.id].c > 0).length; return { done, total: qs.length, xp: (G.c[c.id] && G.c[c.id].xp) || 0 };
 }
 
@@ -109,33 +111,35 @@ let view = { name: 'home' };
 let ses = null; // active session
 function go(name, extra = {}) { view = Object.assign({ name }, extra); renderView(); window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' }); }
 function renderView() {
-  const v = C ? view.name : 'cadeiras';
-  const html = v === 'cadeiras' ? Cadeiras() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : Home();
+  const v = C || view.name === 'sync' ? view.name : 'courses';
+  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'sync' ? Sync() : Home();
   $app.innerHTML = Top() + html;
-  document.title = C && v !== 'cadeiras' ? `${C.sigla} · Estudo IST` : 'Estudo IST';
+  document.title = C && v !== 'courses' ? `${C.code} · Estudo IST` : 'Estudo IST';
   if (v === 'quiz') afterQuizRender();
+  if (v === 'sync') afterSyncRender();
 }
 const toast = (msg) => { const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); };
 
 function Top() {
-  const inC = C && view.name !== 'cadeiras';
+  const inC = C && !['courses', 'sync'].includes(view.name);
   return `<header class="top">
-    <button class="brand" data-act="${inC ? 'home' : 'cadeiras'}" aria-label="Início">
+    <button class="brand" data-act="${inC ? 'home' : 'courses'}" aria-label="Início">
       <svg class="brand-mark" viewBox="0 0 30 30" aria-hidden="true"><path d="M15 2 L28 15 L15 28 L2 15 Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 10 L20 20 M20 10 L10 20" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="24" cy="6" r="4" fill="var(--token)"/></svg>
-      <b>${inC ? `${esc(C.sigla)} Treino` : 'Estudo IST'}</b></button>
-    ${inC ? `<button class="chip" data-act="cadeiras" title="Trocar de cadeira">Cadeiras ▾</button>` : ''}
+      <b>${inC ? `${esc(C.code)} Treino` : 'Estudo IST'}</b></button>
+    ${inC ? `<button class="chip" data-act="courses" title="Trocar de cadeira">Cadeiras ▾</button>` : ''}
     <span class="spacer"></span>
     ${inC ? `<span class="stat-pill" title="Experiência nesta cadeira"><i></i>${S.xp} XP</span>` : ''}
+    ${view.name === 'sync' || (ses && !ses.ended) ? '' : `<button class="btn small" data-act="sync" title="Levar o progresso para outro dispositivo, ou trazê-lo">${glyph('swap')}<span class="hide-narrow">Outro dispositivo</span></button>`}
   </header>`;
 }
 
-/* ---------- CADEIRAS (menu inicial) ---------- */
-function Cadeiras() {
-  const list = REG.ordem.map(id => REG.cadeiras[id]).filter(c => c.temas);
-  const cards = list.map(c => { const p = cadeiraProgress(c); const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
-    return `<button class="mode cadeira" data-act="openC" data-id="${esc(c.id)}">
-      <span class="eyebrow">${c.ano ? `${c.ano}.º ano` : ''}${c.semestre ? ` · ${c.semestre}.º sem.` : ''}</span>
-      <h3><span class="sigla">${esc(c.sigla)}</span></h3><p>${esc(c.nome)}</p>
+/* ---------- COURSES (start menu) ---------- */
+function Courses() {
+  const list = REG.order.map(id => REG.courses[id]).filter(c => c.topics);
+  const cards = list.map(c => { const p = courseProgress(c); const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
+    return `<button class="mode course-card" data-act="openC" data-id="${esc(c.id)}">
+      <span class="eyebrow">${c.year ? `${c.year}.º ano` : ''}${c.semester ? ` · ${c.semester}.º sem.` : ''}</span>
+      <h3><span class="code">${esc(c.code)}</span></h3><p>${esc(c.name)}</p>
       <span class="lvl-bar"><span style="width:${pct}%"></span></span>
       <span class="meta">${p.done}/${p.total} dominadas · ${p.xp} XP</span></button>`; }).join('');
   return `<section class="hero"><span class="eyebrow">Técnico · LEIC</span><h1>Escolhe a cadeira.</h1>
@@ -143,7 +147,7 @@ function Cadeiras() {
     <div class="modes">${cards}</div>`;
 }
 
-/* ---------- HOME (da cadeira) ---------- */
+/* ---------- HOME (of a course) ---------- */
 function daysLeft() { if (!S.settings.testDate) return null; const d = new Date(S.settings.testDate + 'T09:00:00'); const n = Math.ceil((d - new Date()) / 864e5); return isNaN(n) ? null : n; }
 const extraApi = () => ({ pool: trainPool(), pick, topLevel, peek, inTopics, LEVELS, BANK });
 function Home() {
@@ -163,12 +167,12 @@ function Home() {
   ];
   const card = ([k, t, d, m, g], act = 'mode') => `<button class="mode" data-act="${act}" data-k="${k}"><h3>${g}${t}</h3><p>${d}</p><span class="meta">${m}</span></button>`;
   const api = extraApi();
-  const extras = (C.extras || []).map(x => card([x.id, esc(x.titulo), esc(x.desc), esc(x.meta ? x.meta(api) : ''), glyph(x.icone || 'star')], 'extra')).join('');
+  const extras = (C.extras || []).map(x => card([x.id, esc(x.title), esc(x.desc), esc(x.meta ? x.meta(api) : ''), glyph(x.icon || 'star')], 'extra')).join('');
   const mt = `<div class="mastery" role="table" aria-label="Domínio por tema e nível"><span></span>${LEVELS.map(L => `<span class="h">N${L.n}</span>`).join('')}
     ${Object.entries(TOPICS).map(([k, t]) => `<span class="tn"><span class="chip static" style="--c:${t.c};padding:0;border:0;background:none"><span class="sw"></span></span>${t.short}</span>` + LEVELS.map(L => { const m = mastery(L.n, [k]); return m.total ? `<span class="cell" title="${m.done} de ${m.total}"><span style="width:${Math.round(m.pct * 100)}%"></span><em>${m.done}/${m.total}</em></span>` : '<span class="cell"><em>—</em></span>'; }).join('')).join('')}</div>`;
   return `<section class="hero">
-      <span class="eyebrow">${esc(C.nome)} · IST</span>
-      <h1>${esc(C.titulo || C.nome)}</h1>
+      <span class="eyebrow">${esc(C.name)} · IST</span>
+      <h1>${esc(C.tagline || C.name)}</h1>
       <p>${nTrain} perguntas de escolha múltipla em ${LEVELS.length} níveis, com a teoria explicada sempre que falhas. ${dl !== null ? `<b>${dl > 0 ? `Faltam ${dl} dia${dl === 1 ? '' : 's'} para o teste.` : dl === 0 ? 'O teste é hoje. Força!' : 'O teste já passou.'}</b>` : ''}</p>
     </section>
     <div class="flow-card">
@@ -181,7 +185,7 @@ function Home() {
       <div class="chips">${topicsChips}</div>
     </div>
     <div class="section"><div class="section-h"><h2>Modos</h2></div><div class="modes">${std.map(c => card(c)).join('')}</div></div>
-    ${extras ? `<div class="section"><div class="section-h"><h2>Só de ${esc(C.sigla)}</h2></div><div class="modes">${extras}</div></div>` : ''}
+    ${extras ? `<div class="section"><div class="section-h"><h2>Só de ${esc(C.code)}</h2></div><div class="modes">${extras}</div></div>` : ''}
     <div class="section"><div class="section-h"><h2>Domínio</h2><span class="muted" style="font-size:13px">perguntas acertadas pelo menos uma vez</span></div>${mt}</div>
     <div class="section">
       <div class="section-h"><h2>Definições</h2></div>
@@ -193,16 +197,16 @@ function Home() {
         <button class="btn" data-act="bank">${glyph('plus')} Banco de perguntas e importar</button>
         <button class="btn" data-act="notes">${glyph('pen')} As minhas notas (${Object.keys(S.notes).filter(k => S.notes[k]).length})</button>
         <span class="spacer"></span>
-        ${view.confirmReset ? `<span class="muted" style="font-size:13px">Apagar o progresso de ${esc(C.sigla)}?</span><button class="btn small" data-act="resetYes" style="color:var(--bad)">Sim, apagar</button><button class="btn small" data-act="resetNo">Cancelar</button>` : `<button class="btn ghost small" data-act="reset">Recomeçar do zero</button>`}
+        ${view.confirmReset ? `<span class="muted" style="font-size:13px">Apagar o progresso de ${esc(C.code)}?</span><button class="btn small" data-act="resetYes" style="color:var(--bad)">Sim, apagar</button><button class="btn small" data-act="resetNo">Cancelar</button>` : `<button class="btn ghost small" data-act="reset">Recomeçar do zero</button>`}
       </div>
     </div>`;
 }
 function glyph(k) {
-  const p = { book: '<path d="M4 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H4z M24 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/>', loop: '<path d="M6 13a8 8 0 0 1 14-5l2 2 M22 15a8 8 0 0 1-14 5l-2-2 M22 4v6h-6 M6 24v-6h6"/>', lens: '<circle cx="12" cy="12" r="7"/><path d="M17 17l6 6 M9 12h6 M12 9v6"/>', bolt: '<path d="M15 3L6 16h7l-1 9 9-13h-7z"/>', clock: '<circle cx="14" cy="14" r="10"/><path d="M14 8v6l4 3"/>', list: '<path d="M9 7h14 M9 14h14 M9 21h14"/><circle cx="5" cy="7" r="1.3"/><circle cx="5" cy="14" r="1.3"/><circle cx="5" cy="21" r="1.3"/>', plus: '<path d="M14 6v16 M6 14h16"/>', pen: '<path d="M6 22l2-6 11-11 4 4-11 11z M16 7l4 4"/>', star: '<path d="M14 3l3.2 7 7.3.6-5.6 4.8 1.8 7.3L14 18.8 7.3 22.7l1.8-7.3L3.5 10.6l7.3-.6z"/>', flag: '<path d="M6 25V4 M6 5h14l-3 5 3 5H6"/>' }[k] || '';
+  const p = { book: '<path d="M4 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H4z M24 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/>', loop: '<path d="M6 13a8 8 0 0 1 14-5l2 2 M22 15a8 8 0 0 1-14 5l-2-2 M22 4v6h-6 M6 24v-6h6"/>', lens: '<circle cx="12" cy="12" r="7"/><path d="M17 17l6 6 M9 12h6 M12 9v6"/>', bolt: '<path d="M15 3L6 16h7l-1 9 9-13h-7z"/>', clock: '<circle cx="14" cy="14" r="10"/><path d="M14 8v6l4 3"/>', list: '<path d="M9 7h14 M9 14h14 M9 21h14"/><circle cx="5" cy="7" r="1.3"/><circle cx="5" cy="14" r="1.3"/><circle cx="5" cy="21" r="1.3"/>', plus: '<path d="M14 6v16 M6 14h16"/>', pen: '<path d="M6 22l2-6 11-11 4 4-11 11z M16 7l4 4"/>', star: '<path d="M14 3l3.2 7 7.3.6-5.6 4.8 1.8 7.3L14 18.8 7.3 22.7l1.8-7.3L3.5 10.6l7.3-.6z"/>', flag: '<path d="M6 25V4 M6 5h14l-3 5 3 5H6"/>', swap: '<path d="M4 9h18l-4-4 M24 19H6l4 4"/>', qr: '<path d="M4 4h7v7H4z M17 4h7v7h-7z M4 17h7v7H4z M17 17h3v3h-3z M21 21h3v3h-3z"/>', share: '<path d="M14 3v14 M9 8l5-5 5 5 M6 13v10h16V13"/>', copy: '<path d="M9 9h13v14H9z M6 19V5h13"/>' }[k] || '';
   return `<svg class="glyph" viewBox="0 0 28 28" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 }
 
-/* ---------- REVISÃO: dois separadores ---------- */
+/* ---------- REVIEW: two tabs ---------- */
 function ReviewPick() {
   const a = reviewPool().length, b = examReviewPool().length;
   return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="eyebrow">Revisão de erros</span></div>
@@ -215,7 +219,7 @@ function ReviewPick() {
 /* ---------- sessions ---------- */
 function makeItem(q) { const n = q.o.length; const order = q.fixed ? [...Array(n).keys()] : shuffle([...Array(n).keys()]); return { kind: 'q', id: q.id, order }; }
 function buildExam() {
-  // 1) perguntas reservadas ainda inéditas; 2) completar com a mistura de níveis do treino; 3) reservadas já vistas
+  // 1) unseen reserved questions; 2) fill with the usual level mix from training; 3) reserved ones already seen
   let qs = shuffle(freshReserved()).slice(0, EXAM_N);
   const used = new Set(qs.map(q => q.id));
   if (qs.length < EXAM_N) {
@@ -233,7 +237,7 @@ function start(mode, opts = {}) {
   if (mode === 'level') { const L = opts.level; items = pick(pool.filter(q => q.l === L), 10).map(makeItem); title = `Nível ${L} · ${LEVELS[L - 1].t}`; }
   if (mode === 'review') { items = reviewPool().slice(0, 12).map(makeItem); title = 'Revisão · erros de treino'; if (!items.length) { toast('Ainda não tens erros de treino para rever.'); return; } }
   if (mode === 'reviewExam') { items = examReviewPool().slice(0, 12).map(makeItem); title = 'Revisão · erros de exame'; if (!items.length) { toast('Ainda não tens erros de exame para rever.'); return; } }
-  if (mode === 'extra') { const x = (C.extras || []).find(e => e.id === opts.extra); if (!x) return; items = (x.perguntas(extraApi()) || []).map(makeItem); title = x.titulo; }
+  if (mode === 'extra') { const x = (C.extras || []).find(e => e.id === opts.extra); if (!x) return; items = (x.questions(extraApi()) || []).map(makeItem); title = x.title; }
   if (mode === 'exam') { items = buildExam().map(makeItem); title = 'Exame simulado'; timeLimit = EXAM_MIN * 60; }
   if (mode === 'learn') {
     const t = opts.topic; title = `Aprender · ${TOPICS[t].short}`;

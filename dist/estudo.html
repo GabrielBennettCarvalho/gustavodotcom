@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
 <style>
-/* Layout: one 860px study column on a faint modelling-canvas dot grid; the level map is drawn as a BPMN process with a token */
+/* Layout: one 860px study column on a faint modelling-canvas dot grid; the level map is drawn as a BPMN process with a token. */
 :root{
   --paper:#F2F4F7; --panel:#FFFFFF; --panel-2:#F7F8FA; --ink:#141C29; --muted:#566275; --line:#D6DCE5; --dot:rgba(20,28,41,.07);
   --accent:#2747C9; --accent-ink:#FFFFFF; --token:#E4632A;
@@ -242,13 +242,23 @@ textarea.code{width:100%;min-height:180px;font:12.5px/1.5 var(--f-mono);border:1
 .dg .a-bus{fill:#FFF5B8}.dg .a-app{fill:#C9EDF8}.dg .a-tech{fill:#D3F1C6}.dg .a-mot{fill:#E3D9F5}.dg .a-strat{fill:#F7DFC4}.dg .a-com{fill:#ECEEF2}.dg .a-impl{fill:#FBE0E4}
 
 
-/* menu de cadeiras e revisão */
-.mode.cadeira h3{font-size:22px}
-.mode.cadeira .sigla{font-family:var(--f-display);font-weight:800;font-stretch:120%;letter-spacing:-.01em}
+/* course menu and review picker */
+.mode.course-card h3{font-size:22px}
+.mode.course-card .code{font-family:var(--f-display);font-weight:800;font-stretch:120%;letter-spacing:-.01em}
 .lvl-bar{display:block;height:5px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:6px}
 .lvl-bar span{display:block;height:100%;background:var(--good)}
 .mode[disabled]{opacity:.5;cursor:not-allowed}
 .mode[disabled]:hover{border-color:var(--line)}
+
+/* other device (progress key) */
+.sync-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:4px;align-items:start}
+.sync-grid h3{display:flex;align-items:center;gap:8px}
+.sync-confirm{margin-bottom:16px;border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.sync-list{margin:0;padding-left:18px;display:grid;gap:4px}
+.qr{background:var(--sheet);color:var(--sheet-ink);border:1px solid var(--sheet-line);border-radius:10px;padding:12px;display:grid;place-items:center;min-height:180px;text-align:center}
+.qr svg{display:block;width:100%;max-width:260px;height:auto}
+textarea.key{min-height:84px;word-break:break-all}
+@media (max-width:480px){.hide-narrow{display:none}}
 
 /* Cores dos temas do AMS */
 :root{ --t-sys:#5452C9; --t-req:#8A55C2; --t-arch:#B88A0B; --t-bpm:#2479B8; --t-bpmn:#238A5E; --t-exam:#C2410C; }
@@ -258,31 +268,2333 @@ textarea.code{width:100%;min-height:180px;font:12.5px/1.5 var(--f-mono);border:1
 </style></head><body>
 <main class="wrap" id="app"><p style="padding:40px 0">A carregar…</p></main>
 <script>
-/* ===== Registo de cadeiras =====
-   Cada cadeira chama, nos seus ficheiros:
-     ESTUDO.cadeira({ id, sigla, nome, temas, ... })   → configuração
-     ESTUDO.licoes(id, [ ... ])                         → lições (teoria)
-     ESTUDO.perguntas(id, [ ... ])                      → perguntas
-   A ordem dos ficheiros não importa entre estas três chamadas. */
-window.ESTUDO = (() => {
-  const cadeiras = {}, ordem = [];
+//---------------------------------------------------------------------
+//
+// QR Code Generator for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//  http://www.opensource.org/licenses/mit-license.php
+//
+// The word 'QR Code' is registered trademark of
+// DENSO WAVE INCORPORATED
+//  http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+
+var qrcode = function() {
+
+  //---------------------------------------------------------------------
+  // qrcode
+  //---------------------------------------------------------------------
+
+  /**
+   * qrcode
+   * @param typeNumber 1 to 40
+   * @param errorCorrectionLevel 'L','M','Q','H'
+   */
+  var qrcode = function(typeNumber, errorCorrectionLevel) {
+
+    var PAD0 = 0xEC;
+    var PAD1 = 0x11;
+
+    var _typeNumber = typeNumber;
+    var _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
+    var _modules = null;
+    var _moduleCount = 0;
+    var _dataCache = null;
+    var _dataList = [];
+
+    var _this = {};
+
+    var makeImpl = function(test, maskPattern) {
+
+      _moduleCount = _typeNumber * 4 + 17;
+      _modules = function(moduleCount) {
+        var modules = new Array(moduleCount);
+        for (var row = 0; row < moduleCount; row += 1) {
+          modules[row] = new Array(moduleCount);
+          for (var col = 0; col < moduleCount; col += 1) {
+            modules[row][col] = null;
+          }
+        }
+        return modules;
+      }(_moduleCount);
+
+      setupPositionProbePattern(0, 0);
+      setupPositionProbePattern(_moduleCount - 7, 0);
+      setupPositionProbePattern(0, _moduleCount - 7);
+      setupPositionAdjustPattern();
+      setupTimingPattern();
+      setupTypeInfo(test, maskPattern);
+
+      if (_typeNumber >= 7) {
+        setupTypeNumber(test);
+      }
+
+      if (_dataCache == null) {
+        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
+      }
+
+      mapData(_dataCache, maskPattern);
+    };
+
+    var setupPositionProbePattern = function(row, col) {
+
+      for (var r = -1; r <= 7; r += 1) {
+
+        if (row + r <= -1 || _moduleCount <= row + r) continue;
+
+        for (var c = -1; c <= 7; c += 1) {
+
+          if (col + c <= -1 || _moduleCount <= col + c) continue;
+
+          if ( (0 <= r && r <= 6 && (c == 0 || c == 6) )
+              || (0 <= c && c <= 6 && (r == 0 || r == 6) )
+              || (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+            _modules[row + r][col + c] = true;
+          } else {
+            _modules[row + r][col + c] = false;
+          }
+        }
+      }
+    };
+
+    var getBestMaskPattern = function() {
+
+      var minLostPoint = 0;
+      var pattern = 0;
+
+      for (var i = 0; i < 8; i += 1) {
+
+        makeImpl(true, i);
+
+        var lostPoint = QRUtil.getLostPoint(_this);
+
+        if (i == 0 || minLostPoint > lostPoint) {
+          minLostPoint = lostPoint;
+          pattern = i;
+        }
+      }
+
+      return pattern;
+    };
+
+    var setupTimingPattern = function() {
+
+      for (var r = 8; r < _moduleCount - 8; r += 1) {
+        if (_modules[r][6] != null) {
+          continue;
+        }
+        _modules[r][6] = (r % 2 == 0);
+      }
+
+      for (var c = 8; c < _moduleCount - 8; c += 1) {
+        if (_modules[6][c] != null) {
+          continue;
+        }
+        _modules[6][c] = (c % 2 == 0);
+      }
+    };
+
+    var setupPositionAdjustPattern = function() {
+
+      var pos = QRUtil.getPatternPosition(_typeNumber);
+
+      for (var i = 0; i < pos.length; i += 1) {
+
+        for (var j = 0; j < pos.length; j += 1) {
+
+          var row = pos[i];
+          var col = pos[j];
+
+          if (_modules[row][col] != null) {
+            continue;
+          }
+
+          for (var r = -2; r <= 2; r += 1) {
+
+            for (var c = -2; c <= 2; c += 1) {
+
+              if (r == -2 || r == 2 || c == -2 || c == 2
+                  || (r == 0 && c == 0) ) {
+                _modules[row + r][col + c] = true;
+              } else {
+                _modules[row + r][col + c] = false;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    var setupTypeNumber = function(test) {
+
+      var bits = QRUtil.getBCHTypeNumber(_typeNumber);
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = mod;
+      }
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[i % 3 + _moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    };
+
+    var setupTypeInfo = function(test, maskPattern) {
+
+      var data = (_errorCorrectionLevel << 3) | maskPattern;
+      var bits = QRUtil.getBCHTypeInfo(data);
+
+      // vertical
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 6) {
+          _modules[i][8] = mod;
+        } else if (i < 8) {
+          _modules[i + 1][8] = mod;
+        } else {
+          _modules[_moduleCount - 15 + i][8] = mod;
+        }
+      }
+
+      // horizontal
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 8) {
+          _modules[8][_moduleCount - i - 1] = mod;
+        } else if (i < 9) {
+          _modules[8][15 - i - 1 + 1] = mod;
+        } else {
+          _modules[8][15 - i - 1] = mod;
+        }
+      }
+
+      // fixed module
+      _modules[_moduleCount - 8][8] = (!test);
+    };
+
+    var mapData = function(data, maskPattern) {
+
+      var inc = -1;
+      var row = _moduleCount - 1;
+      var bitIndex = 7;
+      var byteIndex = 0;
+      var maskFunc = QRUtil.getMaskFunction(maskPattern);
+
+      for (var col = _moduleCount - 1; col > 0; col -= 2) {
+
+        if (col == 6) col -= 1;
+
+        while (true) {
+
+          for (var c = 0; c < 2; c += 1) {
+
+            if (_modules[row][col - c] == null) {
+
+              var dark = false;
+
+              if (byteIndex < data.length) {
+                dark = ( ( (data[byteIndex] >>> bitIndex) & 1) == 1);
+              }
+
+              var mask = maskFunc(row, col - c);
+
+              if (mask) {
+                dark = !dark;
+              }
+
+              _modules[row][col - c] = dark;
+              bitIndex -= 1;
+
+              if (bitIndex == -1) {
+                byteIndex += 1;
+                bitIndex = 7;
+              }
+            }
+          }
+
+          row += inc;
+
+          if (row < 0 || _moduleCount <= row) {
+            row -= inc;
+            inc = -inc;
+            break;
+          }
+        }
+      }
+    };
+
+    var createBytes = function(buffer, rsBlocks) {
+
+      var offset = 0;
+
+      var maxDcCount = 0;
+      var maxEcCount = 0;
+
+      var dcdata = new Array(rsBlocks.length);
+      var ecdata = new Array(rsBlocks.length);
+
+      for (var r = 0; r < rsBlocks.length; r += 1) {
+
+        var dcCount = rsBlocks[r].dataCount;
+        var ecCount = rsBlocks[r].totalCount - dcCount;
+
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+
+        dcdata[r] = new Array(dcCount);
+
+        for (var i = 0; i < dcdata[r].length; i += 1) {
+          dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+        }
+        offset += dcCount;
+
+        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        var rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+        var modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength() - 1);
+        for (var i = 0; i < ecdata[r].length; i += 1) {
+          var modIndex = i + modPoly.getLength() - ecdata[r].length;
+          ecdata[r][i] = (modIndex >= 0)? modPoly.getAt(modIndex) : 0;
+        }
+      }
+
+      var totalCodeCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalCodeCount += rsBlocks[i].totalCount;
+      }
+
+      var data = new Array(totalCodeCount);
+      var index = 0;
+
+      for (var i = 0; i < maxDcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < dcdata[r].length) {
+            data[index] = dcdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      for (var i = 0; i < maxEcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < ecdata[r].length) {
+            data[index] = ecdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      return data;
+    };
+
+    var createData = function(typeNumber, errorCorrectionLevel, dataList) {
+
+      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+
+      var buffer = qrBitBuffer();
+
+      for (var i = 0; i < dataList.length; i += 1) {
+        var data = dataList[i];
+        buffer.put(data.getMode(), 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+        data.write(buffer);
+      }
+
+      // calc num max data.
+      var totalDataCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalDataCount += rsBlocks[i].dataCount;
+      }
+
+      if (buffer.getLengthInBits() > totalDataCount * 8) {
+        throw 'code length overflow. ('
+          + buffer.getLengthInBits()
+          + '>'
+          + totalDataCount * 8
+          + ')';
+      }
+
+      // end code
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+        buffer.put(0, 4);
+      }
+
+      // padding
+      while (buffer.getLengthInBits() % 8 != 0) {
+        buffer.putBit(false);
+      }
+
+      // padding
+      while (true) {
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD0, 8);
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD1, 8);
+      }
+
+      return createBytes(buffer, rsBlocks);
+    };
+
+    _this.addData = function(data, mode) {
+
+      mode = mode || 'Byte';
+
+      var newData = null;
+
+      switch(mode) {
+      case 'Numeric' :
+        newData = qrNumber(data);
+        break;
+      case 'Alphanumeric' :
+        newData = qrAlphaNum(data);
+        break;
+      case 'Byte' :
+        newData = qr8BitByte(data);
+        break;
+      case 'Kanji' :
+        newData = qrKanji(data);
+        break;
+      default :
+        throw 'mode:' + mode;
+      }
+
+      _dataList.push(newData);
+      _dataCache = null;
+    };
+
+    _this.isDark = function(row, col) {
+      if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
+        throw row + ',' + col;
+      }
+      return _modules[row][col];
+    };
+
+    _this.getModuleCount = function() {
+      return _moduleCount;
+    };
+
+    _this.make = function() {
+      if (_typeNumber < 1) {
+        var typeNumber = 1;
+
+        for (; typeNumber < 40; typeNumber++) {
+          var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
+          var buffer = qrBitBuffer();
+
+          for (var i = 0; i < _dataList.length; i++) {
+            var data = _dataList[i];
+            buffer.put(data.getMode(), 4);
+            buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+            data.write(buffer);
+          }
+
+          var totalDataCount = 0;
+          for (var i = 0; i < rsBlocks.length; i++) {
+            totalDataCount += rsBlocks[i].dataCount;
+          }
+
+          if (buffer.getLengthInBits() <= totalDataCount * 8) {
+            break;
+          }
+        }
+
+        _typeNumber = typeNumber;
+      }
+
+      makeImpl(false, getBestMaskPattern() );
+    };
+
+    _this.createTableTag = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var qrHtml = '';
+
+      qrHtml += '<table style="';
+      qrHtml += ' border-width: 0px; border-style: none;';
+      qrHtml += ' border-collapse: collapse;';
+      qrHtml += ' padding: 0px; margin: ' + margin + 'px;';
+      qrHtml += '">';
+      qrHtml += '<tbody>';
+
+      for (var r = 0; r < _this.getModuleCount(); r += 1) {
+
+        qrHtml += '<tr>';
+
+        for (var c = 0; c < _this.getModuleCount(); c += 1) {
+          qrHtml += '<td style="';
+          qrHtml += ' border-width: 0px; border-style: none;';
+          qrHtml += ' border-collapse: collapse;';
+          qrHtml += ' padding: 0px; margin: 0px;';
+          qrHtml += ' width: ' + cellSize + 'px;';
+          qrHtml += ' height: ' + cellSize + 'px;';
+          qrHtml += ' background-color: ';
+          qrHtml += _this.isDark(r, c)? '#000000' : '#ffffff';
+          qrHtml += ';';
+          qrHtml += '"/>';
+        }
+
+        qrHtml += '</tr>';
+      }
+
+      qrHtml += '</tbody>';
+      qrHtml += '</table>';
+
+      return qrHtml;
+    };
+
+    _this.createSvgTag = function(cellSize, margin, alt, title) {
+
+      var opts = {};
+      if (typeof arguments[0] == 'object') {
+        // Called by options.
+        opts = arguments[0];
+        // overwrite cellSize and margin.
+        cellSize = opts.cellSize;
+        margin = opts.margin;
+        alt = opts.alt;
+        title = opts.title;
+      }
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      // Compose alt property surrogate
+      alt = (typeof alt === 'string') ? {text: alt} : alt || {};
+      alt.text = alt.text || null;
+      alt.id = (alt.text) ? alt.id || 'qrcode-description' : null;
+
+      // Compose title property surrogate
+      title = (typeof title === 'string') ? {text: title} : title || {};
+      title.text = title.text || null;
+      title.id = (title.text) ? title.id || 'qrcode-title' : null;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var c, mc, r, mr, qrSvg='', rect;
+
+      rect = 'l' + cellSize + ',0 0,' + cellSize +
+        ' -' + cellSize + ',0 0,-' + cellSize + 'z ';
+
+      qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
+      qrSvg += !opts.scalable ? ' width="' + size + 'px" height="' + size + 'px"' : '';
+      qrSvg += ' viewBox="0 0 ' + size + ' ' + size + '" ';
+      qrSvg += ' preserveAspectRatio="xMinYMin meet"';
+      qrSvg += (title.text || alt.text) ? ' role="img" aria-labelledby="' +
+          escapeXml([title.id, alt.id].join(' ').trim() ) + '"' : '';
+      qrSvg += '>';
+      qrSvg += (title.text) ? '<title id="' + escapeXml(title.id) + '">' +
+          escapeXml(title.text) + '</title>' : '';
+      qrSvg += (alt.text) ? '<description id="' + escapeXml(alt.id) + '">' +
+          escapeXml(alt.text) + '</description>' : '';
+      qrSvg += '<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>';
+      qrSvg += '<path d="';
+
+      for (r = 0; r < _this.getModuleCount(); r += 1) {
+        mr = r * cellSize + margin;
+        for (c = 0; c < _this.getModuleCount(); c += 1) {
+          if (_this.isDark(r, c) ) {
+            mc = c*cellSize+margin;
+            qrSvg += 'M' + mc + ',' + mr + rect;
+          }
+        }
+      }
+
+      qrSvg += '" stroke="transparent" fill="black"/>';
+      qrSvg += '</svg>';
+
+      return qrSvg;
+    };
+
+    _this.createDataURL = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      return createDataURL(size, size, function(x, y) {
+        if (min <= x && x < max && min <= y && y < max) {
+          var c = Math.floor( (x - min) / cellSize);
+          var r = Math.floor( (y - min) / cellSize);
+          return _this.isDark(r, c)? 0 : 1;
+        } else {
+          return 1;
+        }
+      } );
+    };
+
+    _this.createImgTag = function(cellSize, margin, alt) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+
+      var img = '';
+      img += '<img';
+      img += '\u0020src="';
+      img += _this.createDataURL(cellSize, margin);
+      img += '"';
+      img += '\u0020width="';
+      img += size;
+      img += '"';
+      img += '\u0020height="';
+      img += size;
+      img += '"';
+      if (alt) {
+        img += '\u0020alt="';
+        img += escapeXml(alt);
+        img += '"';
+      }
+      img += '/>';
+
+      return img;
+    };
+
+    var escapeXml = function(s) {
+      var escaped = '';
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charAt(i);
+        switch(c) {
+        case '<': escaped += '&lt;'; break;
+        case '>': escaped += '&gt;'; break;
+        case '&': escaped += '&amp;'; break;
+        case '"': escaped += '&quot;'; break;
+        default : escaped += c; break;
+        }
+      }
+      return escaped;
+    };
+
+    var _createHalfASCII = function(margin) {
+      var cellSize = 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r1, r2, p;
+
+      var blocks = {
+        '██': '█',
+        '█ ': '▀',
+        ' █': '▄',
+        '  ': ' '
+      };
+
+      var blocksLastLineNoMargin = {
+        '██': '▀',
+        '█ ': '▀',
+        ' █': ' ',
+        '  ': ' '
+      };
+
+      var ascii = '';
+      for (y = 0; y < size; y += 2) {
+        r1 = Math.floor((y - min) / cellSize);
+        r2 = Math.floor((y + 1 - min) / cellSize);
+        for (x = 0; x < size; x += 1) {
+          p = '█';
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r1, Math.floor((x - min) / cellSize))) {
+            p = ' ';
+          }
+
+          if (min <= x && x < max && min <= y+1 && y+1 < max && _this.isDark(r2, Math.floor((x - min) / cellSize))) {
+            p += ' ';
+          }
+          else {
+            p += '█';
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          ascii += (margin < 1 && y+1 >= max) ? blocksLastLineNoMargin[p] : blocks[p];
+        }
+
+        ascii += '\n';
+      }
+
+      if (size % 2 && margin > 0) {
+        return ascii.substring(0, ascii.length - size - 1) + Array(size+1).join('▀');
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.createASCII = function(cellSize, margin) {
+      cellSize = cellSize || 1;
+
+      if (cellSize < 2) {
+        return _createHalfASCII(margin);
+      }
+
+      cellSize -= 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r, p;
+
+      var white = Array(cellSize+1).join('██');
+      var black = Array(cellSize+1).join('  ');
+
+      var ascii = '';
+      var line = '';
+      for (y = 0; y < size; y += 1) {
+        r = Math.floor( (y - min) / cellSize);
+        line = '';
+        for (x = 0; x < size; x += 1) {
+          p = 1;
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r, Math.floor((x - min) / cellSize))) {
+            p = 0;
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          line += p ? white : black;
+        }
+
+        for (r = 0; r < cellSize; r += 1) {
+          ascii += line + '\n';
+        }
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.renderTo2dContext = function(context, cellSize) {
+      cellSize = cellSize || 2;
+      var length = _this.getModuleCount();
+      for (var row = 0; row < length; row++) {
+        for (var col = 0; col < length; col++) {
+          context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
+          context.fillRect(row * cellSize, col * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrcode.stringToBytes
+  //---------------------------------------------------------------------
+
+  qrcode.stringToBytesFuncs = {
+    'default' : function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        bytes.push(c & 0xff);
+      }
+      return bytes;
+    }
+  };
+
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['default'];
+
+  //---------------------------------------------------------------------
+  // qrcode.createStringToBytes
+  //---------------------------------------------------------------------
+
+  /**
+   * @param unicodeData base64 string of byte array.
+   * [16bit Unicode],[16bit Bytes], ...
+   * @param numChars
+   */
+  qrcode.createStringToBytes = function(unicodeData, numChars) {
+
+    // create conversion map.
+
+    var unicodeMap = function() {
+
+      var bin = base64DecodeInputStream(unicodeData);
+      var read = function() {
+        var b = bin.read();
+        if (b == -1) throw 'eof';
+        return b;
+      };
+
+      var count = 0;
+      var unicodeMap = {};
+      while (true) {
+        var b0 = bin.read();
+        if (b0 == -1) break;
+        var b1 = read();
+        var b2 = read();
+        var b3 = read();
+        var k = String.fromCharCode( (b0 << 8) | b1);
+        var v = (b2 << 8) | b3;
+        unicodeMap[k] = v;
+        count += 1;
+      }
+      if (count != numChars) {
+        throw count + ' != ' + numChars;
+      }
+
+      return unicodeMap;
+    }();
+
+    var unknownChar = '?'.charCodeAt(0);
+
+    return function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        if (c < 128) {
+          bytes.push(c);
+        } else {
+          var b = unicodeMap[s.charAt(i)];
+          if (typeof b == 'number') {
+            if ( (b & 0xff) == b) {
+              // 1byte
+              bytes.push(b);
+            } else {
+              // 2bytes
+              bytes.push(b >>> 8);
+              bytes.push(b & 0xff);
+            }
+          } else {
+            bytes.push(unknownChar);
+          }
+        }
+      }
+      return bytes;
+    };
+  };
+
+  //---------------------------------------------------------------------
+  // QRMode
+  //---------------------------------------------------------------------
+
+  var QRMode = {
+    MODE_NUMBER :    1 << 0,
+    MODE_ALPHA_NUM : 1 << 1,
+    MODE_8BIT_BYTE : 1 << 2,
+    MODE_KANJI :     1 << 3
+  };
+
+  //---------------------------------------------------------------------
+  // QRErrorCorrectionLevel
+  //---------------------------------------------------------------------
+
+  var QRErrorCorrectionLevel = {
+    L : 1,
+    M : 0,
+    Q : 3,
+    H : 2
+  };
+
+  //---------------------------------------------------------------------
+  // QRMaskPattern
+  //---------------------------------------------------------------------
+
+  var QRMaskPattern = {
+    PATTERN000 : 0,
+    PATTERN001 : 1,
+    PATTERN010 : 2,
+    PATTERN011 : 3,
+    PATTERN100 : 4,
+    PATTERN101 : 5,
+    PATTERN110 : 6,
+    PATTERN111 : 7
+  };
+
+  //---------------------------------------------------------------------
+  // QRUtil
+  //---------------------------------------------------------------------
+
+  var QRUtil = function() {
+
+    var PATTERN_POSITION_TABLE = [
+      [],
+      [6, 18],
+      [6, 22],
+      [6, 26],
+      [6, 30],
+      [6, 34],
+      [6, 22, 38],
+      [6, 24, 42],
+      [6, 26, 46],
+      [6, 28, 50],
+      [6, 30, 54],
+      [6, 32, 58],
+      [6, 34, 62],
+      [6, 26, 46, 66],
+      [6, 26, 48, 70],
+      [6, 26, 50, 74],
+      [6, 30, 54, 78],
+      [6, 30, 56, 82],
+      [6, 30, 58, 86],
+      [6, 34, 62, 90],
+      [6, 28, 50, 72, 94],
+      [6, 26, 50, 74, 98],
+      [6, 30, 54, 78, 102],
+      [6, 28, 54, 80, 106],
+      [6, 32, 58, 84, 110],
+      [6, 30, 58, 86, 114],
+      [6, 34, 62, 90, 118],
+      [6, 26, 50, 74, 98, 122],
+      [6, 30, 54, 78, 102, 126],
+      [6, 26, 52, 78, 104, 130],
+      [6, 30, 56, 82, 108, 134],
+      [6, 34, 60, 86, 112, 138],
+      [6, 30, 58, 86, 114, 142],
+      [6, 34, 62, 90, 118, 146],
+      [6, 30, 54, 78, 102, 126, 150],
+      [6, 24, 50, 76, 102, 128, 154],
+      [6, 28, 54, 80, 106, 132, 158],
+      [6, 32, 58, 84, 110, 136, 162],
+      [6, 26, 54, 82, 110, 138, 166],
+      [6, 30, 58, 86, 114, 142, 170]
+    ];
+    var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+    var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+    var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+    var _this = {};
+
+    var getBCHDigit = function(data) {
+      var digit = 0;
+      while (data != 0) {
+        digit += 1;
+        data >>>= 1;
+      }
+      return digit;
+    };
+
+    _this.getBCHTypeInfo = function(data) {
+      var d = data << 10;
+      while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+        d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
+      }
+      return ( (data << 10) | d) ^ G15_MASK;
+    };
+
+    _this.getBCHTypeNumber = function(data) {
+      var d = data << 12;
+      while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
+        d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
+      }
+      return (data << 12) | d;
+    };
+
+    _this.getPatternPosition = function(typeNumber) {
+      return PATTERN_POSITION_TABLE[typeNumber - 1];
+    };
+
+    _this.getMaskFunction = function(maskPattern) {
+
+      switch (maskPattern) {
+
+      case QRMaskPattern.PATTERN000 :
+        return function(i, j) { return (i + j) % 2 == 0; };
+      case QRMaskPattern.PATTERN001 :
+        return function(i, j) { return i % 2 == 0; };
+      case QRMaskPattern.PATTERN010 :
+        return function(i, j) { return j % 3 == 0; };
+      case QRMaskPattern.PATTERN011 :
+        return function(i, j) { return (i + j) % 3 == 0; };
+      case QRMaskPattern.PATTERN100 :
+        return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
+      case QRMaskPattern.PATTERN101 :
+        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+      case QRMaskPattern.PATTERN110 :
+        return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
+      case QRMaskPattern.PATTERN111 :
+        return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
+
+      default :
+        throw 'bad maskPattern:' + maskPattern;
+      }
+    };
+
+    _this.getErrorCorrectPolynomial = function(errorCorrectLength) {
+      var a = qrPolynomial([1], 0);
+      for (var i = 0; i < errorCorrectLength; i += 1) {
+        a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
+      }
+      return a;
+    };
+
+    _this.getLengthInBits = function(mode, type) {
+
+      if (1 <= type && type < 10) {
+
+        // 1 - 9
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 10;
+        case QRMode.MODE_ALPHA_NUM : return 9;
+        case QRMode.MODE_8BIT_BYTE : return 8;
+        case QRMode.MODE_KANJI     : return 8;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 27) {
+
+        // 10 - 26
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 12;
+        case QRMode.MODE_ALPHA_NUM : return 11;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 10;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 41) {
+
+        // 27 - 40
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 14;
+        case QRMode.MODE_ALPHA_NUM : return 13;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 12;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else {
+        throw 'type:' + type;
+      }
+    };
+
+    _this.getLostPoint = function(qrcode) {
+
+      var moduleCount = qrcode.getModuleCount();
+
+      var lostPoint = 0;
+
+      // LEVEL1
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount; col += 1) {
+
+          var sameCount = 0;
+          var dark = qrcode.isDark(row, col);
+
+          for (var r = -1; r <= 1; r += 1) {
+
+            if (row + r < 0 || moduleCount <= row + r) {
+              continue;
+            }
+
+            for (var c = -1; c <= 1; c += 1) {
+
+              if (col + c < 0 || moduleCount <= col + c) {
+                continue;
+              }
+
+              if (r == 0 && c == 0) {
+                continue;
+              }
+
+              if (dark == qrcode.isDark(row + r, col + c) ) {
+                sameCount += 1;
+              }
+            }
+          }
+
+          if (sameCount > 5) {
+            lostPoint += (3 + sameCount - 5);
+          }
+        }
+      };
+
+      // LEVEL2
+
+      for (var row = 0; row < moduleCount - 1; row += 1) {
+        for (var col = 0; col < moduleCount - 1; col += 1) {
+          var count = 0;
+          if (qrcode.isDark(row, col) ) count += 1;
+          if (qrcode.isDark(row + 1, col) ) count += 1;
+          if (qrcode.isDark(row, col + 1) ) count += 1;
+          if (qrcode.isDark(row + 1, col + 1) ) count += 1;
+          if (count == 0 || count == 4) {
+            lostPoint += 3;
+          }
+        }
+      }
+
+      // LEVEL3
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount - 6; col += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row, col + 1)
+              &&  qrcode.isDark(row, col + 2)
+              &&  qrcode.isDark(row, col + 3)
+              &&  qrcode.isDark(row, col + 4)
+              && !qrcode.isDark(row, col + 5)
+              &&  qrcode.isDark(row, col + 6) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount - 6; row += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row + 1, col)
+              &&  qrcode.isDark(row + 2, col)
+              &&  qrcode.isDark(row + 3, col)
+              &&  qrcode.isDark(row + 4, col)
+              && !qrcode.isDark(row + 5, col)
+              &&  qrcode.isDark(row + 6, col) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      // LEVEL4
+
+      var darkCount = 0;
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount; row += 1) {
+          if (qrcode.isDark(row, col) ) {
+            darkCount += 1;
+          }
+        }
+      }
+
+      var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+
+      return lostPoint;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // QRMath
+  //---------------------------------------------------------------------
+
+  var QRMath = function() {
+
+    var EXP_TABLE = new Array(256);
+    var LOG_TABLE = new Array(256);
+
+    // initialize tables
+    for (var i = 0; i < 8; i += 1) {
+      EXP_TABLE[i] = 1 << i;
+    }
+    for (var i = 8; i < 256; i += 1) {
+      EXP_TABLE[i] = EXP_TABLE[i - 4]
+        ^ EXP_TABLE[i - 5]
+        ^ EXP_TABLE[i - 6]
+        ^ EXP_TABLE[i - 8];
+    }
+    for (var i = 0; i < 255; i += 1) {
+      LOG_TABLE[EXP_TABLE[i] ] = i;
+    }
+
+    var _this = {};
+
+    _this.glog = function(n) {
+
+      if (n < 1) {
+        throw 'glog(' + n + ')';
+      }
+
+      return LOG_TABLE[n];
+    };
+
+    _this.gexp = function(n) {
+
+      while (n < 0) {
+        n += 255;
+      }
+
+      while (n >= 256) {
+        n -= 255;
+      }
+
+      return EXP_TABLE[n];
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrPolynomial
+  //---------------------------------------------------------------------
+
+  function qrPolynomial(num, shift) {
+
+    if (typeof num.length == 'undefined') {
+      throw num.length + '/' + shift;
+    }
+
+    var _num = function() {
+      var offset = 0;
+      while (offset < num.length && num[offset] == 0) {
+        offset += 1;
+      }
+      var _num = new Array(num.length - offset + shift);
+      for (var i = 0; i < num.length - offset; i += 1) {
+        _num[i] = num[i + offset];
+      }
+      return _num;
+    }();
+
+    var _this = {};
+
+    _this.getAt = function(index) {
+      return _num[index];
+    };
+
+    _this.getLength = function() {
+      return _num.length;
+    };
+
+    _this.multiply = function(e) {
+
+      var num = new Array(_this.getLength() + e.getLength() - 1);
+
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        for (var j = 0; j < e.getLength(); j += 1) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
+        }
+      }
+
+      return qrPolynomial(num, 0);
+    };
+
+    _this.mod = function(e) {
+
+      if (_this.getLength() - e.getLength() < 0) {
+        return _this;
+      }
+
+      var ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
+
+      var num = new Array(_this.getLength() );
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        num[i] = _this.getAt(i);
+      }
+
+      for (var i = 0; i < e.getLength(); i += 1) {
+        num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
+      }
+
+      // recursive call
+      return qrPolynomial(num, 0).mod(e);
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // QRRSBlock
+  //---------------------------------------------------------------------
+
+  var QRRSBlock = function() {
+
+    var RS_BLOCK_TABLE = [
+
+      // L
+      // M
+      // Q
+      // H
+
+      // 1
+      [1, 26, 19],
+      [1, 26, 16],
+      [1, 26, 13],
+      [1, 26, 9],
+
+      // 2
+      [1, 44, 34],
+      [1, 44, 28],
+      [1, 44, 22],
+      [1, 44, 16],
+
+      // 3
+      [1, 70, 55],
+      [1, 70, 44],
+      [2, 35, 17],
+      [2, 35, 13],
+
+      // 4
+      [1, 100, 80],
+      [2, 50, 32],
+      [2, 50, 24],
+      [4, 25, 9],
+
+      // 5
+      [1, 134, 108],
+      [2, 67, 43],
+      [2, 33, 15, 2, 34, 16],
+      [2, 33, 11, 2, 34, 12],
+
+      // 6
+      [2, 86, 68],
+      [4, 43, 27],
+      [4, 43, 19],
+      [4, 43, 15],
+
+      // 7
+      [2, 98, 78],
+      [4, 49, 31],
+      [2, 32, 14, 4, 33, 15],
+      [4, 39, 13, 1, 40, 14],
+
+      // 8
+      [2, 121, 97],
+      [2, 60, 38, 2, 61, 39],
+      [4, 40, 18, 2, 41, 19],
+      [4, 40, 14, 2, 41, 15],
+
+      // 9
+      [2, 146, 116],
+      [3, 58, 36, 2, 59, 37],
+      [4, 36, 16, 4, 37, 17],
+      [4, 36, 12, 4, 37, 13],
+
+      // 10
+      [2, 86, 68, 2, 87, 69],
+      [4, 69, 43, 1, 70, 44],
+      [6, 43, 19, 2, 44, 20],
+      [6, 43, 15, 2, 44, 16],
+
+      // 11
+      [4, 101, 81],
+      [1, 80, 50, 4, 81, 51],
+      [4, 50, 22, 4, 51, 23],
+      [3, 36, 12, 8, 37, 13],
+
+      // 12
+      [2, 116, 92, 2, 117, 93],
+      [6, 58, 36, 2, 59, 37],
+      [4, 46, 20, 6, 47, 21],
+      [7, 42, 14, 4, 43, 15],
+
+      // 13
+      [4, 133, 107],
+      [8, 59, 37, 1, 60, 38],
+      [8, 44, 20, 4, 45, 21],
+      [12, 33, 11, 4, 34, 12],
+
+      // 14
+      [3, 145, 115, 1, 146, 116],
+      [4, 64, 40, 5, 65, 41],
+      [11, 36, 16, 5, 37, 17],
+      [11, 36, 12, 5, 37, 13],
+
+      // 15
+      [5, 109, 87, 1, 110, 88],
+      [5, 65, 41, 5, 66, 42],
+      [5, 54, 24, 7, 55, 25],
+      [11, 36, 12, 7, 37, 13],
+
+      // 16
+      [5, 122, 98, 1, 123, 99],
+      [7, 73, 45, 3, 74, 46],
+      [15, 43, 19, 2, 44, 20],
+      [3, 45, 15, 13, 46, 16],
+
+      // 17
+      [1, 135, 107, 5, 136, 108],
+      [10, 74, 46, 1, 75, 47],
+      [1, 50, 22, 15, 51, 23],
+      [2, 42, 14, 17, 43, 15],
+
+      // 18
+      [5, 150, 120, 1, 151, 121],
+      [9, 69, 43, 4, 70, 44],
+      [17, 50, 22, 1, 51, 23],
+      [2, 42, 14, 19, 43, 15],
+
+      // 19
+      [3, 141, 113, 4, 142, 114],
+      [3, 70, 44, 11, 71, 45],
+      [17, 47, 21, 4, 48, 22],
+      [9, 39, 13, 16, 40, 14],
+
+      // 20
+      [3, 135, 107, 5, 136, 108],
+      [3, 67, 41, 13, 68, 42],
+      [15, 54, 24, 5, 55, 25],
+      [15, 43, 15, 10, 44, 16],
+
+      // 21
+      [4, 144, 116, 4, 145, 117],
+      [17, 68, 42],
+      [17, 50, 22, 6, 51, 23],
+      [19, 46, 16, 6, 47, 17],
+
+      // 22
+      [2, 139, 111, 7, 140, 112],
+      [17, 74, 46],
+      [7, 54, 24, 16, 55, 25],
+      [34, 37, 13],
+
+      // 23
+      [4, 151, 121, 5, 152, 122],
+      [4, 75, 47, 14, 76, 48],
+      [11, 54, 24, 14, 55, 25],
+      [16, 45, 15, 14, 46, 16],
+
+      // 24
+      [6, 147, 117, 4, 148, 118],
+      [6, 73, 45, 14, 74, 46],
+      [11, 54, 24, 16, 55, 25],
+      [30, 46, 16, 2, 47, 17],
+
+      // 25
+      [8, 132, 106, 4, 133, 107],
+      [8, 75, 47, 13, 76, 48],
+      [7, 54, 24, 22, 55, 25],
+      [22, 45, 15, 13, 46, 16],
+
+      // 26
+      [10, 142, 114, 2, 143, 115],
+      [19, 74, 46, 4, 75, 47],
+      [28, 50, 22, 6, 51, 23],
+      [33, 46, 16, 4, 47, 17],
+
+      // 27
+      [8, 152, 122, 4, 153, 123],
+      [22, 73, 45, 3, 74, 46],
+      [8, 53, 23, 26, 54, 24],
+      [12, 45, 15, 28, 46, 16],
+
+      // 28
+      [3, 147, 117, 10, 148, 118],
+      [3, 73, 45, 23, 74, 46],
+      [4, 54, 24, 31, 55, 25],
+      [11, 45, 15, 31, 46, 16],
+
+      // 29
+      [7, 146, 116, 7, 147, 117],
+      [21, 73, 45, 7, 74, 46],
+      [1, 53, 23, 37, 54, 24],
+      [19, 45, 15, 26, 46, 16],
+
+      // 30
+      [5, 145, 115, 10, 146, 116],
+      [19, 75, 47, 10, 76, 48],
+      [15, 54, 24, 25, 55, 25],
+      [23, 45, 15, 25, 46, 16],
+
+      // 31
+      [13, 145, 115, 3, 146, 116],
+      [2, 74, 46, 29, 75, 47],
+      [42, 54, 24, 1, 55, 25],
+      [23, 45, 15, 28, 46, 16],
+
+      // 32
+      [17, 145, 115],
+      [10, 74, 46, 23, 75, 47],
+      [10, 54, 24, 35, 55, 25],
+      [19, 45, 15, 35, 46, 16],
+
+      // 33
+      [17, 145, 115, 1, 146, 116],
+      [14, 74, 46, 21, 75, 47],
+      [29, 54, 24, 19, 55, 25],
+      [11, 45, 15, 46, 46, 16],
+
+      // 34
+      [13, 145, 115, 6, 146, 116],
+      [14, 74, 46, 23, 75, 47],
+      [44, 54, 24, 7, 55, 25],
+      [59, 46, 16, 1, 47, 17],
+
+      // 35
+      [12, 151, 121, 7, 152, 122],
+      [12, 75, 47, 26, 76, 48],
+      [39, 54, 24, 14, 55, 25],
+      [22, 45, 15, 41, 46, 16],
+
+      // 36
+      [6, 151, 121, 14, 152, 122],
+      [6, 75, 47, 34, 76, 48],
+      [46, 54, 24, 10, 55, 25],
+      [2, 45, 15, 64, 46, 16],
+
+      // 37
+      [17, 152, 122, 4, 153, 123],
+      [29, 74, 46, 14, 75, 47],
+      [49, 54, 24, 10, 55, 25],
+      [24, 45, 15, 46, 46, 16],
+
+      // 38
+      [4, 152, 122, 18, 153, 123],
+      [13, 74, 46, 32, 75, 47],
+      [48, 54, 24, 14, 55, 25],
+      [42, 45, 15, 32, 46, 16],
+
+      // 39
+      [20, 147, 117, 4, 148, 118],
+      [40, 75, 47, 7, 76, 48],
+      [43, 54, 24, 22, 55, 25],
+      [10, 45, 15, 67, 46, 16],
+
+      // 40
+      [19, 148, 118, 6, 149, 119],
+      [18, 75, 47, 31, 76, 48],
+      [34, 54, 24, 34, 55, 25],
+      [20, 45, 15, 61, 46, 16]
+    ];
+
+    var qrRSBlock = function(totalCount, dataCount) {
+      var _this = {};
+      _this.totalCount = totalCount;
+      _this.dataCount = dataCount;
+      return _this;
+    };
+
+    var _this = {};
+
+    var getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+
+      switch(errorCorrectionLevel) {
+      case QRErrorCorrectionLevel.L :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+      case QRErrorCorrectionLevel.M :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+      case QRErrorCorrectionLevel.Q :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+      case QRErrorCorrectionLevel.H :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+      default :
+        return undefined;
+      }
+    };
+
+    _this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+
+      var rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
+
+      if (typeof rsBlock == 'undefined') {
+        throw 'bad rs block @ typeNumber:' + typeNumber +
+            '/errorCorrectionLevel:' + errorCorrectionLevel;
+      }
+
+      var length = rsBlock.length / 3;
+
+      var list = [];
+
+      for (var i = 0; i < length; i += 1) {
+
+        var count = rsBlock[i * 3 + 0];
+        var totalCount = rsBlock[i * 3 + 1];
+        var dataCount = rsBlock[i * 3 + 2];
+
+        for (var j = 0; j < count; j += 1) {
+          list.push(qrRSBlock(totalCount, dataCount) );
+        }
+      }
+
+      return list;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrBitBuffer
+  //---------------------------------------------------------------------
+
+  var qrBitBuffer = function() {
+
+    var _buffer = [];
+    var _length = 0;
+
+    var _this = {};
+
+    _this.getBuffer = function() {
+      return _buffer;
+    };
+
+    _this.getAt = function(index) {
+      var bufIndex = Math.floor(index / 8);
+      return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+    };
+
+    _this.put = function(num, length) {
+      for (var i = 0; i < length; i += 1) {
+        _this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+      }
+    };
+
+    _this.getLengthInBits = function() {
+      return _length;
+    };
+
+    _this.putBit = function(bit) {
+
+      var bufIndex = Math.floor(_length / 8);
+      if (_buffer.length <= bufIndex) {
+        _buffer.push(0);
+      }
+
+      if (bit) {
+        _buffer[bufIndex] |= (0x80 >>> (_length % 8) );
+      }
+
+      _length += 1;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrNumber
+  //---------------------------------------------------------------------
+
+  var qrNumber = function(data) {
+
+    var _mode = QRMode.MODE_NUMBER;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _data;
+
+      var i = 0;
+
+      while (i + 2 < data.length) {
+        buffer.put(strToNum(data.substring(i, i + 3) ), 10);
+        i += 3;
+      }
+
+      if (i < data.length) {
+        if (data.length - i == 1) {
+          buffer.put(strToNum(data.substring(i, i + 1) ), 4);
+        } else if (data.length - i == 2) {
+          buffer.put(strToNum(data.substring(i, i + 2) ), 7);
+        }
+      }
+    };
+
+    var strToNum = function(s) {
+      var num = 0;
+      for (var i = 0; i < s.length; i += 1) {
+        num = num * 10 + chatToNum(s.charAt(i) );
+      }
+      return num;
+    };
+
+    var chatToNum = function(c) {
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      }
+      throw 'illegal char :' + c;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrAlphaNum
+  //---------------------------------------------------------------------
+
+  var qrAlphaNum = function(data) {
+
+    var _mode = QRMode.MODE_ALPHA_NUM;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var s = _data;
+
+      var i = 0;
+
+      while (i + 1 < s.length) {
+        buffer.put(
+          getCode(s.charAt(i) ) * 45 +
+          getCode(s.charAt(i + 1) ), 11);
+        i += 2;
+      }
+
+      if (i < s.length) {
+        buffer.put(getCode(s.charAt(i) ), 6);
+      }
+    };
+
+    var getCode = function(c) {
+
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      } else if ('A' <= c && c <= 'Z') {
+        return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+      } else {
+        switch (c) {
+        case ' ' : return 36;
+        case '$' : return 37;
+        case '%' : return 38;
+        case '*' : return 39;
+        case '+' : return 40;
+        case '-' : return 41;
+        case '.' : return 42;
+        case '/' : return 43;
+        case ':' : return 44;
+        default :
+          throw 'illegal char :' + c;
+        }
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qr8BitByte
+  //---------------------------------------------------------------------
+
+  var qr8BitByte = function(data) {
+
+    var _mode = QRMode.MODE_8BIT_BYTE;
+    var _data = data;
+    var _bytes = qrcode.stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _bytes.length;
+    };
+
+    _this.write = function(buffer) {
+      for (var i = 0; i < _bytes.length; i += 1) {
+        buffer.put(_bytes[i], 8);
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrKanji
+  //---------------------------------------------------------------------
+
+  var qrKanji = function(data) {
+
+    var _mode = QRMode.MODE_KANJI;
+    var _data = data;
+
+    var stringToBytes = qrcode.stringToBytesFuncs['SJIS'];
+    if (!stringToBytes) {
+      throw 'sjis not supported.';
+    }
+    !function(c, code) {
+      // self test for sjis support.
+      var test = stringToBytes(c);
+      if (test.length != 2 || ( (test[0] << 8) | test[1]) != code) {
+        throw 'sjis not supported.';
+      }
+    }('\u53cb', 0x9746);
+
+    var _bytes = stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return ~~(_bytes.length / 2);
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _bytes;
+
+      var i = 0;
+
+      while (i + 1 < data.length) {
+
+        var c = ( (0xff & data[i]) << 8) | (0xff & data[i + 1]);
+
+        if (0x8140 <= c && c <= 0x9FFC) {
+          c -= 0x8140;
+        } else if (0xE040 <= c && c <= 0xEBBF) {
+          c -= 0xC140;
+        } else {
+          throw 'illegal char at ' + (i + 1) + '/' + c;
+        }
+
+        c = ( (c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
+
+        buffer.put(c, 13);
+
+        i += 2;
+      }
+
+      if (i < data.length) {
+        throw 'illegal char at ' + (i + 1);
+      }
+    };
+
+    return _this;
+  };
+
+  //=====================================================================
+  // GIF Support etc.
+  //
+
+  //---------------------------------------------------------------------
+  // byteArrayOutputStream
+  //---------------------------------------------------------------------
+
+  var byteArrayOutputStream = function() {
+
+    var _bytes = [];
+
+    var _this = {};
+
+    _this.writeByte = function(b) {
+      _bytes.push(b & 0xff);
+    };
+
+    _this.writeShort = function(i) {
+      _this.writeByte(i);
+      _this.writeByte(i >>> 8);
+    };
+
+    _this.writeBytes = function(b, off, len) {
+      off = off || 0;
+      len = len || b.length;
+      for (var i = 0; i < len; i += 1) {
+        _this.writeByte(b[i + off]);
+      }
+    };
+
+    _this.writeString = function(s) {
+      for (var i = 0; i < s.length; i += 1) {
+        _this.writeByte(s.charCodeAt(i) );
+      }
+    };
+
+    _this.toByteArray = function() {
+      return _bytes;
+    };
+
+    _this.toString = function() {
+      var s = '';
+      s += '[';
+      for (var i = 0; i < _bytes.length; i += 1) {
+        if (i > 0) {
+          s += ',';
+        }
+        s += _bytes[i];
+      }
+      s += ']';
+      return s;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64EncodeOutputStream
+  //---------------------------------------------------------------------
+
+  var base64EncodeOutputStream = function() {
+
+    var _buffer = 0;
+    var _buflen = 0;
+    var _length = 0;
+    var _base64 = '';
+
+    var _this = {};
+
+    var writeEncoded = function(b) {
+      _base64 += String.fromCharCode(encode(b & 0x3f) );
+    };
+
+    var encode = function(n) {
+      if (n < 0) {
+        // error.
+      } else if (n < 26) {
+        return 0x41 + n;
+      } else if (n < 52) {
+        return 0x61 + (n - 26);
+      } else if (n < 62) {
+        return 0x30 + (n - 52);
+      } else if (n == 62) {
+        return 0x2b;
+      } else if (n == 63) {
+        return 0x2f;
+      }
+      throw 'n:' + n;
+    };
+
+    _this.writeByte = function(n) {
+
+      _buffer = (_buffer << 8) | (n & 0xff);
+      _buflen += 8;
+      _length += 1;
+
+      while (_buflen >= 6) {
+        writeEncoded(_buffer >>> (_buflen - 6) );
+        _buflen -= 6;
+      }
+    };
+
+    _this.flush = function() {
+
+      if (_buflen > 0) {
+        writeEncoded(_buffer << (6 - _buflen) );
+        _buffer = 0;
+        _buflen = 0;
+      }
+
+      if (_length % 3 != 0) {
+        // padding
+        var padlen = 3 - _length % 3;
+        for (var i = 0; i < padlen; i += 1) {
+          _base64 += '=';
+        }
+      }
+    };
+
+    _this.toString = function() {
+      return _base64;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64DecodeInputStream
+  //---------------------------------------------------------------------
+
+  var base64DecodeInputStream = function(str) {
+
+    var _str = str;
+    var _pos = 0;
+    var _buffer = 0;
+    var _buflen = 0;
+
+    var _this = {};
+
+    _this.read = function() {
+
+      while (_buflen < 8) {
+
+        if (_pos >= _str.length) {
+          if (_buflen == 0) {
+            return -1;
+          }
+          throw 'unexpected end of file./' + _buflen;
+        }
+
+        var c = _str.charAt(_pos);
+        _pos += 1;
+
+        if (c == '=') {
+          _buflen = 0;
+          return -1;
+        } else if (c.match(/^\s$/) ) {
+          // ignore if whitespace.
+          continue;
+        }
+
+        _buffer = (_buffer << 6) | decode(c.charCodeAt(0) );
+        _buflen += 6;
+      }
+
+      var n = (_buffer >>> (_buflen - 8) ) & 0xff;
+      _buflen -= 8;
+      return n;
+    };
+
+    var decode = function(c) {
+      if (0x41 <= c && c <= 0x5a) {
+        return c - 0x41;
+      } else if (0x61 <= c && c <= 0x7a) {
+        return c - 0x61 + 26;
+      } else if (0x30 <= c && c <= 0x39) {
+        return c - 0x30 + 52;
+      } else if (c == 0x2b) {
+        return 62;
+      } else if (c == 0x2f) {
+        return 63;
+      } else {
+        throw 'c:' + c;
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // gifImage (B/W)
+  //---------------------------------------------------------------------
+
+  var gifImage = function(width, height) {
+
+    var _width = width;
+    var _height = height;
+    var _data = new Array(width * height);
+
+    var _this = {};
+
+    _this.setPixel = function(x, y, pixel) {
+      _data[y * _width + x] = pixel;
+    };
+
+    _this.write = function(out) {
+
+      //---------------------------------
+      // GIF Signature
+
+      out.writeString('GIF87a');
+
+      //---------------------------------
+      // Screen Descriptor
+
+      out.writeShort(_width);
+      out.writeShort(_height);
+
+      out.writeByte(0x80); // 2bit
+      out.writeByte(0);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Global Color Map
+
+      // black
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+
+      // white
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+
+      //---------------------------------
+      // Image Descriptor
+
+      out.writeString(',');
+      out.writeShort(0);
+      out.writeShort(0);
+      out.writeShort(_width);
+      out.writeShort(_height);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Local Color Map
+
+      //---------------------------------
+      // Raster Data
+
+      var lzwMinCodeSize = 2;
+      var raster = getLZWRaster(lzwMinCodeSize);
+
+      out.writeByte(lzwMinCodeSize);
+
+      var offset = 0;
+
+      while (raster.length - offset > 255) {
+        out.writeByte(255);
+        out.writeBytes(raster, offset, 255);
+        offset += 255;
+      }
+
+      out.writeByte(raster.length - offset);
+      out.writeBytes(raster, offset, raster.length - offset);
+      out.writeByte(0x00);
+
+      //---------------------------------
+      // GIF Terminator
+      out.writeString(';');
+    };
+
+    var bitOutputStream = function(out) {
+
+      var _out = out;
+      var _bitLength = 0;
+      var _bitBuffer = 0;
+
+      var _this = {};
+
+      _this.write = function(data, length) {
+
+        if ( (data >>> length) != 0) {
+          throw 'length over';
+        }
+
+        while (_bitLength + length >= 8) {
+          _out.writeByte(0xff & ( (data << _bitLength) | _bitBuffer) );
+          length -= (8 - _bitLength);
+          data >>>= (8 - _bitLength);
+          _bitBuffer = 0;
+          _bitLength = 0;
+        }
+
+        _bitBuffer = (data << _bitLength) | _bitBuffer;
+        _bitLength = _bitLength + length;
+      };
+
+      _this.flush = function() {
+        if (_bitLength > 0) {
+          _out.writeByte(_bitBuffer);
+        }
+      };
+
+      return _this;
+    };
+
+    var getLZWRaster = function(lzwMinCodeSize) {
+
+      var clearCode = 1 << lzwMinCodeSize;
+      var endCode = (1 << lzwMinCodeSize) + 1;
+      var bitLength = lzwMinCodeSize + 1;
+
+      // Setup LZWTable
+      var table = lzwTable();
+
+      for (var i = 0; i < clearCode; i += 1) {
+        table.add(String.fromCharCode(i) );
+      }
+      table.add(String.fromCharCode(clearCode) );
+      table.add(String.fromCharCode(endCode) );
+
+      var byteOut = byteArrayOutputStream();
+      var bitOut = bitOutputStream(byteOut);
+
+      // clear code
+      bitOut.write(clearCode, bitLength);
+
+      var dataIndex = 0;
+
+      var s = String.fromCharCode(_data[dataIndex]);
+      dataIndex += 1;
+
+      while (dataIndex < _data.length) {
+
+        var c = String.fromCharCode(_data[dataIndex]);
+        dataIndex += 1;
+
+        if (table.contains(s + c) ) {
+
+          s = s + c;
+
+        } else {
+
+          bitOut.write(table.indexOf(s), bitLength);
+
+          if (table.size() < 0xfff) {
+
+            if (table.size() == (1 << bitLength) ) {
+              bitLength += 1;
+            }
+
+            table.add(s + c);
+          }
+
+          s = c;
+        }
+      }
+
+      bitOut.write(table.indexOf(s), bitLength);
+
+      // end code
+      bitOut.write(endCode, bitLength);
+
+      bitOut.flush();
+
+      return byteOut.toByteArray();
+    };
+
+    var lzwTable = function() {
+
+      var _map = {};
+      var _size = 0;
+
+      var _this = {};
+
+      _this.add = function(key) {
+        if (_this.contains(key) ) {
+          throw 'dup key:' + key;
+        }
+        _map[key] = _size;
+        _size += 1;
+      };
+
+      _this.size = function() {
+        return _size;
+      };
+
+      _this.indexOf = function(key) {
+        return _map[key];
+      };
+
+      _this.contains = function(key) {
+        return typeof _map[key] != 'undefined';
+      };
+
+      return _this;
+    };
+
+    return _this;
+  };
+
+  var createDataURL = function(width, height, getPixel) {
+    var gif = gifImage(width, height);
+    for (var y = 0; y < height; y += 1) {
+      for (var x = 0; x < width; x += 1) {
+        gif.setPixel(x, y, getPixel(x, y) );
+      }
+    }
+
+    var b = byteArrayOutputStream();
+    gif.write(b);
+
+    var base64 = base64EncodeOutputStream();
+    var bytes = b.toByteArray();
+    for (var i = 0; i < bytes.length; i += 1) {
+      base64.writeByte(bytes[i]);
+    }
+    base64.flush();
+
+    return 'data:image/gif;base64,' + base64;
+  };
+
+  //---------------------------------------------------------------------
+  // returns qrcode function.
+
+  return qrcode;
+}();
+
+// multibyte support
+!function() {
+
+  qrcode.stringToBytesFuncs['UTF-8'] = function(s) {
+    // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
+    function toUTF8Array(str) {
+      var utf8 = [];
+      for (var i=0; i < str.length; i++) {
+        var charcode = str.charCodeAt(i);
+        if (charcode < 0x80) utf8.push(charcode);
+        else if (charcode < 0x800) {
+          utf8.push(0xc0 | (charcode >> 6),
+              0x80 | (charcode & 0x3f));
+        }
+        else if (charcode < 0xd800 || charcode >= 0xe000) {
+          utf8.push(0xe0 | (charcode >> 12),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+        // surrogate pair
+        else {
+          i++;
+          // UTF-16 encodes 0x10000-0x10FFFF by
+          // subtracting 0x10000 and splitting the
+          // 20 bits of 0x0-0xFFFFF into two halves
+          charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+            | (str.charCodeAt(i) & 0x3ff));
+          utf8.push(0xf0 | (charcode >>18),
+              0x80 | ((charcode>>12) & 0x3f),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+      }
+      return utf8;
+    }
+    return toUTF8Array(s);
+  };
+
+}();
+
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+      define([], factory);
+  } else if (typeof exports === 'object') {
+      module.exports = factory();
+  }
+}(function () {
+    return qrcode;
+}));
+
+</script>
+<script>
+/* ===== Course registry =====
+   Each course calls, from its own files:
+     STUDY.course({ id, code, name, topics, ... })   → configuration
+     STUDY.lessons(id, [ ... ])                        → lessons (theory)
+     STUDY.questions(id, [ ... ])                      → questions
+   The order of these calls doesn't matter. Each course is wrapped in its own scope by the build. */
+window.STUDY = (() => {
+  const courses = {}, order = [];
   const get = id => {
-    if (!cadeiras[id]) { ordem.push(id); cadeiras[id] = { id, licoes: [], perguntas: [], extras: [] }; }
-    return cadeiras[id];
+    if (!courses[id]) { order.push(id); courses[id] = { id, lessons: [], questions: [], extras: [] }; }
+    return courses[id];
   };
   return {
-    cadeiras, ordem,
-    cadeira(cfg) { const c = get(cfg.id); const { licoes, perguntas } = c; Object.assign(c, cfg, { licoes, perguntas }); if (!c.extras) c.extras = []; },
-    licoes(id, arr) { get(id).licoes.push(...arr); },
-    perguntas(id, arr) { get(id).perguntas.push(...arr); },
+    courses, order,
+    course(cfg) { const c = get(cfg.id); const { lessons, questions } = c; Object.assign(c, cfg, { lessons, questions }); if (!c.extras) c.extras = []; },
+    lessons(id, arr) { get(id).lessons.push(...arr); },
+    questions(id, arr) { get(id).questions.push(...arr); },
+    // Injected by build.py from courses/<id>/ids.json: the fixed position of every question id.
+    ids(id, arr) { get(id).ids = arr; },
   };
 })();
 
 </script>
 <script>
-/* ===== cadeira: ams ===== */
+/* ===== course: ams ===== */
 (() => {
-/* --- cadeiras/ams/render.js --- */
+/* --- courses/ams/render.js --- */
 /* ===== Diagram renderer: tiny BPMN + ArchiMate DSL -> SVG ===== */
 const DG = (() => {
   let uid = 0;
@@ -584,15 +2896,15 @@ const DG = (() => {
   return { render, bpmn, archimate, rel, esc, aIcon, AFILL };
 })();
 
-/* --- cadeiras/ams/cadeira.js --- */
+/* --- courses/ams/course.js --- */
 /* ===== AMS — Análise e Modelação de Sistemas ===== */
-ESTUDO.cadeira({
+STUDY.course({
   id: 'ams',
-  sigla: 'AMS',
-  nome: 'Análise e Modelação de Sistemas',
-  ano: 3, semestre: 1,
-  titulo: 'Do token ao teste.',
-  temas: {
+  code: 'AMS',
+  name: 'Análise e Modelação de Sistemas',
+  year: 3, semester: 1,
+  tagline: 'Do token ao teste.',
+  topics: {
     sys:  { label: 'Sistemas & Modelação', short: 'Sistemas', c: 'var(--t-sys)' },
     req:  { label: 'Requisitos', short: 'Requisitos', c: 'var(--t-req)' },
     arch: { label: 'ArchiMate & EA', short: 'ArchiMate', c: 'var(--t-arch)' },
@@ -600,32 +2912,33 @@ ESTUDO.cadeira({
     bpmn: { label: 'BPMN', short: 'BPMN', c: 'var(--t-bpmn)' },
     exam: { label: 'Estilo do teste (casos e falhas A–F)', short: 'Teste', c: 'var(--t-exam)' },
   },
-  // Desenha o campo "d" das perguntas e lições (diagramas BPMN/ArchiMate).
+  // Draws the "d" field of questions and lessons (BPMN/ArchiMate diagrams).
   render: d => DG.render(d),
 
-  // Secções próprias desta cadeira, além dos modos padrão.
+  // Course-specific sections, shown next to the standard modes.
   extras: [{
-    id: 'detetive',
-    titulo: 'Detetive de diagramas',
+    id: 'detective',
+    title: 'Detetive de diagramas',
     desc: 'Só perguntas com diagramas BPMN e ArchiMate: encontra o erro, segue o token.',
-    icone: 'lens',
+    icon: 'lens',
     meta: ({ pool }) => `${pool.filter(q => q.d).length} diagramas`,
-    perguntas: ({ pool, pick, topLevel }) =>
+    questions: ({ pool, pick, topLevel }) =>
       pick(pool.filter(q => q.d && q.l <= Math.max(topLevel(), 2)), 10).sort((a, b) => a.l - b.l),
   }],
 
-  importar: {
-    notas: 'Usa termos técnicos em inglês (como nas aulas) e explicações em português de Portugal.',
-    exemplo: { name: 'Pacote extra BPMN', questions: [{ id: 'x-bpmn-001', t: 'bpmn', l: 2, q: 'Que gateway espera por TODOS os fluxos de entrada antes de continuar?', o: ['Exclusive (XOR) merge', 'Parallel (AND) join', 'Event-based gateway', 'Inclusive (OR) split'], a: 1, e: 'O AND-join sincroniza: só deixa passar o token quando chegaram tokens de todos os ramos de entrada.', w: { '0': 'O XOR-merge continua assim que chega UM token.' }, les: 'bpmn-gw' }] },
+  // Shown on the question bank page, to help students generate their own packs.
+  importHelp: {
+    notes: 'Usa termos técnicos em inglês (como nas aulas) e explicações em português de Portugal.',
+    example: { name: 'Pacote extra BPMN', questions: [{ id: 'x-bpmn-001', t: 'bpmn', l: 2, q: 'Que gateway espera por TODOS os fluxos de entrada antes de continuar?', o: ['Exclusive (XOR) merge', 'Parallel (AND) join', 'Event-based gateway', 'Inclusive (OR) split'], a: 1, e: 'O AND-join sincroniza: só deixa passar o token quando chegaram tokens de todos os ramos de entrada.', w: { '0': 'O XOR-merge continua assim que chega UM token.' }, les: 'bpmn-gw' }] },
   },
 });
 
-/* --- cadeiras/ams/licoes/base.js --- */
-/* ===== Lições (teoria) ===== */
+/* --- courses/ams/lessons/base.js --- */
+/* ===== Lessons (theory) ===== */
 (() => {
 const R = (k, al, ak, ad, bl, bk, bd, extra = {}) => `<div class="diagram" style="margin-top:6px">${DG.rel(k, Object.assign({ al, ak, ad, bl, bk, bd }, extra))}</div>`;
-ESTUDO.licoes('ams', [
-/* ---------------- SISTEMAS & MODELAÇÃO ---------------- */
+STUDY.lessons('ams', [
+/* ---------------- SYSTEMS & MODELLING ---------------- */
 { id: 'sys-system', t: 'sys', title: 'O que é (afinal) um sistema',
   html: `<p>Do grego <i>sústēma</i>: um todo formado por elementos que “estão juntos”. Mas na AMS a ideia central é outra: <b>um sistema não existe “per si”</b>. Emerge conceptualmente quando alguém, um <b>stakeholder</b>, tem uma <b>concern</b> (preocupação, interesse).</p>
   <p>Definição usada no curso: <i>“A system is a thing that, when situated in a specific environment, pursues a common goal for a set of stakeholders according to their concerns.”</i></p>
@@ -720,7 +3033,7 @@ ESTUDO.licoes('ams', [
   <li><b>Boeing 737 Max</b>: MCAS com dependência de um único sensor, documentação insuficiente e pilotos sem treino nessa funcionalidade “black-box”.</li></ul>`,
   key: 'Quase todas as falhas vêm de requisitos, comunicação entre stakeholders ou integração.' },
 
-/* ---------------- REQUISITOS ---------------- */
+/* ---------------- REQUIREMENTS ---------------- */
 { id: 'req-basics', t: 'req', title: 'Do UoD ao requisito',
   html: `<p>Requirements Engineering é o processo disciplinado de determinar, exprimir, avaliar e gerir o que tem de ser alcançado ou respeitado numa mudança. Não é só recolher desejos.</p>
   <p>A progressão (raramente linear): <b>evidência → concern / necessidade → objetivo → requisito → design e implementação</b>.</p>
@@ -990,8 +3303,8 @@ ESTUDO.licoes('ams', [
 ]);
 })();
 
-/* --- cadeiras/ams/licoes/teste.js --- */
-/* ===== Lições do estilo de teste + folhas de notação ===== */
+/* --- courses/ams/lessons/exam.js --- */
+/* ===== Exam-style lessons + notation sheets ===== */
 (() => {
 const A = (k, dom, lb, x, y) => ({ id: lb, k, dom, lb, x, y, w: 132, h: 50 });
 const archSheet = { kind: 'archimate', w: 600, h: 500, alt: 'Folha de notação ArchiMate', nodes: [
@@ -1014,7 +3327,7 @@ const bpmnSheet = { kind: 'bpmn', w: 620, h: 628, alt: 'Folha de notação BPMN'
   B({ id: 'd1', k: 'data', x: 60, y: 577, lb: 'Data object' }), B({ id: 'd2', k: 'store', x: 180, y: 577, lb: 'Data store' }), B({ id: 'd3', k: 'task', comp: true, x: 300, y: 577, w: 100, h: 46, lb: 'Compensation' }), B({ id: 'd4', k: 'note', x: 470, y: 577, w: 110, lb: 'Annotation (texto)' })] };
 const rel = (k, al, ak, ad, bl, bk, bd, read) => `<div class="diagram" style="margin-top:6px">${DG.rel(k, { al, ak, ad, bl, bk, bd, read })}</div>`;
 
-ESTUDO.licoes('ams', [
+STUDY.lessons('ams', [
 { id: 'exam-format', t: 'exam', title: 'Como é o teste: viewpoints e falhas A–F',
   html: `<p>O teste dá um <b>UoD</b> (texto do caso) e diagramas ArchiMate e BPMN. Cada diagrama responde a um <b>viewpoint</b>: <b>parte interessada</b> + <b>preocupação</b> (ex.: “diretora do Serviço; identificar a equipa responsável por cada conjunto de atividades”). Cada diagrama tem <b>4 falhas</b>:</p>
   <div class="tbl-wrap"><table><tr><th>Letra</th><th>Tipo</th><th>Exemplo típico</th></tr>
@@ -1092,9 +3405,9 @@ ESTUDO.licoes('ams', [
 ]);
 })();
 
-/* --- cadeiras/ams/perguntas/sys.js --- */
-ESTUDO.perguntas('ams', [
-/* ===== SISTEMAS & MODELAÇÃO ===== */
+/* --- courses/ams/questions/sys.js --- */
+STUDY.questions('ams', [
+/* ===== SYSTEMS & MODELLING ===== */
 { id: 'sys-01', t: 'sys', l: 1, les: 'sys-system', src: 'Slides 00b, p.8–10',
   q: 'Segundo a abordagem do curso, quando é que algo passa a ser um “sistema”?',
   o: ["Quando tem pelo menos um componente de software que o controla", "Quando emerge das concerns de stakeholders sobre algo", "Quando é composto por mais de dois subsistemas em interação", "Sempre: tudo o que existe é um sistema “per si”, com ou sem observador"], a: 1,
@@ -1227,9 +3540,9 @@ ESTUDO.perguntas('ams', [
   e: 'O 737 Max junta **requisitos incompletos**, **dependência de um sensor**, falta de **comunicação com os utilizadores finais** (os pilotos) e **ética/governança**. O marketing dizia que não era preciso treino em simulador.' },
 ]);
 
-/* --- cadeiras/ams/perguntas/req.js --- */
-ESTUDO.perguntas('ams', [
-/* ===== REQUISITOS ===== */
+/* --- courses/ams/questions/req.js --- */
+STUDY.questions('ams', [
+/* ===== REQUIREMENTS ===== */
 { id: 'req-01', t: 'req', l: 1, les: 'req-basics',
   q: 'Qual é a progressão típica (não linear) da análise de requisitos, segundo as notas?',
   o: ["Requisito → evidência → design → objetivo, nesta ordem fixa", "Evidência → necessidade → objetivo → requisito → design", "Design → requisito → teste → evidência, num ciclo iterativo", "Objetivo → design → requisito → evidência, de cima para baixo"], a: 1,
@@ -1288,8 +3601,8 @@ ESTUDO.perguntas('ams', [
   e: 'Estes rótulos aparecem em métodos e normas, mas podem sugerir **origem, viewpoint, nível de abstração ou alvo**. Usa-os só com o significado explícito: um rótulo não substitui identificar **o que** é exigido e **quem** o tem de cumprir.' },
 ]);
 
-/* --- cadeiras/ams/perguntas/arch.js --- */
-ESTUDO.perguntas('ams', [
+/* --- courses/ams/questions/arch.js --- */
+STUDY.questions('ams', [
 /* ===== ARCHIMATE & EA ===== */
 { id: 'arch-01', t: 'arch', l: 1, les: 'arch-ea', src: 'Slides 03a, p.3',
   q: 'Qual é a definição de Enterprise Architecture dada nas aulas?',
@@ -1483,8 +3796,8 @@ ESTUDO.perguntas('ams', [
   e: 'Um **flow sem rótulo** diz que algo se move, mas não o quê nem porquê. O problema arquitetural (re-introdução manual) tem de ficar **visível**: rotula o flow. Os triggerings aqui expressam uma ordem causal real (receber → rever → criar).' },
 ]);
 
-/* --- cadeiras/ams/perguntas/bpm.js --- */
-ESTUDO.perguntas('ams', [
+/* --- courses/ams/questions/bpm.js --- */
+STUDY.questions('ams', [
 /* ===== BPM ===== */
 { id: 'bpm-01', t: 'bpm', l: 1, les: 'bpm-process', src: 'Slides 03a-BPM, p.3',
   q: 'Na visão de processo dos slides, pessoas, energia, equipamento, infraestruturas e métodos são…',
@@ -1548,7 +3861,7 @@ ESTUDO.perguntas('ams', [
   e: 'Processos **explícitos** permitem que todos percebam como o trabalho flui, coordenem atividades e analisem o impacto de mudanças de mercado, tecnologia ou regulação.' },
 ]);
 
-/* --- cadeiras/ams/perguntas/bpmn.js --- */
+/* --- courses/ams/questions/bpmn.js --- */
 (() => {
 /* diagram builders reused across questions */
 const splitMerge = (g1, g2, la, lb, ca, cb, after, alt) => ({ kind: 'bpmn', w: 600, h: 150, alt, nodes: [
@@ -1557,8 +3870,8 @@ const splitMerge = (g1, g2, la, lb, ca, cb, after, alt) => ({ kind: 'bpmn', w: 6
   { id: 'g2', k: g2, x: 420, y: 72 }, { id: 't', k: 'task', x: 502, y: 72, w: 86, lb: after }, { id: 'e', k: 'end', x: 572, y: 72 }],
   edges: [{ f: 's', t: 't0' }, { f: 't0', t: 'g1' }, { f: 'g1', t: 'a', lb: ca }, { f: 'g1', t: 'b', lb: cb }, { f: 'a', t: 'g2' }, { f: 'b', t: 'g2' }, { f: 'g2', t: 't' }, { f: 't', t: 'e' }] });
 
-ESTUDO.perguntas('ams', [
-/* ===== BPMN · Nível 1 ===== */
+STUDY.questions('ams', [
+/* ===== BPMN · Level 1 ===== */
 { id: 'bpmn-01', t: 'bpmn', l: 1, les: 'bpmn-core',
   q: 'Quais são os três tipos de flow objects em BPMN?',
   o: ['Pools, Lanes, Groups', 'Events, Activities, Gateways', 'Sequence flow, Message flow, Association', 'Data objects, Data stores, Annotations'], a: 1,
@@ -1616,7 +3929,7 @@ ESTUDO.perguntas('ams', [
   o: ['A', 'B', 'C', 'Nenhum'], a: 1, fixed: true,
   e: 'O **Terminate end event** tem um círculo preenchido no interior. A tem um envelope (message end) e C um raio (error end).' },
 
-/* ===== BPMN · Nível 2 ===== */
+/* ===== BPMN · Level 2 ===== */
 { id: 'bpmn-15', t: 'bpmn', l: 2, les: 'bpmn-events',
   q: 'Qual a diferença entre um Message e um Signal?',
   o: ["Não há diferença: são dois nomes para o mesmo trigger", "Message tem destinatário específico; Signal é broadcast", "Signal só serve para assinalar erros técnicos", "Message só pode existir em start events"], a: 1,
@@ -1686,7 +3999,7 @@ ESTUDO.perguntas('ams', [
   o: ["Para enviar mensagens a outras pools", "Para ligar partes do mesmo diagrama", "Para criar novas instâncias do processo", "Para sincronizar dois processos diferentes"], a: 1,
   e: 'Os **link events** funcionam aos pares (throw → catch) **dentro do mesmo processo**: simplificam o desenho, como um conector de página.' },
 
-/* ===== BPMN · Nível 3 (diagramas e cenários) ===== */
+/* ===== BPMN · Level 3 (diagrams and scenarios) ===== */
 { id: 'bpmn-31', t: 'bpmn', l: 3, les: 'bpmn-gw', d: splitMerge('xor', 'and', 'Aprovar', 'Rejeitar', 'ok', 'não ok', 'Arquivar', 'XOR split fechado por AND join'),
   q: 'O que acontece a uma instância que passe por este processo?',
   o: ["Corre normalmente até ao fim", "Deadlock no AND-join", "“Arquivar” é executada duas vezes", "Aprovar e Rejeitar correm em paralelo"], a: 1,
@@ -1793,7 +4106,7 @@ ESTUDO.perguntas('ams', [
   o: ["Parallel gateway; timer event para a espera", "Exclusive gateway; message catch para a receção", "Inclusive gateway; terminate event para a espera", "Event-based gateway; error event para a falta"], a: 1,
   e: 'Há stock **ou** não há: decisão **exclusiva (XOR)**. A espera por algo enviado por outro participante (o fornecedor) é um **message catch** intermédio. No fim, os dois ramos convergem antes de “Enviar produto”.' },
 
-/* ===== BPMN · Nível 4 (boss) ===== */
+/* ===== BPMN · Level 4 (boss) ===== */
 { id: 'bpmn-48', t: 'bpmn', l: 4, les: 'bpmn-events', src: 'Slides 04a, p.25',
   q: 'Quando é que um Terminate End Event e um None End Event têm exatamente o mesmo efeito?',
   o: ["Sempre: são duas formas de terminar", "Nunca: o terminate é sempre diferente", "Só se o processo não for concorrente", "Só em diagramas de colaboração"], a: 2,
@@ -1851,13 +4164,13 @@ ESTUDO.perguntas('ams', [
 ]);
 })();
 
-/* --- cadeiras/ams/perguntas/teste.js --- */
+/* --- courses/ams/questions/exam.js --- */
 (() => {
 const FALHA4 = ['A — excesso: relação a mais', 'B — excesso: conceito a mais', 'C — erro: relação de tipo errado', 'D — erro: conceito de tipo errado'];
 const FALHA6 = [...FALHA4, 'E — omissão: relação em falta', 'F — omissão: conceito(s) em falta'];
 const SRC = 'Teste modelo AMS 2026 · solução oficial';
 
-/* ---------- diagramas do teste modelo ---------- */
+/* ---------- model test diagrams ---------- */
 const Q3 = { kind: 'archimate', w: 540, h: 250, alt: 'Teste modelo Q3: responsabilidades', nodes: [
   { id: 'c1', k: 'actor', dom: 'bus', lb: 'C01: Equipa de atendimento', x: 120, y: 45, w: 160 }, { id: 'c2', k: 'actor', dom: 'bus', lb: 'C02: Equipa técnica', x: 420, y: 45, w: 160 },
   { id: 'c3', k: 'process', dom: 'common', lb: 'C03: Elaborar termo de responsabilidade', x: 120, y: 205, w: 160, h: 58 }, { id: 'c4', k: 'process', dom: 'common', lb: 'C04: Verificar e preparar equipamento', x: 420, y: 205, w: 160, h: 58 }],
@@ -1879,7 +4192,7 @@ const Q6 = { kind: 'bpmn', w: 700, h: 320, alt: 'Teste modelo Q6: interação co
     { id: 'x21', k: 'end', x: 630, y: 262, lb: 'X21: Pedido cancelado' }],
   edges: [{ f: 'est', t: 'x11', k: 'msg', fx: 300, lb: 'X10: termo assinado', dx: 52 }, { f: 'x3', t: 'x5' }, { f: 'x5', t: 'x8' }, { f: 'x8', t: 'x11' }, { f: 'x11', t: 'x13' }, { f: 'x13', t: 'x15' }, { f: 'x8', t: 'x17' }, { f: 'x17', t: 'x19' }, { f: 'x19', t: 'x21' }] };
 
-/* ---------- diagramas do caso de treino (Piscina) ---------- */
+/* ---------- practice case diagrams (Piscina) ---------- */
 const P1 = { kind: 'archimate', w: 560, h: 250, alt: 'Caso Piscina: responsabilidades', nodes: [
   { id: 'a1', k: 'actor', dom: 'bus', lb: 'C01: Secretaria', x: 130, y: 45, w: 150 }, { id: 'a2', k: 'actor', dom: 'bus', lb: 'C02: Treinadores', x: 420, y: 45, w: 150 },
   { id: 'p1', k: 'process', dom: 'common', lb: 'C03: Validar atestado', x: 70, y: 205, w: 116 }, { id: 'p2', k: 'process', dom: 'common', lb: 'C04: Reservar vaga', x: 205, y: 205, w: 116 },
@@ -1903,7 +4216,7 @@ const P4 = { kind: 'bpmn', w: 700, h: 320, alt: 'Caso Piscina: interação com o
   edges: [{ f: 'atl', t: 'z4', k: 'msg', fx: 340, lb: 'pagamento', dx: 34 }, { f: 'z1', t: 'z2' }, { f: 'z2', t: 'z3' }, { f: 'z3', t: 'z4' }, { f: 'z4', t: 'z5' }, { f: 'z5', t: 'z10' }, { f: 'z10', t: 'z6' }, { f: 'z3', t: 'z7' }, { f: 'z7', t: 'z8' }, { f: 'z8', t: 'z9' }] };
 
 const Q = [
-/* ===== Teste modelo · Q1 ===== */
+/* ===== Model test · Q1 ===== */
 { id: 'ex-q1-1', t: 'exam', l: 2, ctx: 'exam-uod', les: 'exam-uod', src: SRC + ', Q1.1',
   q: 'Qual das seguintes afirmações é um requisito CONFIRMADO no UoD?',
   o: ['O estudante pode cancelar o pedido inicial em qualquer momento.', 'O Portal deve ser fácil de utilizar.', 'A reserva é cancelada se não houver confirmação nas 48 horas seguintes à notificação.', 'O processo deve tratar a devolução e a avaria do equipamento.'], a: 2, fixed: true,
@@ -1921,7 +4234,7 @@ const Q = [
   q: 'Porque é que, num diagrama BPMN, é adequado usar um gateway baseado em eventos depois da notificação ao estudante?',
   o: ['Porque a preparação do equipamento e a elaboração do termo são executadas em paralelo.', 'Porque o processo avança segundo o primeiro evento entre confirmação, desistência ou expiração do prazo.', 'Porque o Portal precisa de calcular uma condição de elegibilidade logo que tal seja possível.', 'Porque o estudante é um participante externo e, como tal, senhor absoluto das suas decisões.'], a: 1, fixed: true,
   e: 'O event-based gateway escolhe o caminho pelo **primeiro evento** que ocorre: mensagem de confirmação, mensagem de desistência ou **timer de 48 h**. O paralelismo da opção A pede um AND, e a condição da opção C pede um XOR sobre dados.' },
-/* ===== Teste modelo · Q2 (frases para completar) ===== */
+/* ===== Model test · Q2 (fill in the sentence) ===== */
 { id: 'ex-q2-1', t: 'exam', l: 2, ctx: 'exam-uod', les: 'exam-uod', src: SRC + ', Q2.1',
   q: 'Completa: “A indicação de que o Portal deve ser fácil de utilizar é, no UoD, uma proposta ou preocupação…”',
   o: ['… é um requisito já confirmado e por isso a analisar no âmbito atual', '… fora do âmbito definido para esta versão do problema', '… um requisito já validado por estar explicitamente mencionado no UoD', '… na linguagem ArchiMate, a responsabilidade da equipa pelo processo'], a: 1,
@@ -1951,7 +4264,7 @@ const Q = [
   o: ['… um fluxo de mensagem na linguagem BPMN', '… um evento temporizador (timer) na linguagem BPMN', '… na linguagem ArchiMate, a responsabilidade da equipa pelo processo', '… uma bifurcação e uma sincronização paralelas'], a: 0,
   e: 'Comunicação **entre participantes** (pools diferentes: Serviço e Estudante) = **message flow**.' },
 
-/* ===== Teste modelo · Q3 (ArchiMate, responsabilidades) ===== */
+/* ===== Model test · Q3 (ArchiMate, responsibilities) ===== */
 { id: 'ex-q3-a', t: 'exam', l: 3, ctx: 'exam-uod', les: 'exam-format', src: SRC + ', Q3', d: Q3,
   q: 'Viewpoint “distribuição de responsabilidades”. Que tipo de falha é a relação **R04** (Equipa técnica → Elaborar termo)?',
   o: FALHA4, a: 0, fixed: true,
@@ -1968,7 +4281,7 @@ const Q = [
   q: 'Para responder à preocupação (“equipa responsável por **cada** conjunto de atividades”), que omissão do tipo F é mais evidente?',
   o: ["Faltam os processos da equipa de atendimento (verificar, reservar, entregar e registar)", "Falta o Portal de Empréstimos como Application Component ligado às duas equipas", "Falta um Event “Pedido recebido” com triggering para o processo C03 e para C04", "Falta a Gestão Académica como Application Component que serve as duas equipas"], a: 0,
   e: 'Solução oficial: **F C90** “Verificar elegibilidade e disponibilidade; reservar equipamento” e **F C91** “Entregar equipamento e registar empréstimo”, ambos com **assignment** da equipa de atendimento. O professor juntou atividades num só processo por conjunto: chega um processo por conjunto de atividades.' },
-/* ===== Teste modelo · Q4 (ArchiMate, suporte aplicacional) ===== */
+/* ===== Model test · Q4 (ArchiMate, application support) ===== */
 { id: 'ex-q4-a', t: 'exam', l: 3, ctx: 'exam-uod', les: 'exam-format', src: SRC + ', Q4', d: Q4,
   q: 'Viewpoint “suporte aplicacional e informação”. Que tipo de falha é **C02: Equipa técnica** (e a sua relação R08)?',
   o: FALHA4, a: 1, fixed: true,
@@ -1989,7 +4302,7 @@ const Q = [
   q: 'R05 e R06 (Gestão de Equipamento → Serviço de gestão de reservas; Gestão Académica → Serviço de dados académicos) são…',
   o: ["realizations corretas", "servings com a direção trocada (deviam subir do serviço)", "assignments mal desenhados, porque falta o ponto na origem", "excessos, porque os serviços não fazem parte deste viewpoint"], a: 0,
   e: '“Serviço… **realizado pela** aplicação…” = **realization** da aplicação para o serviço (tracejado com triângulo vazio). Estão corretas.' },
-/* ===== Teste modelo · Q5 (BPMN interno) ===== */
+/* ===== Model test · Q5 (internal BPMN) ===== */
 { id: 'ex-q5-a', t: 'exam', l: 3, ctx: 'exam-uod', les: 'bpmn-gw', src: SRC + ', Q5', d: Q5,
   q: 'Viewpoint “tratamento interno do pedido”. Que falha é o gateway **X06**, a seguir à verificação?',
   o: FALHA4, a: 3, fixed: true,
@@ -2006,7 +4319,7 @@ const Q = [
   q: 'Na solução oficial, o caminho da recusa (X07) não foi contado como falha. Como aparece no diagrama corrigido?',
   o: ["Como message end event “Pedido recusado” (informa o estudante e termina)", "Ligado ao AND-split X10 para retomar o fluxo da reserva", "Como uma pool própria do estudante, colapsada", "Como um timer intermédio à espera do estudante"], a: 0,
   e: 'No corrigido, X07 é um **message end event** “Pedido recusado”: termina **e** comunica numa só forma. Como não está entre as 4 falhas, não gastes uma linha da tabela com isto: as 4 oficiais são X06 (D), X10 (D), X12 (D) e X90 (F).' },
-/* ===== Teste modelo · Q6 (BPMN colaboração) ===== */
+/* ===== Model test · Q6 (BPMN collaboration) ===== */
 { id: 'ex-q6-a', t: 'exam', l: 3, ctx: 'exam-uod', les: 'bpmn-gw', src: SRC + ', Q6', d: Q6,
   q: 'Viewpoint “interação e resposta à notificação”. Que falha é o gateway **X08**?',
   o: FALHA4, a: 3, fixed: true,
@@ -2040,89 +4353,89 @@ const Q = [
   q: 'Que falha é **X15** (end event de escalation “Reserva mantida”)?',
   o: FALHA4, a: 3, fixed: true,
   e: 'Solução oficial: **D**. Manter a reserva é uma **conclusão normal** (none end); um end de **escalation** comunica uma situação que requer tratamento superior, o que o UoD não prevê. Olha sempre para o **ícone** dentro dos eventos.' },
-/* ===== Caso de treino (Piscina) · ArchiMate responsabilidades ===== */
-{ id: 'cs-p1-a', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'exam-format', d: P1,
+/* ===== Practice case (Piscina) · ArchiMate responsibilities — reserved for the mock exam ===== */
+{ id: 'cs-p1-a', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'exam-format', d: P1,
   q: 'Viewpoint: responsabilidades (coordenador desportivo quer saber quem faz o quê). Que falha é **R02** (Secretaria → Reservar vaga, desenhada como triggering)?',
   o: FALHA4, a: 2, fixed: true,
   e: 'É de facto a secretaria que reserva a vaga, por isso a ligação faz sentido, mas o **tipo** está errado: “quem executa” é **assignment**, não triggering. Falha **C**.' },
-{ id: 'cs-p1-b', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'exam-format', d: P1,
+{ id: 'cs-p1-b', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'exam-format', d: P1,
   q: 'Que falha é **R03** (Treinadores → Reservar vaga)?',
   o: FALHA4, a: 0, fixed: true,
   e: 'Reservar a vaga é da **secretaria**. Os treinadores avaliam o nível. A relação está **a mais**: **A**.' },
-{ id: 'cs-p1-c', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'arch-common', d: P1,
+{ id: 'cs-p1-c', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'arch-common', d: P1,
   q: 'Que falha é **C06: Avaliar nível**, desenhado como Business Object?',
   o: FALHA4, a: 3, fixed: true,
   e: '“Avaliar nível” é **comportamento** (verbo): é um **Process**, não um objeto passivo. Conceito de tipo errado: **D**.' },
-{ id: 'cs-p1-d', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'exam-format', d: P1,
+{ id: 'cs-p1-d', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'exam-format', d: P1,
   q: 'C05 “Enviar pedido de pagamento” está no diagrama, mas sem ligação. Que falha é e como se corrige?',
   o: ['E: acrescentar R90, assignment da Secretaria a C05', 'B: retirar C05, que está a mais', 'F: acrescentar um novo actor “Tesouraria” para C05', 'C: trocar C05 por um Service'], a: 0,
   e: 'O UoD diz que é a **secretaria** que envia o pedido de pagamento. O conceito existe; falta a **relação**: **E**.' },
-/* ===== Caso de treino · ArchiMate suporte aplicacional ===== */
-{ id: 'cs-p2-a', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'arch-rel', d: P2,
+/* ===== Practice case · ArchiMate application support ===== */
+{ id: 'cs-p2-a', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'arch-rel', d: P2,
   q: 'Viewpoint: suporte aplicacional e informação. Que falha é **R11** (serving do Serviço de Pagamentos para o Gateway de Pagamentos)?',
   o: FALHA4, a: 2, fixed: true,
   e: '“Serviço… **realizado pela** aplicação Gateway”: devia ser **realization** de C13 para C11. Relação de tipo errado: **C**.' },
-{ id: 'cs-p2-b', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'arch-app', d: P2,
+{ id: 'cs-p2-b', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'arch-app', d: P2,
   q: 'Que falha é **C15: Registo de ocupação**, desenhado como Application Component?',
   o: FALHA4, a: 3, fixed: true,
   e: 'O Registo é **informação mantida** pela aplicação: **Data Object**. Uma aplicação faz coisas; um registo é passivo. Falha **D**.' },
-{ id: 'cs-p2-c', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'exam-viewpoints', d: P2,
+{ id: 'cs-p2-c', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'exam-viewpoints', d: P2,
   q: 'Que falha é **C16: Treinadores** com R14?',
   o: FALHA4, a: 1, fixed: true,
   e: 'Equipas humanas não respondem à preocupação de **suporte aplicacional**: conceito **a mais** (com a sua relação), uma só falha **B**.' },
-{ id: 'cs-p2-d', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'exam-format', d: P2,
+{ id: 'cs-p2-d', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'exam-format', d: P2,
   q: 'A App ADC também usa o Serviço de Pagamentos. O que falta?',
   o: ['E: um serving de C11 para C14', 'F: uma nova aplicação de pagamentos', 'A: retirar R12', 'C: trocar R10 por serving'], a: 0,
   e: '“A app **usa** o Serviço de Pagamentos” = o serviço **serve** a app. A relação não existe: **E**.' },
-/* ===== Caso de treino · BPMN interno ===== */
-{ id: 'cs-p3-a', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'bpmn-events', d: P3,
+/* ===== Practice case · internal BPMN ===== */
+{ id: 'cs-p3-a', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'bpmn-events', d: P3,
   q: 'Viewpoint: tratamento interno da inscrição. Que falha é **Y01** (start event de timer “Inscrição recebida”)?',
   o: FALHA4, a: 3, fixed: true,
   e: 'O processo começa quando **chega** a inscrição submetida na app: é um **message start event**, não um timer. Falha **D**.' },
-{ id: 'cs-p3-b', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'bpmn-gw', d: P3,
+{ id: 'cs-p3-b', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'bpmn-gw', d: P3,
   q: 'Que falha é o gateway **Y06**?',
   o: FALHA4, a: 3, fixed: true,
   e: '“**Em simultâneo**, um treinador avalia e a secretaria reserva”: tem de ser **AND-split**. Com um XOR só um dos ramos corria, e o AND-join Y09 ficaria em **deadlock**. Falha **D**.' },
-{ id: 'cs-p3-c', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'bpmn-collab', d: P3,
+{ id: 'cs-p3-c', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'bpmn-collab', d: P3,
   q: 'Que falha é **Y11**, o message flow entre “Reservar vaga” e “Avaliar nível”?',
   o: FALHA4, a: 0, fixed: true,
   e: 'Entre lanes da mesma pool **não há message flows**. E aqui nem é preciso nenhum fluxo, porque as duas tarefas são paralelas e sincronizam no AND-join. Relação a mais: **A**. (Também se pode defender C, se o autor quisesse um sequence flow, mas o paralelo dispensa-o.)' },
-{ id: 'cs-p3-d', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'exam-format', d: P3,
+{ id: 'cs-p3-d', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'exam-format', d: P3,
   q: 'O que falta entre o join Y09 e o fim?',
   o: ["F: “Enviar pedido de pagamento” na Secretaria", "E: um message flow do join Y09 para o end Y10", "F: uma lane “Atleta” com o pagamento e a desistência", "F: um timer de 72 horas na lane dos Treinadores"], a: 0,
   e: '“Quando ambos terminam, a secretaria **envia ao atleta o pedido de pagamento**”. Falta essa atividade (com os seus fluxos). O atleta e o prazo são do viewpoint de interação.' },
-/* ===== Caso de treino · BPMN colaboração ===== */
-{ id: 'cs-p4-a', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'bpmn-collab', d: P4,
+/* ===== Practice case · BPMN collaboration ===== */
+{ id: 'cs-p4-a', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'bpmn-collab', d: P4,
   q: 'Viewpoint: mensagens com o atleta e desfechos. Z02 envia o pedido de pagamento. O que falta?',
   o: ['E: o message flow de Z02 para a pool Atleta', 'D: Z02 devia ser uma receive task', 'A: o sequence flow Z02→Z03 está a mais', 'B: a pool Atleta está a mais'], a: 0,
   e: 'Uma send task sem message flow não mostra **a quem** envia. Falta a relação entre pools: **E**.' },
-{ id: 'cs-p4-b', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'bpmn-events', d: P4,
+{ id: 'cs-p4-b', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'bpmn-events', d: P4,
   q: 'O que está errado em **Z07**?',
   o: ["O prazo: o UoD dá 72 horas", "Devia ser um signal event", "Devia ser non-interrupting", "Nada: está correto"], a: 0,
   e: 'É a armadilha do teste modelo: o tipo (timer) está certo, mas o **valor** não corresponde ao UoD.' },
-{ id: 'cs-p4-c', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'exam-viewpoints', d: P4,
+{ id: 'cs-p4-c', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'exam-viewpoints', d: P4,
   q: 'Que falha é **Z10: Avaliar nível do atleta**, depois do pagamento?',
   o: FALHA4, a: 1, fixed: true,
   e: 'A avaliação de nível acontece **antes** (no tratamento interno) e não é uma interação com o atleta. Neste viewpoint é um **conceito a mais**: **B**.' },
-{ id: 'cs-p4-d', t: 'exam', l: 3, ctx: 'case-adc', reservada: 'exame', les: 'bpmn-gw', d: P4,
+{ id: 'cs-p4-d', t: 'exam', l: 3, ctx: 'case-adc', reserved: 'exam', les: 'bpmn-gw', d: P4,
   q: 'Que desfecho do UoD falta no event-based gateway Z03?',
   o: ["A desistência do atleta", "A lesão do atleta durante as aulas de natação", "A renovação da inscrição para a época seguinte", "Um segundo pagamento parcial depois de 72 horas"], a: 0,
   e: 'Três desfechos: **pagamento**, **desistência**, **falta de pagamento em 72 h**. Falta o ramo da desistência (que também leva a anular e informar). Lesões e renovações estão fora do âmbito.' },
-{ id: 'cs-p4-e', t: 'exam', l: 2, ctx: 'case-adc', reservada: 'exame', les: 'bpmn-gw', d: P4,
+{ id: 'cs-p4-e', t: 'exam', l: 2, ctx: 'case-adc', reserved: 'exam', les: 'bpmn-gw', d: P4,
   q: 'Z03 é um event-based gateway. Está correto aqui?',
   o: ["Sim: segue o primeiro evento que ocorrer", "Não: devia ser um AND, porque os eventos são simultâneos", "Não: devia ser um XOR com a condição “pagou?”", "Não: devia ser um inclusive gateway com três condições"], a: 0,
   e: 'É o mesmo raciocínio do Q1.4 do teste: respostas de um participante externo ou um prazo → **event-based**. Um XOR com “pagou?” obrigaria o processo a avaliar dados que ainda não existem.' },
 
-/* ===== Viewpoint e âmbito (estilo Q1/Q2) ===== */
-{ id: 'ex-vp-1', t: 'exam', l: 2, ctx: 'case-adc', reservada: 'exame', les: 'exam-viewpoints',
+/* ===== Viewpoint and scope (Q1/Q2 style) ===== */
+{ id: 'ex-vp-1', t: 'exam', l: 2, ctx: 'case-adc', reserved: 'exam', les: 'exam-viewpoints',
   q: 'O coordenador quer perceber que aplicações e informação suportam a consulta de vagas e o pagamento. Que diagrama faz sentido?',
   o: ["ArchiMate: services, aplicações e data objects", "BPMN collaboration com a pool do Atleta e message flows", "ArchiMate: business actors com assignment a processes", "BPMN private com lanes Secretaria e Treinadores"], a: 0,
   e: 'É um viewpoint de **suporte aplicacional e informação**: serviços, aplicações (realization), quem os usa (serving) e dados (access).' },
-{ id: 'ex-vp-2', t: 'exam', l: 2, ctx: 'case-adc', reservada: 'exame', les: 'exam-uod',
+{ id: 'ex-vp-2', t: 'exam', l: 2, ctx: 'case-adc', reserved: 'exam', les: 'exam-uod',
   q: '“Notificações por SMS” no caso da Piscina são…',
   o: ["ideias para o futuro, a não modelar", "um requisito confirmado, a modelar em BPMN já", "um message flow obrigatório para o atleta", "um Data Object do Registo de ocupação"], a: 0,
   e: 'O UoD diz que são **ideias para o futuro**. Pô-las no diagrama seria um **excesso** (A ou B).' },
-{ id: 'ex-vp-3', t: 'exam', l: 2, ctx: 'case-adc', reservada: 'exame', les: 'exam-uod',
+{ id: 'ex-vp-3', t: 'exam', l: 2, ctx: 'case-adc', reserved: 'exam', les: 'exam-uod',
   q: 'Num diagrama BPMN do caso Piscina aparece a tarefa “Registar falta à aula”. Como se classifica?',
   o: ["B: conceito a mais (fora do âmbito)", "D: devia ser um evento intermédio em vez de tarefa", "F: falta todo o ramo das faltas às aulas", "Está correto, porque as faltas acontecem nas aulas"], a: 0,
   e: 'Faltas, renovações e lesões estão **fora do âmbito**: qualquer elemento sobre elas é **excesso** (B, porque é um conceito).' },
@@ -2139,7 +4452,7 @@ const Q = [
   o: ["Sim: o valor esperado é ≈ +0,17", "Não: o valor esperado passa a ser negativo", "Só compensa se conseguires eliminar duas opções", "É indiferente: o valor esperado é exatamente zero"], a: 0,
   e: 'Com 3 opções: (1/3) × 1 − (2/3) × 0,25 = 0,333 − 0,167 ≈ **+0,17**. Mesmo sem eliminar nenhuma: 0,25 − 0,75 × 0,25 ≈ **+0,06**. Responder tem valor esperado positivo; o risco só é variância.' },
 
-/* ===== Ligações ArchiMate (que relação usar) ===== */
+/* ===== ArchiMate relationships (which one to use) ===== */
 { id: 'lk-a01', t: 'arch', l: 2, les: 'arch-rel', q: 'A aplicação Gestão Académica **realiza** o Serviço de Dados Académicos. Que relação, de onde para onde?', o: ['Realization: Gestão Académica → Serviço', 'Serving: Gestão Académica → Serviço', 'Realization: Serviço → Gestão Académica', 'Composition: Serviço → Gestão Académica'], a: 0, e: 'O concreto (aplicação) **realiza** o abstrato (serviço): tracejado com triângulo vazio a apontar para o serviço.' },
 { id: 'lk-a02', t: 'arch', l: 2, les: 'arch-rel', q: 'A Equipa de atendimento é composta por três funcionários (todos Business Actors). Que relação?', o: ["Composition (ou aggregation)", "Assignment da Equipa para cada funcionário", "Specialization do funcionário para a Equipa", "Serving da Equipa para cada funcionário"], a: 0, e: 'Todo-parte entre actors: **composition** (ou aggregation, se a pessoa puder pertencer a vários grupos). Assignment é estrutura → comportamento, ou actor → role.' },
 { id: 'lk-a03', t: 'arch', l: 2, les: 'arch-business', q: 'O funcionário Rui desempenha o papel de Técnico de Equipamento. Que relação?', o: ["Assignment: Rui → Técnico", "Specialization: Técnico → Rui", "Realization: Rui → Técnico", "Aggregation: Técnico → Rui"], a: 0, e: '**Actor → Role** é assignment: o actor assume o papel.' },
@@ -2154,7 +4467,7 @@ const Q = [
 { id: 'lk-a12', t: 'arch', l: 3, les: 'arch-common', q: 'As roles Especialista e Atendimento trabalham juntas no tratamento de casos difíceis. Como se modela o conjunto?', o: ['Uma Collaboration que agrega os dois roles', 'Um novo Business Actor composto pelos roles', 'Um Process com assignment dos dois roles e nada mais', 'Uma Interface partilhada'], a: 0, e: 'Nos slides: “High-Risk Claims Adjudication is a **collaboration** of two roles”. Collaboration = agregado de roles para comportamento coletivo.' },
 ];
 
-/* ===== Notação: que símbolo é este? (gerado) ===== */
+/* ===== Notation: which symbol is this? (generated) ===== */
 const ARCH_SYM = [
   ['actor', 'bus', 'Business Actor', 'Entidade organizacional que age: pessoa, equipa ou empresa. Ícone de boneco.', ['Role', 'Stakeholder', 'Collaboration']],
   ['role', 'bus', 'Role', 'Responsabilidade que um actor assume. Ícone de cilindro deitado.', ['Business Actor', 'Collaboration', 'Interface']],
@@ -2238,18 +4551,480 @@ BPMN_SYM.forEach(([n, name, desc, wrong], i) => {
     q: 'Que símbolo BPMN é este?', o: [name, ...wrong], a: 0, e: `**${name}**: ${desc}` });
 });
 
-ESTUDO.perguntas('ams', Q);
+STUDY.questions('ams', Q);
 })();
 
 })();
+STUDY.ids("ams", [
+"sys-01",
+"sys-02",
+"sys-03",
+"sys-04",
+"sys-05",
+"sys-06",
+"sys-07",
+"sys-08",
+"sys-09",
+"sys-10",
+"sys-11",
+"sys-12",
+"sys-13",
+"sys-14",
+"sys-15",
+"sys-16",
+"sys-17",
+"sys-18",
+"sys-19",
+"sys-20",
+"sys-21",
+"sys-22",
+"sys-23",
+"sys-24",
+"sys-25",
+"sys-26",
+"sys-27",
+"sys-28",
+"sys-29",
+"sys-30",
+"sys-31",
+"sys-32",
+"req-01",
+"req-02",
+"req-03",
+"req-04",
+"req-05",
+"req-06",
+"req-07",
+"req-08",
+"req-09",
+"req-10",
+"req-11",
+"req-12",
+"req-13",
+"req-14",
+"arch-01",
+"arch-02",
+"arch-03",
+"arch-04",
+"arch-05",
+"arch-06",
+"arch-07",
+"arch-08",
+"arch-09",
+"arch-10",
+"arch-11",
+"arch-12",
+"arch-13",
+"arch-14",
+"arch-15",
+"arch-16",
+"arch-17",
+"arch-18",
+"arch-19",
+"arch-20",
+"arch-21",
+"arch-22",
+"arch-23",
+"arch-24",
+"arch-25",
+"arch-26",
+"arch-27",
+"arch-28",
+"arch-29",
+"arch-30",
+"arch-31",
+"arch-32",
+"arch-33",
+"arch-34",
+"arch-35",
+"arch-36",
+"arch-37",
+"arch-38",
+"arch-39",
+"arch-40",
+"arch-41",
+"arch-42",
+"arch-43",
+"arch-44",
+"arch-45",
+"arch-46",
+"bpm-01",
+"bpm-02",
+"bpm-03",
+"bpm-04",
+"bpm-05",
+"bpm-06",
+"bpm-07",
+"bpm-08",
+"bpm-09",
+"bpm-10",
+"bpm-11",
+"bpm-12",
+"bpm-13",
+"bpm-14",
+"bpm-15",
+"bpmn-01",
+"bpmn-02",
+"bpmn-03",
+"bpmn-04",
+"bpmn-05",
+"bpmn-06",
+"bpmn-07",
+"bpmn-08",
+"bpmn-09",
+"bpmn-10",
+"bpmn-11",
+"bpmn-12",
+"bpmn-13",
+"bpmn-14",
+"bpmn-15",
+"bpmn-16",
+"bpmn-17",
+"bpmn-18",
+"bpmn-19",
+"bpmn-20",
+"bpmn-21",
+"bpmn-22",
+"bpmn-23",
+"bpmn-24",
+"bpmn-25",
+"bpmn-26",
+"bpmn-27",
+"bpmn-28",
+"bpmn-29",
+"bpmn-30",
+"bpmn-31",
+"bpmn-32",
+"bpmn-33",
+"bpmn-34",
+"bpmn-35",
+"bpmn-36",
+"bpmn-37",
+"bpmn-38",
+"bpmn-39",
+"bpmn-40",
+"bpmn-41",
+"bpmn-42",
+"bpmn-43",
+"bpmn-44",
+"bpmn-45",
+"bpmn-46",
+"bpmn-47",
+"bpmn-48",
+"bpmn-49",
+"bpmn-50",
+"bpmn-51",
+"bpmn-52",
+"bpmn-53",
+"bpmn-54",
+"bpmn-55",
+"bpmn-56",
+"bpmn-57",
+"bpmn-58",
+"bpmn-59",
+"bpmn-60",
+"ex-q1-1",
+"ex-q1-2",
+"ex-q1-3",
+"ex-q1-4",
+"ex-q2-1",
+"ex-q2-2",
+"ex-q2-3",
+"ex-q2-5",
+"ex-q2-6",
+"ex-q2-7",
+"ex-q2-8",
+"ex-q3-a",
+"ex-q3-b",
+"ex-q3-c",
+"ex-q3-d",
+"ex-q4-a",
+"ex-q4-b",
+"ex-q4-c",
+"ex-q4-d",
+"ex-q4-e",
+"ex-q5-a",
+"ex-q5-b",
+"ex-q5-c",
+"ex-q5-d",
+"ex-q6-a",
+"ex-q6-b",
+"ex-q6-c",
+"ex-q6-d",
+"ex-q6-e",
+"ex-q2-4",
+"ex-q5-e",
+"ex-q6-f",
+"cs-p1-a",
+"cs-p1-b",
+"cs-p1-c",
+"cs-p1-d",
+"cs-p2-a",
+"cs-p2-b",
+"cs-p2-c",
+"cs-p2-d",
+"cs-p3-a",
+"cs-p3-b",
+"cs-p3-c",
+"cs-p3-d",
+"cs-p4-a",
+"cs-p4-b",
+"cs-p4-c",
+"cs-p4-d",
+"cs-p4-e",
+"ex-vp-1",
+"ex-vp-2",
+"ex-vp-3",
+"ex-vp-4",
+"ex-vp-5",
+"ex-vp-6",
+"lk-a01",
+"lk-a02",
+"lk-a03",
+"lk-a04",
+"lk-a05",
+"lk-a06",
+"lk-a07",
+"lk-a08",
+"lk-a09",
+"lk-a10",
+"lk-a11",
+"lk-a12",
+"nt-a01",
+"nt-a02",
+"nt-a03",
+"nt-a04",
+"nt-a05",
+"nt-a06",
+"nt-a07",
+"nt-a08",
+"nt-a09",
+"nt-a10",
+"nt-a11",
+"nt-a12",
+"nt-a13",
+"nt-a14",
+"nt-a15",
+"nt-a16",
+"nt-a17",
+"nt-a18",
+"nt-a19",
+"nt-a20",
+"nt-a21",
+"nt-a22",
+"nt-a23",
+"nt-a24",
+"nt-r01",
+"nt-r02",
+"nt-r03",
+"nt-r04",
+"nt-r05",
+"nt-r06",
+"nt-r07",
+"nt-r08",
+"nt-r09",
+"nt-r10",
+"nt-r11",
+"nt-b01",
+"nt-b02",
+"nt-b03",
+"nt-b04",
+"nt-b05",
+"nt-b06",
+"nt-b07",
+"nt-b08",
+"nt-b09",
+"nt-b10",
+"nt-b11",
+"nt-b12",
+"nt-b13",
+"nt-b14",
+"nt-b15",
+"nt-b16",
+"nt-b17",
+"nt-b18",
+"nt-b19",
+"nt-b20",
+"nt-b21",
+"nt-b22",
+"nt-b23",
+"nt-b24"
+]);
 </script>
 <script>
-/* ===== Estudo IST — motor =====
-   Igual para todas as cadeiras: menu de cadeiras, níveis, modos padrão
-   (Aprender, Revisão, Exame simulado, Biblioteca) e gravação do progresso.
-   O conteúdo e as secções extra vêm de cada cadeira (src/cadeiras/<id>). */
+/* ===== Progress key =====
+   Packs a student's progress into a short text that can travel as a link, a QR code or a paste,
+   so they can continue on another device without accounts or a server.
+
+   Questions are referred to by their position in the course's ids.json (STUDY.ids), never by
+   their order in the source files, so adding questions never breaks old keys.
+
+   Text format:  "E1" + base64url(bytes)
+   bytes:        [flags] + payload + [checksum hi, lo]
+     flags       bit0 compressed · bit1 includes notes
+     payload     deflate-compressed when the browser supports it
+     checksum    Fletcher-16 over flags + payload, catches truncated or mistyped keys
+   payload (varint = unsigned LEB128, str = varint length + UTF-8):
+     varint courseCount
+     per course:
+       str id · varint xp · varint rounds · varint testDay (0 = none) · byte settings (bit0 unlockAll)
+       varint baseDay · varint n
+       n × varint gap        (index − previous index − 1, indexes ascending)
+       n × byte  c<<4 | w    (each capped at 15)
+       n × byte  box<<5 | eb<<3 | ew   (box ≤ 7, eb ≤ 3, ew ≤ 7)
+       n × varint lastDay − baseDay
+       if notes: varint m, m × (varint index, str text)
+   Columns (not rows) because similar bytes side by side compress much better. */
+window.PROGRESS_KEY = (() => {
+  const PREFIX = 'E1';
+  const DAY = 864e5, EPOCH = Math.floor(Date.UTC(2024, 0, 1) / DAY);
+  const toDay = ms => ms ? Math.max(0, Math.floor(ms / DAY) - EPOCH) : 0;
+  const fromDay = d => (d + EPOCH) * DAY + DAY / 2;
+  const cap = (v, m) => Math.max(0, Math.min(m, v | 0));
+
+  /* --- bytes --- */
+  function writer() {
+    const b = [];
+    const w = {
+      byte(v) { b.push(v & 255); },
+      varint(v) { v = Math.max(0, Math.floor(v)); do { let x = v % 128; v = Math.floor(v / 128); b.push(v ? x | 128 : x); } while (v); },
+      str(s) { const u = new TextEncoder().encode(s); w.varint(u.length); u.forEach(x => b.push(x)); },
+      out: () => Uint8Array.from(b),
+    };
+    return w;
+  }
+  function reader(u) {
+    let i = 0;
+    const need = () => { if (i >= u.length) throw new Error('truncated'); };
+    const r = {
+      byte() { need(); return u[i++]; },
+      varint() { let v = 0, m = 1, x; do { need(); x = u[i++]; v += (x & 127) * m; m *= 128; } while (x & 128); return v; },
+      str() { const n = r.varint(); if (i + n > u.length) throw new Error('truncated'); const s = new TextDecoder().decode(u.subarray(i, i + n)); i += n; return s; },
+    };
+    return r;
+  }
+  const b64 = u => { let s = ''; u.forEach(x => s += String.fromCharCode(x)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+  const unb64 = s => { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; const t = atob(s); return Uint8Array.from(t, c => c.charCodeAt(0)); };
+  async function pipe(u, Stream) { const out = new Response(new Blob([u]).stream().pipeThrough(new Stream('deflate-raw'))); return new Uint8Array(await out.arrayBuffer()); }
+  const fletcher = u => { let a = 0, b = 0; u.forEach(x => { a = (a + x) % 255; b = (b + a) % 255; }); return [b, a]; };
+  const canZip = typeof CompressionStream === 'function' && typeof DecompressionStream === 'function';
+
+  /* --- encode: G is the app state ({ c: { courseId: { stats, notes, xp, rounds, settings } } }) --- */
+  async function encode(G, courses, opts = {}) {
+    const w = writer();
+    const list = Object.keys(G.c || {}).filter(id => courses[id] && courses[id].ids);
+    w.varint(list.length);
+    for (const id of list) {
+      const S = G.c[id], ids = courses[id].ids, pos = new Map(ids.map((q, i) => [q, i]));
+      const rows = Object.entries(S.stats || {})
+        .filter(([q, s]) => pos.has(q) && (s.c || s.w || s.ew))
+        .map(([q, s]) => ({ i: pos.get(q), s })).sort((a, b) => a.i - b.i);
+      const days = rows.map(r => toDay(r.s.last)); const base = days.length ? Math.min(...days) : 0;
+      w.str(id); w.varint(S.xp || 0); w.varint(S.rounds || 0);
+      const td = S.settings && S.settings.testDate ? Date.parse(S.settings.testDate + 'T12:00:00Z') : 0;
+      w.varint(td ? toDay(td) + 1 : 0); w.byte(S.settings && S.settings.unlockAll ? 1 : 0);
+      w.varint(base); w.varint(rows.length);
+      let prev = -1; rows.forEach(r => { w.varint(r.i - prev - 1); prev = r.i; });
+      rows.forEach(r => w.byte(cap(r.s.c, 15) << 4 | cap(r.s.w, 15)));
+      rows.forEach(r => w.byte(cap(r.s.box, 7) << 5 | cap(r.s.eb, 3) << 3 | cap(r.s.ew, 7)));
+      days.forEach(d => w.varint(d - base));
+      if (opts.notes) {
+        const ns = Object.entries(S.notes || {}).filter(([q, t]) => t && pos.has(q));
+        w.varint(ns.length); ns.forEach(([q, t]) => { w.varint(pos.get(q)); w.str(t); });
+      }
+    }
+    let payload = w.out(), flags = opts.notes ? 2 : 0;
+    if (canZip) { const z = await pipe(payload, CompressionStream); if (z.length < payload.length) { payload = z; flags |= 1; } }
+    const body = new Uint8Array(payload.length + 1); body[0] = flags; body.set(payload, 1);
+    const all = new Uint8Array(body.length + 2); all.set(body); all.set(fletcher(body), body.length);
+    return PREFIX + b64(all);
+  }
+
+  /* --- find the key inside whatever was pasted: a link, the key itself, text around it --- */
+  function extract(text) {
+    const s = String(text || '').trim();
+    const m = s.match(/[#?&]k=(E1[A-Za-z0-9_-]+)/) || s.match(/\b(E1[A-Za-z0-9_-]{6,})/);
+    return m ? m[1] : null;
+  }
+
+  /* --- decode: returns { courses: { id: { stats, notes, xp, rounds, testDate, unlockAll } }, unknown } --- */
+  async function decode(text, courses) {
+    const key = extract(text); if (!key) throw new Error('Não encontrei uma chave neste texto.');
+    let all; try { all = unb64(key.slice(PREFIX.length)); } catch { throw new Error('A chave está incompleta ou foi alterada. Copia-a outra vez.'); }
+    const bad = () => new Error('A chave está incompleta ou foi alterada. Copia-a outra vez.');
+    if (all.length < 4) throw bad();
+    const body = all.subarray(0, all.length - 2), [h, l] = fletcher(body);
+    if (all[all.length - 2] !== h || all[all.length - 1] !== l) throw bad();
+    const flags = body[0]; let payload = body.subarray(1);
+    if (flags & 1) { if (!canZip) throw new Error('Este browser é demasiado antigo para ler a chave.'); try { payload = await pipe(payload, DecompressionStream); } catch { throw bad(); } }
+    const r = reader(payload), out = { courses: {}, unknown: 0 };
+    try {
+      const nc = r.varint();
+      for (let k = 0; k < nc; k++) {
+        const id = r.str(), ids = (courses[id] && courses[id].ids) || [];
+        const C = { stats: {}, notes: {}, xp: r.varint(), rounds: r.varint() };
+        const td = r.varint(); C.testDate = td ? new Date(fromDay(td - 1)).toISOString().slice(0, 10) : '';
+        C.unlockAll = !!(r.byte() & 1);
+        const base = r.varint(), n = r.varint();
+        const idx = []; let prev = -1; for (let j = 0; j < n; j++) { prev += r.varint() + 1; idx.push(prev); }
+        const a = [], b = [], d = [];
+        for (let j = 0; j < n; j++) a.push(r.byte());
+        for (let j = 0; j < n; j++) b.push(r.byte());
+        for (let j = 0; j < n; j++) d.push(r.varint());
+        idx.forEach((i, j) => {
+          const q = ids[i]; if (!q) { out.unknown++; return; }
+          C.stats[q] = { c: a[j] >> 4, w: a[j] & 15, box: b[j] >> 5, eb: (b[j] >> 3) & 3, ew: b[j] & 7, last: fromDay(base + d[j]) };
+        });
+        if (flags & 2) { const m = r.varint(); for (let j = 0; j < m; j++) { const i = r.varint(), t = r.str(); if (ids[i]) C.notes[ids[i]] = t; } }
+        if (courses[id]) out.courses[id] = C; else out.unknown += n;
+      }
+    } catch { throw bad(); }
+    if (!Object.keys(out.courses).length) throw new Error('Esta chave não tem progresso de nenhuma cadeira deste site.');
+    return out;
+  }
+
+  /* --- merge into G without losing anything on either side --- */
+  function merge(G, incoming, blank) {
+    const report = { added: 0, updated: 0, notes: 0 };
+    for (const [id, R] of Object.entries(incoming.courses)) {
+      const L = G.c[id] || (G.c[id] = blank(id));
+      L.stats = L.stats || {}; L.notes = L.notes || {}; L.settings = L.settings || {};
+      for (const [q, r] of Object.entries(R.stats)) {
+        const l = L.stats[q];
+        if (!l) { L.stats[q] = { ...r }; report.added++; continue; }
+        const before = JSON.stringify(l);
+        l.c = Math.max(l.c || 0, r.c); l.w = Math.max(l.w || 0, r.w); l.ew = Math.max(l.ew || 0, r.ew);
+        if ((r.last || 0) > (l.last || 0)) { l.box = r.box; l.eb = r.eb; l.last = r.last; }   // review state follows the most recent device
+        if (JSON.stringify(l) !== before) report.updated++;
+      }
+      for (const [q, t] of Object.entries(R.notes)) {
+        const mine = L.notes[q];
+        if (!mine) { L.notes[q] = t; report.notes++; }
+        else if (!mine.includes(t)) { L.notes[q] = mine + '\n\n' + t; report.notes++; }
+      }
+      L.xp = Math.max(L.xp || 0, R.xp); L.rounds = Math.max(L.rounds || 0, R.rounds);
+      if (!L.settings.testDate && R.testDate) L.settings.testDate = R.testDate;
+      if (R.unlockAll) L.settings.unlockAll = true;
+    }
+    return report;
+  }
+
+  /* --- what a key contains, for the confirmation screen --- */
+  const summary = decoded => Object.entries(decoded.courses).map(([id, C]) => ({
+    id, answered: Object.keys(C.stats).length, mastered: Object.values(C.stats).filter(s => s.c > 0).length,
+    xp: C.xp, notes: Object.keys(C.notes).length,
+  }));
+
+  return { encode, decode, extract, merge, summary };
+})();
+
+/* ===== Estudo IST — engine =====
+   Shared by every course: course menu, levels, standard modes
+   (Learn, Review, Mock exam, Library) and progress storage.
+   Content and extra sections come from each course (src/courses/<id>).
+   UI text is in Portuguese on purpose: the students are. */
 (() => {
-const REG = window.ESTUDO;
+const REG = window.STUDY;
 const DEFAULT_LEVELS = [
   { n: 1, t: 'Fundamentos', d: 'Definições e símbolos' },
   { n: 2, t: 'Aplicação', d: 'Distinguir e escolher' },
@@ -2258,10 +5033,10 @@ const DEFAULT_LEVELS = [
 ];
 const XP = { 1: 10, 2: 15, 3: 20, 4: 30 };
 const UNLOCK = 0.6;
-const EXAM_N = 20, EXAM_MIN = 30;   // perguntas e minutos do exame simulado
-const EXAM_CLEAR = 2;               // acertos seguidos para tirar um erro de exame da revisão
+const EXAM_N = 20, EXAM_MIN = 30;   // mock exam: questions and minutes
+const EXAM_CLEAR = 2;               // correct answers in a row to clear an exam mistake from review
 const LS_KEY = 'estudo-ist-v2', LS_PACKS = 'estudo-ist-packs-v2';
-const LEGACY = { state: 'ams-treino-v1', packs: 'ams-treino-packs-v1', cadeira: 'ams' };
+const LEGACY = { state: 'ams-treino-v1', packs: 'ams-treino-packs-v1', course: 'ams' };
 
 const $app = document.getElementById('app');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2271,29 +5046,30 @@ const shuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i-
 const ls = { get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
 /* ---------- state ----------
-   G guarda tudo; S aponta para a fatia da cadeira aberta (G.c[id]). */
-const blank = (temas = {}) => ({ stats: {}, notes: {}, xp: 0, settings: { topics: Object.keys(temas), known: Object.keys(temas), unlockAll: false, testDate: '' }, rounds: 0, sessions: [] });
+   G holds everything; S points at the open course's slice (G.c[id]). */
+const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '' }, rounds: 0, sessions: [] });
 let G = ls.get(LS_KEY);
 if (!G || G.v !== 2) {
   G = { v: 2, cur: null, c: {}, updatedAt: 0 };
-  const old = ls.get(LEGACY.state);   // progresso da versão só-AMS
-  if (old && old.stats) { const { bestSprint, v, updatedAt, ...rest } = old; G.c[LEGACY.cadeira] = rest; G.cur = LEGACY.cadeira; G.updatedAt = updatedAt || Date.now(); }
+  const old = ls.get(LEGACY.state);   // progress from the AMS-only version
+  if (old && old.stats) { const { bestSprint, v, updatedAt, ...rest } = old; G.c[LEGACY.course] = rest; G.cur = LEGACY.course; G.updatedAt = updatedAt || Date.now(); }
 }
 let packs = ls.get(LS_PACKS);
-if (!packs) { packs = (ls.get(LEGACY.packs) || []).map(p => Object.assign({ cadeira: LEGACY.cadeira }, p)); ls.set(LS_PACKS, packs); }
+if (!packs) { packs = (ls.get(LEGACY.packs) || []).map(p => Object.assign({ course: LEGACY.course }, p)); ls.set(LS_PACKS, packs); }
+packs.forEach(p => { if (!p.course && p.cadeira) p.course = p.cadeira; });   // packs saved by the first multi-course build
 
 let C = null, S = null, TOPICS = {}, LEVELS = DEFAULT_LEVELS;
 let BANK = [], BYID = {}, LESSONS = [], LBYID = {};
 const renderD = d => !d ? '' : typeof d === 'string' ? d : (C && C.render ? C.render(d) : '');
 
-function openCadeira(id) {
-  C = REG.cadeiras[id]; if (!C) return false;
-  TOPICS = C.temas; LEVELS = C.niveis || DEFAULT_LEVELS;
+function openCourse(id) {
+  C = REG.courses[id]; if (!C) return false;
+  TOPICS = C.topics; LEVELS = C.levels || DEFAULT_LEVELS;
   if (!G.c[id]) G.c[id] = blank(TOPICS);
   S = G.c[id];
   const b = blank(TOPICS); for (const k in b) if (S[k] === undefined) S[k] = b[k];
   S.settings = Object.assign(b.settings, S.settings || {});
-  // temas novos ficam ligados para quem já tinha progresso
+  // new topics start enabled for people who already had progress
   const known = S.settings.known; Object.keys(TOPICS).forEach(k => { if (!known.includes(k)) { known.push(k); if (!S.settings.topics.includes(k)) S.settings.topics.push(k); } });
   S.settings.topics = S.settings.topics.filter(k => TOPICS[k]); if (!S.settings.topics.length) S.settings.topics = Object.keys(TOPICS);
   G.cur = id; rebuildBank(); return true;
@@ -2302,10 +5078,10 @@ function openCadeira(id) {
 function rebuildBank() {
   const seen = new Set(); BANK = []; BYID = {}; LESSONS = []; LBYID = {};
   const addL = (l, trusted) => { if (!l || !l.id || LBYID[l.id]) return; const x = Object.assign({}, l, { trusted }); LESSONS.push(x); LBYID[l.id] = x; };
-  C.licoes.forEach(l => addL(l, true));
+  C.lessons.forEach(l => addL(l, true));
   const addQ = (q, origin) => { const v = validateQ(q); if (!v.ok) return; let id = q.id; while (seen.has(id)) id = id + '+'; seen.add(id); const x = Object.assign({}, q, { id, origin }); BANK.push(x); BYID[id] = x; };
-  C.perguntas.forEach(q => addQ(q, 'base'));
-  packs.filter(p => p.cadeira === C.id).forEach(p => { (p.lessons || []).forEach(l => addL(l, false)); (p.questions || []).forEach(q => addQ(q, p.name || 'pacote')); });
+  C.questions.forEach(q => addQ(q, 'base'));
+  packs.filter(p => p.course === C.id).forEach(p => { (p.lessons || []).forEach(l => addL(l, false)); (p.questions || []).forEach(q => addQ(q, p.name || 'pacote')); });
 }
 function validateQ(q) {
   if (!q || typeof q !== 'object') return { ok: false, why: 'não é um objeto' };
@@ -2323,13 +5099,13 @@ function validateQ(q) {
 function save() { G.updatedAt = Date.now(); ls.set(LS_KEY, G); }
 
 /* ---------- stats helpers ----------
-   Por pergunta: c acertos, w erros de treino, box caixa da revisão de treino,
-   ew erros em exame, eb acertos seguidos desde o último erro de exame, last. */
+   Per question: c correct, w training mistakes, box training-review box,
+   ew exam mistakes, eb correct in a row since the last exam mistake, last (timestamp). */
 const ZERO = { c: 0, w: 0, box: 0, ew: 0, eb: 0, last: 0 };
 const st = id => { const s = S.stats[id] || (S.stats[id] = { ...ZERO }); for (const k in ZERO) if (s[k] === undefined) s[k] = 0; return s; };
 const peek = id => Object.assign({}, ZERO, S.stats[id]);
 const inTopics = q => S.settings.topics.includes(q.t);
-const isReserved = q => q.reservada === 'exame';
+const isReserved = q => q.reserved === 'exam';
 const fresh = q => { const s = peek(q.id); return !s.c && !s.w && !s.ew; };
 const trainPool = () => BANK.filter(q => inTopics(q) && !isReserved(q));
 function mastery(level, topics = S.settings.topics) {
@@ -2345,8 +5121,8 @@ function pick(pool, n) { // unseen first, then weakest, randomized within bands
   const bands = [[], [], []]; pool.forEach(q => { const s = peek(q.id); if (!s.c && !s.w && !s.ew) bands[0].push(q); else if (s.box < 2) bands[1].push(q); else bands[2].push(q); });
   return bands.flatMap(b => shuffle(b)).slice(0, n);
 }
-function cadeiraProgress(c) {
-  const st_ = (G.c[c.id] && G.c[c.id].stats) || {}; const qs = c.perguntas.filter(q => !isReserved(q));
+function courseProgress(c) {
+  const st_ = (G.c[c.id] && G.c[c.id].stats) || {}; const qs = c.questions.filter(q => !isReserved(q));
   const done = qs.filter(q => st_[q.id] && st_[q.id].c > 0).length; return { done, total: qs.length, xp: (G.c[c.id] && G.c[c.id].xp) || 0 };
 }
 
@@ -2355,33 +5131,35 @@ let view = { name: 'home' };
 let ses = null; // active session
 function go(name, extra = {}) { view = Object.assign({ name }, extra); renderView(); window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' }); }
 function renderView() {
-  const v = C ? view.name : 'cadeiras';
-  const html = v === 'cadeiras' ? Cadeiras() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : Home();
+  const v = C || view.name === 'sync' ? view.name : 'courses';
+  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'sync' ? Sync() : Home();
   $app.innerHTML = Top() + html;
-  document.title = C && v !== 'cadeiras' ? `${C.sigla} · Estudo IST` : 'Estudo IST';
+  document.title = C && v !== 'courses' ? `${C.code} · Estudo IST` : 'Estudo IST';
   if (v === 'quiz') afterQuizRender();
+  if (v === 'sync') afterSyncRender();
 }
 const toast = (msg) => { const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); };
 
 function Top() {
-  const inC = C && view.name !== 'cadeiras';
+  const inC = C && !['courses', 'sync'].includes(view.name);
   return `<header class="top">
-    <button class="brand" data-act="${inC ? 'home' : 'cadeiras'}" aria-label="Início">
+    <button class="brand" data-act="${inC ? 'home' : 'courses'}" aria-label="Início">
       <svg class="brand-mark" viewBox="0 0 30 30" aria-hidden="true"><path d="M15 2 L28 15 L15 28 L2 15 Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 10 L20 20 M20 10 L10 20" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="24" cy="6" r="4" fill="var(--token)"/></svg>
-      <b>${inC ? `${esc(C.sigla)} Treino` : 'Estudo IST'}</b></button>
-    ${inC ? `<button class="chip" data-act="cadeiras" title="Trocar de cadeira">Cadeiras ▾</button>` : ''}
+      <b>${inC ? `${esc(C.code)} Treino` : 'Estudo IST'}</b></button>
+    ${inC ? `<button class="chip" data-act="courses" title="Trocar de cadeira">Cadeiras ▾</button>` : ''}
     <span class="spacer"></span>
     ${inC ? `<span class="stat-pill" title="Experiência nesta cadeira"><i></i>${S.xp} XP</span>` : ''}
+    ${view.name === 'sync' || (ses && !ses.ended) ? '' : `<button class="btn small" data-act="sync" title="Levar o progresso para outro dispositivo, ou trazê-lo">${glyph('swap')}<span class="hide-narrow">Outro dispositivo</span></button>`}
   </header>`;
 }
 
-/* ---------- CADEIRAS (menu inicial) ---------- */
-function Cadeiras() {
-  const list = REG.ordem.map(id => REG.cadeiras[id]).filter(c => c.temas);
-  const cards = list.map(c => { const p = cadeiraProgress(c); const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
-    return `<button class="mode cadeira" data-act="openC" data-id="${esc(c.id)}">
-      <span class="eyebrow">${c.ano ? `${c.ano}.º ano` : ''}${c.semestre ? ` · ${c.semestre}.º sem.` : ''}</span>
-      <h3><span class="sigla">${esc(c.sigla)}</span></h3><p>${esc(c.nome)}</p>
+/* ---------- COURSES (start menu) ---------- */
+function Courses() {
+  const list = REG.order.map(id => REG.courses[id]).filter(c => c.topics);
+  const cards = list.map(c => { const p = courseProgress(c); const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
+    return `<button class="mode course-card" data-act="openC" data-id="${esc(c.id)}">
+      <span class="eyebrow">${c.year ? `${c.year}.º ano` : ''}${c.semester ? ` · ${c.semester}.º sem.` : ''}</span>
+      <h3><span class="code">${esc(c.code)}</span></h3><p>${esc(c.name)}</p>
       <span class="lvl-bar"><span style="width:${pct}%"></span></span>
       <span class="meta">${p.done}/${p.total} dominadas · ${p.xp} XP</span></button>`; }).join('');
   return `<section class="hero"><span class="eyebrow">Técnico · LEIC</span><h1>Escolhe a cadeira.</h1>
@@ -2389,7 +5167,7 @@ function Cadeiras() {
     <div class="modes">${cards}</div>`;
 }
 
-/* ---------- HOME (da cadeira) ---------- */
+/* ---------- HOME (of a course) ---------- */
 function daysLeft() { if (!S.settings.testDate) return null; const d = new Date(S.settings.testDate + 'T09:00:00'); const n = Math.ceil((d - new Date()) / 864e5); return isNaN(n) ? null : n; }
 const extraApi = () => ({ pool: trainPool(), pick, topLevel, peek, inTopics, LEVELS, BANK });
 function Home() {
@@ -2409,12 +5187,12 @@ function Home() {
   ];
   const card = ([k, t, d, m, g], act = 'mode') => `<button class="mode" data-act="${act}" data-k="${k}"><h3>${g}${t}</h3><p>${d}</p><span class="meta">${m}</span></button>`;
   const api = extraApi();
-  const extras = (C.extras || []).map(x => card([x.id, esc(x.titulo), esc(x.desc), esc(x.meta ? x.meta(api) : ''), glyph(x.icone || 'star')], 'extra')).join('');
+  const extras = (C.extras || []).map(x => card([x.id, esc(x.title), esc(x.desc), esc(x.meta ? x.meta(api) : ''), glyph(x.icon || 'star')], 'extra')).join('');
   const mt = `<div class="mastery" role="table" aria-label="Domínio por tema e nível"><span></span>${LEVELS.map(L => `<span class="h">N${L.n}</span>`).join('')}
     ${Object.entries(TOPICS).map(([k, t]) => `<span class="tn"><span class="chip static" style="--c:${t.c};padding:0;border:0;background:none"><span class="sw"></span></span>${t.short}</span>` + LEVELS.map(L => { const m = mastery(L.n, [k]); return m.total ? `<span class="cell" title="${m.done} de ${m.total}"><span style="width:${Math.round(m.pct * 100)}%"></span><em>${m.done}/${m.total}</em></span>` : '<span class="cell"><em>—</em></span>'; }).join('')).join('')}</div>`;
   return `<section class="hero">
-      <span class="eyebrow">${esc(C.nome)} · IST</span>
-      <h1>${esc(C.titulo || C.nome)}</h1>
+      <span class="eyebrow">${esc(C.name)} · IST</span>
+      <h1>${esc(C.tagline || C.name)}</h1>
       <p>${nTrain} perguntas de escolha múltipla em ${LEVELS.length} níveis, com a teoria explicada sempre que falhas. ${dl !== null ? `<b>${dl > 0 ? `Faltam ${dl} dia${dl === 1 ? '' : 's'} para o teste.` : dl === 0 ? 'O teste é hoje. Força!' : 'O teste já passou.'}</b>` : ''}</p>
     </section>
     <div class="flow-card">
@@ -2427,7 +5205,7 @@ function Home() {
       <div class="chips">${topicsChips}</div>
     </div>
     <div class="section"><div class="section-h"><h2>Modos</h2></div><div class="modes">${std.map(c => card(c)).join('')}</div></div>
-    ${extras ? `<div class="section"><div class="section-h"><h2>Só de ${esc(C.sigla)}</h2></div><div class="modes">${extras}</div></div>` : ''}
+    ${extras ? `<div class="section"><div class="section-h"><h2>Só de ${esc(C.code)}</h2></div><div class="modes">${extras}</div></div>` : ''}
     <div class="section"><div class="section-h"><h2>Domínio</h2><span class="muted" style="font-size:13px">perguntas acertadas pelo menos uma vez</span></div>${mt}</div>
     <div class="section">
       <div class="section-h"><h2>Definições</h2></div>
@@ -2439,16 +5217,16 @@ function Home() {
         <button class="btn" data-act="bank">${glyph('plus')} Banco de perguntas e importar</button>
         <button class="btn" data-act="notes">${glyph('pen')} As minhas notas (${Object.keys(S.notes).filter(k => S.notes[k]).length})</button>
         <span class="spacer"></span>
-        ${view.confirmReset ? `<span class="muted" style="font-size:13px">Apagar o progresso de ${esc(C.sigla)}?</span><button class="btn small" data-act="resetYes" style="color:var(--bad)">Sim, apagar</button><button class="btn small" data-act="resetNo">Cancelar</button>` : `<button class="btn ghost small" data-act="reset">Recomeçar do zero</button>`}
+        ${view.confirmReset ? `<span class="muted" style="font-size:13px">Apagar o progresso de ${esc(C.code)}?</span><button class="btn small" data-act="resetYes" style="color:var(--bad)">Sim, apagar</button><button class="btn small" data-act="resetNo">Cancelar</button>` : `<button class="btn ghost small" data-act="reset">Recomeçar do zero</button>`}
       </div>
     </div>`;
 }
 function glyph(k) {
-  const p = { book: '<path d="M4 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H4z M24 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/>', loop: '<path d="M6 13a8 8 0 0 1 14-5l2 2 M22 15a8 8 0 0 1-14 5l-2-2 M22 4v6h-6 M6 24v-6h6"/>', lens: '<circle cx="12" cy="12" r="7"/><path d="M17 17l6 6 M9 12h6 M12 9v6"/>', bolt: '<path d="M15 3L6 16h7l-1 9 9-13h-7z"/>', clock: '<circle cx="14" cy="14" r="10"/><path d="M14 8v6l4 3"/>', list: '<path d="M9 7h14 M9 14h14 M9 21h14"/><circle cx="5" cy="7" r="1.3"/><circle cx="5" cy="14" r="1.3"/><circle cx="5" cy="21" r="1.3"/>', plus: '<path d="M14 6v16 M6 14h16"/>', pen: '<path d="M6 22l2-6 11-11 4 4-11 11z M16 7l4 4"/>', star: '<path d="M14 3l3.2 7 7.3.6-5.6 4.8 1.8 7.3L14 18.8 7.3 22.7l1.8-7.3L3.5 10.6l7.3-.6z"/>', flag: '<path d="M6 25V4 M6 5h14l-3 5 3 5H6"/>' }[k] || '';
+  const p = { book: '<path d="M4 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H4z M24 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/>', loop: '<path d="M6 13a8 8 0 0 1 14-5l2 2 M22 15a8 8 0 0 1-14 5l-2-2 M22 4v6h-6 M6 24v-6h6"/>', lens: '<circle cx="12" cy="12" r="7"/><path d="M17 17l6 6 M9 12h6 M12 9v6"/>', bolt: '<path d="M15 3L6 16h7l-1 9 9-13h-7z"/>', clock: '<circle cx="14" cy="14" r="10"/><path d="M14 8v6l4 3"/>', list: '<path d="M9 7h14 M9 14h14 M9 21h14"/><circle cx="5" cy="7" r="1.3"/><circle cx="5" cy="14" r="1.3"/><circle cx="5" cy="21" r="1.3"/>', plus: '<path d="M14 6v16 M6 14h16"/>', pen: '<path d="M6 22l2-6 11-11 4 4-11 11z M16 7l4 4"/>', star: '<path d="M14 3l3.2 7 7.3.6-5.6 4.8 1.8 7.3L14 18.8 7.3 22.7l1.8-7.3L3.5 10.6l7.3-.6z"/>', flag: '<path d="M6 25V4 M6 5h14l-3 5 3 5H6"/>', swap: '<path d="M4 9h18l-4-4 M24 19H6l4 4"/>', qr: '<path d="M4 4h7v7H4z M17 4h7v7h-7z M4 17h7v7H4z M17 17h3v3h-3z M21 21h3v3h-3z"/>', share: '<path d="M14 3v14 M9 8l5-5 5 5 M6 13v10h16V13"/>', copy: '<path d="M9 9h13v14H9z M6 19V5h13"/>' }[k] || '';
   return `<svg class="glyph" viewBox="0 0 28 28" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 }
 
-/* ---------- REVISÃO: dois separadores ---------- */
+/* ---------- REVIEW: two tabs ---------- */
 function ReviewPick() {
   const a = reviewPool().length, b = examReviewPool().length;
   return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="eyebrow">Revisão de erros</span></div>
@@ -2461,7 +5239,7 @@ function ReviewPick() {
 /* ---------- sessions ---------- */
 function makeItem(q) { const n = q.o.length; const order = q.fixed ? [...Array(n).keys()] : shuffle([...Array(n).keys()]); return { kind: 'q', id: q.id, order }; }
 function buildExam() {
-  // 1) perguntas reservadas ainda inéditas; 2) completar com a mistura de níveis do treino; 3) reservadas já vistas
+  // 1) unseen reserved questions; 2) fill with the usual level mix from training; 3) reserved ones already seen
   let qs = shuffle(freshReserved()).slice(0, EXAM_N);
   const used = new Set(qs.map(q => q.id));
   if (qs.length < EXAM_N) {
@@ -2479,7 +5257,7 @@ function start(mode, opts = {}) {
   if (mode === 'level') { const L = opts.level; items = pick(pool.filter(q => q.l === L), 10).map(makeItem); title = `Nível ${L} · ${LEVELS[L - 1].t}`; }
   if (mode === 'review') { items = reviewPool().slice(0, 12).map(makeItem); title = 'Revisão · erros de treino'; if (!items.length) { toast('Ainda não tens erros de treino para rever.'); return; } }
   if (mode === 'reviewExam') { items = examReviewPool().slice(0, 12).map(makeItem); title = 'Revisão · erros de exame'; if (!items.length) { toast('Ainda não tens erros de exame para rever.'); return; } }
-  if (mode === 'extra') { const x = (C.extras || []).find(e => e.id === opts.extra); if (!x) return; items = (x.perguntas(extraApi()) || []).map(makeItem); title = x.titulo; }
+  if (mode === 'extra') { const x = (C.extras || []).find(e => e.id === opts.extra); if (!x) return; items = (x.questions(extraApi()) || []).map(makeItem); title = x.title; }
   if (mode === 'exam') { items = buildExam().map(makeItem); title = 'Exame simulado'; timeLimit = EXAM_MIN * 60; }
   if (mode === 'learn') {
     const t = opts.topic; title = `Aprender · ${TOPICS[t].short}`;
@@ -2551,7 +5329,7 @@ function grade() {
   const ok = Array.isArray(q.a) ? (picked.length === q.a.length && q.a.every(x => ses.picked.has(x))) : picked[0] === q.a;
   ses.answered = true; ses.results.push({ item: it, id: q.id, ok, picked });
   const s = st(q.id); s.last = Date.now();
-  if (ses.mode === 'exam') { if (ok) s.c++; else { s.ew++; s.eb = 0; } }           // erro de exame: vai para a revisão de exame
+  if (ses.mode === 'exam') { if (ok) s.c++; else { s.ew++; s.eb = 0; } }           // exam mistake: goes to the exam review
   else if (ses.examGrading) { if (ok) { s.c++; s.eb++; } else { s.ew++; s.eb = 0; } }
   else if (ok) { s.c++; s.box = Math.min(5, s.box + 1); } else { s.w++; s.box = 0; }
   if (ses.mode !== 'exam') { const gain = ok ? XP[q.l] + (s.c === 1 && !s.w && !s.ew ? 5 : 0) : 0; S.xp += gain; ses.xp += gain; }
@@ -2626,21 +5404,21 @@ function Notes() {
 
 /* ---------- BANK / IMPORT ---------- */
 function importPrompt() {
-  const imp = C.importar || {};
-  return `Gera perguntas de escolha múltipla para estudar ${C.sigla} (${C.nome}, IST) sobre [TEMA].
+  const imp = C.importHelp || {};
+  return `Gera perguntas de escolha múltipla para estudar ${C.code} (${C.name}, IST) sobre [TEMA].
 Responde APENAS com JSON válido neste formato:
 {"name":"Nome do pacote","questions":[{"id":"único-por-pergunta","t":"${Object.keys(TOPICS).join('|')}","l":1,"q":"enunciado","o":["opção A","opção B","opção C","opção D"],"a":0,"e":"explicação teórica de porque a resposta certa é a certa","w":{"1":"porque é que a opção B está errada"}}]}
-Regras: "l" é o nível (1 = definições, 2 = distinguir conceitos, 3 = cenários/diagramas, 4 = armadilhas). "a" é o índice (começa em 0) da opção certa, ou uma lista de índices se houver várias certas. ${imp.notas || 'Explicações em português de Portugal.'} Opcional: "les" com o id da lição relacionada.`;
+Regras: "l" é o nível (1 = definições, 2 = distinguir conceitos, 3 = cenários/diagramas, 4 = armadilhas). "a" é o índice (começa em 0) da opção certa, ou uma lista de índices se houver várias certas. ${imp.notes || 'Explicações em português de Portugal.'} Opcional: "les" com o id da lição relacionada.`;
 }
 function Bank() {
   const counts = Object.keys(TOPICS).map(k => `<span class="chip static" style="--c:${TOPICS[k].c}"><span class="sw"></span>${TOPICS[k].short} ${BANK.filter(q => q.t === k).length}</span>`).join('');
-  const all = packs.map((p, i) => ({ ...p, _i: i })).filter(p => p.cadeira === C.id);
+  const all = packs.map((p, i) => ({ ...p, _i: i })).filter(p => p.course === C.id);
   return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="eyebrow">Banco de perguntas</span></div>
   <div class="stack">
     <h2>${BANK.length} perguntas, ${LESSONS.length} lições</h2><div class="chips">${counts}</div>
     <div class="card stack">
       <h3>Acrescentar perguntas</h3>
-      <p class="muted" style="font-size:14px">Cola um pacote JSON (ou escolhe um ficheiro .json). Também podes pedir-me no chat para acrescentar perguntas: entram aqui sozinhas.</p>
+      <p class="muted" style="font-size:14px">Cola um pacote JSON (ou escolhe um ficheiro .json).</p>
       <textarea class="code" id="importBox" spellcheck="false" placeholder='{"name":"…","questions":[…]}'>${esc(view.draft || '')}</textarea>
       <div class="row"><button class="btn primary" data-act="import">Importar</button><label class="btn" for="importFile">Escolher ficheiro</label><input type="file" id="importFile" accept=".json,application/json" hidden><span class="spacer"></span><button class="btn small" data-act="copyPrompt">Copiar prompt para gerar perguntas</button><button class="btn small" data-act="example">Ver exemplo</button></div>
       ${view.msg ? `<p class="msg ${view.msgOk ? 'ok' : 'ko'}">${esc(view.msg)}</p>` : ''}
@@ -2659,7 +5437,7 @@ function doImport(text) {
   if (!data || !Array.isArray(data.questions)) return go('bank', { msg: 'Falta a lista "questions".', msgOk: false, draft: text });
   const bad = []; data.questions.forEach((q, i) => { const v = validateQ(q); if (!v.ok) bad.push(`pergunta ${i + 1}: ${v.why}`); });
   if (bad.length) return go('bank', { msg: `Corrige antes de importar — ${bad.slice(0, 3).join('; ')}${bad.length > 3 ? ` (+${bad.length - 3})` : ''}`, msgOk: false, draft: text });
-  const pack = { cadeira: C.id, name: String(data.name || 'Pacote importado').slice(0, 80), createdAt: Date.now(), questions: data.questions, lessons: Array.isArray(data.lessons) ? data.lessons : [] };
+  const pack = { course: C.id, name: String(data.name || 'Pacote importado').slice(0, 80), createdAt: Date.now(), questions: data.questions, lessons: Array.isArray(data.lessons) ? data.lessons : [] };
   packs.push(pack); ls.set(LS_PACKS, packs);
   rebuildBank(); go('bank', { msg: `${pack.questions.length} pergunta(s) importada(s) neste browser.`, msgOk: true, draft: '' });
 }
@@ -2668,14 +5446,90 @@ async function copyText(text, fallbackId) {
   catch { const el = document.getElementById(fallbackId); if (el) { el.closest('details') && (el.closest('details').open = true); el.focus(); el.select(); toast('Seleccionei o texto: copia com Ctrl/Cmd+C.'); } }
 }
 
+/* ---------- OTHER DEVICE (progress key) ----------
+   Export: a key for all courses, as a link + QR (site) or text (local file), plus Share on phones.
+   Import: paste a key/link, or open a #k= link; always merges, never overwrites. */
+const KEY = window.PROGRESS_KEY;
+const onWeb = /^https?:$/.test(location.protocol);
+const touch = matchMedia('(pointer: coarse)').matches;
+const keyLink = key => location.origin + location.pathname + '#k=' + key;
+const hasProgress = () => Object.values(G.c).some(c => Object.values(c.stats || {}).some(s => s.c || s.w || s.ew));
+function Sync() {
+  const back = C ? 'home' : 'courses';
+  const inc = view.incoming;
+  const confirm = inc ? `<article class="card stack sync-confirm">
+      <span class="eyebrow">${view.fromLink ? 'Abriste um link de progresso' : 'Chave lida'}</span>
+      <h2>Juntar este progresso?</h2>
+      <ul class="sync-list">${KEY.summary(inc).map(x => { const c = REG.courses[x.id]; return `<li><b>${esc(c.code)}</b> · ${x.answered} pergunta${x.answered === 1 ? '' : 's'} respondida${x.answered === 1 ? '' : 's'} (${x.mastered} já certas) · ${x.xp} XP${x.notes ? ` · ${x.notes} nota${x.notes === 1 ? '' : 's'}` : ''}</li>`; }).join('')}</ul>
+      <p class="muted">Não apaga nada deste dispositivo: para cada pergunta fica o melhor dos dois lados.${inc.unknown ? ` ${inc.unknown} resposta(s) eram de perguntas que este site já não tem e ficam de fora.` : ''}</p>
+      <div class="row"><button class="btn primary" data-act="mergeKey">Juntar ao meu progresso</button><button class="btn" data-act="cancelKey">Cancelar</button></div>
+    </article>` : '';
+  const exportHint = !onWeb ? 'Estás a usar o ficheiro HTML: o código dá o texto da chave. Copia-o e cola-o em “Trazer para aqui” no outro dispositivo.'
+    : touch ? 'Carrega em Partilhar e envia para ti próprio (WhatsApp, email, notas). No outro dispositivo, abre o link.'
+    : 'No telemóvel, aponta a câmara a este código e abre o link.';
+  const exportCard = hasProgress() ? `<article class="card stack">
+      <h3>${glyph('qr')} Levar daqui</h3>
+      <p class="muted">${exportHint}</p>
+      <div class="qr" id="qrBox" aria-label="Código QR com o teu progresso"><span class="muted">A gerar…</span></div>
+      <label class="toggle"><input type="checkbox" id="includeNotes" ${view.notes ? 'checked' : ''}> Incluir as minhas notas <span class="muted" style="font-size:12.5px">(a chave fica maior)</span></label>
+      <textarea class="code key" id="keyBox" readonly aria-label="${onWeb ? 'Link' : 'Chave'} de progresso"></textarea>
+      <div class="row">
+        <button class="btn primary" data-act="copyKey">${glyph('copy')} Copiar ${onWeb ? 'link' : 'chave'}</button>
+        ${navigator.share ? `<button class="btn" data-act="shareKey">${glyph('share')} Partilhar</button>` : ''}
+      </div>
+    </article>` : `<article class="card stack"><h3>${glyph('qr')} Levar daqui</h3><p class="muted">Ainda não há progresso neste dispositivo. Responde a algumas perguntas e volta aqui.</p></article>`;
+  return `<div class="qhead"><button class="btn small" data-act="${back}" aria-label="Voltar">←</button><span class="eyebrow">Outro dispositivo</span></div>
+    <section class="hero"><h1>Continua noutro dispositivo.</h1>
+      <p>O progresso fica guardado só neste browser. Para o passares, gera aqui uma chave e abre-a no outro dispositivo. Não há contas e nada é enviado para servidores.</p></section>
+    ${confirm}
+    <div class="sync-grid">
+      ${exportCard}
+      <article class="card stack">
+        <h3>${glyph('swap')} Trazer para aqui</h3>
+        <p class="muted">Cola a chave ou o link que geraste no outro dispositivo.</p>
+        <textarea class="code key" id="pasteBox" spellcheck="false" placeholder="https://…#k=E1…  ou  E1…">${esc(view.pasted || '')}</textarea>
+        ${view.err ? `<p class="msg ko">${esc(view.err)}</p>` : ''}
+        <div class="row"><button class="btn primary" data-act="readKey">Ler chave</button></div>
+      </article>
+    </div>`;
+}
+let keyGen = 0;
+async function afterSyncRender() {
+  const box = document.getElementById('keyBox'), qrBox = document.getElementById('qrBox'); if (!box) return;
+  const my = ++keyGen;
+  let key; try { key = await KEY.encode(G, REG.courses, { notes: !!view.notes }); } catch { qrBox.innerHTML = '<span class="muted">Não consegui gerar a chave neste browser.</span>'; return; }
+  if (my !== keyGen) return;
+  const text = onWeb ? keyLink(key) : key;
+  view.keyText = text; box.value = text;
+  try { const q = qrcode(0, 'L'); q.addData(text, 'Byte'); q.make(); qrBox.innerHTML = q.createSvgTag({ cellSize: 4, margin: 2, scalable: true }); }
+  catch { qrBox.innerHTML = '<span class="muted">A chave é grande demais para um código QR. Usa Copiar ou Partilhar' + (view.notes ? ', ou tira as notas' : '') + '.</span>'; }
+}
+async function readKey(text) {
+  try { const inc = await KEY.decode(text, REG.courses); go('sync', { incoming: inc, notes: view.notes }); }
+  catch (e) { go('sync', { err: e.message, pasted: text, notes: view.notes }); }
+}
+function mergeKey() {
+  const rep = KEY.merge(G, view.incoming, id => blank(REG.courses[id].topics));
+  if (C) openCourse(C.id); else { const first = Object.keys(view.incoming.courses)[0]; if (first) openCourse(first); }
+  save();
+  toast(`Feito: ${rep.added} pergunta(s) novas, ${rep.updated} atualizadas${rep.notes ? `, ${rep.notes} nota(s)` : ''}.`);
+  go(C ? 'home' : 'courses');
+}
+
 /* ---------- events ---------- */
 document.addEventListener('click', async ev => {
   const b = ev.target.closest('[data-act]'); if (!b) return; const a = b.dataset.act;
   if (['unlockAll', 'testDate', 'note'].includes(a)) return;
   switch (a) {
     case 'home': if (ses && !ses.ended && ses.mode === 'exam' && view.name === 'quiz') { finish(); return; } clearInterval(tick); ses = null; go('home'); break;
-    case 'cadeiras': if (ses && !ses.ended && ses.mode === 'exam' && view.name === 'quiz') { finish(); return; } clearInterval(tick); ses = null; go('cadeiras'); break;
-    case 'openC': if (openCadeira(b.dataset.id)) { save(); go('home'); } break;
+    case 'courses': if (ses && !ses.ended && ses.mode === 'exam' && view.name === 'quiz') { finish(); return; } clearInterval(tick); ses = null; go('courses'); break;
+    case 'sync': go('sync'); break;
+    case 'copyKey': if (view.keyText) copyText(view.keyText, 'keyBox'); break;
+    case 'shareKey': if (view.keyText) navigator.share(onWeb ? { title: 'Estudo IST', text: 'O meu progresso no Estudo IST', url: view.keyText } : { title: 'Estudo IST', text: view.keyText }).catch(() => {}); break;
+    case 'readKey': readKey(document.getElementById('pasteBox').value); break;
+    case 'mergeKey': mergeKey(); break;
+    case 'cancelKey': go('sync', { notes: view.notes }); break;
+    case 'openC': if (openCourse(b.dataset.id)) { save(); go('home'); } break;
     case 'extra': start('extra', { extra: b.dataset.k }); break;
     case 'startReview': start(b.dataset.k); break;
     case 'topic': { const k = b.dataset.k; const set = new Set(S.settings.topics); set.has(k) ? set.delete(k) : set.add(k); if (!set.size) { toast('Tem de ficar pelo menos um tema.'); return; } S.settings.topics = Object.keys(TOPICS).filter(t => set.has(t)); save(); renderView(); break; }
@@ -2694,18 +5548,19 @@ document.addEventListener('click', async ev => {
     case 'bank': go('bank'); break;
     case 'notes': go('notes'); break;
     case 'import': doImport(document.getElementById('importBox').value); break;
-    case 'example': go('bank', { draft: JSON.stringify((C.importar && C.importar.exemplo) || { name: 'Exemplo', questions: [] }, null, 2) }); break;
+    case 'example': go('bank', { draft: JSON.stringify((C.importHelp && C.importHelp.example) || { name: 'Exemplo', questions: [] }, null, 2) }); break;
     case 'copyPrompt': copyText(importPrompt(), 'promptBox'); break;
     case 'delPack': view.confirmDel = +b.dataset.i; renderView(); break;
     case 'delPackNo': view.confirmDel = null; renderView(); break;
     case 'delPackYes': { packs.splice(+b.dataset.i, 1); ls.set(LS_PACKS, packs); rebuildBank(); view.confirmDel = null; renderView(); break; }
     case 'reset': view.confirmReset = true; renderView(); break;
     case 'resetNo': view.confirmReset = false; renderView(); break;
-    case 'resetYes': { const keep = S.settings; G.c[C.id] = blank(TOPICS); G.c[C.id].settings = keep; openCadeira(C.id); save(); view.confirmReset = false; toast('Progresso apagado.'); renderView(); break; }
+    case 'resetYes': { const keep = S.settings; G.c[C.id] = blank(TOPICS); G.c[C.id].settings = keep; openCourse(C.id); save(); view.confirmReset = false; toast('Progresso apagado.'); renderView(); break; }
   }
 });
 document.addEventListener('change', ev => {
   const t = ev.target;
+  if (t.id === 'includeNotes') { view.notes = t.checked; renderView(); return; }
   if (t.id === 'unlockAll') { S.settings.unlockAll = t.checked; save(); renderView(); }
   if (t.id === 'testDate') { S.settings.testDate = t.value; save(); renderView(); }
   if (t.id === 'importFile' && t.files && t.files[0]) { const r = new FileReader(); r.onload = () => doImport(String(r.result || '')); r.readAsText(t.files[0]); }
@@ -2721,8 +5576,17 @@ document.addEventListener('keydown', ev => {
   } else if (view.name === 'lesson' && ev.key === 'Enter') { ev.preventDefault(); next(); }
 });
 
-if (G.cur && REG.cadeiras[G.cur]) openCadeira(G.cur); else view = { name: 'cadeiras' };
+if (G.cur && REG.courses[G.cur]) openCourse(G.cur); else view = { name: 'courses' };
 renderView();
+// opened from a progress link: show what it brings, then clean the address bar
+function openKeyFromHash() {
+  const linkKey = KEY.extract(location.hash); if (!linkKey) return;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch {}
+  if (ses && !ses.ended) { clearInterval(tick); ses = null; }
+  KEY.decode(linkKey, REG.courses).then(inc => go('sync', { incoming: inc, fromLink: true }), e => go('sync', { err: e.message, pasted: linkKey }));
+}
+openKeyFromHash();
+window.addEventListener('hashchange', openKeyFromHash);   // link opened in a tab where the site was already open
 })();
 
 </script>

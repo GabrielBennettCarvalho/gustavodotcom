@@ -1,4 +1,4 @@
-ESTUDO.perguntas('ams', [
+STUDY.questions('ams', [
 /* ===== ARCHIMATE & EA ===== */
 { id: 'arch-01', t: 'arch', l: 1, les: 'arch-ea', src: 'Slides 03a, p.3',
   q: 'Qual é a definição de Enterprise Architecture dada nas aulas?',

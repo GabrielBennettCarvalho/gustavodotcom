@@ -1,8 +1,8 @@
-/* ===== Lições (teoria) ===== */
+/* ===== Lessons (theory) ===== */
 (() => {
 const R = (k, al, ak, ad, bl, bk, bd, extra = {}) => `<div class="diagram" style="margin-top:6px">${DG.rel(k, Object.assign({ al, ak, ad, bl, bk, bd }, extra))}</div>`;
-ESTUDO.licoes('ams', [
-/* ---------------- SISTEMAS & MODELAÇÃO ---------------- */
+STUDY.lessons('ams', [
+/* ---------------- SYSTEMS & MODELLING ---------------- */
 { id: 'sys-system', t: 'sys', title: 'O que é (afinal) um sistema',
   html: `<p>Do grego <i>sústēma</i>: um todo formado por elementos que “estão juntos”. Mas na AMS a ideia central é outra: <b>um sistema não existe “per si”</b>. Emerge conceptualmente quando alguém, um <b>stakeholder</b>, tem uma <b>concern</b> (preocupação, interesse).</p>
   <p>Definição usada no curso: <i>“A system is a thing that, when situated in a specific environment, pursues a common goal for a set of stakeholders according to their concerns.”</i></p>
@@ -97,7 +97,7 @@ ESTUDO.licoes('ams', [
   <li><b>Boeing 737 Max</b>: MCAS com dependência de um único sensor, documentação insuficiente e pilotos sem treino nessa funcionalidade “black-box”.</li></ul>`,
   key: 'Quase todas as falhas vêm de requisitos, comunicação entre stakeholders ou integração.' },
 
-/* ---------------- REQUISITOS ---------------- */
+/* ---------------- REQUIREMENTS ---------------- */
 { id: 'req-basics', t: 'req', title: 'Do UoD ao requisito',
   html: `<p>Requirements Engineering é o processo disciplinado de determinar, exprimir, avaliar e gerir o que tem de ser alcançado ou respeitado numa mudança. Não é só recolher desejos.</p>
   <p>A progressão (raramente linear): <b>evidência → concern / necessidade → objetivo → requisito → design e implementação</b>.</p>

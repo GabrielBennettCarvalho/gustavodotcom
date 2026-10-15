@@ -6,8 +6,8 @@ const splitMerge = (g1, g2, la, lb, ca, cb, after, alt) => ({ kind: 'bpmn', w: 6
   { id: 'g2', k: g2, x: 420, y: 72 }, { id: 't', k: 'task', x: 502, y: 72, w: 86, lb: after }, { id: 'e', k: 'end', x: 572, y: 72 }],
   edges: [{ f: 's', t: 't0' }, { f: 't0', t: 'g1' }, { f: 'g1', t: 'a', lb: ca }, { f: 'g1', t: 'b', lb: cb }, { f: 'a', t: 'g2' }, { f: 'b', t: 'g2' }, { f: 'g2', t: 't' }, { f: 't', t: 'e' }] });
 
-ESTUDO.perguntas('ams', [
-/* ===== BPMN · Nível 1 ===== */
+STUDY.questions('ams', [
+/* ===== BPMN · Level 1 ===== */
 { id: 'bpmn-01', t: 'bpmn', l: 1, les: 'bpmn-core',
   q: 'Quais são os três tipos de flow objects em BPMN?',
   o: ['Pools, Lanes, Groups', 'Events, Activities, Gateways', 'Sequence flow, Message flow, Association', 'Data objects, Data stores, Annotations'], a: 1,
@@ -65,7 +65,7 @@ ESTUDO.perguntas('ams', [
   o: ['A', 'B', 'C', 'Nenhum'], a: 1, fixed: true,
   e: 'O **Terminate end event** tem um círculo preenchido no interior. A tem um envelope (message end) e C um raio (error end).' },
 
-/* ===== BPMN · Nível 2 ===== */
+/* ===== BPMN · Level 2 ===== */
 { id: 'bpmn-15', t: 'bpmn', l: 2, les: 'bpmn-events',
   q: 'Qual a diferença entre um Message e um Signal?',
   o: ["Não há diferença: são dois nomes para o mesmo trigger", "Message tem destinatário específico; Signal é broadcast", "Signal só serve para assinalar erros técnicos", "Message só pode existir em start events"], a: 1,
@@ -135,7 +135,7 @@ ESTUDO.perguntas('ams', [
   o: ["Para enviar mensagens a outras pools", "Para ligar partes do mesmo diagrama", "Para criar novas instâncias do processo", "Para sincronizar dois processos diferentes"], a: 1,
   e: 'Os **link events** funcionam aos pares (throw → catch) **dentro do mesmo processo**: simplificam o desenho, como um conector de página.' },
 
-/* ===== BPMN · Nível 3 (diagramas e cenários) ===== */
+/* ===== BPMN · Level 3 (diagrams and scenarios) ===== */
 { id: 'bpmn-31', t: 'bpmn', l: 3, les: 'bpmn-gw', d: splitMerge('xor', 'and', 'Aprovar', 'Rejeitar', 'ok', 'não ok', 'Arquivar', 'XOR split fechado por AND join'),
   q: 'O que acontece a uma instância que passe por este processo?',
   o: ["Corre normalmente até ao fim", "Deadlock no AND-join", "“Arquivar” é executada duas vezes", "Aprovar e Rejeitar correm em paralelo"], a: 1,
@@ -242,7 +242,7 @@ ESTUDO.perguntas('ams', [
   o: ["Parallel gateway; timer event para a espera", "Exclusive gateway; message catch para a receção", "Inclusive gateway; terminate event para a espera", "Event-based gateway; error event para a falta"], a: 1,
   e: 'Há stock **ou** não há: decisão **exclusiva (XOR)**. A espera por algo enviado por outro participante (o fornecedor) é um **message catch** intermédio. No fim, os dois ramos convergem antes de “Enviar produto”.' },
 
-/* ===== BPMN · Nível 4 (boss) ===== */
+/* ===== BPMN · Level 4 (boss) ===== */
 { id: 'bpmn-48', t: 'bpmn', l: 4, les: 'bpmn-events', src: 'Slides 04a, p.25',
   q: 'Quando é que um Terminate End Event e um None End Event têm exatamente o mesmo efeito?',
   o: ["Sempre: são duas formas de terminar", "Nunca: o terminate é sempre diferente", "Só se o processo não for concorrente", "Só em diagramas de colaboração"], a: 2,

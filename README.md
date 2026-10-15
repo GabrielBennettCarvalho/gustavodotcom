@@ -1,60 +1,77 @@
-# Estudo IST
+# gustavodotcom — Estudo IST
 
-App de estudo por cadeiras. Para os colegas é **um único ficheiro**: `dist/estudo.html`.
+A study app for IST courses. For students it is **one file**: `dist/estudo.html`, also served at
+**https://gabrielbennettcarvalho.github.io/gustavodotcom/**.
 
-## Site
+The code and file names are in English; everything students see is in Portuguese.
 
-Cada push para a `main` corre o build e publica em **https://gabrielbennettcarvalho.github.io/gustavodotcom/** (workflow em `.github/workflows/pages.yml`). Se o build falhar na validação, o site não é atualizado: vê o erro no separador Actions.
-
-## Gerar o ficheiro
+## Build
 
 ```
 python3 build.py
 ```
 
-O build valida o conteúdo (ids repetidos, respostas fora das opções, lições inexistentes, diagramas partidos) e só gera o HTML se estiver tudo certo. Precisa de Python 3 e Node.
+Validates the content (duplicate ids, answers out of range, missing lessons, broken diagrams) and only writes
+`dist/estudo.html` if everything passes. Needs Python 3 and Node.
 
-## Estrutura
+Every push to `main` runs the same build on GitHub Actions and publishes the site
+(`.github/workflows/pages.yml`). If validation fails, the site is not updated: check the Actions tab.
+
+## Layout
 
 ```
 src/
-  manifesto.json        cadeiras incluídas e ordem dos ficheiros
-  motor/                igual para todas as cadeiras
-    nucleo.js           registo: ESTUDO.cadeira / .licoes / .perguntas
-    app_topo.js         estado, menu de cadeiras, home, sessões, exame
-    app_resto.js        quiz, resultados, biblioteca, banco, eventos
+  manifest.json          courses included and the order of their files
+  engine/                shared by every course
+    registry.js          STUDY.course / .lessons / .questions / .ids
+    progress-key.js      the "other device" key: encode, decode, merge
+    app-core.js          state, course menu, course home, sessions, mock exam
+    app-views.js         quiz, results, library, question bank, other device, events
     style.css
-  cadeiras/
+  courses/
     ams/
-      cadeira.js        nome, temas, cores, extras (detetive de diagramas)
-      estilo.css        cores dos temas
-      render.js         desenho de BPMN/ArchiMate (só o AMS usa)
-      licoes/*.js
-      perguntas/*.js
-      registo.json      gerado pelo build; não editar à mão
+      course.js          name, topics, colours, extras (diagram detective)
+      theme.css          topic colours
+      render.js          BPMN/ArchiMate drawing (only AMS uses it)
+      lessons/*.js
+      questions/*.js
+      ids.json           written by the build; never edit by hand
+  vendor/qrcode.js       QR code generator (MIT, Kazuhiko Arase)
+tools/validate.js        content checks, used by build.py
 ```
 
-## Acrescentar matéria a uma cadeira
+## Adding content to a course
 
-Cria (ou edita) um ficheiro em `cadeiras/<id>/perguntas/` com:
+Create (or edit) a file in `src/courses/<id>/questions/`:
 
 ```js
-ESTUDO.perguntas('ams', [
+STUDY.questions('ams', [
   { id: 'bpmn-99', t: 'bpmn', l: 2, q: '…', o: ['…', '…'], a: 1, e: '…', les: 'bpmn-gw' },
 ]);
 ```
 
-Se o ficheiro for novo, acrescenta-o à lista da cadeira em `manifesto.json`. Lições: o mesmo com `ESTUDO.licoes`.
+Fields: `id` unique text · `t` topic · `l` level 1–4 · `q` question · `o` 2–6 options · `a` index of the right
+option (or a list) · `e` explanation. Optional: `w` note per wrong option, `les` lesson id, `ctx` case lesson
+shown above the question, `d` diagram, `src` source, `fixed` don't shuffle options, `reserved: 'exam'` only in
+the mock exam.
 
-Para uma pergunta só aparecer no exame simulado: `reservada: 'exame'`.
+New file? Add it to the course's list in `manifest.json`. Lessons work the same way with `STUDY.lessons`.
 
-## Acrescentar uma cadeira
+## Adding a course
 
-1. `src/cadeiras/<id>/cadeira.js` com `ESTUDO.cadeira({ id, sigla, nome, ano, semestre, titulo, temas: {…} })`.
-2. Opcional: `render` (para o campo `d` das perguntas) e `extras` (secções só desta cadeira, ver o detetive no AMS).
-3. Acrescentar a cadeira e os seus ficheiros a `manifesto.json`.
+1. `src/courses/<id>/course.js` with `STUDY.course({ id, code, name, year, semester, tagline, topics: {…} })`.
+2. Optional: `render` (draws the `d` field) and `extras` (sections only this course has; see AMS).
+3. Add the course and its files to `manifest.json`.
 
-## Regras que não se partem
+## Progress and the "other device" key
 
-- **Nunca mudar o `id` de uma pergunta já publicada.** O progresso dos estudantes (e a futura chave de importação) está ligado ao id. Para corrigir uma pergunta, edita o texto e mantém o id.
-- `registo.json` só cresce. O build trata disso.
+Progress lives in the browser (`localStorage`). The **Outro dispositivo** screen packs it into a key
+(link + QR on the site, text in the local file) that another device merges in; nothing is ever overwritten.
+Format details are at the top of `src/engine/progress-key.js`.
+
+## Rules that must not be broken
+
+- **Never change the `id` of a published question.** Students' progress and their keys point at it.
+  To fix a question, edit its text and keep the id.
+- `ids.json` only grows. The build takes care of it.
+- Don't edit `dist/estudo.html` by hand: the build overwrites it.

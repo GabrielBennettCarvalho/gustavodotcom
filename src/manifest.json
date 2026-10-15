@@ -1,0 +1,16 @@
+{
+  "title": "Estudo IST",
+  "vendor": ["vendor/qrcode.js"],
+  "engine": ["engine/registry.js", "engine/progress-key.js", "engine/app-core.js", "engine/app-views.js"],
+  "courses": {
+    "ams": {
+      "styles": ["theme.css"],
+      "files": [
+        "render.js", "course.js",
+        "lessons/base.js", "lessons/exam.js",
+        "questions/sys.js", "questions/req.js", "questions/arch.js",
+        "questions/bpm.js", "questions/bpmn.js", "questions/exam.js"
+      ]
+    }
+  }
+}

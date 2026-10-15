@@ -3,6 +3,10 @@ Usage: python3 build.py   (validates the content first; needs Python 3 and Node)
 New course: create src/courses/<id>/ and add it to src/manifest.json."""
 import json, pathlib, subprocess, sys, tempfile
 
+# Windows consoles default to cp1252: force UTF-8 so non-ASCII output never crashes the build.
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace'); sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
 ROOT = pathlib.Path(__file__).parent
 SRC, DIST = ROOT / 'src', ROOT / 'dist'
 man = json.loads((SRC / 'manifest.json').read_text(encoding='utf-8'))
@@ -20,7 +24,7 @@ for cid, c in man['courses'].items():
 # 1) validate content and update each course's ids.json (append-only)
 with tempfile.NamedTemporaryFile('w', suffix='.js', delete=False, encoding='utf-8') as tmp:
     tmp.write(registry + '\n' + '\n'.join(js for _, js in course_js))
-r = subprocess.run(['node', str(ROOT / 'tools' / 'validate.js'), tmp.name, str(SRC / 'courses')], capture_output=True, text=True)
+r = subprocess.run(['node', str(ROOT / 'tools' / 'validate.js'), tmp.name, str(SRC / 'courses')], capture_output=True, text=True, encoding='utf-8', errors='replace')
 pathlib.Path(tmp.name).unlink()
 print(r.stdout.strip())
 if r.returncode:

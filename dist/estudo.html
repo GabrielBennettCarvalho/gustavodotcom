@@ -5049,10 +5049,18 @@ const ls = { get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null')
    G holds everything; S points at the open course's slice (G.c[id]). */
 const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '' }, rounds: 0, sessions: [] });
 let G = ls.get(LS_KEY);
-if (!G || G.v !== 2) {
-  G = { v: 2, cur: null, c: {}, updatedAt: 0 };
-  const old = ls.get(LEGACY.state);   // progress from the AMS-only version
-  if (old && old.stats) { const { bestSprint, v, updatedAt, ...rest } = old; G.c[LEGACY.course] = rest; G.cur = LEGACY.course; G.updatedAt = updatedAt || Date.now(); }
+if (!G || G.v !== 2) G = { v: 2, cur: null, c: {}, updatedAt: 0 };
+// Progress from the AMS-only version (same browser, same origin): merged once, even if this
+// version was opened before. Merging never overwrites what is already here.
+if (!G.legacyMerged) {
+  const old = ls.get(LEGACY.state);
+  if (old && old.stats && Object.keys(old.stats).length) {
+    const s = old.settings || {};
+    window.PROGRESS_KEY.merge(G, { courses: { [LEGACY.course]: { stats: old.stats, notes: old.notes || {}, xp: old.xp || 0, rounds: old.rounds || 0, testDate: s.testDate || '', unlockAll: !!s.unlockAll } } },
+      () => ({ stats: {}, notes: {}, xp: 0, settings: {}, rounds: 0, sessions: [] }));
+    if (!G.cur) G.cur = LEGACY.course;
+  }
+  G.legacyMerged = true; ls.set(LS_KEY, G);
 }
 let packs = ls.get(LS_PACKS);
 if (!packs) { packs = (ls.get(LEGACY.packs) || []).map(p => Object.assign({ course: LEGACY.course }, p)); ls.set(LS_PACKS, packs); }

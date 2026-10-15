@@ -9,20 +9,22 @@ const qIndex = () => ses.items.slice(0, ses.i + 1).filter(x => x.kind === 'q').l
 function Quiz() {
   const it = curItem(), q = BYID[it.id]; const T = TOPICS[q.t]; const multi = Array.isArray(q.a);
   const isExam = ses.mode === 'exam';
-  const prog = `<div class="progress" aria-hidden="true">${ses.items.filter(x => x.kind === 'q').map((x, i) => { const r = ses.results.find(rr => rr.item === x); const cur = x === it; return `<i class="${r ? (isExam ? 'cur' : r.ok ? 'ok' : 'ko') : cur ? 'cur' : ''}"></i>`; }).join('')}</div>`;
+  const prog = `<div class="progress" aria-hidden="true">${ses.items.filter(x => x.kind === 'q').map((x, i) => { const r = ses.results.find(rr => rr.item === x); const cur = x === it; return `<i class="${r ? (r.skipped ? 'sk' : isExam ? 'cur' : r.ok ? 'ok' : 'ko') : cur ? 'cur' : ''}"></i>`; }).join('')}</div>`;
+  const skipBtn = `<button class="btn small skip" data-act="skip" title="${isExam ? 'Deixar em branco (não desconta)' : 'Saltar: fica na lista Saltadas para fazeres depois'}">${isExam ? 'Deixar em branco' : 'Saltar'} ⤼</button>`;
   const opts = it.order.map((oi, pos) => { let cls = ''; const isRight = multi ? q.a.includes(oi) : q.a === oi; const chosen = ses.picked.has(oi);
     if (ses.answered && !isExam) { if (isRight) cls = 'right'; else if (chosen) cls = 'wrong'; } else if (chosen) cls = 'sel';
     return `<button class="opt ${cls}" data-act="opt" data-oi="${oi}" ${ses.answered ? 'disabled' : ''}><span class="k">${multi ? (chosen ? '✓' : pos + 1) : pos + 1}</span><span class="txt">${md(q.o[oi])}</span></button>`; }).join('');
   let fb = '';
   if (ses.answered && !isExam) fb = Feedback(q, it);
   const foot = ses.answered ? (isExam ? '' : `<div class="qfoot"><button class="btn primary" data-act="next" id="nextBtn">${ses.i >= ses.items.length - 1 ? 'Ver resultado' : 'Seguinte'} →</button><span class="kbd">Enter</span><span class="spacer"></span><button class="btn ghost small" data-act="quit">Terminar ronda</button></div>`)
-    : `<div class="qfoot">${multi ? `<button class="btn primary" data-act="confirm" ${ses.picked.size ? '' : 'disabled'}>Confirmar</button>` : ''}<span class="muted" style="font-size:12.5px">Teclas <span class="kbd">1</span>–<span class="kbd">${q.o.length}</span>${multi ? ' marcam, <span class="kbd">Enter</span> confirma' : ''}</span><span class="spacer"></span>${isExam ? `<button class="btn ghost small" data-act="finish">Entregar exame</button>` : `<button class="btn ghost small" data-act="quit">Terminar ronda</button>`}</div>`;
-  return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="badge">N${q.l}</span>${prog}${(isExam) ? `<span class="timer" id="timer">${fmt(ses.timeLimit - Math.floor((Date.now() - ses.startedAt) / 1000))}</span>` : ''}<span class="mono muted">${qIndex()}/${qCount()}</span></div>
+    : `<div class="qfoot">${multi ? `<button class="btn primary" data-act="confirm" ${ses.picked.size ? '' : 'disabled'}>Confirmar</button>` : ''}${skipBtn}<span class="muted" style="font-size:12.5px">Teclas <span class="kbd">1</span>–<span class="kbd">${q.o.length}</span>${multi ? ' marcam, <span class="kbd">Enter</span> confirma' : ''} · <span class="kbd">S</span> ${isExam ? 'branco' : 'salta'}</span><span class="spacer"></span>${isExam ? `<button class="btn ghost small" data-act="finish">Entregar exame</button>` : `<button class="btn ghost small" data-act="quit">Terminar ronda</button>`}</div>`;
+  return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="badge">N${q.l}</span>${q.calc ? `<span class="badge calc" title="Pergunta com contas">Contas${q.step ? ` · ${esc(q.step)}` : ''}</span>` : ''}${prog}${(isExam) ? `<span class="timer" id="timer">${fmt(ses.timeLimit - Math.floor((Date.now() - ses.startedAt) / 1000))}</span>` : ''}<span class="mono muted">${qIndex()}/${qCount()}</span></div>
     <article class="card" id="qcard">
       <span class="eyebrow">${esc(ses.title)}</span>
       <p class="qtext" style="margin-top:6px">${md(q.q)}</p>
       ${multi ? '<div class="multi-note">Seleciona todas as corretas</div>' : ''}
       ${q.ctx && LBYID[q.ctx] ? `<details class="lesson-peek" style="margin-top:12px"><summary>Ler o caso: ${esc(LBYID[q.ctx].title)}</summary><div class="lbody lesson">${lessonBody(LBYID[q.ctx])}</div></details>` : ''}
+      ${q.code ? codeBlock(q.code) : ''}
       ${q.d ? `<div class="diagram">${renderD(q.d)}</div>` : ''}
       <div class="opts" role="group" aria-label="Opções">${opts}</div>
       ${fb}
@@ -34,7 +36,7 @@ function Feedback(q, it) {
   const wrongNotes = [...ses.picked].filter(oi => (Array.isArray(q.a) ? !q.a.includes(oi) : q.a !== oi) && q.w && q.w[oi]).map(oi => `<p class="why-wrong"><b>Porque não “${md(q.o[oi])}”:</b> ${md(q.w[oi])}</p>`).join('');
   const L = q.les && LBYID[q.les];
   return `<div class="feedback ${ok ? 'ok' : 'ko'}" aria-live="polite">
-    <div class="verdict">${ok ? pickOne(['Certo.', 'Exatamente.', 'Na mouche.', 'Isso mesmo.']) : pickOne(['Ainda não.', 'Quase, mas não.', 'Falhou. Bora perceber porquê.'])}</div>
+    <div class="verdict">${C.verdict ? `<span class="vtag">${esc(ok ? C.verdict.ok : C.verdict.ko)}</span>` : ''}${ok ? pickOne(['Certo.', 'Exatamente.', 'Na mouche.', 'Isso mesmo.']) : pickOne(['Ainda não.', 'Quase, mas não.', 'Falhou. Bora perceber porquê.'])}</div>
     <p class="explain">${md(q.e)}</p>
     ${wrongNotes}
     ${L ? `<details class="lesson-peek" ${ok ? '' : 'open'}><summary>Teoria: ${esc(L.title)}</summary><div class="lbody lesson">${lessonBody(L)}</div></details>` : ''}
@@ -43,6 +45,7 @@ function Feedback(q, it) {
   </div>`;
 }
 const pickOne = a => a[Math.floor(Math.random() * a.length)];
+const codeBlock = c => `<pre class="codeblk">${esc(c)}</pre>`;
 function lessonBody(L) { const body = L.trusted ? L.html : md(L.html || ''); return `${body}${L.d ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key ? `<p class="key">${L.trusted ? L.key : md(L.key)}</p>` : ''}`; }
 function afterQuizRender() { const n = document.getElementById('nextBtn'); if (n) n.focus({ preventScroll: true }); }
 
@@ -56,6 +59,7 @@ function grade() {
   const ok = Array.isArray(q.a) ? (picked.length === q.a.length && q.a.every(x => ses.picked.has(x))) : picked[0] === q.a;
   ses.answered = true; ses.results.push({ item: it, id: q.id, ok, picked });
   const s = st(q.id); s.last = Date.now();
+  if (S.skipped && S.skipped[q.id]) delete S.skipped[q.id];   // answered: leaves the "Saltadas" list
   if (ses.mode === 'exam') { if (ok) s.c++; else { s.ew++; s.eb = 0; } }           // exam mistake: goes to the exam review
   else if (ses.examGrading) { if (ok) { s.c++; s.eb++; } else { s.ew++; s.eb = 0; } }
   else if (ok) { s.c++; s.box = Math.min(5, s.box + 1); } else { s.w++; s.box = 0; }
@@ -63,6 +67,13 @@ function grade() {
   save();
   if (ses.mode === 'exam') { next(); return; }
   renderView();
+}
+// Skip: in training it goes to the "Saltadas" list (not a mistake, no XP); in the mock exam it is a blank answer.
+function skip() {
+  if (!ses || ses.answered) return; const it = curItem(); if (!it || it.kind !== 'q') return;
+  ses.results.push({ item: it, id: it.id, ok: false, skipped: true, picked: [] });
+  if (ses.mode !== 'exam') { if (!S.skipped) S.skipped = {}; S.skipped[it.id] = Date.now(); save(); }
+  ses.answered = true; next();
 }
 function next() {
   if (!ses) return;
@@ -72,7 +83,10 @@ function next() {
 }
 function finish() {
   if (!ses || ses.ended) return; ses.ended = true; clearInterval(tick);
-  if (ses.mode === 'exam') { const tot = ses.items.length, ok = ses.results.filter(r => r.ok).length; ses.grade = Math.round(ok / tot * 200) / 10; const g = ses.results.filter(r => r.ok).reduce((a, r) => a + XP[BYID[r.id].l], 0); S.xp += g; ses.xp = g; }
+  if (ses.mode === 'exam') { const tot = ses.items.length, ok = ses.results.filter(r => r.ok).length; const X = examCfg();
+    // real grading: a wrong answer costs 1/(number of options); blank (skipped or unanswered) is 0
+    const pen = X.penalty ? ses.results.filter(r => !r.ok && !r.skipped).reduce((a, r) => a + 1 / BYID[r.id].o.length, 0) : 0;
+    ses.penalty = pen; ses.grade = Math.max(0, Math.round((ok - pen) / tot * 200) / 10); ses.rawGrade = Math.round(ok / tot * 200) / 10; const g = ses.results.filter(r => r.ok).reduce((a, r) => a + XP[BYID[r.id].l], 0); S.xp += g; ses.xp = g; }
   S.rounds++; S.sessions.push({ m: ses.mode, d: Date.now(), n: ses.results.length, ok: ses.results.filter(r => r.ok).length }); if (S.sessions.length > 400) S.sessions = S.sessions.slice(-400);
   save(); go('results');
 }
@@ -88,18 +102,20 @@ function LessonScreen() {
 
 /* ---------- RESULTS ---------- */
 function Results() {
-  const r = ses.results; const ok = r.filter(x => x.ok).length; const tot = r.length; const wrong = r.filter(x => !x.ok);
+  const r = ses.results; const ok = r.filter(x => x.ok).length; const skipped = r.filter(x => x.skipped); const tot = r.length - skipped.length; const wrong = r.filter(x => !x.ok && !x.skipped);
   const lvl = ses.level; const nowUnlocked = lvl && lvl < 4 && unlocked(lvl + 1);
   let big = `${ok}/${tot}`, sub = tot ? `${Math.round(ok / tot * 100)}% de acerto` : 'sem respostas';
-  if (ses.mode === 'exam') { big = `${ses.grade.toFixed(1)}`; sub = `valores em 20 · ${ok} de ${ses.items.length} certas${tot < ses.items.length ? ` (${ses.items.length - tot} por responder)` : ''}`; }
+  if (!ses.mode.startsWith('exam') && skipped.length) sub += ` · ${skipped.length} saltada${skipped.length === 1 ? '' : 's'}`;
+  if (ses.mode === 'exam') { const blank = ses.items.length - tot; big = `${ses.grade.toFixed(1)}`;
+    sub = `valores em 20 · ${ok} certas, ${wrong.length} erradas, ${blank} em branco${ses.penalty ? ` · os erros descontaram ${(ses.penalty / ses.items.length * 20).toFixed(1)} valores (sem desconto: ${ses.rawGrade.toFixed(1)})` : ''}`; }
   const list = wrong.map(x => { const q = BYID[x.id]; const ans = (Array.isArray(q.a) ? q.a : [q.a]).map(i => md(q.o[i])).join(' · ');
-    return `<div class="review-item"><span class="badge" style="--c:${TOPICS[q.t].c};align-self:flex-start"><span class="sw"></span>${TOPICS[q.t].short} · N${q.l}</span><p class="q">${md(q.q)}</p>${q.d ? `<div class="diagram">${renderD(q.d)}</div>` : ''}<p class="a">Resposta: <b>${ans}</b></p><p class="x">${md(q.e)}</p></div>`; }).join('');
+    return `<div class="review-item"><span class="badge" style="--c:${TOPICS[q.t].c};align-self:flex-start"><span class="sw"></span>${TOPICS[q.t].short} · N${q.l}</span><p class="q">${md(q.q)}</p>${q.code ? codeBlock(q.code) : ''}${q.d ? `<div class="diagram">${renderD(q.d)}</div>` : ''}<p class="a">Resposta: <b>${ans}</b></p><p class="x">${md(q.e)}</p></div>`; }).join('');
   return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="eyebrow">${esc(ses.title)} · resultado</span></div>
     <article class="card stack">
       <div><div class="score-big">${big}</div><p class="muted">${sub}</p></div>
-      <div class="result-grid"><div class="kpi"><b>+${ses.xp}</b><span>XP ganho</span></div><div class="kpi"><b>${wrong.length}</b><span>para rever</span></div><div class="kpi"><b>${topLevel()}</b><span>nível mais alto aberto</span></div></div>
+      <div class="result-grid"><div class="kpi"><b>+${ses.xp}</b><span>XP ganho</span></div><div class="kpi"><b>${wrong.length}</b><span>para rever</span></div>${ses.mode === 'exam' ? (ses.items.length - tot ? `<div class="kpi"><b>${ses.items.length - tot}</b><span>em branco</span></div>` : '') : skipped.length ? `<div class="kpi"><b>${skipped.length}</b><span>saltadas</span></div>` : ''}<div class="kpi"><b>${topLevel()}</b><span>nível mais alto aberto</span></div></div>
       ${nowUnlocked ? `<p class="key" style="margin:0">Nível ${lvl + 1} desbloqueado. O token avançou.</p>` : ''}
-      <div class="row">${wrong.length ? `<button class="btn primary" data-act="retryWrong">Repetir as ${wrong.length} erradas</button>` : ''}${lvl ? `<button class="btn" data-act="level" data-n="${nowUnlocked ? lvl + 1 : lvl}">${nowUnlocked ? `Ir para o nível ${lvl + 1}` : `Outra ronda do nível ${lvl}`}</button>` : ''}<button class="btn" data-act="home">Início</button></div>
+      <div class="row">${wrong.length ? `<button class="btn primary" data-act="retryWrong">${wrong.length === 1 ? 'Repetir a errada' : `Repetir as ${wrong.length} erradas`}</button>` : ''}${skipped.length ? `<button class="btn${wrong.length ? '' : ' primary'}" data-act="retrySkipped">${skipped.length === 1 ? `Tentar a ${ses.mode === 'exam' ? 'que ficou em branco' : 'saltada'} agora` : `Tentar as ${skipped.length} ${ses.mode === 'exam' ? 'em branco' : 'saltadas'} agora`}</button>` : ''}${lvl ? `<button class="btn" data-act="level" data-n="${nowUnlocked ? lvl + 1 : lvl}">${nowUnlocked ? `Ir para o nível ${lvl + 1}` : `Outra ronda do nível ${lvl}`}</button>` : ''}<button class="btn" data-act="home">Início</button></div>
     </article>
     ${wrong.length ? `<div class="section"><h2>O que falhaste, explicado</h2>${list}</div>` : `<div class="section"><p class="muted">Sem erros nesta ronda.</p></div>`}`;
 }
@@ -246,11 +262,14 @@ function mergeKey() {
 /* ---------- events ---------- */
 document.addEventListener('click', async ev => {
   const b = ev.target.closest('[data-act]'); if (!b) return; const a = b.dataset.act;
-  if (['unlockAll', 'testDate', 'note'].includes(a)) return;
+  if (['unlockAll', 'testDate', 'note', 'noCalc'].includes(a)) return;
   switch (a) {
     case 'home': if (ses && !ses.ended && ses.mode === 'exam' && view.name === 'quiz') { finish(); return; } clearInterval(tick); ses = null; go('home'); break;
     case 'courses': if (ses && !ses.ended && ses.mode === 'exam' && view.name === 'quiz') { finish(); return; } clearInterval(tick); ses = null; go('courses'); break;
     case 'sync': go('sync'); break;
+    case 'theme': cycleTheme(); renderView(); break;
+    case 'skip': skip(); break;
+    case 'retrySkipped': { const ids = ses.results.filter(r => r.skipped).map(r => r.id); start('retry', { ids }); if (ses) ses.title = 'Saltadas · com papel e caneta'; break; }
     case 'copyKey': if (view.keyText) copyText(view.keyText, 'keyBox'); break;
     case 'shareKey': if (view.keyText) navigator.share(onWeb ? { title: 'Estudo IST', text: 'O meu progresso no Estudo IST', url: view.keyText } : { title: 'Estudo IST', text: view.keyText }).catch(() => {}); break;
     case 'readKey': readKey(document.getElementById('pasteBox').value); break;
@@ -289,6 +308,7 @@ document.addEventListener('change', ev => {
   const t = ev.target;
   if (t.id === 'includeNotes') { view.notes = t.checked; renderView(); return; }
   if (t.id === 'unlockAll') { S.settings.unlockAll = t.checked; save(); renderView(); }
+  if (t.id === 'noCalc') { S.settings.noCalc = t.checked; save(); renderView(); }
   if (t.id === 'testDate') { S.settings.testDate = t.value; save(); renderView(); }
   if (t.id === 'importFile' && t.files && t.files[0]) { const r = new FileReader(); r.onload = () => doImport(String(r.result || '')); r.readAsText(t.files[0]); }
 });
@@ -299,6 +319,7 @@ document.addEventListener('keydown', ev => {
   if (view.name === 'quiz' && ses) {
     const it = curItem(); const k = ev.key;
     if (/^[1-6]$/.test(k) && !ses.answered) { const pos = +k - 1; if (it.order[pos] !== undefined) { ev.preventDefault(); choose(it.order[pos]); } }
+    else if ((k === 's' || k === 'S') && !ses.answered && !ev.ctrlKey && !ev.metaKey) { ev.preventDefault(); skip(); }
     else if (k === 'Enter') { ev.preventDefault(); if (!ses.answered && Array.isArray(BYID[it.id].a) && ses.picked.size) grade(); else if (ses.answered) next(); }
   } else if (view.name === 'lesson' && ev.key === 'Enter') { ev.preventDefault(); next(); }
 });

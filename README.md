@@ -36,6 +36,7 @@ src/
       lessons/*.js
       questions/*.js
       ids.json           written by the build; never edit by hand
+    oc/                  Organização de Computadores (same layout; render.js draws address fields and tables)
   vendor/qrcode.js       QR code generator (MIT, Kazuhiko Arase)
 tools/validate.js        content checks, used by build.py
 ```
@@ -53,7 +54,8 @@ STUDY.questions('ams', [
 Fields: `id` unique text · `t` topic · `l` level 1–4 · `q` question · `o` 2–6 options · `a` index of the right
 option (or a list) · `e` explanation. Optional: `w` note per wrong option, `les` lesson id, `ctx` case lesson
 shown above the question, `d` diagram, `src` source, `fixed` don't shuffle options, `reserved: 'exam'` only in
-the mock exam.
+the mock exam, `calc: true` the question needs calculations (hidden by "Só teoria", tagged "Contas"), `step: '2/3'`
+step of a guided calculation, `code` a code listing shown above the options.
 
 New file? Add it to the course's list in `manifest.json`. Lessons work the same way with `STUDY.lessons`.
 
@@ -61,7 +63,18 @@ New file? Add it to the course's list in `manifest.json`. Lessons work the same 
 
 1. `src/courses/<id>/course.js` with `STUDY.course({ id, code, name, year, semester, tagline, topics: {…} })`.
 2. Optional: `render` (draws the `d` field) and `extras` (sections only this course has; see AMS).
+   Also optional (see OC): `levels` (with `tag`/`sub` shown on the level map), `map` (level map title, `link: 'bus'`,
+   `start`/`end` icons, legend), `exam: { n, min, penalty: 'options' }` (mock exam size, minutes and real grading where a
+   wrong answer costs 1/number of options), `verdict: { ok, ko }` (tags such as HIT/MISS), `logo` (SVG for the top bar).
+   Course-only CSS can be scoped with `:root[data-course="<id>"]`.
 3. Add the course and its files to `manifest.json`.
+
+## Skip, "Só teoria" and theme
+
+- **Saltar** (key S): in training a skipped question is not a mistake; it goes to Revisão → Saltadas until answered.
+  In the mock exam it is a blank answer (0 points).
+- **Só teoria (sem contas)** hides every `calc: true` question in all modes; level progress counts only what is shown.
+- The top bar cycles the colour theme (auto / claro / escuro), saved per device. Total XP is the sum of all courses.
 
 ## Progress and the "other device" key
 

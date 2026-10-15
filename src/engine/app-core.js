@@ -13,9 +13,9 @@ const DEFAULT_LEVELS = [
 ];
 const XP = { 1: 10, 2: 15, 3: 20, 4: 30 };
 const UNLOCK = 0.6;
-const EXAM_N = 20, EXAM_MIN = 30;   // mock exam: questions and minutes
+const EXAM_N = 20, EXAM_MIN = 30;   // mock exam defaults: questions and minutes (a course can set exam: { n, min, penalty })
 const EXAM_CLEAR = 2;               // correct answers in a row to clear an exam mistake from review
-const LS_KEY = 'estudo-ist-v2', LS_PACKS = 'estudo-ist-packs-v2';
+const LS_KEY = 'estudo-ist-v2', LS_PACKS = 'estudo-ist-packs-v2', LS_THEME = 'estudo-ist-theme';
 const LEGACY = { state: 'ams-treino-v1', packs: 'ams-treino-packs-v1', course: 'ams' };
 
 const $app = document.getElementById('app');
@@ -25,9 +25,16 @@ const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g
 const shuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 const ls = { get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
+/* ---------- colour theme: 'auto' follows the system; light/dark stay on this device only ---------- */
+let theme = ls_get_raw(LS_THEME) || 'auto';
+function ls_get_raw(k) { try { return localStorage.getItem(k); } catch { return null; } }
+function applyTheme() { const r = document.documentElement; if (theme === 'auto') r.removeAttribute('data-theme'); else r.setAttribute('data-theme', theme); }
+function cycleTheme() { theme = theme === 'auto' ? 'light' : theme === 'light' ? 'dark' : 'auto'; try { localStorage.setItem(LS_THEME, theme); } catch {} applyTheme(); }
+applyTheme();
+
 /* ---------- state ----------
    G holds everything; S points at the open course's slice (G.c[id]). */
-const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '' }, rounds: 0, sessions: [] });
+const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, skipped: {}, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '', noCalc: false }, rounds: 0, sessions: [] });
 let G = ls.get(LS_KEY);
 if (!G || G.v !== 2) G = { v: 2, cur: null, c: {}, updatedAt: 0 };
 // Progress from the AMS-only version (same browser, same origin): merged once, even if this
@@ -92,12 +99,15 @@ function save() { G.updatedAt = Date.now(); ls.set(LS_KEY, G); }
 const ZERO = { c: 0, w: 0, box: 0, ew: 0, eb: 0, last: 0 };
 const st = id => { const s = S.stats[id] || (S.stats[id] = { ...ZERO }); for (const k in ZERO) if (s[k] === undefined) s[k] = 0; return s; };
 const peek = id => Object.assign({}, ZERO, S.stats[id]);
-const inTopics = q => S.settings.topics.includes(q.t);
+const shown = q => !(S.settings.noCalc && q.calc);                 // "Só teoria" hides questions with calculations
+const inTopics = q => S.settings.topics.includes(q.t) && shown(q);
+const hasCalc = () => BANK.some(q => q.calc);
+const examCfg = () => Object.assign({ n: EXAM_N, min: EXAM_MIN, penalty: null }, C && C.exam);
 const isReserved = q => q.reserved === 'exam';
 const fresh = q => { const s = peek(q.id); return !s.c && !s.w && !s.ew; };
 const trainPool = () => BANK.filter(q => inTopics(q) && !isReserved(q));
 function mastery(level, topics = S.settings.topics) {
-  const qs = BANK.filter(q => q.l === level && topics.includes(q.t) && !isReserved(q)); if (!qs.length) return { pct: 0, done: 0, total: 0 };
+  const qs = BANK.filter(q => q.l === level && topics.includes(q.t) && shown(q) && !isReserved(q)); if (!qs.length) return { pct: 0, done: 0, total: 0 };
   const done = qs.filter(q => peek(q.id).c > 0).length; return { pct: done / qs.length, done, total: qs.length };
 }
 function unlocked(level) { if (level === 1 || S.settings.unlockAll) return true; return mastery(level - 1).pct >= UNLOCK; }
@@ -105,10 +115,13 @@ function topLevel() { let t = 1; for (const L of LEVELS) if (unlocked(L.n)) t = 
 const reviewPool = () => trainPool().filter(q => peek(q.id).w > 0 && peek(q.id).box < 3).sort((a, b) => peek(a.id).box - peek(b.id).box || peek(a.id).last - peek(b.id).last);
 const examReviewPool = () => BANK.filter(q => inTopics(q) && peek(q.id).ew > 0 && peek(q.id).eb < EXAM_CLEAR).sort((a, b) => peek(a.id).eb - peek(b.id).eb || peek(a.id).last - peek(b.id).last);
 const freshReserved = () => BANK.filter(q => inTopics(q) && isReserved(q) && fresh(q));
+// skipped questions wait here (ignoring "Só teoria": you skipped them to do later with paper)
+const skippedPool = () => BANK.filter(q => S.skipped && S.skipped[q.id] && S.settings.topics.includes(q.t)).sort((a, b) => S.skipped[a.id] - S.skipped[b.id]);
 function pick(pool, n) { // unseen first, then weakest, randomized within bands
   const bands = [[], [], []]; pool.forEach(q => { const s = peek(q.id); if (!s.c && !s.w && !s.ew) bands[0].push(q); else if (s.box < 2) bands[1].push(q); else bands[2].push(q); });
   return bands.flatMap(b => shuffle(b)).slice(0, n);
 }
+const totalXp = () => Object.values(G.c).reduce((a, c) => a + (c.xp || 0), 0);
 function courseProgress(c) {
   const st_ = (G.c[c.id] && G.c[c.id].stats) || {}; const qs = c.questions.filter(q => !isReserved(q));
   const done = qs.filter(q => st_[q.id] && st_[q.id].c > 0).length; return { done, total: qs.length, xp: (G.c[c.id] && G.c[c.id].xp) || 0 };
@@ -121,6 +134,7 @@ function go(name, extra = {}) { view = Object.assign({ name }, extra); renderVie
 function renderView() {
   const v = C || view.name === 'sync' ? view.name : 'courses';
   const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'sync' ? Sync() : Home();
+  document.documentElement.dataset.course = C && v !== 'courses' && v !== 'sync' ? C.id : '';
   $app.innerHTML = Top() + html;
   document.title = C && v !== 'courses' ? `${C.code} · Estudo IST` : 'Estudo IST';
   if (v === 'quiz') afterQuizRender();
@@ -132,11 +146,12 @@ function Top() {
   const inC = C && !['courses', 'sync'].includes(view.name);
   return `<header class="top">
     <button class="brand" data-act="${inC ? 'home' : 'courses'}" aria-label="Início">
-      <svg class="brand-mark" viewBox="0 0 30 30" aria-hidden="true"><path d="M15 2 L28 15 L15 28 L2 15 Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 10 L20 20 M20 10 L10 20" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="24" cy="6" r="4" fill="var(--token)"/></svg>
+      ${inC && C.logo ? C.logo : `<svg class="brand-mark" viewBox="0 0 30 30" aria-hidden="true"><path d="M15 2 L28 15 L15 28 L2 15 Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 10 L20 20 M20 10 L10 20" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="24" cy="6" r="4" fill="var(--token)"/></svg>`}
       <b>${inC ? `${esc(C.code)} Treino` : 'Estudo IST'}</b></button>
     ${inC ? `<button class="chip" data-act="courses" title="Trocar de cadeira">Cadeiras ▾</button>` : ''}
     <span class="spacer"></span>
-    ${inC ? `<span class="stat-pill" title="Experiência nesta cadeira"><i></i>${S.xp} XP</span>` : ''}
+    ${inC ? `<span class="stat-pill" title="XP nesta cadeira · XP total em todas as cadeiras"><i></i>${S.xp} XP<span class="muted hide-narrow">· ${totalXp()} total</span></span>` : `<span class="stat-pill" title="XP total em todas as cadeiras"><i></i>${totalXp()} XP total</span>`}
+    <button class="btn small theme-btn" data-act="theme" title="Tema: ${theme === 'auto' ? 'automático (segue o sistema)' : theme === 'light' ? 'claro' : 'escuro'}" aria-label="Mudar o tema (agora ${theme === 'auto' ? 'automático' : theme === 'light' ? 'claro' : 'escuro'})">${glyph(theme === 'light' ? 'sun' : theme === 'dark' ? 'moon' : 'auto')}<span class="hide-narrow">${theme === 'auto' ? 'Auto' : theme === 'light' ? 'Claro' : 'Escuro'}</span></button>
     ${view.name === 'sync' || (ses && !ses.ended) ? '' : `<button class="btn small" data-act="sync" title="Levar o progresso para outro dispositivo, ou trazê-lo">${glyph('swap')}<span class="hide-narrow">Outro dispositivo</span></button>`}
   </header>`;
 }
@@ -146,7 +161,7 @@ function Courses() {
   const list = REG.order.map(id => REG.courses[id]).filter(c => c.topics);
   const cards = list.map(c => { const p = courseProgress(c); const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
     return `<button class="mode course-card" data-act="openC" data-id="${esc(c.id)}">
-      <span class="eyebrow">${c.year ? `${c.year}.º ano` : ''}${c.semester ? ` · ${c.semester}.º sem.` : ''}</span>
+      <span class="eyebrow">${[c.year ? `${c.year}.º ano` : '', c.semester ? `${c.semester}.º sem.` : ''].filter(Boolean).join(' · ')}</span>
       <h3><span class="code">${esc(c.code)}</span></h3><p>${esc(c.name)}</p>
       <span class="lvl-bar"><span style="width:${pct}%"></span></span>
       <span class="meta">${p.done}/${p.total} dominadas · ${p.xp} XP</span></button>`; }).join('');
@@ -159,18 +174,20 @@ function Courses() {
 function daysLeft() { if (!S.settings.testDate) return null; const d = new Date(S.settings.testDate + 'T09:00:00'); const n = Math.ceil((d - new Date()) / 864e5); return isNaN(n) ? null : n; }
 const extraApi = () => ({ pool: trainPool(), pick, topLevel, peek, inTopics, LEVELS, BANK });
 function Home() {
-  const tl = topLevel(); const dl = daysLeft(); const rp = reviewPool().length + examReviewPool().length;
-  const nFresh = freshReserved().length; const nTrain = BANK.filter(q => !isReserved(q)).length;
-  const topicsChips = Object.entries(TOPICS).map(([k, t]) => { const n = BANK.filter(q => q.t === k && !isReserved(q)).length; return `<button class="chip" style="--c:${t.c}" data-act="topic" data-k="${k}" aria-pressed="${S.settings.topics.includes(k)}"><span class="sw"></span>${t.short} <span class="muted mono">${n}</span></button>`; }).join('');
+  const tl = topLevel(); const dl = daysLeft(); const rp = reviewPool().length + examReviewPool().length; const nSk = skippedPool().length;
+  const nFresh = freshReserved().length; const nTrain = BANK.filter(q => !isReserved(q) && shown(q)).length; const X = examCfg(); const M = C.map || {};
+  const topicsChips = Object.entries(TOPICS).map(([k, t]) => { const n = BANK.filter(q => q.t === k && !isReserved(q) && shown(q)).length; return `<button class="chip" style="--c:${t.c}" data-act="topic" data-k="${k}" aria-pressed="${S.settings.topics.includes(k)}"><span class="sw"></span>${t.short} <span class="muted mono">${n}</span></button>`; }).join('');
+  const link = `<span class="${M.link || 'seq'}" aria-hidden="true"></span>`;
+  const ends = (e, cls) => e ? `<span class="hier" aria-hidden="true">${e.icon || ''}<span>${esc(e.label || '')}</span></span>` : `<span class="ev${cls}" aria-hidden="true"></span>`;
   const flow = LEVELS.map((L, i) => { const m = mastery(L.n), un = unlocked(L.n);
-    return `${i ? '<span class="seq" aria-hidden="true"></span>' : ''}<button class="lvl ${un ? '' : 'locked'}" data-act="level" data-n="${L.n}" aria-label="Nível ${L.n} ${L.t}${un ? '' : ' (bloqueado)'}">
+    return `${i ? link : ''}<button class="lvl l${L.n} ${un ? '' : 'locked'}" data-act="level" data-n="${L.n}" aria-label="Nível ${L.n} ${L.t}${un ? '' : ' (bloqueado)'}">
       ${un && L.n === tl ? '<span class="tok" title="Estás aqui"></span>' : ''}${un ? '' : '<span class="lock" aria-hidden="true">🔒</span>'}
-      <span class="n">NÍVEL ${L.n}</span><span class="t">${L.t}</span><span class="pct">${m.done}/${m.total} dominadas</span>
+      <span class="n">NÍVEL ${L.n}${L.tag ? ` · ${esc(L.tag)}` : ''}</span><span class="t">${L.t}</span>${L.sub ? `<span class="lat">${esc(L.sub)}</span>` : ''}<span class="pct">${m.done}/${m.total} dominadas</span>
       <span class="bar"><span style="width:${Math.round(m.pct * 100)}%"></span></span></button>`; }).join('');
   const std = [
     ['learn', 'Aprender', 'Teoria em pequenos cartões, cada um seguido de perguntas sobre ele. Começa por aqui.', `${LESSONS.length} lições`, glyph('book')],
-    ['review', 'Revisão de erros', 'Volta às perguntas que falhaste, em separado as do treino e as do exame simulado.', rp ? `${rp} por rever` : 'nada por rever ainda', glyph('loop')],
-    ['exam', 'Exame simulado', `${EXAM_N} perguntas, ${EXAM_MIN} minutos, sem feedback até ao fim. Usa primeiro perguntas que não aparecem nos outros modos.`, nFresh ? `${nFresh} perguntas inéditas reservadas` : 'condições de teste', glyph('clock')],
+    ['review', 'Revisão', 'Volta às perguntas que falhaste (treino e exame simulado) e às que saltaste.', rp || nSk ? [rp ? `${rp} por rever` : '', nSk ? `${nSk} saltada${nSk === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ') : 'nada por rever ainda', glyph('loop')],
+    ['exam', 'Exame simulado', `${X.n} perguntas, ${X.min} minutos, sem feedback até ao fim.${X.penalty ? ' Cotação real: resposta errada desconta, saltar deixa em branco.' : ''} Usa primeiro perguntas que não aparecem nos outros modos.`, nFresh ? `${nFresh} perguntas inéditas reservadas` : 'condições de teste', glyph('clock')],
     ['library', 'Biblioteca de teoria', 'Todas as lições, por tema, para leres de seguida.', `${Object.keys(TOPICS).length} temas`, glyph('list')],
   ];
   const card = ([k, t, d, m, g], act = 'mode') => `<button class="mode" data-act="${act}" data-k="${k}"><h3>${g}${t}</h3><p>${d}</p><span class="meta">${m}</span></button>`;
@@ -184,12 +201,12 @@ function Home() {
       <p>${nTrain} perguntas de escolha múltipla em ${LEVELS.length} níveis, com a teoria explicada sempre que falhas. ${dl !== null ? `<b>${dl > 0 ? `Faltam ${dl} dia${dl === 1 ? '' : 's'} para o teste.` : dl === 0 ? 'O teste é hoje. Força!' : 'O teste já passou.'}</b>` : ''}</p>
     </section>
     <div class="flow-card">
-      <div class="row"><h2>Mapa de níveis</h2><span class="spacer"></span><span class="muted" style="font-size:13px">Desbloqueias o seguinte com ${Math.round(UNLOCK * 100)}% do anterior.</span></div>
-      <div class="flow" role="group" aria-label="Níveis"><span class="ev" aria-hidden="true"></span><span class="seq" aria-hidden="true"></span>${flow}<span class="seq" aria-hidden="true"></span><span class="ev end" title="Teste" aria-hidden="true"></span></div>
-      <div class="flow-legend"><span>○ início</span><span>◉ o token marca onde estás</span><span>● fim = pronto para o teste</span></div>
+      <div class="row"><h2>${esc(M.title || 'Mapa de níveis')}</h2><span class="spacer"></span><span class="muted" style="font-size:13px">Desbloqueias o seguinte com ${Math.round(UNLOCK * 100)}% do anterior.</span></div>
+      <div class="flow ${M.link ? 'flow-' + M.link : ''}" role="group" aria-label="Níveis">${ends(M.start, '')}${link}${flow}${link}${ends(M.end, ' end')}</div>
+      <div class="flow-legend">${(M.legend || ['○ início', '◉ o token marca onde estás', '● fim = pronto para o teste']).map(x => `<span>${esc(x)}</span>`).join('')}</div>
     </div>
     <div class="stack">
-      <div class="row"><span class="eyebrow">Temas em jogo</span></div>
+      <div class="row"><span class="eyebrow">Temas em jogo</span><span class="spacer"></span>${hasCalc() ? `<label class="toggle" title="Esconde as perguntas com contas em todos os modos"><input type="checkbox" id="noCalc" ${S.settings.noCalc ? 'checked' : ''}> Só teoria (sem contas)</label>` : ''}</div>
       <div class="chips">${topicsChips}</div>
     </div>
     <div class="section"><div class="section-h"><h2>Modos</h2></div><div class="modes">${std.map(c => card(c)).join('')}</div></div>
@@ -210,17 +227,18 @@ function Home() {
     </div>`;
 }
 function glyph(k) {
-  const p = { book: '<path d="M4 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H4z M24 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/>', loop: '<path d="M6 13a8 8 0 0 1 14-5l2 2 M22 15a8 8 0 0 1-14 5l-2-2 M22 4v6h-6 M6 24v-6h6"/>', lens: '<circle cx="12" cy="12" r="7"/><path d="M17 17l6 6 M9 12h6 M12 9v6"/>', bolt: '<path d="M15 3L6 16h7l-1 9 9-13h-7z"/>', clock: '<circle cx="14" cy="14" r="10"/><path d="M14 8v6l4 3"/>', list: '<path d="M9 7h14 M9 14h14 M9 21h14"/><circle cx="5" cy="7" r="1.3"/><circle cx="5" cy="14" r="1.3"/><circle cx="5" cy="21" r="1.3"/>', plus: '<path d="M14 6v16 M6 14h16"/>', pen: '<path d="M6 22l2-6 11-11 4 4-11 11z M16 7l4 4"/>', star: '<path d="M14 3l3.2 7 7.3.6-5.6 4.8 1.8 7.3L14 18.8 7.3 22.7l1.8-7.3L3.5 10.6l7.3-.6z"/>', flag: '<path d="M6 25V4 M6 5h14l-3 5 3 5H6"/>', swap: '<path d="M4 9h18l-4-4 M24 19H6l4 4"/>', qr: '<path d="M4 4h7v7H4z M17 4h7v7h-7z M4 17h7v7H4z M17 17h3v3h-3z M21 21h3v3h-3z"/>', share: '<path d="M14 3v14 M9 8l5-5 5 5 M6 13v10h16V13"/>', copy: '<path d="M9 9h13v14H9z M6 19V5h13"/>' }[k] || '';
+  const p = { book: '<path d="M4 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H4z M24 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/>', loop: '<path d="M6 13a8 8 0 0 1 14-5l2 2 M22 15a8 8 0 0 1-14 5l-2-2 M22 4v6h-6 M6 24v-6h6"/>', lens: '<circle cx="12" cy="12" r="7"/><path d="M17 17l6 6 M9 12h6 M12 9v6"/>', bolt: '<path d="M15 3L6 16h7l-1 9 9-13h-7z"/>', clock: '<circle cx="14" cy="14" r="10"/><path d="M14 8v6l4 3"/>', list: '<path d="M9 7h14 M9 14h14 M9 21h14"/><circle cx="5" cy="7" r="1.3"/><circle cx="5" cy="14" r="1.3"/><circle cx="5" cy="21" r="1.3"/>', plus: '<path d="M14 6v16 M6 14h16"/>', pen: '<path d="M6 22l2-6 11-11 4 4-11 11z M16 7l4 4"/>', star: '<path d="M14 3l3.2 7 7.3.6-5.6 4.8 1.8 7.3L14 18.8 7.3 22.7l1.8-7.3L3.5 10.6l7.3-.6z"/>', flag: '<path d="M6 25V4 M6 5h14l-3 5 3 5H6"/>', sun: '<circle cx="14" cy="14" r="5"/><path d="M14 3v3 M14 22v3 M3 14h3 M22 14h3 M6.2 6.2l2.1 2.1 M19.7 19.7l2.1 2.1 M6.2 21.8l2.1-2.1 M19.7 8.3l2.1-2.1"/>', moon: '<path d="M21 17.5A9 9 0 0 1 10.5 7a9 9 0 1 0 10.5 10.5z"/>', auto: '<circle cx="14" cy="14" r="9"/><path d="M14 5a9 9 0 0 1 0 18z" fill="currentColor"/>', skip: '<path d="M4 18c3-8 13-10 18-3 M22 9v6h-6 M4 22h20"/>', swap: '<path d="M4 9h18l-4-4 M24 19H6l4 4"/>', qr: '<path d="M4 4h7v7H4z M17 4h7v7h-7z M4 17h7v7H4z M17 17h3v3h-3z M21 21h3v3h-3z"/>', share: '<path d="M14 3v14 M9 8l5-5 5 5 M6 13v10h16V13"/>', copy: '<path d="M9 9h13v14H9z M6 19V5h13"/>' }[k] || '';
   return `<svg class="glyph" viewBox="0 0 28 28" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 }
 
 /* ---------- REVIEW: two tabs ---------- */
 function ReviewPick() {
-  const a = reviewPool().length, b = examReviewPool().length;
-  return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="eyebrow">Revisão de erros</span></div>
+  const a = reviewPool().length, b = examReviewPool().length, c = skippedPool().length;
+  return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="eyebrow">Revisão</span></div>
   <div class="modes">
     <button class="mode" data-act="startReview" data-k="review" ${a ? '' : 'disabled'}><h3>${glyph('loop')}Erros de treino</h3><p>Perguntas que falhaste nos níveis, em Aprender e nas secções da cadeira. Saem quando as acertares três vezes seguidas.</p><span class="meta">${a ? `${a} por rever` : 'nada por rever'}</span></button>
     <button class="mode" data-act="startReview" data-k="reviewExam" ${b ? '' : 'disabled'}><h3>${glyph('flag')}Erros de exame</h3><p>O que falhaste em condições de teste. Saem quando as acertares ${EXAM_CLEAR} vezes seguidas aqui.</p><span class="meta">${b ? `${b} por rever` : 'nada por rever'}</span></button>
+    <button class="mode" data-act="startReview" data-k="skipped" ${c ? '' : 'disabled'}><h3>${glyph('skip')}Saltadas</h3><p>As perguntas que saltaste. Pega em papel e caneta e tenta agora. Saem da lista quando lhes responderes.</p><span class="meta">${c ? `${c} à espera` : 'nenhuma saltada'}</span></button>
   </div>`;
 }
 
@@ -228,11 +246,12 @@ function ReviewPick() {
 function makeItem(q) { const n = q.o.length; const order = q.fixed ? [...Array(n).keys()] : shuffle([...Array(n).keys()]); return { kind: 'q', id: q.id, order }; }
 function buildExam() {
   // 1) unseen reserved questions; 2) fill with the usual level mix from training; 3) reserved ones already seen
+  const EXAM_N = examCfg().n;
   let qs = shuffle(freshReserved()).slice(0, EXAM_N);
   const used = new Set(qs.map(q => q.id));
   if (qs.length < EXAM_N) {
     const tp = trainPool().filter(q => !used.has(q.id)); const by = (l, n) => pick(tp.filter(q => q.l === l), n);
-    const mix = shuffle([...by(2, 7), ...by(3, 8), ...by(4, 5)]).slice(0, EXAM_N - qs.length);
+    const r = EXAM_N / 20; const mix = shuffle([...by(2, Math.ceil(7 * r)), ...by(3, Math.ceil(8 * r)), ...by(4, Math.ceil(5 * r))]).slice(0, EXAM_N - qs.length);
     mix.forEach(q => used.add(q.id)); qs = qs.concat(mix);
   }
   if (qs.length < EXAM_N) qs = qs.concat(shuffle(BANK.filter(q => inTopics(q) && isReserved(q) && !used.has(q.id))).slice(0, EXAM_N - qs.length));
@@ -244,9 +263,10 @@ function start(mode, opts = {}) {
   if (!BANK.some(inTopics)) { toast('Escolhe pelo menos um tema.'); return; }
   if (mode === 'level') { const L = opts.level; items = pick(pool.filter(q => q.l === L), 10).map(makeItem); title = `Nível ${L} · ${LEVELS[L - 1].t}`; }
   if (mode === 'review') { items = reviewPool().slice(0, 12).map(makeItem); title = 'Revisão · erros de treino'; if (!items.length) { toast('Ainda não tens erros de treino para rever.'); return; } }
+  if (mode === 'skipped') { items = skippedPool().slice(0, 12).map(makeItem); title = 'Revisão · saltadas'; if (!items.length) { toast('Não tens perguntas saltadas.'); return; } }
   if (mode === 'reviewExam') { items = examReviewPool().slice(0, 12).map(makeItem); title = 'Revisão · erros de exame'; if (!items.length) { toast('Ainda não tens erros de exame para rever.'); return; } }
   if (mode === 'extra') { const x = (C.extras || []).find(e => e.id === opts.extra); if (!x) return; items = (x.questions(extraApi()) || []).map(makeItem); title = x.title; }
-  if (mode === 'exam') { items = buildExam().map(makeItem); title = 'Exame simulado'; timeLimit = EXAM_MIN * 60; }
+  if (mode === 'exam') { items = buildExam().map(makeItem); title = 'Exame simulado'; timeLimit = examCfg().min * 60; }
   if (mode === 'learn') {
     const t = opts.topic; title = `Aprender · ${TOPICS[t].short}`;
     LESSONS.filter(l => l.t === t).forEach(l => { items.push({ kind: 'lesson', id: l.id });

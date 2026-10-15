@@ -1,0 +1,20 @@
+/* OC: topic colours (global, used by chips) */
+:root{ --t-perf:#2F6FDB; --t-bits:#7A4FD0; --t-isa:#0F7A5A; --t-comp:#6B7A1F; --t-cache:#C2410C; --t-cperf:#B4235A; --t-opt:#0E7C8C; --t-vm:#8A5A12; --t-ocx:#C2392F; }
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --t-perf:#7EA8FF; --t-bits:#B59BFF; --t-isa:#4FD1A0; --t-comp:#C3D35A; --t-cache:#FF8F5C; --t-cperf:#FF7AAE; --t-opt:#5CD4E3; --t-vm:#E3B25F; --t-ocx:#FF7468; }}
+:root[data-theme="dark"]{ --t-perf:#7EA8FF; --t-bits:#B59BFF; --t-isa:#4FD1A0; --t-comp:#C3D35A; --t-cache:#FF8F5C; --t-cperf:#FF7AAE; --t-opt:#5CD4E3; --t-vm:#E3B25F; --t-ocx:#FF7468; }
+
+/* OC look: same blue as AMS, green "block" token, graph paper like an exam scratch sheet */
+:root[data-course="oc"]{ --token:#13A06F; --grid:rgba(39,71,201,.07); }
+@media (prefers-color-scheme: dark){:root[data-course="oc"]:not([data-theme="light"]){ --token:#3DDC97; --grid:rgba(229,234,241,.05); }}
+:root[data-course="oc"][data-theme="dark"]{ --token:#3DDC97; --grid:rgba(229,234,241,.05); }
+:root[data-course="oc"] body{ background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px); background-size:20px 20px; }
+:root[data-course="oc"] .lvl,:root[data-course="oc"] .cell{ border-radius:5px; }
+.verdict .vtag{font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;padding:2px 7px;border-radius:4px;color:var(--panel);margin-right:8px;vertical-align:3px;font-stretch:100%}
+.feedback.ok .vtag{background:var(--good)} .feedback.ko .vtag{background:var(--bad)}
+
+/* OC diagrams */
+.dg.oc .mono{font-family:var(--f-mono)}
+.dg.oc .sub{opacity:.72;font-family:var(--f-mono)}
+.dg.oc .hl{fill:#FFF0C2}
+.dg.oc .th{fill:color-mix(in srgb,var(--sheet) 88%,#8aa0c0)}
+.dg.oc.tbl{display:block;margin:0 auto;width:100%;height:auto}

@@ -21,6 +21,9 @@ for (const id of REG.order) {
     if (q.les && !L.has(q.les)) err(`${tag}: lesson "${q.les}" does not exist`);
     if (q.ctx && !L.has(q.ctx)) err(`${tag}: case "${q.ctx}" does not exist`);
     if (q.reserved && q.reserved !== 'exam') err(`${tag}: "reserved" can only be 'exam'`);
+    if (q.calc !== undefined && typeof q.calc !== 'boolean') err(`${tag}: "calc" must be true/false`);
+    if (q.code !== undefined && typeof q.code !== 'string') err(`${tag}: "code" must be text`);
+    if (q.step !== undefined && typeof q.step !== 'string') err(`${tag}: "step" must be text like '2/3'`);
     if (q.d && c.render) { try { const s = c.render(q.d); if (!s || !String(s).includes('<svg')) err(`${tag}: empty diagram`); } catch (e) { err(`${tag}: diagram fails (${e.message})`); } }
   }
   const idsFile = path.join(coursesDir, id, 'ids.json');

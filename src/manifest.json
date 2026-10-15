@@ -1,15 +1,49 @@
 {
   "title": "Estudo IST",
-  "vendor": ["vendor/qrcode.js"],
-  "engine": ["engine/registry.js", "engine/progress-key.js", "engine/app-core.js", "engine/app-views.js"],
+  "vendor": [
+    "vendor/qrcode.js"
+  ],
+  "engine": [
+    "engine/registry.js",
+    "engine/progress-key.js",
+    "engine/app-core.js",
+    "engine/app-views.js"
+  ],
   "courses": {
     "ams": {
-      "styles": ["theme.css"],
+      "styles": [
+        "theme.css"
+      ],
       "files": [
-        "render.js", "course.js",
-        "lessons/base.js", "lessons/exam.js",
-        "questions/sys.js", "questions/req.js", "questions/arch.js",
-        "questions/bpm.js", "questions/bpmn.js", "questions/exam.js"
+        "render.js",
+        "course.js",
+        "lessons/base.js",
+        "lessons/exam.js",
+        "questions/sys.js",
+        "questions/req.js",
+        "questions/arch.js",
+        "questions/bpm.js",
+        "questions/bpmn.js",
+        "questions/exam.js"
+      ]
+    },
+    "oc": {
+      "styles": [
+        "theme.css"
+      ],
+      "files": [
+        "render.js",
+        "course.js",
+        "lessons/base.js",
+        "questions/perf.js",
+        "questions/bits.js",
+        "questions/isa.js",
+        "questions/comp.js",
+        "questions/cache.js",
+        "questions/cperf.js",
+        "questions/opt.js",
+        "questions/vm.js",
+        "questions/exam.js"
       ]
     }
   }

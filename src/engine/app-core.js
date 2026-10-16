@@ -102,7 +102,7 @@ const peek = id => Object.assign({}, ZERO, S.stats[id]);
 const shown = q => !(S.settings.noCalc && q.calc);                 // "Só teoria" hides questions with calculations
 const inTopics = q => S.settings.topics.includes(q.t) && shown(q);
 const hasCalc = () => BANK.some(q => q.calc);
-const examCfg = () => Object.assign({ n: EXAM_N, min: EXAM_MIN, penalty: null }, C && C.exam);
+const examCfg = () => Object.assign({ n: EXAM_N, min: EXAM_MIN, penalty: null, desc: '' }, C && C.exam);
 const isReserved = q => q.reserved === 'exam';
 const fresh = q => { const s = peek(q.id); return !s.c && !s.w && !s.ew; };
 const trainPool = () => BANK.filter(q => inTopics(q) && !isReserved(q));
@@ -187,7 +187,7 @@ function Home() {
   const std = [
     ['learn', 'Aprender', 'Teoria em pequenos cartões, cada um seguido de perguntas sobre ele. Começa por aqui.', `${LESSONS.length} lições`, glyph('book')],
     ['review', 'Revisão', 'Volta às perguntas que falhaste (treino e exame simulado) e às que saltaste.', rp || nSk ? [rp ? `${rp} por rever` : '', nSk ? `${nSk} saltada${nSk === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ') : 'nada por rever ainda', glyph('loop')],
-    ['exam', 'Exame simulado', `${X.n} perguntas, ${X.min} minutos, sem feedback até ao fim.${X.penalty ? ' Cotação real: resposta errada desconta, saltar deixa em branco.' : ''} Usa primeiro perguntas que não aparecem nos outros modos.`, nFresh ? `${nFresh} perguntas inéditas reservadas` : 'condições de teste', glyph('clock')],
+    ['exam', 'Exame simulado', X.desc || `${X.n} perguntas, ${X.min} minutos, sem feedback até ao fim.${X.penalty ? ' Cotação real: resposta errada desconta, saltar deixa em branco.' : ''} Usa primeiro perguntas que não aparecem nos outros modos.`, nFresh ? `${nFresh} perguntas inéditas reservadas` : 'condições de teste', glyph('clock')],
     ['library', 'Biblioteca de teoria', 'Todas as lições, por tema, para leres de seguida.', `${Object.keys(TOPICS).length} temas`, glyph('list')],
   ];
   const card = ([k, t, d, m, g], act = 'mode') => `<button class="mode" data-act="${act}" data-k="${k}"><h3>${g}${t}</h3><p>${d}</p><span class="meta">${m}</span></button>`;

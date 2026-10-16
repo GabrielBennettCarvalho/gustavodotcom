@@ -1,0 +1,31 @@
+/* RC: topic colours (global, used by chips) */
+:root{ --t-net:#2F6FDB; --t-sock:#6B7A1F; --t-http:#0F7A5A; --t-dns:#7A4FD0; --t-tcp:#C2410C; --t-cong:#B4235A; --t-ip:#0E7C8C; --t-route:#8A5A12; --t-lan:#3D5A99; --t-wifi:#9C3FAE; --t-rcx:#C2392F; }
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --t-net:#7EA8FF; --t-sock:#C3D35A; --t-http:#4FD1A0; --t-dns:#B59BFF; --t-tcp:#FF8F5C; --t-cong:#FF7AAE; --t-ip:#5CD4E3; --t-route:#E3B25F; --t-lan:#9DB4F0; --t-wifi:#E39BF0; --t-rcx:#FF7468; }}
+:root[data-theme="dark"]{ --t-net:#7EA8FF; --t-sock:#C3D35A; --t-http:#4FD1A0; --t-dns:#B59BFF; --t-tcp:#FF8F5C; --t-cong:#FF7AAE; --t-ip:#5CD4E3; --t-route:#E3B25F; --t-lan:#9DB4F0; --t-wifi:#E39BF0; --t-rcx:#FF7468; }
+
+/* RC look: a packet (amber token) hopping router to router, like a traceroute */
+:root[data-course="rc"]{ --token:#D98A0B; --grid:rgba(39,71,201,.06); }
+@media (prefers-color-scheme: dark){:root[data-course="rc"]:not([data-theme="light"]){ --token:#FFB547; --grid:rgba(229,234,241,.045); }}
+:root[data-course="rc"][data-theme="dark"]{ --token:#FFB547; --grid:rgba(229,234,241,.045); }
+:root[data-course="rc"] body{ background-image:radial-gradient(var(--grid) 1.2px,transparent 1.3px); background-size:18px 18px; }
+:root[data-course="rc"] .lvl .tok{ border-radius:3px; width:24px; height:16px; top:-9px; }
+
+/* level map: links drawn as hops (dashed cable with an arrow) */
+.flow .hop{flex:1 0 18px;min-width:18px;height:0;border-top:2px dashed var(--ink);position:relative;margin-bottom:0}
+.flow .hop::after{content:"";position:absolute;right:-2px;top:-6px;border-left:8px solid var(--ink);border-top:5px solid transparent;border-bottom:5px solid transparent}
+.flow-hop{align-items:center}
+.flow-hop .lvl{border-radius:8px}
+.flow-hop .hier{padding-bottom:0}
+@media (max-width:560px){
+  .flow .hop{flex:0 0 22px;width:0;height:22px;min-width:0;border-top:0;border-left:2px dashed var(--ink);align-self:center}
+  .flow .hop::after{right:auto;top:auto;bottom:-2px;left:-6px;border-left:5px solid transparent;border-right:5px solid transparent;border-top:8px solid var(--ink);border-bottom:0}
+}
+
+/* RC diagrams */
+.dg.rc .mono{font-family:var(--f-mono)}
+.dg.rc .sub{opacity:.72;font-family:var(--f-mono)}
+.dg.rc .hl{fill:#FFE7B3}
+.dg.rc .band{fill:color-mix(in srgb,var(--sheet) 80%,#7EA8FF)}
+.dg.rc .band.hl{fill:#FFE7B3}
+.dg.rc .th{fill:color-mix(in srgb,var(--sheet) 88%,#8aa0c0)}
+.dg.rc.tbl{display:block;margin:0 auto;width:100%;height:auto}

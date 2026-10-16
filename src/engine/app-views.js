@@ -84,8 +84,9 @@ function next() {
 function finish() {
   if (!ses || ses.ended) return; ses.ended = true; clearInterval(tick);
   if (ses.mode === 'exam') { const tot = ses.items.length, ok = ses.results.filter(r => r.ok).length; const X = examCfg();
-    // real grading: a wrong answer costs 1/(number of options); blank (skipped or unanswered) is 0
-    const pen = X.penalty ? ses.results.filter(r => !r.ok && !r.skipped).reduce((a, r) => a + 1 / BYID[r.id].o.length, 0) : 0;
+    // real grading: a wrong answer costs 1/(number of options), or a fixed fraction (exam: { penalty: 1/3 }); blank is 0
+    const cost = q => typeof X.penalty === 'number' ? X.penalty : 1 / q.o.length;
+    const pen = X.penalty ? ses.results.filter(r => !r.ok && !r.skipped).reduce((a, r) => a + cost(BYID[r.id]), 0) : 0;
     ses.penalty = pen; ses.grade = Math.max(0, Math.round((ok - pen) / tot * 200) / 10); ses.rawGrade = Math.round(ok / tot * 200) / 10; const g = ses.results.filter(r => r.ok).reduce((a, r) => a + XP[BYID[r.id].l], 0); S.xp += g; ses.xp = g; }
   S.rounds++; S.sessions.push({ m: ses.mode, d: Date.now(), n: ses.results.length, ok: ses.results.filter(r => r.ok).length }); if (S.sessions.length > 400) S.sessions = S.sessions.slice(-400);
   save(); go('results');

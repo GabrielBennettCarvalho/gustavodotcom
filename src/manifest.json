@@ -45,6 +45,27 @@
         "questions/vm.js",
         "questions/exam.js"
       ]
+    },
+    "rc": {
+      "styles": [
+        "theme.css"
+      ],
+      "files": [
+        "render.js",
+        "course.js",
+        "lessons/net-app.js",
+        "lessons/transport.js",
+        "lessons/network.js",
+        "questions/net.js",
+        "questions/sock.js",
+        "questions/http.js",
+        "questions/dns.js",
+        "questions/tcp.js",
+        "questions/cong.js",
+        "questions/ip.js",
+        "questions/route.js",
+        "questions/exam.js"
+      ]
     }
   }
 }

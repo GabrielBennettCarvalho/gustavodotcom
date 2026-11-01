@@ -30,6 +30,9 @@ for (const id of REG.order) {
   const tell = c.questions.filter(q => { if (Array.isArray(q.a) || !Array.isArray(q.o)) return false;
     const L = q.o.map(o => String(o).length), r = L[q.a], others = L.filter((_, i) => i !== q.a);
     return r > Math.max(...others) && r > 1.3 * others.reduce((x, y) => x + y, 0) / others.length; });
+  // every question is shown on its own (shuffled, mock exam): it must not lean on the previous one
+  const leans = c.questions.filter(q => /^(E |Mesm[oa] (problema|cenário|cache|sistema|caso|código|rede|tabela|sessão|captura|resposta|ligação)|No mesmo |Na mesma |No caso anterior|Nesse caso|Depois do padding|Com o mesmo )/i.test(q.q));
+  if (leans.length) console.log(`WARN ${id}: ${leans.length} question(s) refer to a previous question; give each one its own data: ${leans.map(q => q.id).join(', ')}`);
   if (tell.length) console.log(`WARN ${id}: in ${tell.length} question(s) the right answer is clearly the longest option: ${tell.map(q => q.id).join(', ')}`);
   const idsFile = path.join(coursesDir, id, 'ids.json');
   const ids = fs.existsSync(idsFile) ? JSON.parse(fs.readFileSync(idsFile, 'utf8')) : [];

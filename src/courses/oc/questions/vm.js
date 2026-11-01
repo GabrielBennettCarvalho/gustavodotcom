@@ -93,7 +93,7 @@ STUDY.questions('oc', [
   o: ['TLB hit e page fault (página fora da RAM)', 'TLB miss, página na RAM, cache hit', 'TLB hit, página na RAM, cache miss', 'TLB miss, página na RAM, cache miss'], a: 0,
   e: 'A TLB só guarda traduções de páginas que **estão** na RAM. Se a página sai, a entrada da TLB é invalidada.' },
 { id: 'vm-23', t: 'vm', l: 3, les: 'v-int',
-  q: 'E porque é impossível “page fault, mas cache hit”?',
+  q: 'Porque é impossível ter um page fault (página fora da RAM) e, ao mesmo tempo, um hit na cache para esse dado?',
   o: ['O dado de uma página fora da RAM não pode estar na cache', 'A cache usa endereços virtuais e não sabe da página', 'Cada page fault obriga a TLB a invalidar a cache', 'Não é impossível: acontece numa cache write-back'], a: 0,
   e: 'A cache guarda cópias de blocos da RAM. Se a página saiu da RAM, os seus blocos também têm de ter saído da cache.' },
 { id: 'vm-24', t: 'vm', l: 3, les: 'v-int',

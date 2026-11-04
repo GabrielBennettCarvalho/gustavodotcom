@@ -263,7 +263,7 @@ function mergeKey() {
 /* ---------- events ---------- */
 document.addEventListener('click', async ev => {
   const b = ev.target.closest('[data-act]'); if (!b) return; const a = b.dataset.act;
-  if (['unlockAll', 'testDate', 'note', 'noCalc'].includes(a)) return;
+  if (['unlockAll', 'testDate', 'note'].includes(a)) return;
   switch (a) {
     case 'home': if (ses && !ses.ended && ses.mode === 'exam' && view.name === 'quiz') { finish(); return; } clearInterval(tick); ses = null; go('home'); break;
     case 'courses': if (ses && !ses.ended && ses.mode === 'exam' && view.name === 'quiz') { finish(); return; } clearInterval(tick); ses = null; go('courses'); break;
@@ -280,6 +280,7 @@ document.addEventListener('click', async ev => {
     case 'extra': start('extra', { extra: b.dataset.k }); break;
     case 'startReview': start(b.dataset.k); break;
     case 'topic': { const k = b.dataset.k; const set = new Set(S.settings.topics); set.has(k) ? set.delete(k) : set.add(k); if (!set.size) { toast('Tem de ficar pelo menos um tema.'); return; } S.settings.topics = Object.keys(TOPICS).filter(t => set.has(t)); save(); renderView(); break; }
+    case 'calcMode': S.settings.calcMode = b.dataset.k; save(); renderView(); break;
     case 'level': { const n = +b.dataset.n; if (!unlocked(n)) { toast(`Bloqueado: precisas de ${Math.round(UNLOCK * 100)}% do nível ${n - 1} (ou ativa “Desbloquear todos”).`); return; } start('level', { level: n }); break; }
     case 'mode': { const k = b.dataset.k; if (k === 'learn') go('learnpick'); else if (k === 'library') go('library'); else if (k === 'review') go('reviewpick'); else start(k); break; }
     case 'learn': start('learn', { topic: b.dataset.k }); break;
@@ -309,7 +310,6 @@ document.addEventListener('change', ev => {
   const t = ev.target;
   if (t.id === 'includeNotes') { view.notes = t.checked; renderView(); return; }
   if (t.id === 'unlockAll') { S.settings.unlockAll = t.checked; save(); renderView(); }
-  if (t.id === 'noCalc') { S.settings.noCalc = t.checked; save(); renderView(); }
   if (t.id === 'testDate') { S.settings.testDate = t.value; save(); renderView(); }
   if (t.id === 'importFile' && t.files && t.files[0]) { const r = new FileReader(); r.onload = () => doImport(String(r.result || '')); r.readAsText(t.files[0]); }
 });

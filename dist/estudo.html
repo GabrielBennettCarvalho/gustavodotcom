@@ -208,6 +208,11 @@ textarea.code{width:100%;min-height:180px;font:12.5px/1.5 var(--f-mono);border:1
 .msg.ko{background:var(--bad-bg);color:var(--bad)}
 .pack{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);flex-wrap:wrap}
 .pack b{min-width:0;overflow-wrap:anywhere}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--panel)}
+.seg button{padding:6px 12px;font-size:13px;font-weight:600;border:0;border-left:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer}
+.seg button:first-child{border-left:0}
+.seg button .mono{font-weight:400;opacity:.75}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper,var(--panel))}
 .toggle{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
 .toggle input{width:18px;height:18px;accent-color:var(--accent)}
 
@@ -10025,7 +10030,8 @@ const DEFAULT_LEVELS = [
 const XP = { 1: 10, 2: 15, 3: 20, 4: 30 };
 const UNLOCK = 0.6;
 const EXAM_N = 20, EXAM_MIN = 30;   // mock exam defaults: questions and minutes (a course can set exam: { n, min, penalty })
-const EXAM_CLEAR = 2;               // correct answers in a row to clear an exam mistake from review
+const CALC_MODES = ['all', 'theory', 'math'];
+const EXAM_CLEAR = 2;              // correct answers in a row to clear an exam mistake from review
 const LS_KEY = 'estudo-ist-v2', LS_PACKS = 'estudo-ist-packs-v2', LS_THEME = 'estudo-ist-theme';
 const LEGACY = { state: 'ams-treino-v1', packs: 'ams-treino-packs-v1', course: 'ams' };
 
@@ -10045,7 +10051,7 @@ applyTheme();
 
 /* ---------- state ----------
    G holds everything; S points at the open course's slice (G.c[id]). */
-const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, skipped: {}, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '', noCalc: false }, rounds: 0, sessions: [] });
+const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, skipped: {}, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '', calcMode: 'all' },rounds: 0, sessions: [] });
 let G = ls.get(LS_KEY);
 if (!G || G.v !== 2) G = { v: 2, cur: null, c: {}, updatedAt: 0 };
 // Progress from the AMS-only version (same browser, same origin): merged once, even if this
@@ -10075,6 +10081,9 @@ function openCourse(id) {
   S = G.c[id];
   const b = blank(TOPICS); for (const k in b) if (S[k] === undefined) S[k] = b[k];
   S.settings = Object.assign(b.settings, S.settings || {});
+  // the old on/off "Só teoria" switch becomes the three-way calcMode
+  if ('noCalc' in S.settings) { if (S.settings.noCalc) S.settings.calcMode = 'theory'; delete S.settings.noCalc; }
+  if (!CALC_MODES.includes(S.settings.calcMode)) S.settings.calcMode = 'all';
   // new topics start enabled for people who already had progress
   const known = S.settings.known; Object.keys(TOPICS).forEach(k => { if (!known.includes(k)) { known.push(k); if (!S.settings.topics.includes(k)) S.settings.topics.push(k); } });
   S.settings.topics = S.settings.topics.filter(k => TOPICS[k]); if (!S.settings.topics.length) S.settings.topics = Object.keys(TOPICS);
@@ -10110,18 +10119,27 @@ function save() { G.updatedAt = Date.now(); ls.set(LS_KEY, G); }
 const ZERO = { c: 0, w: 0, box: 0, ew: 0, eb: 0, last: 0 };
 const st = id => { const s = S.stats[id] || (S.stats[id] = { ...ZERO }); for (const k in ZERO) if (s[k] === undefined) s[k] = 0; return s; };
 const peek = id => Object.assign({}, ZERO, S.stats[id]);
-const shown = q => !(S.settings.noCalc && q.calc);                 // "Só teoria" hides questions with calculations
+// calcMode: 'all' everything · 'theory' hides calc questions ("Só teoria") · 'math' only calc questions ("Só contas")
+const calcMode = () => hasCalc() ? S.settings.calcMode : 'all';
+const shown = (q, m = calcMode()) => m === 'all' || (m === 'theory' ? !q.calc : !!q.calc);
 const inTopics = q => S.settings.topics.includes(q.t) && shown(q);
 const hasCalc = () => BANK.some(q => q.calc);
 const examCfg = () => Object.assign({ n: EXAM_N, min: EXAM_MIN, penalty: null, desc: '' }, C && C.exam);
 const isReserved = q => q.reserved === 'exam';
 const fresh = q => { const s = peek(q.id); return !s.c && !s.w && !s.ew; };
 const trainPool = () => BANK.filter(q => inTopics(q) && !isReserved(q));
-function mastery(level, topics = S.settings.topics) {
-  const qs = BANK.filter(q => q.l === level && topics.includes(q.t) && shown(q) && !isReserved(q)); if (!qs.length) return { pct: 0, done: 0, total: 0 };
+function mastery(level, topics = S.settings.topics, m = calcMode()) {
+  const qs = BANK.filter(q => q.l === level && topics.includes(q.t) && shown(q, m) && !isReserved(q)); if (!qs.length) return { pct: 0, done: 0, total: 0 };
   const done = qs.filter(q => peek(q.id).c > 0).length; return { pct: done / qs.length, done, total: qs.length };
 }
-function unlocked(level) { if (level === 1 || S.settings.unlockAll) return true; return mastery(level - 1).pct >= UNLOCK; }
+// Unlocked in mode m: the previous level shown in m is UNLOCK done; a level with nothing shown in m doesn't block
+// (in "Só contas" level 1 usually has no calculations, so level 2 opens straight away).
+function unlockedIn(level, m) { if (level === 1) return true; const p = mastery(level - 1, S.settings.topics, m); return p.total ? p.pct >= UNLOCK : unlockedIn(level - 1, m); }
+// A level stays open when the switch changes: what you passed with theory only (or with everything) still counts.
+function unlocked(level) {
+  if (level === 1 || S.settings.unlockAll) return true;
+  return unlockedIn(level, calcMode()) || (hasCalc() && (unlockedIn(level, 'all') || unlockedIn(level, 'theory')));
+}
 function topLevel() { let t = 1; for (const L of LEVELS) if (unlocked(L.n)) t = L.n; return t; }
 const reviewPool = () => trainPool().filter(q => peek(q.id).w > 0 && peek(q.id).box < 3).sort((a, b) => peek(a.id).box - peek(b.id).box || peek(a.id).last - peek(b.id).last);
 const examReviewPool = () => BANK.filter(q => inTopics(q) && peek(q.id).ew > 0 && peek(q.id).eb < EXAM_CLEAR).sort((a, b) => peek(a.id).eb - peek(b.id).eb || peek(a.id).last - peek(b.id).last);
@@ -10217,7 +10235,7 @@ function Home() {
       <div class="flow-legend">${(M.legend || ['○ início', '◉ o token marca onde estás', '● fim = pronto para o teste']).map(x => `<span>${esc(x)}</span>`).join('')}</div>
     </div>
     <div class="stack">
-      <div class="row"><span class="eyebrow">Temas em jogo</span><span class="spacer"></span>${hasCalc() ? `<label class="toggle" title="Esconde as perguntas com contas em todos os modos"><input type="checkbox" id="noCalc" ${S.settings.noCalc ? 'checked' : ''}> Só teoria (sem contas)</label>` : ''}</div>
+      <div class="row"><span class="eyebrow">Temas em jogo</span><span class="spacer"></span>${hasCalc() ? calcSwitch() : ''}</div>
       <div class="chips">${topicsChips}</div>
     </div>
     <div class="section"><div class="section-h"><h2>Modos</h2></div><div class="modes">${std.map(c => card(c)).join('')}</div></div>
@@ -10236,6 +10254,13 @@ function Home() {
         ${view.confirmReset ? `<span class="muted" style="font-size:13px">Apagar o progresso de ${esc(C.code)}?</span><button class="btn small" data-act="resetYes" style="color:var(--bad)">Sim, apagar</button><button class="btn small" data-act="resetNo">Cancelar</button>` : `<button class="btn ghost small" data-act="reset">Recomeçar do zero</button>`}
       </div>
     </div>`;
+}
+// Tudo / Só teoria / Só contas: applies to every mode (levels, Aprender, Revisão, exame simulado, extras)
+function calcSwitch() {
+  const opts = [['all', 'Tudo', 'Teoria e contas, misturadas'], ['theory', 'Só teoria', 'Esconde as perguntas com contas'], ['math', 'Só contas', 'Só as perguntas com contas, como nos problemas do exame']];
+  const cur = calcMode(), pool = BANK.filter(q => !isReserved(q) && S.settings.topics.includes(q.t));
+  return `<div class="seg" role="group" aria-label="Que perguntas mostrar">${opts.map(([k, t, d]) =>
+    `<button data-act="calcMode" data-k="${k}" aria-pressed="${cur === k}" title="${d}">${t} <span class="mono">${pool.filter(q => shown(q, k)).length}</span></button>`).join('')}</div>`;
 }
 function glyph(k) {
   const p = { book: '<path d="M4 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H4z M24 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/>', loop: '<path d="M6 13a8 8 0 0 1 14-5l2 2 M22 15a8 8 0 0 1-14 5l-2-2 M22 4v6h-6 M6 24v-6h6"/>', lens: '<circle cx="12" cy="12" r="7"/><path d="M17 17l6 6 M9 12h6 M12 9v6"/>', bolt: '<path d="M15 3L6 16h7l-1 9 9-13h-7z"/>', clock: '<circle cx="14" cy="14" r="10"/><path d="M14 8v6l4 3"/>', list: '<path d="M9 7h14 M9 14h14 M9 21h14"/><circle cx="5" cy="7" r="1.3"/><circle cx="5" cy="14" r="1.3"/><circle cx="5" cy="21" r="1.3"/>', plus: '<path d="M14 6v16 M6 14h16"/>', pen: '<path d="M6 22l2-6 11-11 4 4-11 11z M16 7l4 4"/>', star: '<path d="M14 3l3.2 7 7.3.6-5.6 4.8 1.8 7.3L14 18.8 7.3 22.7l1.8-7.3L3.5 10.6l7.3-.6z"/>', flag: '<path d="M6 25V4 M6 5h14l-3 5 3 5H6"/>', sun: '<circle cx="14" cy="14" r="5"/><path d="M14 3v3 M14 22v3 M3 14h3 M22 14h3 M6.2 6.2l2.1 2.1 M19.7 19.7l2.1 2.1 M6.2 21.8l2.1-2.1 M19.7 8.3l2.1-2.1"/>', moon: '<path d="M21 17.5A9 9 0 0 1 10.5 7a9 9 0 1 0 10.5 10.5z"/>', auto: '<circle cx="14" cy="14" r="9"/><path d="M14 5a9 9 0 0 1 0 18z" fill="currentColor"/>', skip: '<path d="M4 18c3-8 13-10 18-3 M22 9v6h-6 M4 22h20"/>', swap: '<path d="M4 9h18l-4-4 M24 19H6l4 4"/>', qr: '<path d="M4 4h7v7H4z M17 4h7v7h-7z M4 17h7v7H4z M17 17h3v3h-3z M21 21h3v3h-3z"/>', share: '<path d="M14 3v14 M9 8l5-5 5 5 M6 13v10h16V13"/>', copy: '<path d="M9 9h13v14H9z M6 19V5h13"/>' }[k] || '';
@@ -10280,8 +10305,11 @@ function start(mode, opts = {}) {
   if (mode === 'exam') { items = buildExam().map(makeItem); title = 'Exame simulado'; timeLimit = examCfg().min * 60; }
   if (mode === 'learn') {
     const t = opts.topic; title = `Aprender · ${TOPICS[t].short}`;
-    LESSONS.filter(l => l.t === t).forEach(l => { items.push({ kind: 'lesson', id: l.id });
-      const qs = pool.filter(q => q.les === l.id).sort((a, b) => a.l - b.l || (peek(a.id).c - peek(b.id).c)).slice(0, 2); qs.forEach(q => items.push(makeItem(q))); });
+    // in "Só contas" a lesson with no calculation questions is skipped: that theory was already done
+    LESSONS.filter(l => l.t === t).forEach(l => {
+      const qs = pool.filter(q => q.les === l.id).sort((a, b) => a.l - b.l || (peek(a.id).c - peek(b.id).c)).slice(0, 2);
+      if (!qs.length && calcMode() === 'math') return;
+      items.push({ kind: 'lesson', id: l.id }); qs.forEach(q => items.push(makeItem(q))); });
   }
   if (mode === 'retry') { items = opts.ids.map(id => BYID[id]).filter(Boolean).map(makeItem); title = 'Repetir erros'; }
   if (!items.length) { toast('Não há perguntas para estes filtros.'); return; }
@@ -10555,7 +10583,7 @@ function mergeKey() {
 /* ---------- events ---------- */
 document.addEventListener('click', async ev => {
   const b = ev.target.closest('[data-act]'); if (!b) return; const a = b.dataset.act;
-  if (['unlockAll', 'testDate', 'note', 'noCalc'].includes(a)) return;
+  if (['unlockAll', 'testDate', 'note'].includes(a)) return;
   switch (a) {
     case 'home': if (ses && !ses.ended && ses.mode === 'exam' && view.name === 'quiz') { finish(); return; } clearInterval(tick); ses = null; go('home'); break;
     case 'courses': if (ses && !ses.ended && ses.mode === 'exam' && view.name === 'quiz') { finish(); return; } clearInterval(tick); ses = null; go('courses'); break;
@@ -10572,6 +10600,7 @@ document.addEventListener('click', async ev => {
     case 'extra': start('extra', { extra: b.dataset.k }); break;
     case 'startReview': start(b.dataset.k); break;
     case 'topic': { const k = b.dataset.k; const set = new Set(S.settings.topics); set.has(k) ? set.delete(k) : set.add(k); if (!set.size) { toast('Tem de ficar pelo menos um tema.'); return; } S.settings.topics = Object.keys(TOPICS).filter(t => set.has(t)); save(); renderView(); break; }
+    case 'calcMode': S.settings.calcMode = b.dataset.k; save(); renderView(); break;
     case 'level': { const n = +b.dataset.n; if (!unlocked(n)) { toast(`Bloqueado: precisas de ${Math.round(UNLOCK * 100)}% do nível ${n - 1} (ou ativa “Desbloquear todos”).`); return; } start('level', { level: n }); break; }
     case 'mode': { const k = b.dataset.k; if (k === 'learn') go('learnpick'); else if (k === 'library') go('library'); else if (k === 'review') go('reviewpick'); else start(k); break; }
     case 'learn': start('learn', { topic: b.dataset.k }); break;
@@ -10601,7 +10630,6 @@ document.addEventListener('change', ev => {
   const t = ev.target;
   if (t.id === 'includeNotes') { view.notes = t.checked; renderView(); return; }
   if (t.id === 'unlockAll') { S.settings.unlockAll = t.checked; save(); renderView(); }
-  if (t.id === 'noCalc') { S.settings.noCalc = t.checked; save(); renderView(); }
   if (t.id === 'testDate') { S.settings.testDate = t.value; save(); renderView(); }
   if (t.id === 'importFile' && t.files && t.files[0]) { const r = new FileReader(); r.onload = () => doImport(String(r.result || '')); r.readAsText(t.files[0]); }
 });

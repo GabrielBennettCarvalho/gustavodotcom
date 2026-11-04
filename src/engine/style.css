@@ -104,6 +104,13 @@ button{font:inherit;color:inherit}
 
 .section{margin-top:26px;display:flex;flex-direction:column;gap:12px}
 .section-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+/* folded home sections (Domínio, Definições): closed by default */
+.fold{display:block}.fold>*+*{margin-top:12px}
+.fold>summary{cursor:pointer;list-style:none}.fold>summary::-webkit-details-marker{display:none}
+.fold>summary h2::before{content:"▸";display:inline-block;margin-right:8px;font-size:.7em;color:var(--accent);transition:transform .15s}
+.fold[open]>summary h2::before{transform:rotate(90deg)}
+/* keyboard hints mean nothing on a phone */
+@media (pointer:coarse){.kbd,.keys{display:none}}
 
 /* mastery table */
 .mastery{display:grid;grid-template-columns:minmax(120px,1fr) repeat(4,minmax(44px,64px));gap:6px 8px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;overflow-x:auto}

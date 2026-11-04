@@ -17,7 +17,7 @@ function Quiz() {
   let fb = '';
   if (ses.answered && !isExam) fb = Feedback(q, it);
   const foot = ses.answered ? (isExam ? '' : `<div class="qfoot"><button class="btn primary" data-act="next" id="nextBtn">${ses.i >= ses.items.length - 1 ? 'Ver resultado' : 'Seguinte'} →</button><span class="kbd">Enter</span><span class="spacer"></span><button class="btn ghost small" data-act="quit">Terminar ronda</button></div>`)
-    : `<div class="qfoot">${multi ? `<button class="btn primary" data-act="confirm" ${ses.picked.size ? '' : 'disabled'}>Confirmar</button>` : ''}${skipBtn}<span class="muted" style="font-size:12.5px">Teclas <span class="kbd">1</span>–<span class="kbd">${q.o.length}</span>${multi ? ' marcam, <span class="kbd">Enter</span> confirma' : ''} · <span class="kbd">S</span> ${isExam ? 'branco' : 'salta'}</span><span class="spacer"></span>${isExam ? `<button class="btn ghost small" data-act="finish">Entregar exame</button>` : `<button class="btn ghost small" data-act="quit">Terminar ronda</button>`}</div>`;
+    : `<div class="qfoot">${multi ? `<button class="btn primary" data-act="confirm" ${ses.picked.size ? '' : 'disabled'}>Confirmar</button>` : ''}${skipBtn}<span class="muted keys" style="font-size:12.5px">Teclas <span class="kbd">1</span>–<span class="kbd">${q.o.length}</span>${multi ? ' marcam, <span class="kbd">Enter</span> confirma' : ''} · <span class="kbd">S</span> ${isExam ? 'branco' : 'salta'}</span><span class="spacer"></span>${isExam ? `<button class="btn ghost small" data-act="finish">Entregar exame</button>` : `<button class="btn ghost small" data-act="quit">Terminar ronda</button>`}</div>`;
   return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="badge">N${q.l}</span>${KINDS[q.kind] ? `<span class="badge kind">${KINDS[q.kind]}</span>` : ''}${q.calc ? `<span class="badge calc" title="Pergunta com contas">Contas${q.step && !isExam ? ` · ${esc(q.step)}` : ''}</span>` : ''}${prog}${(isExam) ? `<span class="timer" id="timer">${fmt(ses.timeLimit - Math.floor((Date.now() - ses.startedAt) / 1000))}</span>` : ''}<span class="mono muted">${qIndex()}/${qCount()}</span></div>
     <article class="card" id="qcard">
       <span class="eyebrow">${esc(ses.title)}</span>
@@ -107,7 +107,7 @@ function LessonScreen() {
 /* ---------- RESULTS ---------- */
 function Results() {
   const r = ses.results; const ok = r.filter(x => x.ok).length; const skipped = r.filter(x => x.skipped); const tot = r.length - skipped.length; const wrong = r.filter(x => !x.ok && !x.skipped);
-  const lvl = ses.level; const nowUnlocked = lvl && lvl < 4 && unlocked(lvl + 1);
+  const lvl = ses.level; const nowUnlocked = lvl && lvl < LEVELS.length && !ses.nextWasOpen && unlocked(lvl + 1);
   let big = `${ok}/${tot}`, sub = tot ? `${Math.round(ok / tot * 100)}% de acerto` : 'sem respostas';
   if (!ses.mode.startsWith('exam') && skipped.length) sub += ` · ${skipped.length} saltada${skipped.length === 1 ? '' : 's'}`;
   if (ses.mode === 'exam') { const blank = ses.items.length - tot; big = `${ses.grade.toFixed(1)}`;
@@ -311,8 +311,10 @@ document.addEventListener('click', async ev => {
   const b = ev.target.closest('[data-act]'); if (!b) return; const a = b.dataset.act;
   if (['unlockAll', 'testDate', 'note'].includes(a)) return;
   switch (a) {
-    case 'home': if (ses && !ses.ended && ses.mode === 'exam' && view.name === 'quiz') { finish(); return; } clearInterval(tick); ses = null; go('home'); break;
-    case 'courses': if (ses && !ses.ended && ses.mode === 'exam' && view.name === 'quiz') { finish(); return; } clearInterval(tick); ses = null; go('courses'); break;
+    case 'home': case 'courses':
+      // leaving a mock exam hands it in, so ask first: one stray tap must not end it
+      if (ses && !ses.ended && ses.mode === 'exam' && view.name === 'quiz') { if (confirm('Sair entrega o exame tal como está. Entregar agora?')) finish(); return; }
+      clearInterval(tick); ses = null; go(a); break;
     case 'sync': go('sync'); break;
     case 'theme': cycleTheme(); renderView(); break;
     case 'skip': skip(); break;
@@ -344,7 +346,7 @@ document.addEventListener('click', async ev => {
     case 'next': next(); break;
     case 'quit': if (ses && ses.results.length) finish(); else { ses = null; go('home'); } break;
     case 'finish': finish(); break;
-    case 'retryWrong': { const ids = ses.results.filter(r => !r.ok).map(r => r.id); start('retry', { ids, examGrading: ses.mode === 'exam' || ses.examGrading }); break; }
+    case 'retryWrong': { const ids = ses.results.filter(r => !r.ok && !r.skipped).map(r => r.id); start('retry', { ids, examGrading: ses.mode === 'exam' || ses.examGrading }); break; }
     case 'bank': go('bank'); break;
     case 'notes': go('notes'); break;
     case 'import': doImport(document.getElementById('importBox').value); break;

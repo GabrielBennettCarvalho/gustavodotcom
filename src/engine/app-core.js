@@ -239,6 +239,18 @@ function Courses() {
 /* ---------- HOME (of a course) ---------- */
 function daysLeft() { if (!S.settings.testDate) return null; const d = new Date(S.settings.testDate + 'T09:00:00'); const n = Math.ceil((d - new Date()) / 864e5); return isNaN(n) ? null : n; }
 const extraApi = () => ({ pool: trainPool(), pick, topLevel, peek, inTopics, LEVELS, BANK });
+// Folded home sections remember being open, so a re-render (a toggle inside them) does not close them
+const folds = {};
+document.addEventListener('toggle', ev => { if (ev.target.id && ev.target.id.startsWith('fold-')) folds[ev.target.id] = ev.target.open; }, true);
+// "Continuar": the one obvious next step, so nobody has to scroll the whole home to start.
+// Mistakes due first, then climbing the levels, then the exam problem type that matters most.
+function nextStep(RS) {
+  const r = reviewPool().length, e = examReviewPool().length, tl = topLevel(), L = LEVELS.find(x => x.n === tl) || LEVELS[0];
+  if (r) return `data-act="startReview" data-k="review">Rever ${r} erro${r === 1 ? '' : 's'}`;
+  if (e) return `data-act="startReview" data-k="reviewExam">Rever ${e} erro${e === 1 ? '' : 's'} de exame`;
+  if (RS && RS.next && (tl === LEVELS[LEVELS.length - 1].n || S.settings.unlockAll)) return `data-act="skill" data-k="${esc(RS.next.id)}">Treinar: ${esc(RS.next.label)}`;
+  return `data-act="level" data-n="${tl}">Nível ${tl} · ${esc(L.t)}`;
+}
 function Home() {
   const tl = topLevel(); const dl = daysLeft(); const rp = reviewPool().length + examReviewPool().length; const nSk = skippedPool().length;
   const nFresh = freshReserved().length; const pt = partTopics(); const inPart = q => pt.includes(q.t) && !isReserved(q) && shown(q);
@@ -282,6 +294,7 @@ function Home() {
       <span class="eyebrow">${esc(C.name)} · IST</span>
       <h1>${esc(C.tagline || C.name)}</h1>
       <p>${nTrain} perguntas${nSupp ? ' prioritárias' : ''} de escolha múltipla em ${LEVELS.length} níveis, com a teoria explicada sempre que falhas. ${dl !== null ? `<b>${dl > 0 ? `Faltam ${dl} dia${dl === 1 ? '' : 's'} para o teste.` : dl === 0 ? 'O teste é hoje. Força!' : 'O teste já passou.'}</b>` : ''}</p>
+      <div class="row"><button class="btn primary" ${nextStep(RS)} →</button></div>
     </section>
     ${readyCard}
     <div class="flow-card">
@@ -297,9 +310,9 @@ function Home() {
     <div class="section"><div class="section-h"><h2>Modos</h2></div><div class="modes">${std.map(c => card(c)).join('')}</div></div>
     ${prep.length ? `<div class="section"><div class="section-h"><h2>Para o exame</h2></div><div class="modes">${prep.map(c => card(c)).join('')}</div></div>` : ''}
     ${extras ? `<div class="section"><div class="section-h"><h2>Só de ${esc(C.code)}</h2></div><div class="modes">${extras}</div></div>` : ''}
-    <div class="section"><div class="section-h"><h2>Domínio</h2><span class="muted" style="font-size:13px">perguntas acertadas pelo menos uma vez</span></div>${mt}</div>
-    <div class="section">
-      <div class="section-h"><h2>Definições</h2></div>
+    <details class="section fold" id="fold-mastery" ${folds['fold-mastery'] ? 'open' : ''}><summary class="section-h"><h2>Domínio</h2><span class="muted" style="font-size:13px">perguntas acertadas pelo menos uma vez</span></summary>${mt}</details>
+    <details class="section fold" id="fold-settings" ${folds['fold-settings'] || view.confirmReset ? 'open' : ''}>
+      <summary class="section-h"><h2>Definições</h2><span class="muted" style="font-size:13px">dia do teste, notas, importar, recomeçar</span></summary>
       <div class="row">
         <label class="toggle"><input type="checkbox" id="unlockAll" data-act="unlockAll" ${S.settings.unlockAll ? 'checked' : ''}> Desbloquear todos os níveis</label>
         <label class="toggle" for="testDate">Dia do teste <input type="date" id="testDate" data-act="testDate" value="${esc(S.settings.testDate)}" style="width:auto;height:auto;font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)"></label>
@@ -310,7 +323,7 @@ function Home() {
         <span class="spacer"></span>
         ${view.confirmReset ? `<span class="muted" style="font-size:13px">Apagar o progresso de ${esc(C.code)}?</span><button class="btn small" data-act="resetYes" style="color:var(--bad)">Sim, apagar</button><button class="btn small" data-act="resetNo">Cancelar</button>` : `<button class="btn ghost small" data-act="reset">Recomeçar do zero</button>`}
       </div>
-    </div>`;
+    </details>`;
 }
 // Tudo / Só teoria / Só contas: applies to every mode (levels, Aprender, Revisão, exame simulado, extras)
 function calcSwitch() {
@@ -386,7 +399,7 @@ function start(mode, opts = {}) {
   }
   if (mode === 'retry') { items = opts.ids.map(id => BYID[id]).filter(Boolean).map(makeItem); title = 'Repetir erros'; }
   if (!items.length) { toast('Não há perguntas para estes filtros.'); return; }
-  ses = { mode, title, items, i: 0, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, topic: opts.topic, skill: mode === 'skill' ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
+  ses = { mode, title, items, i: 0, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, nextWasOpen: !!opts.level && opts.level < LEVELS.length && unlocked(opts.level + 1), topic: opts.topic, skill: mode === 'skill' ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
   if (timeLimit) startTimer();
   go(items[0].kind === 'lesson' ? 'lesson' : 'quiz');
 }

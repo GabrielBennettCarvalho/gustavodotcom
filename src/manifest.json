@@ -90,7 +90,10 @@
         "questions/pca.js",
         "questions/svm-dft.js",
         "questions/deep.js",
-        "questions/exam.js"
+        "questions/exam.js",
+        "questions/exam22b.js",
+        "questions/exam23.js",
+        "questions/prep.js"
       ]
     }
   }

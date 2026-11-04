@@ -10,6 +10,15 @@ for (const id of REG.order) {
   if (!c.topics) { err(`${id}: missing STUDY.course({...})`); continue; }
   const L = new Set(c.lessons.map(l => l.id)), seen = new Set();
   for (const l of c.lessons) if (!c.topics[l.t]) err(`${id}/${l.id}: unknown topic "${l.t}"`);
+  // parts (1.º teste, 2.º teste…), exam problem types (skills) and past exams
+  for (const p of c.parts || []) { if (!p.id || !p.label || !Array.isArray(p.topics)) err(`${id}: part needs id, label, topics`); (p.topics || []).forEach(t => { if (!c.topics[t]) err(`${id}: part ${p.id} has unknown topic "${t}"`); }); }
+  const SK = new Map(), lesSk = {};
+  for (const s of c.skills || []) {
+    if (!s.id || !s.label) err(`${id}: skill needs id and label`); if (SK.has(s.id)) err(`${id}: duplicate skill ${s.id}`); SK.set(s.id, s);
+    if (!c.topics[s.t]) err(`${id}: skill ${s.id} has unknown topic "${s.t}"`);
+    (s.les || []).forEach(l => { if (!L.has(l)) err(`${id}: skill ${s.id} lists missing lesson "${l}"`); if (lesSk[l]) err(`${id}: lesson ${l} is in skills ${lesSk[l]} and ${s.id}`); lesSk[l] = s.id; });
+    if (c.past) (s.seen || []).forEach(k => { if (!c.past.includes(k)) err(`${id}: skill ${s.id} seen in "${k}", which is not in past`); });
+  }
   for (const q of c.questions) {
     const tag = `${id}/${q.id}`;
     if (seen.has(q.id)) err(`${tag}: duplicate id`); seen.add(q.id);
@@ -24,6 +33,8 @@ for (const id of REG.order) {
     if (q.calc !== undefined && typeof q.calc !== 'boolean') err(`${tag}: "calc" must be true/false`);
     if (q.code !== undefined && typeof q.code !== 'string') err(`${tag}: "code" must be text`);
     if (q.step !== undefined && typeof q.step !== 'string') err(`${tag}: "step" must be text like '2/3'`);
+    if (q.k !== undefined && q.k !== '' && !SK.has(q.k)) err(`${tag}: skill "${q.k}" does not exist`);
+    if (q.kind !== undefined && !['method', 'check', 'bug'].includes(q.kind)) err(`${tag}: "kind" must be method, check or bug`);
     if (q.d && c.render) { try { const s = c.render(q.d); if (!s || !String(s).includes('<svg')) err(`${tag}: empty diagram`); } catch (e) { err(`${tag}: diagram fails (${e.message})`); } }
   }
   // Warn when the right answer gives itself away by being clearly the longest option.
@@ -39,6 +50,10 @@ for (const id of REG.order) {
   const known = new Set(ids); const added = c.questions.map(q => q.id).filter(x => !known.has(x));
   if (!errs && added.length) fs.writeFileSync(idsFile, JSON.stringify(ids.concat(added), null, 0).replace(/","/g, '",\n"') + '\n');
   const res = c.questions.filter(q => q.reserved === 'exam').length;
-  console.log(`${id}: ${c.lessons.length} lessons, ${c.questions.length} questions (${res} reserved for the exam), ${c.extras.length} extra(s)${added.length ? `, +${added.length} new ids` : ''}`);
+  // same rule as the engine's isCore: the type came up in a past exam, or the question comes from one
+  const skOf = q => q.k !== undefined ? q.k : lesSk[q.les];
+  const core = q => !SK.size || /^(exame|teste|map|mini|repescagem)/i.test(q.src || '') || !!(SK.get(skOf(q)) && (SK.get(skOf(q)).seen || []).length);
+  const pr = SK.size ? `, ${SK.size} problem types, ${c.questions.filter(core).length} priority / ${c.questions.filter(q => !core(q)).length} supplementary` : '';
+  console.log(`${id}: ${c.lessons.length} lessons, ${c.questions.length} questions (${res} reserved for the exam), ${c.extras.length} extra(s)${pr}${added.length ? `, +${added.length} new ids` : ''}`);
 }
 process.exit(errs ? 1 : 0);

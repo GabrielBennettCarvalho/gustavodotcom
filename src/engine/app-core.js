@@ -15,7 +15,7 @@ const XP = { 1: 10, 2: 15, 3: 20, 4: 30 };
 const UNLOCK = 0.6;
 const EXAM_N = 20, EXAM_MIN = 30;   // mock exam defaults: questions and minutes (a course can set exam: { n, min, penalty })
 const CALC_MODES = ['all', 'theory', 'math'];
-const EXAM_CLEAR = 2;              // correct answers in a row to clear an exam mistake from review
+const TRAIN_CLEAR = 2, EXAM_CLEAR = 2;   // correct answers in a row to clear a training / exam mistake from review
 const LS_KEY = 'estudo-ist-v2', LS_PACKS = 'estudo-ist-packs-v2', LS_THEME = 'estudo-ist-theme';
 const LEGACY = { state: 'ams-treino-v1', packs: 'ams-treino-packs-v1', course: 'ams' };
 
@@ -35,7 +35,7 @@ applyTheme();
 
 /* ---------- state ----------
    G holds everything; S points at the open course's slice (G.c[id]). */
-const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, skipped: {}, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '', calcMode: 'all' },rounds: 0, sessions: [] });
+const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, skipped: {}, pins: {}, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '', calcMode: 'all', part: 'all' }, rounds: 0, sessions: [] });
 let G = ls.get(LS_KEY);
 if (!G || G.v !== 2) G = { v: 2, cur: null, c: {}, updatedAt: 0 };
 // Progress from the AMS-only version (same browser, same origin): merged once, even if this
@@ -56,6 +56,7 @@ packs.forEach(p => { if (!p.course && p.cadeira) p.course = p.cadeira; });   // 
 
 let C = null, S = null, TOPICS = {}, LEVELS = DEFAULT_LEVELS;
 let BANK = [], BYID = {}, LESSONS = [], LBYID = {};
+let SKILLS = [], SKBYID = {}, LES2SK = {};   // the course's exam problem types (C.skills), by id and by lesson
 const renderD = d => !d ? '' : typeof d === 'string' ? d : (C && C.render ? C.render(d) : '');
 
 function openCourse(id) {
@@ -71,6 +72,9 @@ function openCourse(id) {
   // new topics start enabled for people who already had progress
   const known = S.settings.known; Object.keys(TOPICS).forEach(k => { if (!known.includes(k)) { known.push(k); if (!S.settings.topics.includes(k)) S.settings.topics.push(k); } });
   S.settings.topics = S.settings.topics.filter(k => TOPICS[k]); if (!S.settings.topics.length) S.settings.topics = Object.keys(TOPICS);
+  if (!(C.parts || []).some(p => p.id === S.settings.part && p.topics.length)) S.settings.part = 'all';
+  SKILLS = C.skills || []; SKBYID = {}; LES2SK = {};
+  SKILLS.forEach(s => { SKBYID[s.id] = s; (s.les || []).forEach(l => { LES2SK[l] = s.id; }); });
   G.cur = id; rebuildBank(); return true;
 }
 
@@ -106,30 +110,79 @@ const peek = id => Object.assign({}, ZERO, S.stats[id]);
 // calcMode: 'all' everything · 'theory' hides calc questions ("Só teoria") · 'math' only calc questions ("Só contas")
 const calcMode = () => hasCalc() ? S.settings.calcMode : 'all';
 const shown = (q, m = calcMode()) => m === 'all' || (m === 'theory' ? !q.calc : !!q.calc);
-const inTopics = q => S.settings.topics.includes(q.t) && shown(q);
+// Parts (C.parts): 1.º teste, 2.º teste… Picking one limits every mode to its topics; 'all' is the whole course.
+const partTopics = () => { const p = (C.parts || []).find(x => x.id === S.settings.part); return p ? p.topics : Object.keys(TOPICS); };
+const activeTopics = () => { const pt = partTopics(); return S.settings.topics.filter(k => pt.includes(k)); };
+const inTopics = q => activeTopics().includes(q.t) && shown(q);
 const hasCalc = () => BANK.some(q => q.calc);
 const examCfg = () => Object.assign({ n: EXAM_N, min: EXAM_MIN, penalty: null, desc: '' }, C && C.exam);
 const isReserved = q => q.reserved === 'exam';
 const fresh = q => { const s = peek(q.id); return !s.c && !s.w && !s.ew; };
-const trainPool = () => BANK.filter(q => inTopics(q) && !isReserved(q));
-function mastery(level, topics = S.settings.topics, m = calcMode()) {
-  const qs = BANK.filter(q => q.l === level && topics.includes(q.t) && shown(q, m) && !isReserved(q)); if (!qs.length) return { pct: 0, done: 0, total: 0 };
+
+/* ---------- exam problem types, readiness, priority ----------
+   C.skills lists the kinds of problem the exams ask. A question belongs to one, through its lesson
+   (skill.les) or its own "k" (k: '' means none). Priority questions: their type came up in a past exam,
+   or they come from one (src). The others are supplementary. A course without skills: all are priority. */
+const skillOf = q => q.k !== undefined ? (q.k || null) : (LES2SK[q.les] || null);
+const PAST_RE = /^(exame|teste|map|mini|repescagem)/i;
+// "Exame 1 2024/25, 6.b" → "Exame 1 2024/25"; "Exame 2020/21, 2.ª época, P3" → "Exame 2020/21, 2.ª época"
+function pastKey(src) {
+  if (!src) return null; const seg = String(src).split(', ');
+  let k = seg[0].replace(/\s*\(.*\)\s*$/, ''); if (seg[1] && /época|teste/i.test(seg[1])) k += ', ' + seg[1];
+  return PAST_RE.test(k) && !/\se\s/.test(k) ? k : null;   // "Exames 2025/26 P4 e 2023/24 P1": in more than one, listed in neither
+}
+const isCore = q => { if (!SKILLS.length || q.origin !== 'base' || PAST_RE.test(q.src || '')) return true; const s = SKBYID[skillOf(q)]; return !!(s && s.seen && s.seen.length); };
+const basePool = () => BANK.filter(q => inTopics(q) && !isReserved(q));
+const trainPool = () => basePool().filter(isCore);
+const suppPool = () => basePool().filter(q => !isCore(q));
+const skillQs = k => BANK.filter(q => skillOf(q) === k && !isReserved(q) && q.origin === 'base');
+const partSkills = () => { const pt = partTopics(); return SKILLS.filter(s => pt.includes(s.t)); };
+const pastList = () => C.past || [];
+// ready: every question of the type answered right and none waiting in review
+function readiness(k) {
+  const qs = skillQs(k); let ok = 0, pend = 0, tried = 0;
+  qs.forEach(q => { const s = peek(q.id); const p = (s.w && s.box < TRAIN_CLEAR) || (s.ew && s.eb < EXAM_CLEAR);
+    if (s.c || s.w || s.ew) tried++; if (p) pend++; else if (s.c) ok++; });
+  const state = !qs.length ? 'none' : ok === qs.length ? 'ready' : tried ? 'training' : 'todo';
+  return { total: qs.length, ok, pend, state, pct: qs.length ? ok / qs.length : 0 };
+}
+// Readiness of the part, weighted by how often each type came up; and the type to train next
+function readySummary() {
+  const rows = partSkills().map(s => ({ s, r: readiness(s.id), w: Math.max(1, (s.seen || []).length) })).filter(x => x.r.total);
+  const W = rows.reduce((a, x) => a + x.w, 0);
+  const next = rows.filter(x => x.r.state !== 'ready').sort((a, b) => b.w - a.w || b.r.pct - a.r.pct)[0];
+  return { rows, ready: rows.filter(x => x.r.state === 'ready').length, pct: W ? rows.reduce((a, x) => a + x.w * x.r.pct, 0) / W : 0, next: next && next.s };
+}
+// Past exams: questions grouped by their source, in the exam's order (steps of a problem stay together)
+function pastGroups() {
+  const pt = partTopics(), by = {};
+  BANK.forEach(q => { const k = pastKey(q.src); if (k && pt.includes(q.t)) (by[k] = by[k] || []).push(q); });
+  const item = q => String(q.src).slice(pastKey(q.src).length);
+  Object.values(by).forEach(a => a.sort((x, y) => item(x).localeCompare(item(y), 'pt', { numeric: true }) || String(x.ch || x.id).localeCompare(String(y.ch || y.id)) || parseInt(x.step || 0) - parseInt(y.step || 0)));
+  const yr = k => { const m = k.match(/(\d{4})\/\d{2}/); return m ? +m[1] : 0; }, order = pastList();
+  return Object.keys(by).sort((a, b) => (order.includes(a) && order.includes(b) ? order.indexOf(a) - order.indexOf(b) : 0) || yr(b) - yr(a) || a.localeCompare(b, 'pt', { numeric: true })).map(k => ({ key: k, qs: by[k] }));
+}
+// The personal cheat sheet holds the types you got wrong at least once, plus the ones you pinned
+const sheetMine = s => S.pins[s.id] === 1 || (S.pins[s.id] !== 0 && skillQs(s.id).some(q => { const x = peek(q.id); return x.w || x.ew; }));
+const shortPast = k => k.replace(/^Exame\s*/i, '').replace(/^(\d)\s+(\d{4}\/\d{2})$/, '$2 E$1');
+function mastery(level, topics = activeTopics(), m = calcMode()) {
+  const qs = BANK.filter(q => q.l === level && topics.includes(q.t) && shown(q, m) && !isReserved(q) && isCore(q)); if (!qs.length) return { pct: 0, done: 0, total: 0 };
   const done = qs.filter(q => peek(q.id).c > 0).length; return { pct: done / qs.length, done, total: qs.length };
 }
 // Unlocked in mode m: the previous level shown in m is UNLOCK done; a level with nothing shown in m doesn't block
 // (in "Só contas" level 1 usually has no calculations, so level 2 opens straight away).
-function unlockedIn(level, m) { if (level === 1) return true; const p = mastery(level - 1, S.settings.topics, m); return p.total ? p.pct >= UNLOCK : unlockedIn(level - 1, m); }
+function unlockedIn(level, m) { if (level === 1) return true; const p = mastery(level - 1, activeTopics(), m); return p.total ? p.pct >= UNLOCK : unlockedIn(level - 1, m); }
 // A level stays open when the switch changes: what you passed with theory only (or with everything) still counts.
 function unlocked(level) {
   if (level === 1 || S.settings.unlockAll) return true;
   return unlockedIn(level, calcMode()) || (hasCalc() && (unlockedIn(level, 'all') || unlockedIn(level, 'theory')));
 }
 function topLevel() { let t = 1; for (const L of LEVELS) if (unlocked(L.n)) t = L.n; return t; }
-const reviewPool = () => trainPool().filter(q => peek(q.id).w > 0 && peek(q.id).box < 3).sort((a, b) => peek(a.id).box - peek(b.id).box || peek(a.id).last - peek(b.id).last);
+const reviewPool = () => basePool().filter(q => peek(q.id).w > 0 && peek(q.id).box < TRAIN_CLEAR).sort((a, b) => peek(a.id).box - peek(b.id).box || peek(a.id).last - peek(b.id).last);
 const examReviewPool = () => BANK.filter(q => inTopics(q) && peek(q.id).ew > 0 && peek(q.id).eb < EXAM_CLEAR).sort((a, b) => peek(a.id).eb - peek(b.id).eb || peek(a.id).last - peek(b.id).last);
 const freshReserved = () => BANK.filter(q => inTopics(q) && isReserved(q) && fresh(q));
 // skipped questions wait here (ignoring "Só teoria": you skipped them to do later with paper)
-const skippedPool = () => BANK.filter(q => S.skipped && S.skipped[q.id] && S.settings.topics.includes(q.t)).sort((a, b) => S.skipped[a.id] - S.skipped[b.id]);
+const skippedPool = () => BANK.filter(q => S.skipped && S.skipped[q.id] && activeTopics().includes(q.t)).sort((a, b) => S.skipped[a.id] - S.skipped[b.id]);
 function pick(pool, n) { // unseen first, then weakest, randomized within bands
   const bands = [[], [], []]; pool.forEach(q => { const s = peek(q.id); if (!s.c && !s.w && !s.ew) bands[0].push(q); else if (s.box < 2) bands[1].push(q); else bands[2].push(q); });
   return bands.flatMap(b => shuffle(b)).slice(0, n);
@@ -146,7 +199,7 @@ let ses = null; // active session
 function go(name, extra = {}) { view = Object.assign({ name }, extra); renderView(); window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' }); }
 function renderView() {
   const v = C || view.name === 'sync' ? view.name : 'courses';
-  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'sync' ? Sync() : Home();
+  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : Home();
   document.documentElement.dataset.course = C && v !== 'courses' && v !== 'sync' ? C.id : '';
   $app.innerHTML = Top() + html;
   document.title = C && v !== 'courses' ? `${C.code} · Estudo IST` : 'Estudo IST';
@@ -188,8 +241,9 @@ function daysLeft() { if (!S.settings.testDate) return null; const d = new Date(
 const extraApi = () => ({ pool: trainPool(), pick, topLevel, peek, inTopics, LEVELS, BANK });
 function Home() {
   const tl = topLevel(); const dl = daysLeft(); const rp = reviewPool().length + examReviewPool().length; const nSk = skippedPool().length;
-  const nFresh = freshReserved().length; const nTrain = BANK.filter(q => !isReserved(q) && shown(q)).length; const X = examCfg(); const M = C.map || {};
-  const topicsChips = Object.entries(TOPICS).map(([k, t]) => { const n = BANK.filter(q => q.t === k && !isReserved(q) && shown(q)).length; return `<button class="chip" style="--c:${t.c}" data-act="topic" data-k="${k}" aria-pressed="${S.settings.topics.includes(k)}"><span class="sw"></span>${t.short} <span class="muted mono">${n}</span></button>`; }).join('');
+  const nFresh = freshReserved().length; const pt = partTopics(); const inPart = q => pt.includes(q.t) && !isReserved(q) && shown(q);
+  const nTrain = BANK.filter(q => inPart(q) && isCore(q)).length, nSupp = BANK.filter(q => inPart(q) && !isCore(q)).length; const X = examCfg(); const M = C.map || {};
+  const topicsChips = Object.entries(TOPICS).filter(([k]) => pt.includes(k)).map(([k, t]) => { const n = BANK.filter(q => q.t === k && inPart(q) && isCore(q)).length; return `<button class="chip" style="--c:${t.c}" data-act="topic" data-k="${k}" aria-pressed="${S.settings.topics.includes(k)}"><span class="sw"></span>${t.short} <span class="muted mono">${n}</span></button>`; }).join('');
   const link = `<span class="${M.link || 'seq'}" aria-hidden="true"></span>`;
   const ends = (e, cls) => e ? `<span class="hier" aria-hidden="true">${e.icon || ''}<span>${esc(e.label || '')}</span></span>` : `<span class="ev${cls}" aria-hidden="true"></span>`;
   const flow = LEVELS.map((L, i) => { const m = mastery(L.n), un = unlocked(L.n);
@@ -206,23 +260,42 @@ function Home() {
   const card = ([k, t, d, m, g], act = 'mode') => `<button class="mode" data-act="${act}" data-k="${k}"><h3>${g}${t}</h3><p>${d}</p><span class="meta">${m}</span></button>`;
   const api = extraApi();
   const extras = (C.extras || []).map(x => card([x.id, esc(x.title), esc(x.desc), esc(x.meta ? x.meta(api) : ''), glyph(x.icon || 'star')], 'extra')).join('');
+  // "Para o exame": readiness checklist, past exams, cheat sheet, supplementary questions
+  const RS = SKILLS.length ? readySummary() : null; const PG = pastGroups();
+  const prep = [
+    RS && RS.rows.length ? ['ready', 'Prontidão', 'A checklist dos tipos de problema que saem nos exames, com o teu estado em cada um.', `${RS.ready}/${RS.rows.length} tipos prontos`, glyph('flag')] : null,
+    PG.length ? ['past', 'Exames anteriores', 'Cada exame, pela ordem original, com as perguntas reescritas aqui. Os problemas grandes vêm por partes.', `${PG.length} exame${PG.length === 1 ? '' : 's'}`, glyph('clock')] : null,
+    RS && RS.rows.length ? ['sheet', 'Cábula', 'A folha para levar para o exame: fórmulas, passos e armadilhas dos tipos onde falhaste, mais as tuas notas.', `${partSkills().filter(s => sheetMine(s)).length} na tua cábula`, glyph('pen')] : null,
+    nSupp ? ['supp', 'Suplementares', 'Perguntas sobre matéria que ainda não saiu nos exames. Para ir mais fundo, depois do resto.', `${nSupp} perguntas`, glyph('plus')] : null,
+  ].filter(Boolean);
+  const readyCard = RS && RS.rows.length ? `<div class="ready-card">
+      <div class="row"><h2>Prontidão para o exame</h2><span class="spacer"></span><span class="mono muted" style="font-size:12px">${RS.ready} de ${RS.rows.length} tipos prontos</span></div>
+      <div class="ready-bar" aria-hidden="true">${RS.rows.map(x => `<i class="${x.r.state}" style="flex:${x.w}" title="${esc(x.s.label)}"></i>`).join('')}</div>
+      <p class="muted" style="font-size:13.5px">${Math.round(RS.pct * 100)}% pronto, a contar mais o que sai mais vezes.${RS.next ? ` A seguir: <b style="color:var(--ink)">${esc(RS.next.label)}</b>${(RS.next.seen || []).length ? ` (saiu em ${RS.next.seen.length} de ${pastList().length || PG.length} exames)` : ''}.` : ' Todos os tipos de problema prontos.'}</p>
+      <div class="row">${RS.next ? `<button class="btn primary" data-act="skill" data-k="${esc(RS.next.id)}">Treinar este tipo</button>` : ''}<button class="btn" data-act="mode" data-k="ready">Ver a checklist</button></div>
+    </div>` : '';
+  const P = (C.parts || []);
+  const partSwitch = P.length > 1 ? `<div class="seg" role="group" aria-label="Que parte da matéria">${P.map(p => `<button data-act="part" data-k="${esc(p.id)}" aria-pressed="${S.settings.part === p.id}" ${p.topics.length ? '' : 'disabled'} title="${esc(p.topics.length ? p.label : p.note || 'Ainda sem matéria')}">${esc(p.label)}${p.topics.length ? '' : ' · em breve'}</button>`).join('')}<button data-act="part" data-k="all" aria-pressed="${S.settings.part === 'all'}">Tudo</button></div>` : '';
   const mt = `<div class="mastery" role="table" aria-label="Domínio por tema e nível"><span></span>${LEVELS.map(L => `<span class="h">N${L.n}</span>`).join('')}
-    ${Object.entries(TOPICS).map(([k, t]) => `<span class="tn"><span class="chip static" style="--c:${t.c};padding:0;border:0;background:none"><span class="sw"></span></span>${t.short}</span>` + LEVELS.map(L => { const m = mastery(L.n, [k]); return m.total ? `<span class="cell" title="${m.done} de ${m.total}"><span style="width:${Math.round(m.pct * 100)}%"></span><em>${m.done}/${m.total}</em></span>` : '<span class="cell"><em>—</em></span>'; }).join('')).join('')}</div>`;
+    ${Object.entries(TOPICS).filter(([k]) => pt.includes(k)).map(([k, t]) => `<span class="tn"><span class="chip static" style="--c:${t.c};padding:0;border:0;background:none"><span class="sw"></span></span>${t.short}</span>` + LEVELS.map(L => { const m = mastery(L.n, [k]); return m.total ? `<span class="cell" title="${m.done} de ${m.total}"><span style="width:${Math.round(m.pct * 100)}%"></span><em>${m.done}/${m.total}</em></span>` : '<span class="cell"><em>—</em></span>'; }).join('')).join('')}</div>`;
   return `<section class="hero">
       <span class="eyebrow">${esc(C.name)} · IST</span>
       <h1>${esc(C.tagline || C.name)}</h1>
-      <p>${nTrain} perguntas de escolha múltipla em ${LEVELS.length} níveis, com a teoria explicada sempre que falhas. ${dl !== null ? `<b>${dl > 0 ? `Faltam ${dl} dia${dl === 1 ? '' : 's'} para o teste.` : dl === 0 ? 'O teste é hoje. Força!' : 'O teste já passou.'}</b>` : ''}</p>
+      <p>${nTrain} perguntas${nSupp ? ' prioritárias' : ''} de escolha múltipla em ${LEVELS.length} níveis, com a teoria explicada sempre que falhas. ${dl !== null ? `<b>${dl > 0 ? `Faltam ${dl} dia${dl === 1 ? '' : 's'} para o teste.` : dl === 0 ? 'O teste é hoje. Força!' : 'O teste já passou.'}</b>` : ''}</p>
     </section>
+    ${readyCard}
     <div class="flow-card">
       <div class="row"><h2>${esc(M.title || 'Mapa de níveis')}</h2><span class="spacer"></span><span class="muted" style="font-size:13px">Desbloqueias o seguinte com ${Math.round(UNLOCK * 100)}% do anterior.</span></div>
       <div class="flow ${M.link ? 'flow-' + M.link : ''}" role="group" aria-label="Níveis">${ends(M.start, '')}${link}${flow}${link}${ends(M.end, ' end')}</div>
       <div class="flow-legend">${(M.legend || ['○ início', '◉ o token marca onde estás', '● fim = pronto para o teste']).map(x => `<span>${esc(x)}</span>`).join('')}</div>
     </div>
     <div class="stack">
+      ${partSwitch ? `<div class="row"><span class="eyebrow">Matéria</span><span class="spacer"></span>${partSwitch}</div>` : ''}
       <div class="row"><span class="eyebrow">Temas em jogo</span><span class="spacer"></span>${hasCalc() ? calcSwitch() : ''}</div>
       <div class="chips">${topicsChips}</div>
     </div>
     <div class="section"><div class="section-h"><h2>Modos</h2></div><div class="modes">${std.map(c => card(c)).join('')}</div></div>
+    ${prep.length ? `<div class="section"><div class="section-h"><h2>Para o exame</h2></div><div class="modes">${prep.map(c => card(c)).join('')}</div></div>` : ''}
     ${extras ? `<div class="section"><div class="section-h"><h2>Só de ${esc(C.code)}</h2></div><div class="modes">${extras}</div></div>` : ''}
     <div class="section"><div class="section-h"><h2>Domínio</h2><span class="muted" style="font-size:13px">perguntas acertadas pelo menos uma vez</span></div>${mt}</div>
     <div class="section">
@@ -242,7 +315,7 @@ function Home() {
 // Tudo / Só teoria / Só contas: applies to every mode (levels, Aprender, Revisão, exame simulado, extras)
 function calcSwitch() {
   const opts = [['all', 'Tudo', 'Teoria e contas, misturadas'], ['theory', 'Só teoria', 'Esconde as perguntas com contas'], ['math', 'Só contas', 'Só as perguntas com contas, como nos problemas do exame']];
-  const cur = calcMode(), pool = BANK.filter(q => !isReserved(q) && S.settings.topics.includes(q.t));
+  const cur = calcMode(), pool = BANK.filter(q => !isReserved(q) && activeTopics().includes(q.t) && isCore(q));
   return `<div class="seg" role="group" aria-label="Que perguntas mostrar">${opts.map(([k, t, d]) =>
     `<button data-act="calcMode" data-k="${k}" aria-pressed="${cur === k}" title="${d}">${t} <span class="mono">${pool.filter(q => shown(q, k)).length}</span></button>`).join('')}</div>`;
 }
@@ -256,7 +329,7 @@ function ReviewPick() {
   const a = reviewPool().length, b = examReviewPool().length, c = skippedPool().length;
   return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="eyebrow">Revisão</span></div>
   <div class="modes">
-    <button class="mode" data-act="startReview" data-k="review" ${a ? '' : 'disabled'}><h3>${glyph('loop')}Erros de treino</h3><p>Perguntas que falhaste nos níveis, em Aprender e nas secções da cadeira. Saem quando as acertares três vezes seguidas.</p><span class="meta">${a ? `${a} por rever` : 'nada por rever'}</span></button>
+    <button class="mode" data-act="startReview" data-k="review" ${a ? '' : 'disabled'}><h3>${glyph('loop')}Erros de treino</h3><p>Perguntas que falhaste nos níveis, em Aprender e nas secções da cadeira. Saem quando as acertares ${TRAIN_CLEAR} vezes seguidas.</p><span class="meta">${a ? `${a} por rever` : 'nada por rever'}</span></button>
     <button class="mode" data-act="startReview" data-k="reviewExam" ${b ? '' : 'disabled'}><h3>${glyph('flag')}Erros de exame</h3><p>O que falhaste em condições de teste. Saem quando as acertares ${EXAM_CLEAR} vezes seguidas aqui.</p><span class="meta">${b ? `${b} por rever` : 'nada por rever'}</span></button>
     <button class="mode" data-act="startReview" data-k="skipped" ${c ? '' : 'disabled'}><h3>${glyph('skip')}Saltadas</h3><p>As perguntas que saltaste. Pega em papel e caneta e tenta agora. Saem da lista quando lhes responderes.</p><span class="meta">${c ? `${c} à espera` : 'nenhuma saltada'}</span></button>
   </div>`;
@@ -287,17 +360,33 @@ function start(mode, opts = {}) {
   if (mode === 'reviewExam') { items = examReviewPool().slice(0, 12).map(makeItem); title = 'Revisão · erros de exame'; if (!items.length) { toast('Ainda não tens erros de exame para rever.'); return; } }
   if (mode === 'extra') { const x = (C.extras || []).find(e => e.id === opts.extra); if (!x) return; items = (x.questions(extraApi()) || []).map(makeItem); title = x.title; }
   if (mode === 'exam') { items = buildExam().map(makeItem); title = 'Exame simulado'; timeLimit = examCfg().min * 60; }
+  if (mode === 'supp') { items = pick(suppPool(), 10).sort((a, b) => a.l - b.l).map(makeItem); title = 'Suplementares'; }
+  if (mode === 'skill') {
+    // one exam problem type: a few single questions (weakest first), then one whole problem in steps
+    const s = SKBYID[opts.k]; if (!s) return; title = s.label;
+    // a problem in steps comes whole, even when its other steps belong to other types (forward → backprop)
+    const qs = skillQs(s.id), single = qs.filter(q => !q.ch), by = {}, chs = new Set(qs.filter(q => q.ch).map(q => q.ch));
+    BANK.filter(q => chs.has(q.ch) && !isReserved(q)).forEach(q => (by[q.ch] = by[q.ch] || []).push(q));
+    const chains = Object.values(by).map(a => a.sort((x, y) => parseInt(x.step) - parseInt(y.step)));
+    const done = a => a.filter(q => peek(q.id).c > 0 && !(peek(q.id).w && peek(q.id).box < TRAIN_CLEAR)).length / a.length;
+    const chain = chains.map(a => [done(a) + Math.random() * 0.3, a]).sort((x, y) => x[0] - y[0]).map(x => x[1])[0] || [];
+    items = [...pick(single, chain.length ? 6 : 8).sort((a, b) => a.l - b.l), ...chain].map(makeItem);
+  }
+  if (mode === 'past') {
+    const g = pastGroups().find(x => x.key === opts.key); if (!g) return; title = g.key;
+    items = g.qs.map(makeItem);
+  }
   if (mode === 'learn') {
     const t = opts.topic; title = `Aprender · ${TOPICS[t].short}`;
     // in "Só contas" a lesson with no calculation questions is skipped: that theory was already done
     LESSONS.filter(l => l.t === t).forEach(l => {
-      const qs = pool.filter(q => q.les === l.id).sort((a, b) => a.l - b.l || (peek(a.id).c - peek(b.id).c)).slice(0, 2);
+      const qs = basePool().filter(q => q.les === l.id).sort((a, b) => a.l - b.l || (peek(a.id).c - peek(b.id).c)).slice(0, 2);
       if (!qs.length && calcMode() === 'math') return;
       items.push({ kind: 'lesson', id: l.id }); qs.forEach(q => items.push(makeItem(q))); });
   }
   if (mode === 'retry') { items = opts.ids.map(id => BYID[id]).filter(Boolean).map(makeItem); title = 'Repetir erros'; }
   if (!items.length) { toast('Não há perguntas para estes filtros.'); return; }
-  ses = { mode, title, items, i: 0, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, topic: opts.topic, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
+  ses = { mode, title, items, i: 0, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, topic: opts.topic, skill: mode === 'skill' ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
   if (timeLimit) startTimer();
   go(items[0].kind === 'lesson' ? 'lesson' : 'quiz');
 }

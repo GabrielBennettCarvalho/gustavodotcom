@@ -58,7 +58,8 @@ Fields: `id` unique text · `t` topic · `l` level 1–4 · `q` question · `o` 
 option (or a list) · `e` explanation. Optional: `w` note per wrong option, `les` lesson id, `ctx` case lesson
 shown above the question, `d` diagram, `src` source, `fixed` don't shuffle options, `reserved: 'exam'` only in
 the mock exam, `calc: true` the question needs calculations (hidden by "Só teoria", the only ones in "Só contas", tagged "Contas"), `step: '2/3'`
-step of a guided calculation, `code` a code listing shown above the options.
+step of a guided calculation, `code` a code listing shown above the options, `k` the exam problem type (when it is not the
+one of its lesson; `k: ''` for none), `kind: 'method' | 'check' | 'bug'` (Que método? / Verificação / Onde está o erro?).
 
 New file? Add it to the course's list in `manifest.json`. Lessons work the same way with `STUDY.lessons`.
 
@@ -70,7 +71,21 @@ New file? Add it to the course's list in `manifest.json`. Lessons work the same 
    `start`/`end` icons, legend), `exam: { n, min, penalty: 'options' }` (mock exam size, minutes and real grading where a
    wrong answer costs 1/number of options), `verdict: { ok, ko }` (tags such as HIT/MISS), `logo` (SVG for the top bar).
    Course-only CSS can be scoped with `:root[data-course="<id>"]`.
+   For the exam (see ML): `parts` (`[{ id, label, topics, note }]`, one per test; a part with no topics shows as "em breve"),
+   `past` (the past exams the questions come from, newest first, as written at the start of `src`) and `skills`
+   (`[{ id, t, label, les: [lessons], seen: [past exams], sheet: 'HTML for the cheat sheet' }]`).
 3. Add the course and its files to `manifest.json`.
+
+## For the exam: readiness, priority, past exams, cheat sheet
+
+- **Prontidão**: a checklist of the course's `skills` (exam problem types). A type is *pronto* when every one of its
+  questions was answered right and none is waiting in review. The course home shows the summary and the type to train next
+  (the most frequent one not ready yet).
+- **Priority / supplementary**: in a course with `skills`, levels, mastery and the mock exam use only priority questions:
+  those whose type has `seen` exams, or whose `src` names an exam. The rest go to "Suplementares". Aprender and Revisão use all.
+- **Exames anteriores**: questions grouped by the exam in their `src` ("Exame 1 2024/25, 6.b" → "Exame 1 2024/25"),
+  in the exam's order. Works in every course; a `src` naming two exams is left out.
+- **Cábula**: the `sheet` of each type you got wrong at least once (or pinned), with your notes. It can be printed.
 
 ## Skip, Tudo / Só teoria / Só contas, and theme
 

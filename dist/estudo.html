@@ -296,6 +296,34 @@ textarea.key{min-height:84px;word-break:break-all}
   .flow-bus .lvl.l1,.flow-bus .lvl.l2,.flow-bus .lvl.l3,.flow-bus .lvl.l4{min-height:0}
 }
 
+/* ---------- for the exam: readiness, past exams, cheat sheet ---------- */
+.ready-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;margin-bottom:14px;box-shadow:var(--shadow)}
+.ready-bar{display:flex;gap:2px;height:10px;border-radius:999px;overflow:hidden;background:var(--panel-2)}
+.ready-bar i{min-width:4px;background:var(--line)}
+.ready-bar i.training{background:color-mix(in srgb,var(--accent) 45%,var(--panel-2))}
+.ready-bar i.ready{background:var(--good)}
+.skill-list{display:flex;flex-direction:column;gap:8px}
+.skill{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:10px;min-width:0}
+.skill .st{font-size:18px;width:18px;text-align:center;flex:none;color:var(--muted)}
+.skill.training .st{color:var(--accent)}
+.skill.ready .st{color:var(--good)}
+.skill .sk-main{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.skill .sk-meta{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.skill .sk-prog{font-size:11px;color:var(--muted);flex:none}
+.seen{font-family:var(--f-mono);font-size:10.5px;padding:1px 5px;border-radius:4px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.badge.kind{border-color:var(--token);color:var(--token)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.sheet-topic{margin:18px 0 8px;font-size:17px}
+.sheet-item{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.sheet-item .lesson{margin-top:6px;font-size:14.5px}
+.sheet-notes{margin:6px 0 0 18px;font-size:13.5px}
+@media (max-width:560px){.skill{flex-wrap:wrap}.skill .sk-main{flex-basis:calc(100% - 40px)}.skill .sk-prog{margin-left:30px}}
+@media print{
+  .top,.no-print,.qhead{display:none !important}
+  body{background:#fff;color:#000}
+  .sheet-item{break-inside:avoid;border-color:#999;box-shadow:none}
+}
+
 /* Cores dos temas do AMS */
 :root{ --t-sys:#5452C9; --t-req:#8A55C2; --t-arch:#B88A0B; --t-bpm:#2479B8; --t-bpmn:#238A5E; --t-exam:#C2410C; }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --t-sys:#9C9BFF; --t-req:#C59BF0; --t-arch:#E9C04A; --t-bpm:#6DB8F0; --t-bpmn:#5ACF96; --t-exam:#FF9A62; }}
@@ -3021,6 +3049,11 @@ STUDY.course({
     bpmn: { label: 'BPMN', short: 'BPMN', c: 'var(--t-bpmn)' },
     exam: { label: 'Estilo do teste (casos e falhas A–F)', short: 'Teste', c: 'var(--t-exam)' },
   },
+  // Parts of the course: each test covers its own topics. Topics for the 2nd test are added here as they arrive.
+  parts: [
+    { id: 't1', label: '1.º teste', topics: ['sys', 'req', 'arch', 'bpm', 'bpmn', 'exam'] },
+    { id: 't2', label: '2.º teste', topics: [], note: 'A matéria do 2.º teste ainda não está cá.' },
+  ],
   // Draws the "d" field of questions and lessons (BPMN/ArchiMate diagrams).
   render: d => DG.render(d),
 
@@ -4725,6 +4758,11 @@ STUDY.course({
     vm:    { label: 'Memória virtual e TLB', short: 'Mem. virtual', c: 'var(--t-vm)' },
     exam:  { label: 'Estilo do teste', short: 'Teste', c: 'var(--t-ocx)' },
   },
+  // Parts of the course: each test covers its own topics. Topics for the 2nd test are added here as they arrive.
+  parts: [
+    { id: 't1', label: '1.º teste', topics: ['perf', 'bits', 'isa', 'comp', 'cache', 'cperf', 'opt', 'vm', 'exam'] },
+    { id: 't2', label: '2.º teste', topics: [], note: 'A matéria do 2.º teste ainda não está cá.' },
+  ],
 
   // Levels climb the memory hierarchy: from slow RAM to the registers next to the CPU.
   levels: [
@@ -9067,6 +9105,73 @@ STUDY.course({
   // The real exam is written (2 h, 20 points). The mock exam has no penalty, like the real grading.
   exam: { n: 16, min: 60, desc: 'O exame real é escrito: 2 horas, 20 valores, problemas com todas as contas. Aqui: 16 perguntas em 60 minutos, sem desconto por errada. Usa primeiro as perguntas dos exames de 2021/22 a 2025/26, que não aparecem nos outros modos.' },
   verdict: { ok: 'LOSS ↓', ko: 'LOSS ↑' },
+
+  // Past exams this course has questions from (newest first): the "src" of exam questions starts with one of these.
+  past: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
+  // The problem types the exams ask. Questions belong to a type through their lesson (les) or their own "k".
+  // seen: the exams where it came up. sheet: the cheat-sheet entry (trusted HTML).
+  skills: [
+    { id: 'dt-gain', t: 'dt', les: ['dt-entropy', 'dt-gain'], label: 'Entropia e ganho de informação: escolher o atributo',
+      seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 1 2021/22'],
+      sheet: '<p><b>H(S) = −Σ pᵢ log₂ pᵢ</b> (0 = nó puro; 1 bit = duas classes meio a meio).</p><p><b>IG(A) = H(S) − Σᵥ (|Sᵥ|/|S|)·H(Sᵥ)</b>. Vai para a raiz o atributo com maior ganho, ou seja, menor entropia condicional.</p><p>Passos: contar as classes no nó → H do nó → para cada atributo, H de cada ramo pesada pelo tamanho do ramo → subtrair.</p><p><b>Armadilhas:</b> esquecer o peso |Sᵥ|/|S|; usar ln em vez de log₂; 0·log 0 = 0.</p>' },
+    { id: 'dt-build', t: 'dt', les: ['dt-id3'], label: 'Construir a árvore (ID3) e ler as regras',
+      seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 2 2022/23'],
+      sheet: '<p>Raiz = maior ganho. Em cada ramo repete <b>só com os exemplos desse ramo</b> e sem os atributos já usados no caminho.</p><p>Pára quando o nó é puro (folha com essa classe) ou já não há atributos (folha com a classe maioritária).</p><p>Cada caminho raiz → folha é uma regra: SE … E … ENTÃO classe.</p><p><b>Armadilha:</b> a entropia de um ramo calcula-se com as contagens do ramo, não do conjunto todo.</p>' },
+    { id: 'ev-cm', t: 'eval', les: ['ev-cm'], label: 'Matriz de confusão: precisão, sensibilidade, accuracy',
+      seen: ['Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
+      sheet: '<p>Vê primeiro a orientação: as linhas são o previsto ou o real?</p><p>Accuracy = (TP + TN)/N · <b>Precisão</b> = TP/(TP + FP) · <b>Sensibilidade (recall)</b> = TP/(TP + FN) · Especificidade = TN/(TN + FP) · F1 = 2PR/(P + R).</p><p>Várias classes: para a classe c, “positivo” é c e “negativo” é o resto.</p><p><b>Armadilha:</b> trocar FP com FN quando a matriz vem transposta.</p>' },
+    { id: 'ev-fit', t: 'eval', les: ['ev-cv'], label: 'Complexidade do modelo e overfitting',
+      seen: ['Exame 2 2021/22', 'Exame 1 2021/22'],
+      sheet: '<p>Overfitting: erro de treino baixo e de teste alto. Mais parâmetros (graus de liberdade) → mais risco.</p><p>Validação cruzada com k folds: k modelos, média dos k erros. Os hiperparâmetros escolhem-se na validação, nunca no teste.</p><p>Remédios: mais dados, regularização, modelo mais simples, early stopping.</p>' },
+    { id: 'bay', t: 'bayes', les: ['b-rule', 'b-map', 'b-naive', 'b-gauss'], label: 'Classificar com Bayes e Naive Bayes (MAP)',
+      seen: ['Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
+      sheet: '<p><b>p(c|x) ∝ p(x|c)·p(c)</b>: escolhe a classe com o maior produto (MAP). p(x) só é preciso para normalizar.</p><p>Naive Bayes: p(x|c) = Πᵢ p(xᵢ|c). Atributo contínuo: N(x; μ, σ²) = exp(−(x − μ)²/(2σ²)) / (σ√(2π)), com μ e σ estimados nessa classe.</p><p>Sem independência: p(x|c) pela frequência conjunta (ou gaussiana multivariada).</p><p><b>Armadilhas:</b> ML ignora p(c), MAP usa-o; uma contagem 0 anula o produto (Laplace).</p>' },
+    { id: 'knn', t: 'knn', les: ['k-dist', 'k-knn'], label: 'Classificar com kNN e distâncias',
+      seen: ['Exame 2 2021/22'],
+      sheet: '<p>Euclidiana √Σ(xᵢ − yᵢ)² · Manhattan Σ|xᵢ − yᵢ| · Hamming = nº de posições diferentes · cosseno xᵀy/(‖x‖‖y‖).</p><p>Classificar: os k mais próximos votam (uniforme, ou com peso 1/d). Regressão: média dos k valores.</p><p><b>Armadilhas:</b> normalizar os atributos antes; em leave-one-out o ponto deixado de fora não é vizinho de si próprio.</p>' },
+    { id: 'lr-fit', t: 'linreg', les: ['lr-ls', 'lr-basis'], label: 'Regressão linear com funções base: pesos, previsões e erro',
+      seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
+      sheet: '<p>Matriz de design Φ: uma linha por exemplo, [1, φ(x), φ(x)², …].</p><p><b>w = (ΦᵀΦ)⁻¹Φᵀt</b> (ridge: (ΦᵀΦ + λI)⁻¹Φᵀt). Previsão ŷ = wᵀφ(x).</p><p>MAE = (1/N)Σ|t − ŷ| · MSE = (1/N)Σ(t − ŷ)² · RMSE = √MSE.</p><p>Inversa 2 × 2: [[a, b], [c, d]]⁻¹ = (1/(ad − bc))·[[d, −b], [−c, a]].</p><p><b>Armadilhas:</b> esquecer a coluna de 1 (bias); aplicar φ (por exemplo ‖x‖₁) antes de elevar ao grau.</p>' },
+    { id: 'pe-update', t: 'percep', les: ['p-rosen'], label: 'Perceptrão: classificar e atualizar os pesos',
+      seen: ['Exame 2 2022/23', 'Exame 1 2022/23'],
+      sheet: '<p>o = sinal(wᵀx), com x₀ = 1 para o bias. Fronteira: wᵀx = 0.</p><p>Só muda quando erra: <b>w ← w + η(t − o)x</b>.</p><p>Converge se os dados forem linearmente separáveis (o XOR não é).</p><p><b>Armadilha:</b> esquecer o x₀ = 1 no produto e na atualização.</p>' },
+    { id: 'gd-rule', t: 'percep', les: ['p-gd'], label: 'Descida do gradiente: derivar e aplicar a regra',
+      seen: ['Exame 2 2022/23', 'Exame 1 2021/22'],
+      sheet: '<p><b>Δw = −η ∂E/∂w</b>. Com E = ½Σ(t − o)², o = f(net), net = wᵀx: ∂E/∂w = −Σ(t − o)·f′(net)·x.</p><p>Linear: Δw = ηΣ(t − o)x. Sigmoide: f′ = o(1 − o). Outra f (por exemplo (wᵀx)² ou exp(…)): regra da cadeia, deriva f em ordem a net e multiplica por x.</p><p>Batch: soma todos os exemplos e atualiza uma vez. Estocástico: atualiza a cada exemplo.</p>' },
+    { id: 'lg', t: 'logreg', les: ['lg-sig', 'lg-soft'], label: 'Regressão logística e softmax: probabilidades e atualização',
+      seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 1 2021/22'],
+      sheet: '<p>p(t = 1|x) = σ(wᵀx) = 1/(1 + e^(−wᵀx)); classe 1 se ≥ 0,5, ou seja wᵀx ≥ 0.</p><p>Entropia cruzada E = −Σ[t ln o + (1 − t) ln(1 − o)] → <b>w ← w − ηΣ(o − t)x</b>.</p><p>Softmax oⱼ = e^(netⱼ)/Σₖe^(netₖ); com entropia cruzada, ∂E/∂netⱼ = oⱼ − tⱼ.</p><p><b>Armadilha:</b> o sinal: (o − t) com menos, ou (t − o) com mais.</p>' },
+    { id: 'mlp-fwd', t: 'mlp', les: ['m-fwd'], label: 'Forward propagation numa MLP',
+      seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
+      sheet: '<p><b>z[l] = W[l]x[l−1] + b[l]</b>, <b>x[l] = f(z[l])</b>, com x[0] a entrada.</p><p>Faz camada a camada e guarda z e x: o backprop precisa deles.</p><p>W[l] tem (nº de unidades da camada l) × (nº da camada anterior). Parâmetros: Σ(nₗ₋₁ + 1)·nₗ.</p>' },
+    { id: 'mlp-bp', t: 'mlp', les: ['m-bp'], label: 'Backpropagation: deltas e atualizar os pesos',
+      seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 2 2021/22', 'Exame 1 2021/22'],
+      sheet: '<p>Saída: δ[L] = ∂E/∂z[L]. Softmax ou sigmoide com entropia cruzada, ou linear com erro quadrático: <b>δ[L] = x[L] − t</b>. Sigmoide com erro quadrático: (x[L] − t)∘x[L]∘(1 − x[L]).</p><p>Escondidas: <b>δ[l] = (W[l+1])ᵀδ[l+1] ∘ f′(z[l])</b>.</p><p>∂E/∂W[l] = δ[l](x[l−1])ᵀ · ∂E/∂b[l] = δ[l] · W ← W − η∂E/∂W.</p><p>σ′ = σ(1 − σ) · tanh′ = 1 − tanh² · ReLU′ = 1 se z > 0, senão 0.</p><p><b>Armadilha:</b> os deltas usam os pesos antigos; atualiza tudo só no fim.</p>' },
+    { id: 'mlp-theory', t: 'mlp', les: ['m-univ'], label: 'O que uma MLP consegue representar',
+      seen: ['Exame 1 2024/25', 'Exame 1 2022/23', 'Exame 1 2021/22'],
+      sheet: '<p>Uma camada escondida chega para qualquer função booleana (forma normal disjuntiva: uma unidade por mintermo e um OR na saída) e para aproximar qualquer função contínua, com unidades suficientes.</p><p>Cada unidade escondida (degrau ou sigmoide) é um hiperplano; a saída combina-os.</p><p>Mais unidades e camadas → mais parâmetros → mais risco de overfitting.</p>' },
+    { id: 'km', t: 'clust', les: ['c-kmeans'], label: 'Iterações do k-means',
+      seen: ['Exame 1 2024/25', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
+      sheet: '<p>1) Cada ponto vai para o centróide mais próximo, com a distância que o enunciado pede (euclidiana ou Manhattan). 2) Cada centróide passa a ser a média dos seus pontos. Repete até nada mudar.</p><p>Mostra as atribuições e os centróides em cada iteração. Erro: Σ‖x − μ_c‖².</p><p><b>Armadilha:</b> em empates e na distância a usar, segue o enunciado à letra.</p>' },
+    { id: 'cl-valid', t: 'clust', les: ['c-valid'], label: 'Validar clusters: silhueta e pureza',
+      seen: ['Exame 1 2024/25', 'Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 2 2021/22'],
+      sheet: '<p>Silhueta de um ponto: a = distância média aos outros pontos do seu cluster, b = menor distância média a outro cluster; <b>s = (b − a)/max(a, b)</b>. Ponto sozinho: s = 0.</p><p>Silhueta de um cluster = média das silhuetas dos seus pontos.</p><p><b>Pureza</b> = (1/N)·Σ, por cluster, do nº de pontos da classe mais comum.</p><p><b>Armadilha:</b> a média de a divide por |C| − 1 (sem o próprio ponto).</p>' },
+    { id: 'em', t: 'clust', les: ['c-em'], label: 'EM com misturas de gaussianas: passos E e M',
+      seen: ['Exame 1 2025/26', 'Exame 2 2022/23'],
+      sheet: '<p><b>E:</b> γₙₖ = πₖN(xₙ|μₖ, Σₖ) / Σⱼ πⱼN(xₙ|μⱼ, Σⱼ) (cada ponto soma 1 entre clusters).</p><p><b>M:</b> Nₖ = Σₙγₙₖ; μₖ = (1/Nₖ)Σγₙₖxₙ; Σₖ = (1/Nₖ)Σγₙₖ(xₙ − μₖ)(xₙ − μₖ)ᵀ com a nova μₖ; πₖ = Nₖ/N.</p><p>Gaussiana 2D: N(x) = exp(−½(x − μ)ᵀΣ⁻¹(x − μ)) / (2π√|Σ|).</p>' },
+    { id: 'pca-cov', t: 'pca', les: ['pc-cov'], label: 'Covariância, valores e vetores próprios',
+      seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
+      sheet: '<p>Média m; <b>C = (1/(n − 1))Σ(x − m)(x − m)ᵀ</b>.</p><p>2 × 2: λ² − (traço)λ + det = 0; λ₁ + λ₂ = traço, λ₁λ₂ = det.</p><p>Vetor próprio: (C − λI)u = 0, depois normaliza (‖u‖ = 1).</p><p><b>Armadilha:</b> n − 1 e não n.</p>' },
+    { id: 'pca-use', t: 'pca', les: ['pc-pca'], label: 'PCA: variância explicada, quantas componentes, projeção',
+      seen: ['Exame 1 2025/26', 'Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
+      sheet: '<p>As componentes ordenam-se por λ. Variância explicada pela k-ésima: λₖ/Σλ.</p><p>Kaiser: fica com as de λ > 1. Ou: as primeiras até chegar à percentagem pedida.</p><p>Projeção <b>y = uᵀ(x − m)</b>; reconstrução x̂ = m + Σyᵢuᵢ.</p><p><b>Armadilha:</b> subtrair a média antes de projetar; normalizar se as escalas forem diferentes.</p>' },
+    { id: 'svm', t: 'svm', les: ['s-margin', 's-kernel'], label: 'SVM, margem e kernels',
+      seen: ['Exame 2 2021/22'],
+      sheet: '<p>Margem = 2/‖w‖ (vetores de suporte com |wᵀx + b| = 1). Distância de x ao hiperplano: (wᵀx + b)/‖w‖.</p><p>Polinomial (xᵀy + c)ᵈ · gaussiano (RBF) exp(−‖x − y‖²/(2σ²)).</p><p>Separável com RBF? Sim, a não ser que haja dois pontos iguais com classes diferentes.</p>' },
+    { id: 'dl', t: 'deep', les: ['dl-why'], label: 'Gradiente que desaparece e redes profundas',
+      seen: ['Exame 2 2021/22'],
+      sheet: '<p>Cada camada multiplica δ por f′. Sigmoide: σ′ ≤ 0,25; com |net| grande satura e f′ ≈ 0.</p><p>Para responder: vê o limite de δ quando net → ±∞.</p><p>Remédios: ReLU, ligações residuais, batch normalization, boa inicialização.</p>' },
+  ],
   logo: '<svg class="brand-mark" viewBox="0 0 30 30" aria-hidden="true"><circle cx="6" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="6" cy="22" r="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="24" cy="15" r="4" fill="var(--token)"/><path d="M9 8.5L20.5 14M9 21.5L20.5 16" stroke="currentColor" stroke-width="2"/></svg>',
 
   render: d => MLD.render(d),
@@ -9630,7 +9735,7 @@ STUDY.questions('ml', [
   q: 'Verdadeiro ou falso: construir uma árvore de decisão resume-se a procurar o atributo com o MENOR ganho de informação.',
   o: ['Verdadeiro', 'Falso'], a: 1, fixed: true,
   e: 'Falso: procura-se o **maior** ganho de informação (equivalente a menor entropia condicional H(Y|A)). É fácil trocar os dois.' },
-{ id: 'dt-03', t: 'dt', l: 1, les: 'dt-more', src: 'Exame 1 2024/25, 1.4',
+{ id: 'dt-03', t: 'dt', l: 1, les: 'dt-more', k: 'dt-build', src: 'Exame 1 2024/25, 1.4',
   q: 'Verdadeiro ou falso: as árvores de decisão só podem ser usadas em problemas de classificação.',
   o: ['Verdadeiro', 'Falso'], a: 1, fixed: true,
   e: 'Falso: há **árvores de regressão** (o “R” de CART), em que cada folha prevê um valor numérico, por exemplo a média dos exemplos que lá caem.' },
@@ -9703,7 +9808,7 @@ STUDY.questions('ml', [
   q: 'O ID3 corre sobre a tabela (Outlook tem ganho 0,667 e Wind 0,082). Que árvore produz?',
   o: ['Outlook na raiz; só o ramo Rain testa Wind', 'Wind na raiz; os dois ramos testam Outlook', 'Outlook na raiz; todos os ramos testam Wind', 'Só uma folha, porque o ganho máximo é < 1'], a: 0,
   e: 'Raiz = **Outlook** (maior ganho). Sunny (só No) e Overcast (só Yes) já são puros. Rain = {4: Yes/Weak, 5: No/Strong}: Wind separa-o → Weak → Yes, Strong → No.' },
-{ id: 'dt-20', t: 'dt', l: 4, les: 'dt-more', src: 'Exame 1 2025/26, 2.d',
+{ id: 'dt-20', t: 'dt', l: 4, les: 'dt-more', k: 'dt-build', src: 'Exame 1 2025/26, 2.d',
   q: 'Com n exemplos e m atributos discretos, qual é o custo no pior caso de construir a árvore com o ID3?',
   o: ['O(n·m²)', 'O(n²·m)', 'O(m!)', 'O(n·log n)'], a: 0,
   e: 'Em cada nível da árvore avaliam-se os atributos que restam sobre os exemplos (O(n·m) no nível todo) e há no máximo m níveis: **O(n·m²)**. O(m!) seria a procura exaustiva de todas as ordens.' },
@@ -12216,7 +12321,7 @@ const XP = { 1: 10, 2: 15, 3: 20, 4: 30 };
 const UNLOCK = 0.6;
 const EXAM_N = 20, EXAM_MIN = 30;   // mock exam defaults: questions and minutes (a course can set exam: { n, min, penalty })
 const CALC_MODES = ['all', 'theory', 'math'];
-const EXAM_CLEAR = 2;              // correct answers in a row to clear an exam mistake from review
+const TRAIN_CLEAR = 2, EXAM_CLEAR = 2;   // correct answers in a row to clear a training / exam mistake from review
 const LS_KEY = 'estudo-ist-v2', LS_PACKS = 'estudo-ist-packs-v2', LS_THEME = 'estudo-ist-theme';
 const LEGACY = { state: 'ams-treino-v1', packs: 'ams-treino-packs-v1', course: 'ams' };
 
@@ -12236,7 +12341,7 @@ applyTheme();
 
 /* ---------- state ----------
    G holds everything; S points at the open course's slice (G.c[id]). */
-const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, skipped: {}, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '', calcMode: 'all' },rounds: 0, sessions: [] });
+const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, skipped: {}, pins: {}, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '', calcMode: 'all', part: 'all' }, rounds: 0, sessions: [] });
 let G = ls.get(LS_KEY);
 if (!G || G.v !== 2) G = { v: 2, cur: null, c: {}, updatedAt: 0 };
 // Progress from the AMS-only version (same browser, same origin): merged once, even if this
@@ -12257,6 +12362,7 @@ packs.forEach(p => { if (!p.course && p.cadeira) p.course = p.cadeira; });   // 
 
 let C = null, S = null, TOPICS = {}, LEVELS = DEFAULT_LEVELS;
 let BANK = [], BYID = {}, LESSONS = [], LBYID = {};
+let SKILLS = [], SKBYID = {}, LES2SK = {};   // the course's exam problem types (C.skills), by id and by lesson
 const renderD = d => !d ? '' : typeof d === 'string' ? d : (C && C.render ? C.render(d) : '');
 
 function openCourse(id) {
@@ -12272,6 +12378,9 @@ function openCourse(id) {
   // new topics start enabled for people who already had progress
   const known = S.settings.known; Object.keys(TOPICS).forEach(k => { if (!known.includes(k)) { known.push(k); if (!S.settings.topics.includes(k)) S.settings.topics.push(k); } });
   S.settings.topics = S.settings.topics.filter(k => TOPICS[k]); if (!S.settings.topics.length) S.settings.topics = Object.keys(TOPICS);
+  if (!(C.parts || []).some(p => p.id === S.settings.part && p.topics.length)) S.settings.part = 'all';
+  SKILLS = C.skills || []; SKBYID = {}; LES2SK = {};
+  SKILLS.forEach(s => { SKBYID[s.id] = s; (s.les || []).forEach(l => { LES2SK[l] = s.id; }); });
   G.cur = id; rebuildBank(); return true;
 }
 
@@ -12307,30 +12416,79 @@ const peek = id => Object.assign({}, ZERO, S.stats[id]);
 // calcMode: 'all' everything · 'theory' hides calc questions ("Só teoria") · 'math' only calc questions ("Só contas")
 const calcMode = () => hasCalc() ? S.settings.calcMode : 'all';
 const shown = (q, m = calcMode()) => m === 'all' || (m === 'theory' ? !q.calc : !!q.calc);
-const inTopics = q => S.settings.topics.includes(q.t) && shown(q);
+// Parts (C.parts): 1.º teste, 2.º teste… Picking one limits every mode to its topics; 'all' is the whole course.
+const partTopics = () => { const p = (C.parts || []).find(x => x.id === S.settings.part); return p ? p.topics : Object.keys(TOPICS); };
+const activeTopics = () => { const pt = partTopics(); return S.settings.topics.filter(k => pt.includes(k)); };
+const inTopics = q => activeTopics().includes(q.t) && shown(q);
 const hasCalc = () => BANK.some(q => q.calc);
 const examCfg = () => Object.assign({ n: EXAM_N, min: EXAM_MIN, penalty: null, desc: '' }, C && C.exam);
 const isReserved = q => q.reserved === 'exam';
 const fresh = q => { const s = peek(q.id); return !s.c && !s.w && !s.ew; };
-const trainPool = () => BANK.filter(q => inTopics(q) && !isReserved(q));
-function mastery(level, topics = S.settings.topics, m = calcMode()) {
-  const qs = BANK.filter(q => q.l === level && topics.includes(q.t) && shown(q, m) && !isReserved(q)); if (!qs.length) return { pct: 0, done: 0, total: 0 };
+
+/* ---------- exam problem types, readiness, priority ----------
+   C.skills lists the kinds of problem the exams ask. A question belongs to one, through its lesson
+   (skill.les) or its own "k" (k: '' means none). Priority questions: their type came up in a past exam,
+   or they come from one (src). The others are supplementary. A course without skills: all are priority. */
+const skillOf = q => q.k !== undefined ? (q.k || null) : (LES2SK[q.les] || null);
+const PAST_RE = /^(exame|teste|map|mini|repescagem)/i;
+// "Exame 1 2024/25, 6.b" → "Exame 1 2024/25"; "Exame 2020/21, 2.ª época, P3" → "Exame 2020/21, 2.ª época"
+function pastKey(src) {
+  if (!src) return null; const seg = String(src).split(', ');
+  let k = seg[0].replace(/\s*\(.*\)\s*$/, ''); if (seg[1] && /época|teste/i.test(seg[1])) k += ', ' + seg[1];
+  return PAST_RE.test(k) && !/\se\s/.test(k) ? k : null;   // "Exames 2025/26 P4 e 2023/24 P1": in more than one, listed in neither
+}
+const isCore = q => { if (!SKILLS.length || q.origin !== 'base' || PAST_RE.test(q.src || '')) return true; const s = SKBYID[skillOf(q)]; return !!(s && s.seen && s.seen.length); };
+const basePool = () => BANK.filter(q => inTopics(q) && !isReserved(q));
+const trainPool = () => basePool().filter(isCore);
+const suppPool = () => basePool().filter(q => !isCore(q));
+const skillQs = k => BANK.filter(q => skillOf(q) === k && !isReserved(q) && q.origin === 'base');
+const partSkills = () => { const pt = partTopics(); return SKILLS.filter(s => pt.includes(s.t)); };
+const pastList = () => C.past || [];
+// ready: every question of the type answered right and none waiting in review
+function readiness(k) {
+  const qs = skillQs(k); let ok = 0, pend = 0, tried = 0;
+  qs.forEach(q => { const s = peek(q.id); const p = (s.w && s.box < TRAIN_CLEAR) || (s.ew && s.eb < EXAM_CLEAR);
+    if (s.c || s.w || s.ew) tried++; if (p) pend++; else if (s.c) ok++; });
+  const state = !qs.length ? 'none' : ok === qs.length ? 'ready' : tried ? 'training' : 'todo';
+  return { total: qs.length, ok, pend, state, pct: qs.length ? ok / qs.length : 0 };
+}
+// Readiness of the part, weighted by how often each type came up; and the type to train next
+function readySummary() {
+  const rows = partSkills().map(s => ({ s, r: readiness(s.id), w: Math.max(1, (s.seen || []).length) })).filter(x => x.r.total);
+  const W = rows.reduce((a, x) => a + x.w, 0);
+  const next = rows.filter(x => x.r.state !== 'ready').sort((a, b) => b.w - a.w || b.r.pct - a.r.pct)[0];
+  return { rows, ready: rows.filter(x => x.r.state === 'ready').length, pct: W ? rows.reduce((a, x) => a + x.w * x.r.pct, 0) / W : 0, next: next && next.s };
+}
+// Past exams: questions grouped by their source, in the exam's order (steps of a problem stay together)
+function pastGroups() {
+  const pt = partTopics(), by = {};
+  BANK.forEach(q => { const k = pastKey(q.src); if (k && pt.includes(q.t)) (by[k] = by[k] || []).push(q); });
+  const item = q => String(q.src).slice(pastKey(q.src).length);
+  Object.values(by).forEach(a => a.sort((x, y) => item(x).localeCompare(item(y), 'pt', { numeric: true }) || String(x.ch || x.id).localeCompare(String(y.ch || y.id)) || parseInt(x.step || 0) - parseInt(y.step || 0)));
+  const yr = k => { const m = k.match(/(\d{4})\/\d{2}/); return m ? +m[1] : 0; }, order = pastList();
+  return Object.keys(by).sort((a, b) => (order.includes(a) && order.includes(b) ? order.indexOf(a) - order.indexOf(b) : 0) || yr(b) - yr(a) || a.localeCompare(b, 'pt', { numeric: true })).map(k => ({ key: k, qs: by[k] }));
+}
+// The personal cheat sheet holds the types you got wrong at least once, plus the ones you pinned
+const sheetMine = s => S.pins[s.id] === 1 || (S.pins[s.id] !== 0 && skillQs(s.id).some(q => { const x = peek(q.id); return x.w || x.ew; }));
+const shortPast = k => k.replace(/^Exame\s*/i, '').replace(/^(\d)\s+(\d{4}\/\d{2})$/, '$2 E$1');
+function mastery(level, topics = activeTopics(), m = calcMode()) {
+  const qs = BANK.filter(q => q.l === level && topics.includes(q.t) && shown(q, m) && !isReserved(q) && isCore(q)); if (!qs.length) return { pct: 0, done: 0, total: 0 };
   const done = qs.filter(q => peek(q.id).c > 0).length; return { pct: done / qs.length, done, total: qs.length };
 }
 // Unlocked in mode m: the previous level shown in m is UNLOCK done; a level with nothing shown in m doesn't block
 // (in "Só contas" level 1 usually has no calculations, so level 2 opens straight away).
-function unlockedIn(level, m) { if (level === 1) return true; const p = mastery(level - 1, S.settings.topics, m); return p.total ? p.pct >= UNLOCK : unlockedIn(level - 1, m); }
+function unlockedIn(level, m) { if (level === 1) return true; const p = mastery(level - 1, activeTopics(), m); return p.total ? p.pct >= UNLOCK : unlockedIn(level - 1, m); }
 // A level stays open when the switch changes: what you passed with theory only (or with everything) still counts.
 function unlocked(level) {
   if (level === 1 || S.settings.unlockAll) return true;
   return unlockedIn(level, calcMode()) || (hasCalc() && (unlockedIn(level, 'all') || unlockedIn(level, 'theory')));
 }
 function topLevel() { let t = 1; for (const L of LEVELS) if (unlocked(L.n)) t = L.n; return t; }
-const reviewPool = () => trainPool().filter(q => peek(q.id).w > 0 && peek(q.id).box < 3).sort((a, b) => peek(a.id).box - peek(b.id).box || peek(a.id).last - peek(b.id).last);
+const reviewPool = () => basePool().filter(q => peek(q.id).w > 0 && peek(q.id).box < TRAIN_CLEAR).sort((a, b) => peek(a.id).box - peek(b.id).box || peek(a.id).last - peek(b.id).last);
 const examReviewPool = () => BANK.filter(q => inTopics(q) && peek(q.id).ew > 0 && peek(q.id).eb < EXAM_CLEAR).sort((a, b) => peek(a.id).eb - peek(b.id).eb || peek(a.id).last - peek(b.id).last);
 const freshReserved = () => BANK.filter(q => inTopics(q) && isReserved(q) && fresh(q));
 // skipped questions wait here (ignoring "Só teoria": you skipped them to do later with paper)
-const skippedPool = () => BANK.filter(q => S.skipped && S.skipped[q.id] && S.settings.topics.includes(q.t)).sort((a, b) => S.skipped[a.id] - S.skipped[b.id]);
+const skippedPool = () => BANK.filter(q => S.skipped && S.skipped[q.id] && activeTopics().includes(q.t)).sort((a, b) => S.skipped[a.id] - S.skipped[b.id]);
 function pick(pool, n) { // unseen first, then weakest, randomized within bands
   const bands = [[], [], []]; pool.forEach(q => { const s = peek(q.id); if (!s.c && !s.w && !s.ew) bands[0].push(q); else if (s.box < 2) bands[1].push(q); else bands[2].push(q); });
   return bands.flatMap(b => shuffle(b)).slice(0, n);
@@ -12347,7 +12505,7 @@ let ses = null; // active session
 function go(name, extra = {}) { view = Object.assign({ name }, extra); renderView(); window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' }); }
 function renderView() {
   const v = C || view.name === 'sync' ? view.name : 'courses';
-  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'sync' ? Sync() : Home();
+  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : Home();
   document.documentElement.dataset.course = C && v !== 'courses' && v !== 'sync' ? C.id : '';
   $app.innerHTML = Top() + html;
   document.title = C && v !== 'courses' ? `${C.code} · Estudo IST` : 'Estudo IST';
@@ -12389,8 +12547,9 @@ function daysLeft() { if (!S.settings.testDate) return null; const d = new Date(
 const extraApi = () => ({ pool: trainPool(), pick, topLevel, peek, inTopics, LEVELS, BANK });
 function Home() {
   const tl = topLevel(); const dl = daysLeft(); const rp = reviewPool().length + examReviewPool().length; const nSk = skippedPool().length;
-  const nFresh = freshReserved().length; const nTrain = BANK.filter(q => !isReserved(q) && shown(q)).length; const X = examCfg(); const M = C.map || {};
-  const topicsChips = Object.entries(TOPICS).map(([k, t]) => { const n = BANK.filter(q => q.t === k && !isReserved(q) && shown(q)).length; return `<button class="chip" style="--c:${t.c}" data-act="topic" data-k="${k}" aria-pressed="${S.settings.topics.includes(k)}"><span class="sw"></span>${t.short} <span class="muted mono">${n}</span></button>`; }).join('');
+  const nFresh = freshReserved().length; const pt = partTopics(); const inPart = q => pt.includes(q.t) && !isReserved(q) && shown(q);
+  const nTrain = BANK.filter(q => inPart(q) && isCore(q)).length, nSupp = BANK.filter(q => inPart(q) && !isCore(q)).length; const X = examCfg(); const M = C.map || {};
+  const topicsChips = Object.entries(TOPICS).filter(([k]) => pt.includes(k)).map(([k, t]) => { const n = BANK.filter(q => q.t === k && inPart(q) && isCore(q)).length; return `<button class="chip" style="--c:${t.c}" data-act="topic" data-k="${k}" aria-pressed="${S.settings.topics.includes(k)}"><span class="sw"></span>${t.short} <span class="muted mono">${n}</span></button>`; }).join('');
   const link = `<span class="${M.link || 'seq'}" aria-hidden="true"></span>`;
   const ends = (e, cls) => e ? `<span class="hier" aria-hidden="true">${e.icon || ''}<span>${esc(e.label || '')}</span></span>` : `<span class="ev${cls}" aria-hidden="true"></span>`;
   const flow = LEVELS.map((L, i) => { const m = mastery(L.n), un = unlocked(L.n);
@@ -12407,23 +12566,42 @@ function Home() {
   const card = ([k, t, d, m, g], act = 'mode') => `<button class="mode" data-act="${act}" data-k="${k}"><h3>${g}${t}</h3><p>${d}</p><span class="meta">${m}</span></button>`;
   const api = extraApi();
   const extras = (C.extras || []).map(x => card([x.id, esc(x.title), esc(x.desc), esc(x.meta ? x.meta(api) : ''), glyph(x.icon || 'star')], 'extra')).join('');
+  // "Para o exame": readiness checklist, past exams, cheat sheet, supplementary questions
+  const RS = SKILLS.length ? readySummary() : null; const PG = pastGroups();
+  const prep = [
+    RS && RS.rows.length ? ['ready', 'Prontidão', 'A checklist dos tipos de problema que saem nos exames, com o teu estado em cada um.', `${RS.ready}/${RS.rows.length} tipos prontos`, glyph('flag')] : null,
+    PG.length ? ['past', 'Exames anteriores', 'Cada exame, pela ordem original, com as perguntas reescritas aqui. Os problemas grandes vêm por partes.', `${PG.length} exame${PG.length === 1 ? '' : 's'}`, glyph('clock')] : null,
+    RS && RS.rows.length ? ['sheet', 'Cábula', 'A folha para levar para o exame: fórmulas, passos e armadilhas dos tipos onde falhaste, mais as tuas notas.', `${partSkills().filter(s => sheetMine(s)).length} na tua cábula`, glyph('pen')] : null,
+    nSupp ? ['supp', 'Suplementares', 'Perguntas sobre matéria que ainda não saiu nos exames. Para ir mais fundo, depois do resto.', `${nSupp} perguntas`, glyph('plus')] : null,
+  ].filter(Boolean);
+  const readyCard = RS && RS.rows.length ? `<div class="ready-card">
+      <div class="row"><h2>Prontidão para o exame</h2><span class="spacer"></span><span class="mono muted" style="font-size:12px">${RS.ready} de ${RS.rows.length} tipos prontos</span></div>
+      <div class="ready-bar" aria-hidden="true">${RS.rows.map(x => `<i class="${x.r.state}" style="flex:${x.w}" title="${esc(x.s.label)}"></i>`).join('')}</div>
+      <p class="muted" style="font-size:13.5px">${Math.round(RS.pct * 100)}% pronto, a contar mais o que sai mais vezes.${RS.next ? ` A seguir: <b style="color:var(--ink)">${esc(RS.next.label)}</b>${(RS.next.seen || []).length ? ` (saiu em ${RS.next.seen.length} de ${pastList().length || PG.length} exames)` : ''}.` : ' Todos os tipos de problema prontos.'}</p>
+      <div class="row">${RS.next ? `<button class="btn primary" data-act="skill" data-k="${esc(RS.next.id)}">Treinar este tipo</button>` : ''}<button class="btn" data-act="mode" data-k="ready">Ver a checklist</button></div>
+    </div>` : '';
+  const P = (C.parts || []);
+  const partSwitch = P.length > 1 ? `<div class="seg" role="group" aria-label="Que parte da matéria">${P.map(p => `<button data-act="part" data-k="${esc(p.id)}" aria-pressed="${S.settings.part === p.id}" ${p.topics.length ? '' : 'disabled'} title="${esc(p.topics.length ? p.label : p.note || 'Ainda sem matéria')}">${esc(p.label)}${p.topics.length ? '' : ' · em breve'}</button>`).join('')}<button data-act="part" data-k="all" aria-pressed="${S.settings.part === 'all'}">Tudo</button></div>` : '';
   const mt = `<div class="mastery" role="table" aria-label="Domínio por tema e nível"><span></span>${LEVELS.map(L => `<span class="h">N${L.n}</span>`).join('')}
-    ${Object.entries(TOPICS).map(([k, t]) => `<span class="tn"><span class="chip static" style="--c:${t.c};padding:0;border:0;background:none"><span class="sw"></span></span>${t.short}</span>` + LEVELS.map(L => { const m = mastery(L.n, [k]); return m.total ? `<span class="cell" title="${m.done} de ${m.total}"><span style="width:${Math.round(m.pct * 100)}%"></span><em>${m.done}/${m.total}</em></span>` : '<span class="cell"><em>—</em></span>'; }).join('')).join('')}</div>`;
+    ${Object.entries(TOPICS).filter(([k]) => pt.includes(k)).map(([k, t]) => `<span class="tn"><span class="chip static" style="--c:${t.c};padding:0;border:0;background:none"><span class="sw"></span></span>${t.short}</span>` + LEVELS.map(L => { const m = mastery(L.n, [k]); return m.total ? `<span class="cell" title="${m.done} de ${m.total}"><span style="width:${Math.round(m.pct * 100)}%"></span><em>${m.done}/${m.total}</em></span>` : '<span class="cell"><em>—</em></span>'; }).join('')).join('')}</div>`;
   return `<section class="hero">
       <span class="eyebrow">${esc(C.name)} · IST</span>
       <h1>${esc(C.tagline || C.name)}</h1>
-      <p>${nTrain} perguntas de escolha múltipla em ${LEVELS.length} níveis, com a teoria explicada sempre que falhas. ${dl !== null ? `<b>${dl > 0 ? `Faltam ${dl} dia${dl === 1 ? '' : 's'} para o teste.` : dl === 0 ? 'O teste é hoje. Força!' : 'O teste já passou.'}</b>` : ''}</p>
+      <p>${nTrain} perguntas${nSupp ? ' prioritárias' : ''} de escolha múltipla em ${LEVELS.length} níveis, com a teoria explicada sempre que falhas. ${dl !== null ? `<b>${dl > 0 ? `Faltam ${dl} dia${dl === 1 ? '' : 's'} para o teste.` : dl === 0 ? 'O teste é hoje. Força!' : 'O teste já passou.'}</b>` : ''}</p>
     </section>
+    ${readyCard}
     <div class="flow-card">
       <div class="row"><h2>${esc(M.title || 'Mapa de níveis')}</h2><span class="spacer"></span><span class="muted" style="font-size:13px">Desbloqueias o seguinte com ${Math.round(UNLOCK * 100)}% do anterior.</span></div>
       <div class="flow ${M.link ? 'flow-' + M.link : ''}" role="group" aria-label="Níveis">${ends(M.start, '')}${link}${flow}${link}${ends(M.end, ' end')}</div>
       <div class="flow-legend">${(M.legend || ['○ início', '◉ o token marca onde estás', '● fim = pronto para o teste']).map(x => `<span>${esc(x)}</span>`).join('')}</div>
     </div>
     <div class="stack">
+      ${partSwitch ? `<div class="row"><span class="eyebrow">Matéria</span><span class="spacer"></span>${partSwitch}</div>` : ''}
       <div class="row"><span class="eyebrow">Temas em jogo</span><span class="spacer"></span>${hasCalc() ? calcSwitch() : ''}</div>
       <div class="chips">${topicsChips}</div>
     </div>
     <div class="section"><div class="section-h"><h2>Modos</h2></div><div class="modes">${std.map(c => card(c)).join('')}</div></div>
+    ${prep.length ? `<div class="section"><div class="section-h"><h2>Para o exame</h2></div><div class="modes">${prep.map(c => card(c)).join('')}</div></div>` : ''}
     ${extras ? `<div class="section"><div class="section-h"><h2>Só de ${esc(C.code)}</h2></div><div class="modes">${extras}</div></div>` : ''}
     <div class="section"><div class="section-h"><h2>Domínio</h2><span class="muted" style="font-size:13px">perguntas acertadas pelo menos uma vez</span></div>${mt}</div>
     <div class="section">
@@ -12443,7 +12621,7 @@ function Home() {
 // Tudo / Só teoria / Só contas: applies to every mode (levels, Aprender, Revisão, exame simulado, extras)
 function calcSwitch() {
   const opts = [['all', 'Tudo', 'Teoria e contas, misturadas'], ['theory', 'Só teoria', 'Esconde as perguntas com contas'], ['math', 'Só contas', 'Só as perguntas com contas, como nos problemas do exame']];
-  const cur = calcMode(), pool = BANK.filter(q => !isReserved(q) && S.settings.topics.includes(q.t));
+  const cur = calcMode(), pool = BANK.filter(q => !isReserved(q) && activeTopics().includes(q.t) && isCore(q));
   return `<div class="seg" role="group" aria-label="Que perguntas mostrar">${opts.map(([k, t, d]) =>
     `<button data-act="calcMode" data-k="${k}" aria-pressed="${cur === k}" title="${d}">${t} <span class="mono">${pool.filter(q => shown(q, k)).length}</span></button>`).join('')}</div>`;
 }
@@ -12457,7 +12635,7 @@ function ReviewPick() {
   const a = reviewPool().length, b = examReviewPool().length, c = skippedPool().length;
   return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="eyebrow">Revisão</span></div>
   <div class="modes">
-    <button class="mode" data-act="startReview" data-k="review" ${a ? '' : 'disabled'}><h3>${glyph('loop')}Erros de treino</h3><p>Perguntas que falhaste nos níveis, em Aprender e nas secções da cadeira. Saem quando as acertares três vezes seguidas.</p><span class="meta">${a ? `${a} por rever` : 'nada por rever'}</span></button>
+    <button class="mode" data-act="startReview" data-k="review" ${a ? '' : 'disabled'}><h3>${glyph('loop')}Erros de treino</h3><p>Perguntas que falhaste nos níveis, em Aprender e nas secções da cadeira. Saem quando as acertares ${TRAIN_CLEAR} vezes seguidas.</p><span class="meta">${a ? `${a} por rever` : 'nada por rever'}</span></button>
     <button class="mode" data-act="startReview" data-k="reviewExam" ${b ? '' : 'disabled'}><h3>${glyph('flag')}Erros de exame</h3><p>O que falhaste em condições de teste. Saem quando as acertares ${EXAM_CLEAR} vezes seguidas aqui.</p><span class="meta">${b ? `${b} por rever` : 'nada por rever'}</span></button>
     <button class="mode" data-act="startReview" data-k="skipped" ${c ? '' : 'disabled'}><h3>${glyph('skip')}Saltadas</h3><p>As perguntas que saltaste. Pega em papel e caneta e tenta agora. Saem da lista quando lhes responderes.</p><span class="meta">${c ? `${c} à espera` : 'nenhuma saltada'}</span></button>
   </div>`;
@@ -12488,17 +12666,33 @@ function start(mode, opts = {}) {
   if (mode === 'reviewExam') { items = examReviewPool().slice(0, 12).map(makeItem); title = 'Revisão · erros de exame'; if (!items.length) { toast('Ainda não tens erros de exame para rever.'); return; } }
   if (mode === 'extra') { const x = (C.extras || []).find(e => e.id === opts.extra); if (!x) return; items = (x.questions(extraApi()) || []).map(makeItem); title = x.title; }
   if (mode === 'exam') { items = buildExam().map(makeItem); title = 'Exame simulado'; timeLimit = examCfg().min * 60; }
+  if (mode === 'supp') { items = pick(suppPool(), 10).sort((a, b) => a.l - b.l).map(makeItem); title = 'Suplementares'; }
+  if (mode === 'skill') {
+    // one exam problem type: a few single questions (weakest first), then one whole problem in steps
+    const s = SKBYID[opts.k]; if (!s) return; title = s.label;
+    // a problem in steps comes whole, even when its other steps belong to other types (forward → backprop)
+    const qs = skillQs(s.id), single = qs.filter(q => !q.ch), by = {}, chs = new Set(qs.filter(q => q.ch).map(q => q.ch));
+    BANK.filter(q => chs.has(q.ch) && !isReserved(q)).forEach(q => (by[q.ch] = by[q.ch] || []).push(q));
+    const chains = Object.values(by).map(a => a.sort((x, y) => parseInt(x.step) - parseInt(y.step)));
+    const done = a => a.filter(q => peek(q.id).c > 0 && !(peek(q.id).w && peek(q.id).box < TRAIN_CLEAR)).length / a.length;
+    const chain = chains.map(a => [done(a) + Math.random() * 0.3, a]).sort((x, y) => x[0] - y[0]).map(x => x[1])[0] || [];
+    items = [...pick(single, chain.length ? 6 : 8).sort((a, b) => a.l - b.l), ...chain].map(makeItem);
+  }
+  if (mode === 'past') {
+    const g = pastGroups().find(x => x.key === opts.key); if (!g) return; title = g.key;
+    items = g.qs.map(makeItem);
+  }
   if (mode === 'learn') {
     const t = opts.topic; title = `Aprender · ${TOPICS[t].short}`;
     // in "Só contas" a lesson with no calculation questions is skipped: that theory was already done
     LESSONS.filter(l => l.t === t).forEach(l => {
-      const qs = pool.filter(q => q.les === l.id).sort((a, b) => a.l - b.l || (peek(a.id).c - peek(b.id).c)).slice(0, 2);
+      const qs = basePool().filter(q => q.les === l.id).sort((a, b) => a.l - b.l || (peek(a.id).c - peek(b.id).c)).slice(0, 2);
       if (!qs.length && calcMode() === 'math') return;
       items.push({ kind: 'lesson', id: l.id }); qs.forEach(q => items.push(makeItem(q))); });
   }
   if (mode === 'retry') { items = opts.ids.map(id => BYID[id]).filter(Boolean).map(makeItem); title = 'Repetir erros'; }
   if (!items.length) { toast('Não há perguntas para estes filtros.'); return; }
-  ses = { mode, title, items, i: 0, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, topic: opts.topic, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
+  ses = { mode, title, items, i: 0, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, topic: opts.topic, skill: mode === 'skill' ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
   if (timeLimit) startTimer();
   go(items[0].kind === 'lesson' ? 'lesson' : 'quiz');
 }
@@ -12523,7 +12717,7 @@ function Quiz() {
   if (ses.answered && !isExam) fb = Feedback(q, it);
   const foot = ses.answered ? (isExam ? '' : `<div class="qfoot"><button class="btn primary" data-act="next" id="nextBtn">${ses.i >= ses.items.length - 1 ? 'Ver resultado' : 'Seguinte'} →</button><span class="kbd">Enter</span><span class="spacer"></span><button class="btn ghost small" data-act="quit">Terminar ronda</button></div>`)
     : `<div class="qfoot">${multi ? `<button class="btn primary" data-act="confirm" ${ses.picked.size ? '' : 'disabled'}>Confirmar</button>` : ''}${skipBtn}<span class="muted" style="font-size:12.5px">Teclas <span class="kbd">1</span>–<span class="kbd">${q.o.length}</span>${multi ? ' marcam, <span class="kbd">Enter</span> confirma' : ''} · <span class="kbd">S</span> ${isExam ? 'branco' : 'salta'}</span><span class="spacer"></span>${isExam ? `<button class="btn ghost small" data-act="finish">Entregar exame</button>` : `<button class="btn ghost small" data-act="quit">Terminar ronda</button>`}</div>`;
-  return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="badge">N${q.l}</span>${q.calc ? `<span class="badge calc" title="Pergunta com contas">Contas${q.step && !isExam ? ` · ${esc(q.step)}` : ''}</span>` : ''}${prog}${(isExam) ? `<span class="timer" id="timer">${fmt(ses.timeLimit - Math.floor((Date.now() - ses.startedAt) / 1000))}</span>` : ''}<span class="mono muted">${qIndex()}/${qCount()}</span></div>
+  return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="badge">N${q.l}</span>${KINDS[q.kind] ? `<span class="badge kind">${KINDS[q.kind]}</span>` : ''}${q.calc ? `<span class="badge calc" title="Pergunta com contas">Contas${q.step && !isExam ? ` · ${esc(q.step)}` : ''}</span>` : ''}${prog}${(isExam) ? `<span class="timer" id="timer">${fmt(ses.timeLimit - Math.floor((Date.now() - ses.startedAt) / 1000))}</span>` : ''}<span class="mono muted">${qIndex()}/${qCount()}</span></div>
     <article class="card" id="qcard">
       <span class="eyebrow">${esc(ses.title)}</span>
       <p class="qtext" style="margin-top:6px">${md(q.q)}</p>
@@ -12546,9 +12740,12 @@ function Feedback(q, it) {
     ${wrongNotes}
     ${L ? `<details class="lesson-peek" ${ok ? '' : 'open'}><summary>Teoria: ${esc(L.title)}</summary><div class="lbody lesson">${lessonBody(L)}</div></details>` : ''}
     <div class="note-box"><label class="eyebrow" for="note-${esc(q.id)}">A minha nota sobre esta pergunta</label><textarea id="note-${esc(q.id)}" data-act="note" data-id="${esc(q.id)}" placeholder="Escreve aqui o truque para não voltares a errar…">${esc(S.notes[q.id] || '')}</textarea></div>
+    ${SKBYID[skillOf(q)] ? `<span class="src">Tipo de problema: ${esc(SKBYID[skillOf(q)].label)}</span>` : ''}
     ${q.src ? `<span class="src">Fonte: ${esc(q.src)}</span>` : ''}
   </div>`;
 }
+// question kinds that train the open-book exam: which method, quick sanity check, find the wrong step
+const KINDS = { method: 'Que método?', check: 'Verificação', bug: 'Onde está o erro?' };
 const pickOne = a => a[Math.floor(Math.random() * a.length)];
 const codeBlock = c => `<pre class="codeblk">${esc(c)}</pre>`;
 function lessonBody(L) { const body = L.trusted ? L.html : md(L.html || ''); return `${body}${L.d ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key ? `<p class="key">${L.trusted ? L.key : md(L.key)}</p>` : ''}`; }
@@ -12621,7 +12818,8 @@ function Results() {
       <div><div class="score-big">${big}</div><p class="muted">${sub}</p></div>
       <div class="result-grid"><div class="kpi"><b>+${ses.xp}</b><span>XP ganho</span></div><div class="kpi"><b>${wrong.length}</b><span>para rever</span></div>${ses.mode === 'exam' ? (ses.items.length - tot ? `<div class="kpi"><b>${ses.items.length - tot}</b><span>em branco</span></div>` : '') : skipped.length ? `<div class="kpi"><b>${skipped.length}</b><span>saltadas</span></div>` : ''}<div class="kpi"><b>${topLevel()}</b><span>nível mais alto aberto</span></div></div>
       ${nowUnlocked ? `<p class="key" style="margin:0">Nível ${lvl + 1} desbloqueado. O token avançou.</p>` : ''}
-      <div class="row">${wrong.length ? `<button class="btn primary" data-act="retryWrong">${wrong.length === 1 ? 'Repetir a errada' : `Repetir as ${wrong.length} erradas`}</button>` : ''}${skipped.length ? `<button class="btn${wrong.length ? '' : ' primary'}" data-act="retrySkipped">${skipped.length === 1 ? `Tentar a ${ses.mode === 'exam' ? 'que ficou em branco' : 'saltada'} agora` : `Tentar as ${skipped.length} ${ses.mode === 'exam' ? 'em branco' : 'saltadas'} agora`}</button>` : ''}${lvl ? `<button class="btn" data-act="level" data-n="${nowUnlocked ? lvl + 1 : lvl}">${nowUnlocked ? `Ir para o nível ${lvl + 1}` : `Outra ronda do nível ${lvl}`}</button>` : ''}<button class="btn" data-act="home">Início</button></div>
+      ${ses.skill && SKBYID[ses.skill] ? (r_ => `<p class="muted" style="margin:0">${esc(SKBYID[ses.skill].label)}: <b style="color:var(--ink)">${STATE[r_.state] ? STATE[r_.state][1] : ''}</b> · ${r_.ok}/${r_.total} perguntas${r_.pend ? `, ${r_.pend} por rever` : ''}.</p>`)(readiness(ses.skill)) : ''}
+      <div class="row">${wrong.length ? `<button class="btn primary" data-act="retryWrong">${wrong.length === 1 ? 'Repetir a errada' : `Repetir as ${wrong.length} erradas`}</button>` : ''}${skipped.length ? `<button class="btn${wrong.length ? '' : ' primary'}" data-act="retrySkipped">${skipped.length === 1 ? `Tentar a ${ses.mode === 'exam' ? 'que ficou em branco' : 'saltada'} agora` : `Tentar as ${skipped.length} ${ses.mode === 'exam' ? 'em branco' : 'saltadas'} agora`}</button>` : ''}${lvl ? `<button class="btn" data-act="level" data-n="${nowUnlocked ? lvl + 1 : lvl}">${nowUnlocked ? `Ir para o nível ${lvl + 1}` : `Outra ronda do nível ${lvl}`}</button>` : ''}${ses.skill ? `<button class="btn" data-act="skill" data-k="${esc(ses.skill)}">Outra ronda deste tipo</button><button class="btn" data-act="mode" data-k="ready">Checklist</button>` : ''}<button class="btn" data-act="home">Início</button></div>
     </article>
     ${wrong.length ? `<div class="section"><h2>O que falhaste, explicado</h2>${list}</div>` : `<div class="section"><p class="muted">Sem erros nesta ronda.</p></div>`}`;
 }
@@ -12642,6 +12840,48 @@ function Reader() {
   return `<div class="qhead"><button class="btn small" data-act="library" aria-label="Voltar à biblioteca">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="mono muted">${idx + 1}/${sib.length}</span></div>
   <article class="card"><h2 style="margin-bottom:12px">${esc(L.title)}</h2><div class="lesson">${lessonBody(L)}</div>
   <div class="qfoot">${qs.length ? `<button class="btn primary" data-act="practice" data-id="${esc(L.id)}">Praticar ${qs.length} pergunta${qs.length === 1 ? '' : 's'} desta lição</button>` : ''}<span class="spacer"></span>${idx > 0 ? `<button class="btn small" data-act="read" data-id="${esc(sib[idx - 1].id)}">← Anterior</button>` : ''}${idx < sib.length - 1 ? `<button class="btn small" data-act="read" data-id="${esc(sib[idx + 1].id)}">Seguinte →</button>` : ''}</div></article>`;
+}
+
+/* ---------- FOR THE EXAM: readiness checklist, past exams, cheat sheet ---------- */
+const STATE = { todo: ['○', 'Por começar'], training: ['◐', 'A treinar'], ready: ['●', 'Pronto'] };
+const seenChips = s => (s.seen || []).map(k => `<span class="seen" title="${esc(k)}">${esc(shortPast(k))}</span>`).join('');
+const nPast = () => pastList().length || pastGroups().length;
+const BACK = `<button class="btn small" data-act="home" aria-label="Voltar ao início">←</button>`;
+function Ready() {
+  const RS = readySummary(); const n = k => RS.rows.filter(x => x.r.state === k).length;
+  const groups = Object.entries(TOPICS).map(([t, T]) => {
+    const rows = RS.rows.filter(x => x.s.t === t).sort((a, b) => b.w - a.w); if (!rows.length) return '';
+    return `<div class="section"><div class="section-h"><h2>${esc(T.label)}</h2></div><div class="skill-list">${rows.map(({ s, r }) => `<div class="skill ${r.state}" style="--c:${T.c}">
+      <span class="st" title="${STATE[r.state][1]}" aria-label="${STATE[r.state][1]}">${STATE[r.state][0]}</span>
+      <div class="sk-main"><b>${esc(s.label)}</b><span class="sk-meta">${(s.seen || []).length ? `saiu em ${s.seen.length} de ${nPast()}` : 'ainda não saiu'} ${seenChips(s)}</span></div>
+      <span class="sk-prog mono">${r.ok}/${r.total}${r.pend ? ` · ${r.pend} por rever` : ''}</span>
+      <button class="btn small${r.state === 'ready' ? '' : ' primary'}" data-act="skill" data-k="${esc(s.id)}">${r.state === 'ready' ? 'Rever' : 'Treinar'}</button></div>`).join('')}</div></div>`; }).join('');
+  return `<div class="qhead">${BACK}<span class="eyebrow">Prontidão para o exame</span></div>
+    <div class="result-grid" style="margin-bottom:10px"><div class="kpi"><b>${Math.round(RS.pct * 100)}%</b><span>pronto (pesa o que sai mais)</span></div><div class="kpi"><b>${n('ready')}</b><span>prontos</span></div><div class="kpi"><b>${n('training')}</b><span>a treinar</span></div><div class="kpi"><b>${n('todo')}</b><span>por começar</span></div></div>
+    <p class="muted" style="font-size:13.5px">Os tipos de problema que saem nos exames, por tema, do mais frequente para o menos. Um tipo fica <b>pronto</b> quando acertaste todas as perguntas dele e nenhuma está por rever. Conta tudo, com e sem contas.</p>
+    ${groups}`;
+}
+function Past() {
+  const G_ = pastGroups();
+  return `<div class="qhead">${BACK}<span class="eyebrow">Exames anteriores</span></div>
+    <p class="muted" style="font-size:13.5px;margin-bottom:12px">As perguntas que vieram de cada exame, reescritas aqui e pela ordem original. Os problemas grandes estão partidos em passos e algumas perguntas foram adaptadas para escolha múltipla. Os enunciados originais estão na página da cadeira.</p>
+    <div class="lesson-list">${G_.map(g => { const done = g.qs.filter(q => peek(q.id).c > 0).length; const ts = [...new Set(g.qs.map(q => (SKBYID[skillOf(q)] || q).t))];
+      return `<button class="lesson-item" style="--c:${TOPICS[ts[0]].c}" data-act="pastx" data-k="${esc(g.key)}"><span class="sw"></span><span class="lt">${esc(g.key)}<span class="muted" style="font-weight:400;font-size:12.5px;display:block">${ts.map(t => TOPICS[t].short).join(' · ')}</span></span><span class="lc">${done}/${g.qs.length} certas</span></button>`; }).join('')}</div>`;
+}
+function Sheet() {
+  const all = !!view.all; const sk = partSkills().filter(s => all || sheetMine(s));
+  const noteOf = id => S.notes[id] ? `<li>${md(S.notes[id])}</li>` : '';
+  const items = Object.entries(TOPICS).map(([t, T]) => { const rows = sk.filter(s => s.t === t); if (!rows.length) return '';
+    return `<h2 class="sheet-topic">${esc(T.label)}</h2>${rows.map(s => { const mine = sheetMine(s); const notes = BANK.filter(q => skillOf(q) === s.id).map(q => noteOf(q.id)).join('');
+      return `<div class="sheet-item" style="--c:${T.c}"><div class="row"><b>${esc(s.label)}</b><span class="spacer"></span><span class="no-print">${seenChips(s)}</span>
+        <button class="btn ghost small no-print" data-act="pin" data-k="${esc(s.id)}" data-v="${mine ? 0 : 1}">${mine ? 'Tirar' : 'Pôr na cábula'}</button></div>
+        <div class="lesson">${s.sheet || '<p class="muted">Sem resumo ainda.</p>'}</div>${notes ? `<ul class="sheet-notes">${notes}</ul>` : ''}</div>`; }).join('')}`; }).join('');
+  const loose = Object.keys(S.notes).filter(id => S.notes[id] && BYID[id] && !skillOf(BYID[id]));
+  return `<div class="qhead no-print">${BACK}<span class="eyebrow">Cábula</span><span class="spacer"></span><button class="btn small" data-act="print">Imprimir</button></div>
+    <div class="no-print" style="margin-bottom:12px"><div class="seg" role="group" aria-label="Que tipos mostrar"><button data-act="sheetAll" data-k="mine" aria-pressed="${!all}">A minha cábula</button><button data-act="sheetAll" data-k="all" aria-pressed="${all}">Todos os tipos</button></div>
+    <p class="muted" style="font-size:13.5px;margin-top:8px">O exame é com consulta. A tua cábula junta os tipos de problema onde já falhaste (e os que puseres à mão), com as tuas notas por baixo. Imprime-a ou copia-a para a tua folha.</p></div>
+    ${items || `<p class="muted">${all ? 'Esta cadeira ainda não tem resumos.' : 'Ainda não falhaste nenhum tipo de problema. Quando falhares, ele aparece aqui; ou vê “Todos os tipos” e põe à mão os que quiseres.'}</p>`}
+    ${loose.length ? `<h2 class="sheet-topic">Outras notas</h2><ul class="sheet-notes">${loose.map(noteOf).join('')}</ul>` : ''}`;
 }
 
 /* ---------- NOTES ---------- */
@@ -12784,10 +13024,16 @@ document.addEventListener('click', async ev => {
     case 'openC': if (openCourse(b.dataset.id)) { save(); go('home'); } break;
     case 'extra': start('extra', { extra: b.dataset.k }); break;
     case 'startReview': start(b.dataset.k); break;
-    case 'topic': { const k = b.dataset.k; const set = new Set(S.settings.topics); set.has(k) ? set.delete(k) : set.add(k); if (!set.size) { toast('Tem de ficar pelo menos um tema.'); return; } S.settings.topics = Object.keys(TOPICS).filter(t => set.has(t)); save(); renderView(); break; }
+    case 'topic': { const k = b.dataset.k; const set = new Set(S.settings.topics); set.has(k) ? set.delete(k) : set.add(k); if (!partTopics().some(t => set.has(t))) { toast('Tem de ficar pelo menos um tema.'); return; } S.settings.topics = Object.keys(TOPICS).filter(t => set.has(t)); save(); renderView(); break; }
     case 'calcMode': S.settings.calcMode = b.dataset.k; save(); renderView(); break;
+    case 'part': S.settings.part = b.dataset.k; S.settings.topics = Object.keys(TOPICS); save(); renderView(); break;
+    case 'skill': start('skill', { k: b.dataset.k }); break;
+    case 'pastx': start('past', { key: b.dataset.k }); break;
+    case 'pin': S.pins[b.dataset.k] = +b.dataset.v; save(); renderView(); break;
+    case 'sheetAll': view.all = b.dataset.k === 'all'; renderView(); break;
+    case 'print': window.print(); break;
     case 'level': { const n = +b.dataset.n; if (!unlocked(n)) { toast(`Bloqueado: precisas de ${Math.round(UNLOCK * 100)}% do nível ${n - 1} (ou ativa “Desbloquear todos”).`); return; } start('level', { level: n }); break; }
-    case 'mode': { const k = b.dataset.k; if (k === 'learn') go('learnpick'); else if (k === 'library') go('library'); else if (k === 'review') go('reviewpick'); else start(k); break; }
+    case 'mode': { const k = b.dataset.k; if (k === 'learn') go('learnpick'); else if (k === 'library') go('library'); else if (k === 'review') go('reviewpick'); else if (['ready', 'past', 'sheet'].includes(k)) go(k); else start(k); break; }
     case 'learn': start('learn', { topic: b.dataset.k }); break;
     case 'library': go('library'); break;
     case 'read': go('reader', { id: b.dataset.id }); break;

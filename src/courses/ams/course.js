@@ -13,6 +13,11 @@ STUDY.course({
     bpmn: { label: 'BPMN', short: 'BPMN', c: 'var(--t-bpmn)' },
     exam: { label: 'Estilo do teste (casos e falhas A–F)', short: 'Teste', c: 'var(--t-exam)' },
   },
+  // Parts of the course: each test covers its own topics. Topics for the 2nd test are added here as they arrive.
+  parts: [
+    { id: 't1', label: '1.º teste', topics: ['sys', 'req', 'arch', 'bpm', 'bpmn', 'exam'] },
+    { id: 't2', label: '2.º teste', topics: [], note: 'A matéria do 2.º teste ainda não está cá.' },
+  ],
   // Draws the "d" field of questions and lessons (BPMN/ArchiMate diagrams).
   render: d => DG.render(d),
 

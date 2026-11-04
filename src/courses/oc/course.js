@@ -16,6 +16,11 @@ STUDY.course({
     vm:    { label: 'Memória virtual e TLB', short: 'Mem. virtual', c: 'var(--t-vm)' },
     exam:  { label: 'Estilo do teste', short: 'Teste', c: 'var(--t-ocx)' },
   },
+  // Parts of the course: each test covers its own topics. Topics for the 2nd test are added here as they arrive.
+  parts: [
+    { id: 't1', label: '1.º teste', topics: ['perf', 'bits', 'isa', 'comp', 'cache', 'cperf', 'opt', 'vm', 'exam'] },
+    { id: 't2', label: '2.º teste', topics: [], note: 'A matéria do 2.º teste ainda não está cá.' },
+  ],
 
   // Levels climb the memory hierarchy: from slow RAM to the registers next to the CPU.
   levels: [

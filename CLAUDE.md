@@ -31,6 +31,8 @@ Full field reference and layout are in README.md. Read it only when you need a d
 - Every question stands alone: it repeats its own data and never says "no mesmo problema" or similar.
 - Keep option lengths balanced, so the right answer is not the longest. Four options, matching the exams.
 - `calc: true` marks a question that needs calculations; the Tudo / Só teoria / Só contas switch depends on it.
+- Exam questions carry `src` starting with an exam name ("Exame 1 2024/25, 6.b"): it drives Exames anteriores and priority.
+  In courses with `skills` (ML), a question with no exam type (by lesson or `k`) is supplementary.
 - Long exam problems are split into steps with `ch` (problem id) and `step: 'k/n'`, each step self-contained.
 - Lessons are trusted HTML. Question text only supports `**bold**`, `` `code` `` and line breaks, so write
   math with Unicode (Σ, σ, ∂, ŷ, ², ₁).

@@ -73,7 +73,8 @@ New file? Add it to the course's list in `manifest.json`. Lessons work the same 
    Course-only CSS can be scoped with `:root[data-course="<id>"]`.
    For the exam (see ML): `parts` (`[{ id, label, topics, note }]`, one per test; a part with no topics shows as "em breve"),
    `past` (the past exams the questions come from, newest first, as written at the start of `src`) and `skills`
-   (`[{ id, t, label, les: [lessons], seen: [past exams], sheet: 'HTML for the cheat sheet' }]`).
+   (`[{ id, t, label, les: [lessons], seen: [past exams], sheet: 'HTML for the cheat sheet' }]`; `core: true` makes a
+   type priority even when it never came up on its own, for base matter such as OC's bits or virtual memory).
 3. Add the course and its files to `manifest.json`.
 
 ## For the exam: readiness, priority, past exams, cheat sheet

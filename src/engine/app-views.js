@@ -154,7 +154,7 @@ function Ready() {
     const rows = RS.rows.filter(x => x.s.t === t).sort((a, b) => b.w - a.w); if (!rows.length) return '';
     return `<div class="section"><div class="section-h"><h2>${esc(T.label)}</h2></div><div class="skill-list">${rows.map(({ s, r }) => `<div class="skill ${r.state}" style="--c:${T.c}">
       <span class="st" title="${STATE[r.state][1]}" aria-label="${STATE[r.state][1]}">${STATE[r.state][0]}</span>
-      <div class="sk-main"><b>${esc(s.label)}</b><span class="sk-meta">${(s.seen || []).length ? `saiu em ${s.seen.length} de ${nPast()}` : 'ainda não saiu'} ${seenChips(s)}</span></div>
+      <div class="sk-main"><b>${esc(s.label)}</b><span class="sk-meta">${(s.seen || []).length ? `saiu em ${s.seen.length} de ${nPast()}` : s.core ? 'matéria de base' : 'ainda não saiu'} ${seenChips(s)}</span></div>
       <span class="sk-prog mono">${r.ok}/${r.total}${r.pend ? ` · ${r.pend} por rever` : ''}</span>
       <button class="btn small${r.state === 'ready' ? '' : ' primary'}" data-act="skill" data-k="${esc(s.id)}">${r.state === 'ready' ? 'Rever' : 'Treinar'}</button></div>`).join('')}</div></div>`; }).join('');
   return `<div class="qhead">${BACK}<span class="eyebrow">Prontidão para o exame</span></div>

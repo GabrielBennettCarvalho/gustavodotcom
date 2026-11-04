@@ -52,7 +52,7 @@ for (const id of REG.order) {
   const res = c.questions.filter(q => q.reserved === 'exam').length;
   // same rule as the engine's isCore: the type came up in a past exam, or the question comes from one
   const skOf = q => q.k !== undefined ? q.k : lesSk[q.les];
-  const core = q => !SK.size || /^(exame|teste|map|mini|repescagem)/i.test(q.src || '') || !!(SK.get(skOf(q)) && (SK.get(skOf(q)).seen || []).length);
+  const core = q => !SK.size || /^(exame|teste|map|mini|repescagem)/i.test(q.src || '') || !!(SK.get(skOf(q)) && (SK.get(skOf(q)).core || (SK.get(skOf(q)).seen || []).length));
   const pr = SK.size ? `, ${SK.size} problem types, ${c.questions.filter(core).length} priority / ${c.questions.filter(q => !core(q)).length} supplementary` : '';
   console.log(`${id}: ${c.lessons.length} lessons, ${c.questions.length} questions (${res} reserved for the exam), ${c.extras.length} extra(s)${pr}${added.length ? `, +${added.length} new ids` : ''}`);
 }

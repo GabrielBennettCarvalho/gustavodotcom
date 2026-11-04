@@ -122,7 +122,7 @@ const fresh = q => { const s = peek(q.id); return !s.c && !s.w && !s.ew; };
 /* ---------- exam problem types, readiness, priority ----------
    C.skills lists the kinds of problem the exams ask. A question belongs to one, through its lesson
    (skill.les) or its own "k" (k: '' means none). Priority questions: their type came up in a past exam,
-   or they come from one (src). The others are supplementary. A course without skills: all are priority. */
+   or they come from one (src), or their type is marked core (base matter the exams rely on). The others are supplementary. A course without skills: all are priority. */
 const skillOf = q => q.k !== undefined ? (q.k || null) : (LES2SK[q.les] || null);
 const PAST_RE = /^(exame|teste|map|mini|repescagem)/i;
 // "Exame 1 2024/25, 6.b" → "Exame 1 2024/25"; "Exame 2020/21, 2.ª época, P3" → "Exame 2020/21, 2.ª época"
@@ -131,7 +131,7 @@ function pastKey(src) {
   let k = seg[0].replace(/\s*\(.*\)\s*$/, ''); if (seg[1] && /época|teste/i.test(seg[1])) k += ', ' + seg[1];
   return PAST_RE.test(k) && !/\se\s/.test(k) ? k : null;   // "Exames 2025/26 P4 e 2023/24 P1": in more than one, listed in neither
 }
-const isCore = q => { if (!SKILLS.length || q.origin !== 'base' || PAST_RE.test(q.src || '')) return true; const s = SKBYID[skillOf(q)]; return !!(s && s.seen && s.seen.length); };
+const isCore = q => { if (!SKILLS.length || q.origin !== 'base' || PAST_RE.test(q.src || '')) return true; const s = SKBYID[skillOf(q)]; return !!(s && (s.core || (s.seen && s.seen.length))); };
 const basePool = () => BANK.filter(q => inTopics(q) && !isReserved(q));
 const trainPool = () => basePool().filter(isCore);
 const suppPool = () => basePool().filter(q => !isCore(q));

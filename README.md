@@ -37,6 +37,9 @@ src/
       questions/*.js
       ids.json           written by the build; never edit by hand
     oc/                  Organização de Computadores (same layout; render.js draws address fields and tables)
+    rc/                  Redes de Computadores (render.js draws space-time diagrams, topologies, addresses)
+    ml/                  Aprendizagem / Machine Learning (render.js draws data tables, matrices,
+                         point plots and decision trees; exam problems split into steps in questions/exam.js)
   vendor/qrcode.js       QR code generator (MIT, Kazuhiko Arase)
 tools/validate.js        content checks, used by build.py
 ```

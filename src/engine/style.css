@@ -104,6 +104,13 @@ button{font:inherit;color:inherit}
 
 .section{margin-top:26px;display:flex;flex-direction:column;gap:12px}
 .section-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+/* folded home sections (Domínio, Definições): closed by default */
+.fold{display:block}.fold>*+*{margin-top:12px}
+.fold>summary{cursor:pointer;list-style:none}.fold>summary::-webkit-details-marker{display:none}
+.fold>summary h2::before{content:"▸";display:inline-block;margin-right:8px;font-size:.7em;color:var(--accent);transition:transform .15s}
+.fold[open]>summary h2::before{transform:rotate(90deg)}
+/* keyboard hints mean nothing on a phone */
+@media (pointer:coarse){.kbd,.keys{display:none}}
 
 /* mastery table */
 .mastery{display:grid;grid-template-columns:minmax(120px,1fr) repeat(4,minmax(44px,64px));gap:6px 8px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;overflow-x:auto}
@@ -202,6 +209,11 @@ textarea.code{width:100%;min-height:180px;font:12.5px/1.5 var(--f-mono);border:1
 .msg.ko{background:var(--bad-bg);color:var(--bad)}
 .pack{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);flex-wrap:wrap}
 .pack b{min-width:0;overflow-wrap:anywhere}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--panel)}
+.seg button{padding:6px 12px;font-size:13px;font-weight:600;border:0;border-left:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer}
+.seg button:first-child{border-left:0}
+.seg button .mono{font-weight:400;opacity:.75}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper,var(--panel))}
 .toggle{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
 .toggle input{width:18px;height:18px;accent-color:var(--accent)}
 
@@ -283,6 +295,34 @@ textarea.key{min-height:84px;word-break:break-all}
   .flow .bus{flex:0 0 22px;width:8px;height:22px;min-width:8px;margin:0;align-self:center;border:0;border-left:2px solid var(--ink);border-right:2px solid var(--ink)}
   .flow .bus::after{right:auto;top:auto;bottom:-7px;left:-7px;border-left:9px solid transparent;border-right:9px solid transparent;border-top:8px solid var(--ink);border-bottom:0}
   .flow-bus .lvl.l1,.flow-bus .lvl.l2,.flow-bus .lvl.l3,.flow-bus .lvl.l4{min-height:0}
+}
+
+/* ---------- for the exam: readiness, past exams, cheat sheet ---------- */
+.ready-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;margin-bottom:14px;box-shadow:var(--shadow)}
+.ready-bar{display:flex;gap:2px;height:10px;border-radius:999px;overflow:hidden;background:var(--panel-2)}
+.ready-bar i{min-width:4px;background:var(--line)}
+.ready-bar i.training{background:color-mix(in srgb,var(--accent) 45%,var(--panel-2))}
+.ready-bar i.ready{background:var(--good)}
+.skill-list{display:flex;flex-direction:column;gap:8px}
+.skill{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:10px;min-width:0}
+.skill .st{font-size:18px;width:18px;text-align:center;flex:none;color:var(--muted)}
+.skill.training .st{color:var(--accent)}
+.skill.ready .st{color:var(--good)}
+.skill .sk-main{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.skill .sk-meta{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.skill .sk-prog{font-size:11px;color:var(--muted);flex:none}
+.seen{font-family:var(--f-mono);font-size:10.5px;padding:1px 5px;border-radius:4px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.badge.kind{border-color:var(--token);color:var(--token)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.sheet-topic{margin:18px 0 8px;font-size:17px}
+.sheet-item{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.sheet-item .lesson{margin-top:6px;font-size:14.5px}
+.sheet-notes{margin:6px 0 0 18px;font-size:13.5px}
+@media (max-width:560px){.skill{flex-wrap:wrap}.skill .sk-main{flex-basis:calc(100% - 40px)}.skill .sk-prog{margin-left:30px}}
+@media print{
+  .top,.no-print,.qhead{display:none !important}
+  body{background:#fff;color:#000}
+  .sheet-item{break-inside:avoid;border-color:#999;box-shadow:none}
 }
 
 /* exam route: the exam's parts as stops on a line */

@@ -67,6 +67,35 @@
         "questions/exam.js"
       ]
     },
+    "ml": {
+      "styles": [
+        "theme.css"
+      ],
+      "files": [
+        "render.js",
+        "course.js",
+        "lessons/foundations.js",
+        "lessons/models.js",
+        "lessons/unsupervised.js",
+        "questions/data.js",
+        "questions/dt.js",
+        "questions/eval.js",
+        "questions/bayes.js",
+        "questions/knn.js",
+        "questions/linreg.js",
+        "questions/percep.js",
+        "questions/logreg.js",
+        "questions/mlp.js",
+        "questions/clust.js",
+        "questions/pca.js",
+        "questions/svm-dft.js",
+        "questions/deep.js",
+        "questions/exam.js",
+        "questions/exam22b.js",
+        "questions/exam23.js",
+        "questions/prep.js"
+      ]
+    },
     "so": {
       "styles": [
         "theme.css"

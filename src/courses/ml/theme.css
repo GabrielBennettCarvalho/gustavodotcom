@@ -1,0 +1,19 @@
+/* ML: topic colours (global, used by chips) */
+:root{ --t-data:#2F6FDB; --t-dt:#0F7A5A; --t-eval:#7A4FD0; --t-bayes:#B4235A; --t-knn:#0E7C8C; --t-linreg:#C2410C; --t-percep:#6B7A1F; --t-logreg:#8A5A12; --t-mlp:#D23F6B; --t-clust:#2E8B57; --t-pca:#5B5FD6; --t-dft:#6E6E6E; --t-svm:#A0522D; --t-deep:#9B2FAE; --t-mlx:#C2392F; }
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --t-data:#7EA8FF; --t-dt:#4FD1A0; --t-eval:#B59BFF; --t-bayes:#FF7AAE; --t-knn:#5CD4E3; --t-linreg:#FF8F5C; --t-percep:#C3D35A; --t-logreg:#E3B25F; --t-mlp:#FF8FAE; --t-clust:#6FE0A0; --t-pca:#A3A6FF; --t-dft:#B8B8B8; --t-svm:#E0A07A; --t-deep:#E08BF0; --t-mlx:#FF7468; }}
+:root[data-theme="dark"]{ --t-data:#7EA8FF; --t-dt:#4FD1A0; --t-eval:#B59BFF; --t-bayes:#FF7AAE; --t-knn:#5CD4E3; --t-linreg:#FF8F5C; --t-percep:#C3D35A; --t-logreg:#E3B25F; --t-mlp:#FF8FAE; --t-clust:#6FE0A0; --t-pca:#A3A6FF; --t-dft:#B8B8B8; --t-svm:#E0A07A; --t-deep:#E08BF0; --t-mlx:#FF7468; }
+
+/* ML look: violet token (a point descending the loss curve) */
+:root[data-course="ml"]{ --token:#7C3AED; }
+@media (prefers-color-scheme: dark){:root[data-course="ml"]:not([data-theme="light"]){ --token:#B794FF; }}
+:root[data-course="ml"][data-theme="dark"]{ --token:#B794FF; }
+:root[data-course="ml"] .lvl .tok{ border-radius:50%; }
+
+/* ML diagrams */
+.dg.ml .mono{font-family:var(--f-mono)}
+.dg.ml .sub{opacity:.72;font-family:var(--f-mono)}
+.dg.ml .th{fill:color-mix(in srgb,var(--sheet) 88%,#8aa0c0)}
+.dg.ml .grid{stroke-width:.6;opacity:.25}
+.dg.ml .leaf{fill:color-mix(in srgb,var(--sheet) 85%,#6fcf97)}
+.dg.ml .cen{stroke:#E4632A}
+.dg.ml.tbl,.dg.ml.mat,.dg.ml.tree,.dg.ml.pts{display:block;margin:0 auto;width:100%;height:auto}

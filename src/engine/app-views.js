@@ -17,8 +17,8 @@ function Quiz() {
   let fb = '';
   if (ses.answered && !isExam) fb = Feedback(q, it);
   const foot = ses.answered ? (isExam ? '' : `<div class="qfoot"><button class="btn primary" data-act="next" id="nextBtn">${ses.i >= ses.items.length - 1 ? 'Ver resultado' : 'Seguinte'} →</button><span class="kbd">Enter</span><span class="spacer"></span><button class="btn ghost small" data-act="quit">Terminar ronda</button></div>`)
-    : `<div class="qfoot">${multi ? `<button class="btn primary" data-act="confirm" ${ses.picked.size ? '' : 'disabled'}>Confirmar</button>` : ''}${skipBtn}<span class="muted" style="font-size:12.5px">Teclas <span class="kbd">1</span>–<span class="kbd">${q.o.length}</span>${multi ? ' marcam, <span class="kbd">Enter</span> confirma' : ''} · <span class="kbd">S</span> ${isExam ? 'branco' : 'salta'}</span><span class="spacer"></span>${isExam ? `<button class="btn ghost small" data-act="finish">Entregar exame</button>` : `<button class="btn ghost small" data-act="quit">Terminar ronda</button>`}</div>`;
-  return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="badge">N${q.l}</span>${q.calc ? `<span class="badge calc" title="Pergunta com contas">Contas${q.step && !isExam ? ` · ${esc(q.step)}` : ''}</span>` : ''}${prog}${(isExam) ? `<span class="timer" id="timer">${fmt(ses.timeLimit - Math.floor((Date.now() - ses.startedAt) / 1000))}</span>` : ''}<span class="mono muted">${qIndex()}/${qCount()}</span></div>
+    : `<div class="qfoot">${multi ? `<button class="btn primary" data-act="confirm" ${ses.picked.size ? '' : 'disabled'}>Confirmar</button>` : ''}${skipBtn}<span class="muted keys" style="font-size:12.5px">Teclas <span class="kbd">1</span>–<span class="kbd">${q.o.length}</span>${multi ? ' marcam, <span class="kbd">Enter</span> confirma' : ''} · <span class="kbd">S</span> ${isExam ? 'branco' : 'salta'}</span><span class="spacer"></span>${isExam ? `<button class="btn ghost small" data-act="finish">Entregar exame</button>` : `<button class="btn ghost small" data-act="quit">Terminar ronda</button>`}</div>`;
+  return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="badge">N${q.l}</span>${KINDS[q.kind] ? `<span class="badge kind">${KINDS[q.kind]}</span>` : ''}${q.calc ? `<span class="badge calc" title="Pergunta com contas">Contas${q.step && !isExam ? ` · ${esc(q.step)}` : ''}</span>` : ''}${prog}${(isExam) ? `<span class="timer" id="timer">${fmt(ses.timeLimit - Math.floor((Date.now() - ses.startedAt) / 1000))}</span>` : ''}<span class="mono muted">${qIndex()}/${qCount()}</span></div>
     <article class="card" id="qcard">
       <span class="eyebrow">${esc(ses.title)}</span>
       <p class="qtext" style="margin-top:6px">${md(q.q)}</p>
@@ -41,9 +41,12 @@ function Feedback(q, it) {
     ${wrongNotes}
     ${L ? `<details class="lesson-peek" ${ok ? '' : 'open'}><summary>Teoria: ${esc(L.title)}</summary><div class="lbody lesson">${lessonBody(L)}</div></details>` : ''}
     <div class="note-box"><label class="eyebrow" for="note-${esc(q.id)}">A minha nota sobre esta pergunta</label><textarea id="note-${esc(q.id)}" data-act="note" data-id="${esc(q.id)}" placeholder="Escreve aqui o truque para não voltares a errar…">${esc(S.notes[q.id] || '')}</textarea></div>
+    ${SKBYID[skillOf(q)] ? `<span class="src">Tipo de problema: ${esc(SKBYID[skillOf(q)].label)}</span>` : ''}
     ${q.src ? `<span class="src">Fonte: ${esc(q.src)}</span>` : ''}
   </div>`;
 }
+// question kinds that train the open-book exam: which method, quick sanity check, find the wrong step
+const KINDS = { method: 'Que método?', check: 'Verificação', bug: 'Onde está o erro?' };
 const pickOne = a => a[Math.floor(Math.random() * a.length)];
 const codeBlock = c => `<pre class="codeblk">${esc(c)}</pre>`;
 function lessonBody(L) { const body = L.trusted ? L.html : md(L.html || ''); return `${body}${L.d ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key ? `<p class="key">${L.trusted ? L.key : md(L.key)}</p>` : ''}`; }
@@ -105,7 +108,7 @@ function LessonScreen() {
 /* ---------- RESULTS ---------- */
 function Results() {
   const r = ses.results; const ok = r.filter(x => x.ok).length; const skipped = r.filter(x => x.skipped); const tot = r.length - skipped.length; const wrong = r.filter(x => !x.ok && !x.skipped);
-  const lvl = ses.level; const nowUnlocked = lvl && lvl < 4 && unlocked(lvl + 1);
+  const lvl = ses.level; const nowUnlocked = lvl && lvl < LEVELS.length && !ses.nextWasOpen && unlocked(lvl + 1);
   let big = `${ok}/${tot}`, sub = tot ? `${Math.round(ok / tot * 100)}% de acerto` : 'sem respostas';
   if (!ses.mode.startsWith('exam') && skipped.length) sub += ` · ${skipped.length} saltada${skipped.length === 1 ? '' : 's'}`;
   if (ses.mode === 'exam') { const blank = ses.items.length - tot; big = `${ses.grade.toFixed(1)}`;
@@ -117,7 +120,8 @@ function Results() {
       <div><div class="score-big">${big}</div><p class="muted">${sub}</p></div>
       <div class="result-grid"><div class="kpi"><b>+${ses.xp}</b><span>XP ganho</span></div><div class="kpi"><b>${wrong.length}</b><span>para rever</span></div>${ses.mode === 'exam' ? (ses.items.length - tot ? `<div class="kpi"><b>${ses.items.length - tot}</b><span>em branco</span></div>` : '') : skipped.length ? `<div class="kpi"><b>${skipped.length}</b><span>saltadas</span></div>` : ''}<div class="kpi"><b>${topLevel()}</b><span>nível mais alto aberto</span></div></div>
       ${nowUnlocked ? `<p class="key" style="margin:0">Nível ${lvl + 1} desbloqueado. O token avançou.</p>` : ''}
-      <div class="row">${wrong.length ? `<button class="btn primary" data-act="retryWrong">${wrong.length === 1 ? 'Repetir a errada' : `Repetir as ${wrong.length} erradas`}</button>` : ''}${skipped.length ? `<button class="btn${wrong.length ? '' : ' primary'}" data-act="retrySkipped">${skipped.length === 1 ? `Tentar a ${ses.mode === 'exam' ? 'que ficou em branco' : 'saltada'} agora` : `Tentar as ${skipped.length} ${ses.mode === 'exam' ? 'em branco' : 'saltadas'} agora`}</button>` : ''}${ses.mode === 'route' ? routeNextBtn() : ''}${lvl ? `<button class="btn" data-act="level" data-n="${nowUnlocked ? lvl + 1 : lvl}">${nowUnlocked ? `Ir para o nível ${lvl + 1}` : `Outra ronda do nível ${lvl}`}</button>` : ''}<button class="btn" data-act="home">Início</button></div>
+      ${ses.skill && SKBYID[ses.skill] ? (r_ => `<p class="muted" style="margin:0">${esc(SKBYID[ses.skill].label)}: <b style="color:var(--ink)">${STATE[r_.state] ? STATE[r_.state][1] : ''}</b> · ${r_.ok}/${r_.total} perguntas${r_.pend ? `, ${r_.pend} por rever` : ''}.</p>`)(readiness(ses.skill)) : ''}
+      <div class="row">${wrong.length ? `<button class="btn primary" data-act="retryWrong">${wrong.length === 1 ? 'Repetir a errada' : `Repetir as ${wrong.length} erradas`}</button>` : ''}${skipped.length ? `<button class="btn${wrong.length ? '' : ' primary'}" data-act="retrySkipped">${skipped.length === 1 ? `Tentar a ${ses.mode === 'exam' ? 'que ficou em branco' : 'saltada'} agora` : `Tentar as ${skipped.length} ${ses.mode === 'exam' ? 'em branco' : 'saltadas'} agora`}</button>` : ''}${ses.mode === 'route' ? routeNextBtn() : ''}${lvl ? `<button class="btn" data-act="level" data-n="${nowUnlocked ? lvl + 1 : lvl}">${nowUnlocked ? `Ir para o nível ${lvl + 1}` : `Outra ronda do nível ${lvl}`}</button>` : ''}${ses.skill ? `<button class="btn" data-act="skill" data-k="${esc(ses.skill)}">Outra ronda deste tipo</button><button class="btn" data-act="mode" data-k="ready">Checklist</button>` : ''}<button class="btn" data-act="home">Início</button></div>
     </article>
     ${wrong.length ? `<div class="section"><h2>O que falhaste, explicado</h2>${list}</div>` : `<div class="section"><p class="muted">Sem erros nesta ronda.</p></div>`}`;
 }
@@ -141,6 +145,48 @@ function Reader() {
   return `<div class="qhead"><button class="btn small" data-act="library" aria-label="Voltar à biblioteca">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="mono muted">${idx + 1}/${sib.length}</span></div>
   <article class="card"><h2 style="margin-bottom:12px">${esc(L.title)}</h2><div class="lesson">${lessonBody(L)}</div>
   <div class="qfoot">${qs.length ? `<button class="btn primary" data-act="practice" data-id="${esc(L.id)}">Praticar ${qs.length} pergunta${qs.length === 1 ? '' : 's'} desta lição</button>` : ''}<span class="spacer"></span>${idx > 0 ? `<button class="btn small" data-act="read" data-id="${esc(sib[idx - 1].id)}">← Anterior</button>` : ''}${idx < sib.length - 1 ? `<button class="btn small" data-act="read" data-id="${esc(sib[idx + 1].id)}">Seguinte →</button>` : ''}</div></article>`;
+}
+
+/* ---------- FOR THE EXAM: readiness checklist, past exams, cheat sheet ---------- */
+const STATE = { todo: ['○', 'Por começar'], training: ['◐', 'A treinar'], ready: ['●', 'Pronto'] };
+const seenChips = s => (s.seen || []).map(k => `<span class="seen" title="${esc(k)}">${esc(shortPast(k))}</span>`).join('');
+const nPast = () => pastList().length || pastGroups().length;
+const BACK = `<button class="btn small" data-act="home" aria-label="Voltar ao início">←</button>`;
+function Ready() {
+  const RS = readySummary(); const n = k => RS.rows.filter(x => x.r.state === k).length;
+  const groups = Object.entries(TOPICS).map(([t, T]) => {
+    const rows = RS.rows.filter(x => x.s.t === t).sort((a, b) => b.w - a.w); if (!rows.length) return '';
+    return `<div class="section"><div class="section-h"><h2>${esc(T.label)}</h2></div><div class="skill-list">${rows.map(({ s, r }) => `<div class="skill ${r.state}" style="--c:${T.c}">
+      <span class="st" title="${STATE[r.state][1]}" aria-label="${STATE[r.state][1]}">${STATE[r.state][0]}</span>
+      <div class="sk-main"><b>${esc(s.label)}</b><span class="sk-meta">${(s.seen || []).length ? `saiu em ${s.seen.length} de ${nPast()}` : s.core ? 'matéria de base' : 'ainda não saiu'} ${seenChips(s)}</span></div>
+      <span class="sk-prog mono">${r.ok}/${r.total}${r.pend ? ` · ${r.pend} por rever` : ''}</span>
+      <button class="btn small${r.state === 'ready' ? '' : ' primary'}" data-act="skill" data-k="${esc(s.id)}">${r.state === 'ready' ? 'Rever' : 'Treinar'}</button></div>`).join('')}</div></div>`; }).join('');
+  return `<div class="qhead">${BACK}<span class="eyebrow">Prontidão para o exame</span></div>
+    <div class="result-grid" style="margin-bottom:10px"><div class="kpi"><b>${Math.round(RS.pct * 100)}%</b><span>pronto (pesa o que sai mais)</span></div><div class="kpi"><b>${n('ready')}</b><span>prontos</span></div><div class="kpi"><b>${n('training')}</b><span>a treinar</span></div><div class="kpi"><b>${n('todo')}</b><span>por começar</span></div></div>
+    <p class="muted" style="font-size:13.5px">Os tipos de problema que saem nos exames, por tema, do mais frequente para o menos. Um tipo fica <b>pronto</b> quando acertaste todas as perguntas dele e nenhuma está por rever. Conta tudo, com e sem contas.</p>
+    ${groups}`;
+}
+function Past() {
+  const G_ = pastGroups();
+  return `<div class="qhead">${BACK}<span class="eyebrow">Exames anteriores</span></div>
+    <p class="muted" style="font-size:13.5px;margin-bottom:12px">As perguntas que vieram de cada exame, reescritas aqui e pela ordem original. Os problemas grandes estão partidos em passos e algumas perguntas foram adaptadas para escolha múltipla. Os enunciados originais estão na página da cadeira.</p>
+    <div class="lesson-list">${G_.map(g => { const done = g.qs.filter(q => peek(q.id).c > 0).length; const ts = [...new Set(g.qs.map(q => (SKBYID[skillOf(q)] || q).t))];
+      return `<button class="lesson-item" style="--c:${TOPICS[ts[0]].c}" data-act="pastx" data-k="${esc(g.key)}"><span class="sw"></span><span class="lt">${esc(g.key)}<span class="muted" style="font-weight:400;font-size:12.5px;display:block">${ts.map(t => TOPICS[t].short).join(' · ')}</span></span><span class="lc">${done}/${g.qs.length} certas</span></button>`; }).join('')}</div>`;
+}
+function Sheet() {
+  const all = !!view.all; const sk = partSkills().filter(s => all || sheetMine(s));
+  const noteOf = id => S.notes[id] ? `<li>${md(S.notes[id])}</li>` : '';
+  const items = Object.entries(TOPICS).map(([t, T]) => { const rows = sk.filter(s => s.t === t); if (!rows.length) return '';
+    return `<h2 class="sheet-topic">${esc(T.label)}</h2>${rows.map(s => { const mine = sheetMine(s); const notes = BANK.filter(q => skillOf(q) === s.id).map(q => noteOf(q.id)).join('');
+      return `<div class="sheet-item" style="--c:${T.c}"><div class="row"><b>${esc(s.label)}</b><span class="spacer"></span><span class="no-print">${seenChips(s)}</span>
+        <button class="btn ghost small no-print" data-act="pin" data-k="${esc(s.id)}" data-v="${mine ? 0 : 1}">${mine ? 'Tirar' : 'Pôr na cábula'}</button></div>
+        <div class="lesson">${s.sheet || '<p class="muted">Sem resumo ainda.</p>'}</div>${notes ? `<ul class="sheet-notes">${notes}</ul>` : ''}</div>`; }).join('')}`; }).join('');
+  const loose = Object.keys(S.notes).filter(id => S.notes[id] && BYID[id] && !skillOf(BYID[id]));
+  return `<div class="qhead no-print">${BACK}<span class="eyebrow">Cábula</span><span class="spacer"></span><button class="btn small" data-act="print">Imprimir</button></div>
+    <div class="no-print" style="margin-bottom:12px"><div class="seg" role="group" aria-label="Que tipos mostrar"><button data-act="sheetAll" data-k="mine" aria-pressed="${!all}">A minha cábula</button><button data-act="sheetAll" data-k="all" aria-pressed="${all}">Todos os tipos</button></div>
+    <p class="muted" style="font-size:13.5px;margin-top:8px">O exame é com consulta. A tua cábula junta os tipos de problema onde já falhaste (e os que puseres à mão), com as tuas notas por baixo. Imprime-a ou copia-a para a tua folha.</p></div>
+    ${items || `<p class="muted">${all ? 'Esta cadeira ainda não tem resumos.' : 'Ainda não falhaste nenhum tipo de problema. Quando falhares, ele aparece aqui; ou vê “Todos os tipos” e põe à mão os que quiseres.'}</p>`}
+    ${loose.length ? `<h2 class="sheet-topic">Outras notas</h2><ul class="sheet-notes">${loose.map(noteOf).join('')}</ul>` : ''}`;
 }
 
 /* ---------- NOTES ---------- */
@@ -267,10 +313,12 @@ function mergeKey() {
 /* ---------- events ---------- */
 document.addEventListener('click', async ev => {
   const b = ev.target.closest('[data-act]'); if (!b) return; const a = b.dataset.act;
-  if (['unlockAll', 'testDate', 'note', 'noCalc'].includes(a)) return;
+  if (['unlockAll', 'testDate', 'note'].includes(a)) return;
   switch (a) {
-    case 'home': if (ses && !ses.ended && ses.mode === 'exam' && view.name === 'quiz') { finish(); return; } clearInterval(tick); ses = null; go('home'); break;
-    case 'courses': if (ses && !ses.ended && ses.mode === 'exam' && view.name === 'quiz') { finish(); return; } clearInterval(tick); ses = null; go('courses'); break;
+    case 'home': case 'courses':
+      // leaving a mock exam hands it in, so ask first: one stray tap must not end it
+      if (ses && !ses.ended && ses.mode === 'exam' && view.name === 'quiz') { if (confirm('Sair entrega o exame tal como está. Entregar agora?')) finish(); return; }
+      clearInterval(tick); ses = null; go(a); break;
     case 'sync': go('sync'); break;
     case 'theme': cycleTheme(); renderView(); break;
     case 'skip': skip(); break;
@@ -283,10 +331,17 @@ document.addEventListener('click', async ev => {
     case 'openC': if (openCourse(b.dataset.id)) { save(); go('home'); } break;
     case 'extra': start('extra', { extra: b.dataset.k }); break;
     case 'startReview': start(b.dataset.k); break;
-    case 'topic': { const k = b.dataset.k; const set = new Set(S.settings.topics); set.has(k) ? set.delete(k) : set.add(k); if (!set.size) { toast('Tem de ficar pelo menos um tema.'); return; } S.settings.topics = Object.keys(TOPICS).filter(t => set.has(t)); save(); renderView(); break; }
+    case 'topic': { const k = b.dataset.k; const set = new Set(S.settings.topics); set.has(k) ? set.delete(k) : set.add(k); if (!partTopics().some(t => set.has(t))) { toast('Tem de ficar pelo menos um tema.'); return; } S.settings.topics = Object.keys(TOPICS).filter(t => set.has(t)); save(); renderView(); break; }
+    case 'calcMode': S.settings.calcMode = b.dataset.k; save(); renderView(); break;
+    case 'part': S.settings.part = b.dataset.k; S.settings.topics = Object.keys(TOPICS); save(); renderView(); break;
+    case 'skill': start('skill', { k: b.dataset.k }); break;
+    case 'pastx': start('past', { key: b.dataset.k }); break;
+    case 'pin': S.pins[b.dataset.k] = +b.dataset.v; save(); renderView(); break;
+    case 'sheetAll': view.all = b.dataset.k === 'all'; renderView(); break;
+    case 'print': window.print(); break;
     case 'level': { const n = +b.dataset.n; if (!unlocked(n)) { toast(`Bloqueado: precisas de ${Math.round(UNLOCK * 100)}% do nível ${n - 1} (ou ativa “Desbloquear todos”).`); return; } start('level', { level: n }); break; }
     case 'routeStop': start('route', { stop: b.dataset.k }); break;
-    case 'mode': { const k = b.dataset.k; if (k === 'route') { ses = null; go('routepick'); } else if (k === 'learn') go('learnpick'); else if (k === 'library') go('library'); else if (k === 'review') go('reviewpick'); else start(k); break; }
+    case 'mode': { const k = b.dataset.k; if (k === 'route') { ses = null; go('routepick'); } else if (k === 'learn') go('learnpick'); else if (k === 'library') go('library'); else if (k === 'review') go('reviewpick'); else if (['ready', 'past', 'sheet'].includes(k)) go(k); else start(k); break; }
     case 'learn': start('learn', { topic: b.dataset.k }); break;
     case 'library': go('library'); break;
     case 'read': go('reader', { id: b.dataset.id }); break;
@@ -296,7 +351,7 @@ document.addEventListener('click', async ev => {
     case 'next': next(); break;
     case 'quit': if (ses && ses.results.length) finish(); else { ses = null; go('home'); } break;
     case 'finish': finish(); break;
-    case 'retryWrong': { const ids = ses.results.filter(r => !r.ok).map(r => r.id); start('retry', { ids, examGrading: ses.mode === 'exam' || ses.examGrading }); break; }
+    case 'retryWrong': { const ids = ses.results.filter(r => !r.ok && !r.skipped).map(r => r.id); start('retry', { ids, examGrading: ses.mode === 'exam' || ses.examGrading }); break; }
     case 'bank': go('bank'); break;
     case 'notes': go('notes'); break;
     case 'import': doImport(document.getElementById('importBox').value); break;
@@ -314,7 +369,6 @@ document.addEventListener('change', ev => {
   const t = ev.target;
   if (t.id === 'includeNotes') { view.notes = t.checked; renderView(); return; }
   if (t.id === 'unlockAll') { S.settings.unlockAll = t.checked; save(); renderView(); }
-  if (t.id === 'noCalc') { S.settings.noCalc = t.checked; save(); renderView(); }
   if (t.id === 'testDate') { S.settings.testDate = t.value; save(); renderView(); }
   if (t.id === 'importFile' && t.files && t.files[0]) { const r = new FileReader(); r.onload = () => doImport(String(r.result || '')); r.readAsText(t.files[0]); }
 });

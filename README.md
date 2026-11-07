@@ -37,7 +37,9 @@ src/
       questions/*.js
       ids.json           written by the build; never edit by hand
     oc/                  Organização de Computadores (same layout; render.js draws address fields and tables)
-    rc/                  Redes de Computadores
+    rc/                  Redes de Computadores (render.js draws space-time diagrams, topologies, addresses)
+    ml/                  Aprendizagem / Machine Learning (render.js draws data tables, matrices,
+                         point plots and decision trees; exam problems split into steps in questions/exam.js)
     so/                  Sistemas Operativos (route.js: the exam route; render.js: address fields and page tables / TLB)
   vendor/qrcode.js       QR code generator (MIT, Kazuhiko Arase)
 tools/validate.js        content checks, used by build.py
@@ -56,8 +58,9 @@ STUDY.questions('ams', [
 Fields: `id` unique text · `t` topic · `l` level 1–4 · `q` question · `o` 2–6 options · `a` index of the right
 option (or a list) · `e` explanation. Optional: `w` note per wrong option, `les` lesson id, `ctx` case lesson
 shown above the question, `d` diagram, `src` source, `fixed` don't shuffle options, `reserved: 'exam'` only in
-the mock exam, `calc: true` the question needs calculations (hidden by "Só teoria", tagged "Contas"), `step: '2/3'`
-step of a guided calculation, `code` a code listing shown above the options.
+the mock exam, `calc: true` the question needs calculations (hidden by "Só teoria", the only ones in "Só contas", tagged "Contas"), `step: '2/3'`
+step of a guided calculation, `code` a code listing shown above the options, `k` the exam problem type (when it is not the
+one of its lesson; `k: ''` for none), `kind: 'method' | 'check' | 'bug'` (Que método? / Verificação / Onde está o erro?).
 
 New file? Add it to the course's list in `manifest.json`. Lessons work the same way with `STUDY.lessons`.
 
@@ -74,13 +77,33 @@ New file? Add it to the course's list in `manifest.json`. Lessons work the same 
    Each stop opens with `brief` (HTML: what this part of the exam asks), then each lesson followed by two of its questions
    (an easy one and one a level up), then `drill` questions (level 3–4 of `topics`, default 5) as in the exam.
    It can live in its own file that calls `STUDY.course({ id, route: {...} })` after course.js.
+   For the exam (see ML): `parts` (`[{ id, label, topics, note }]`, one per test; a part with no topics shows as "em breve"),
+   `past` (the past exams the questions come from, newest first, as written at the start of `src`) and `skills`
+   (`[{ id, t, label, les: [lessons], seen: [past exams], sheet: 'HTML for the cheat sheet' }]`; `core: true` makes a
+   type priority even when it never came up on its own, for base matter such as OC's bits or virtual memory).
 3. Add the course and its files to `manifest.json`.
 
-## Skip, "Só teoria" and theme
+## For the exam: readiness, priority, past exams, cheat sheet
+
+- **Prontidão**: a checklist of the course's `skills` (exam problem types). A type is *pronto* when every one of its
+  questions was answered right and none is waiting in review. The course home shows the summary and the type to train next
+  (the most frequent one not ready yet).
+- **Priority / supplementary**: in a course with `skills`, levels, mastery and the mock exam use only priority questions:
+  those whose type has `seen` exams, or whose `src` names an exam. The rest go to "Suplementares". Aprender and Revisão use all.
+- **Exames anteriores**: questions grouped by the exam in their `src` ("Exame 1 2024/25, 6.b" → "Exame 1 2024/25"),
+  in the exam's order. Works in every course; a `src` naming two exams is left out.
+- **Cábula**: the `sheet` of each type you got wrong at least once (or pinned), with your notes. It can be printed.
+
+## Skip, Tudo / Só teoria / Só contas, and theme
 
 - **Saltar** (key S): in training a skipped question is not a mistake; it goes to Revisão → Saltadas until answered.
   In the mock exam it is a blank answer (0 points).
-- **Só teoria (sem contas)** hides every `calc: true` question in all modes; level progress counts only what is shown.
+- **Tudo / Só teoria / Só contas** (shown only in courses with `calc: true` questions) filters every mode: levels,
+  Aprender, Revisão, mock exam and extras. "Só teoria" hides `calc: true` questions and "Só contas" shows only those.
+  In "Só contas", Aprender skips lessons that have no calculation questions. Level progress counts only what is shown,
+  but a level never locks again when you switch: a level passed with theory only (or with everything) stays open,
+  and a level with nothing shown in the current mode doesn't block the next one. The old `noCalc: true` setting
+  becomes "Só teoria".
 - The top bar cycles the colour theme (auto / claro / escuro), saved per device. Total XP is the sum of all courses.
 
 ## Progress and the "other device" key

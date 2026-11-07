@@ -40,7 +40,8 @@ src/
     rc/                  Redes de Computadores (render.js draws space-time diagrams, topologies, addresses)
     ml/                  Aprendizagem / Machine Learning (render.js draws data tables, matrices,
                          point plots and decision trees; exam problems split into steps in questions/exam.js)
-    so/                  Sistemas Operativos (route.js: the exam route; render.js: address fields and page tables / TLB)
+    so/                  Sistemas Operativos (route.js: the exam route; skills.js: past exams and problem types;
+                         render.js: address fields and page tables / TLB)
   vendor/qrcode.js       QR code generator (MIT, Kazuhiko Arase)
 tools/validate.js        content checks, used by build.py
 ```

@@ -104,6 +104,7 @@
         "render.js",
         "course.js",
         "route.js",
+        "skills.js",
         "lessons/fs.js",
         "lessons/proc.js",
         "lessons/sync.js",

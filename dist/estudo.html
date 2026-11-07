@@ -11726,6 +11726,86 @@ STUDY.course({
   },
 });
 
+/* --- courses/so/skills.js --- */
+/* ===== SO exam readiness: past exams and the problem types they ask =====
+   seen: the exams where the type came up. Every lesson belongs to exactly one type. */
+const SO_A = 'Exame 2025/26, 2.ª época', SO_B = 'Exame 2025/26, 1.ª época', SO_C = 'Exame 2024/25, 2.ª época', SO_D = 'Exame 2024/25, 1.ª época',
+  SO_E = 'Exame 2023/24, 2.ª época', SO_F = 'Exame 2023/24, 1.ª época', SO_G = 'Exame 2022/23, 2.ª época', SO_H = 'Exame 2022/23, 1.ª época';
+STUDY.course({
+  id: 'so',
+  // Past exams the questions come from (newest first), as written at the start of "src".
+  past: [SO_A, SO_B, SO_C, SO_D, SO_E, SO_F, SO_G, SO_H],
+  skills: [
+/* --- Grupo 1: sistemas de ficheiros --- */
+{ id: 'so-path', t: 'fs', les: ['f-path'], label: 'Caminhos relativos com . e ..', seen: [SO_F, SO_H],
+  sheet: '<p>Parte do diretório corrente; cada <b>..</b> tira o último componente, <b>.</b> não faz nada. Na raiz, .. continua em /.</p>' },
+{ id: 'so-dup', t: 'fs', les: ['f-tables', 'f-dup'], label: 'open, dup e o cursor partilhado', seen: [SO_A, SO_B, SO_F, SO_G, SO_H],
+  sheet: '<p>fd (por processo) → <b>ficheiros abertos</b> (global: cursor + modo) → inode.</p><p><b>dup e fork partilham a entrada</b> (mesmo cursor). Outro <b>open</b> = entrada nova, cursor a 0.</p><p>read e write avançam o cursor; escrever a meio sobrescreve. lseek SEEK_SET põe, SEEK_CUR soma.</p>' },
+{ id: 'so-redir', t: 'fs', les: ['f-redir'], label: 'Redireção com close + dup e o buffer do printf', seen: [SO_B, SO_C, SO_D, SO_E],
+  sheet: '<p><b>close(1); dup(fd)</b> → o stdout passa a ser o ficheiro (dup dá o menor fd livre). Para o stdin: close(0); dup(fd), com O_RDONLY.</p><p>close(fd) depois do dup não fecha o ficheiro: o 1 ainda lá está.</p><p>printf fica no buffer até fflush ou ao fim do processo; sai na posição do cursor <b>nesse momento</b>.</p>' },
+{ id: 'so-fscalls', t: 'fs', les: ['f-calls'], label: 'open, as flags e mkfifo', seen: [SO_D, SO_E],
+  sheet: '<p>open(caminho, modo[, permissões]): permissões só com <b>O_CREAT</b>. O_TRUNC põe a 0; O_APPEND escreve sempre no fim.</p><p>mkfifo(caminho, permissões): só cria, não abre.</p>' },
+{ id: 'so-alloc', t: 'fs', les: ['f-alloc', 'f-links'], label: 'FAT, CP/M, VFS, diretórios e links', seen: [SO_A, SO_C, SO_G, SO_H],
+  sheet: '<p>FAT: uma entrada <b>por bloco</b>, lista ligada. CP/M: lista de blocos no diretório. Blocos fixos: interna sim, <b>externa não</b>.</p><p>VFS: o superbloco aponta para as funções de cada tipo de FS. Diretórios: procurar por nome mais depressa.</p><p>Hard link = outro nome do inode (o ficheiro vai quando não há links nem quem o tenha aberto). Apagar um symlink nunca apaga o alvo.</p>' },
+{ id: 'so-inode', t: 'fs', les: ['f-inode'], label: 'O inode do ext3', seen: [SO_B, SO_D, SO_E, SO_F],
+  sheet: '<p>Inode: dono, permissões, tamanho, datas, nº de links, 12 diretas + simples + dupla + tripla. <b>Sem nome.</b></p><p>Nº de ficheiros ≤ nº de inodes; hard links não gastam inodes.</p>' },
+{ id: 'so-blocks', t: 'fs', les: ['f-blocks'], label: 'Contar blocos de referências no ext3', seen: [SO_A, SO_B, SO_C, SO_D, SO_E, SO_F, SO_G],
+  sheet: '<p>N = tamanho / bloco; R = bloco / referência (32 bits = 4 B, 64 bits = 8 B).</p><p>N ≤ 12 → <b>0</b>. Senão simples = 1 bloco (R refs). O que sobrar: dupla = <b>1 + ⌈resto/R⌉</b>.</p><p>Ex.: 1 KB, 4 B, 358 KB → 346 − 256 = 90 → 1 + 2 = <b>3</b>.</p>' },
+/* --- Grupo 2: processos e tarefas --- */
+{ id: 'so-fork', t: 'proc', les: ['p-fork', 'p-trace'], label: 'Prever o output de fork e wait', seen: [SO_B, SO_C, SO_D, SO_E, SO_H],
+  sheet: '<p>fork: PID do filho no pai, <b>0</b> no filho. Variáveis copiadas.</p><p>Desenha a <b>árvore</b>; o <b>wait</b> fixa a ordem; sem wait, qualquer ordem. n forks seguidos = 2ⁿ processos.</p><p>printf sem \\n nem fflush antes de um fork sai duas vezes.</p>' },
+{ id: 'so-exec', t: 'proc', les: ['p-exec'], label: 'fork + exec: o que corre depois', seen: [SO_A, SO_B, SO_C, SO_E, SO_F, SO_G, SO_H],
+  sheet: '<p>exec bem sucedida <b>nunca regressa</b>: risca o resto do código desse processo. Se falha, devolve −1 e segue.</p><p>Mantém PID e ficheiros abertos; não cria processos.</p>' },
+{ id: 'so-wait', t: 'proc', les: ['p-wait'], label: 'exit, wait, zombies e o estado de saída', seen: [SO_B, SO_G, SO_H],
+  sheet: '<p>wait: devolve logo se há zombie, bloqueia se há filhos vivos, <b>−1 sem filhos</b>.</p><p>WIFEXITED / WEXITSTATUS (o n do exit) / WIFSIGNALED (morreu por signal).</p><p>exit fecha ficheiros e deixa a task_struct (zombie) até ao wait.</p>' },
+{ id: 'so-thr', t: 'proc', les: ['p-thr', 'p-thrbugs'], label: 'Threads: o que partilham e os erros clássicos', seen: [SO_A, SO_B, SO_C, SO_D, SO_E, SO_F],
+  sheet: '<p>Partilham globais, heap e ficheiros; cada uma tem <b>pilha</b> e registos. join espera por uma tarefa concreta.</p><p><b>&amp;i</b> para várias tarefas → leem o valor quando calha. Devolver &amp;local → <b>indefinido</b>. Devolver &amp;global → vê o valor atual. a++ sem trinco perde incrementos.</p>' },
+{ id: 'so-modes', t: 'proc', les: ['p-modes'], label: 'Modo núcleo, chamadas de sistema e setuid', seen: [SO_A, SO_D, SO_E, SO_F],
+  sheet: '<p>Chamada de sistema = trap para modo núcleo, com parâmetros da aplicação. I/O é privilegiado; a MMU traduz em qualquer modo.</p><p>Bit setuid → UID efetivo = <b>dono do ficheiro</b> (chmod u+s). A chamada setuid() é outra coisa.</p>' },
+/* --- Grupo 3: exclusão mútua --- */
+{ id: 'so-lockimpl', t: 'mutex', les: ['m-race', 'm-impl'], label: 'Implementar trincos: quem faz espera ativa', seen: [SO_A, SO_B, SO_D, SO_E, SO_F, SO_G],
+  sheet: '<p>Lamport e test-and-set: <b>espera ativa</b>. Inibir interrupções: só núcleo e só 1 CPU. Trinco do núcleo: bloqueia (fila), com um trinco interno de espera ativa só para gerir a fila.</p><p>Sem a variável escolha, Lamport perde a exclusão mútua.</p>' },
+{ id: 'so-gran', t: 'mutex', les: ['m-gran'], label: 'Granularidade e read-write locks', seen: [SO_B, SO_C, SO_F, SO_G, SO_H],
+  sheet: '<p>Fina = mais paralelismo, mais custo e risco de interblocagem (resolve-se com ordem global). rwlock: muitos leitores ou um escritor; mais pesado, <b>nem sempre</b> melhor. Um mutex não garante ausência de míngua.</p>' },
+{ id: 'so-dead', t: 'mutex', les: ['m-dead'], label: 'Interblocagem e jantar dos filósofos', seen: [SO_A, SO_B, SO_C, SO_D, SO_E, SO_F, SO_G],
+  sheet: '<p>Ordem global de aquisição → sem interblocagem. try_lock → sem interblocagem mas com <b>livelock</b>; recuo <b>aleatório</b> evita-o (probabilisticamente), recuo determinístico pode nunca comer. "Todos pela direita" bloqueia.</p>' },
+/* --- Grupo 4: semáforos e variáveis de condição --- */
+{ id: 'so-sem', t: 'sync', les: ['s-sem'], label: 'Semáforos: valor inicial e operações', seen: [SO_A, SO_B, SO_G, SO_H],
+  sheet: '<p>esperar: decrementa ou bloqueia. assinalar: acorda ou incrementa, <b>nunca bloqueia</b>. Tem memória.</p><p>Inicial: <b>N</b> recursos, <b>0</b> evento (T1 espera, T2 assinala), <b>1</b> mutex (menos eficiente).</p>' },
+{ id: 'so-pc', t: 'sync', les: ['s-pc', 's-pccv'], label: 'Produtor-consumidor (semáforos ou condições)', seen: [SO_A, SO_B, SO_C, SO_D, SO_H],
+  sheet: '<p>livres = N, cheias = 0. <b>sem_wait antes do lock</b> (ao contrário: interblocagem). Trocar unlock e sem_post: só menos eficiente.</p><p>Um trinco por lado dá mais paralelismo; com 1 produtor e 1 consumidor o trinco pode sair.</p><p>Com condições: lock → while (count == N ou 0) wait → mexer → signal ao outro lado → unlock.</p>' },
+{ id: 'so-cv', t: 'sync', les: ['s-cv'], label: 'Variáveis de condição: wait, signal, broadcast', seen: [SO_C, SO_D, SO_G, SO_H],
+  sheet: '<p>cond_wait(c, m) larga m e retoma-o ao acordar. Sempre <b>while</b>. Sem memória: o estado vive num contador.</p><p><b>broadcast</b> quando vários podem avançar ou há tipos diferentes na mesma condição.</p>' },
+{ id: 'so-boxes', t: 'sync', les: ['s-rw', 's-boxes'], label: 'Preencher caixas: barbeiro, leitores-escritores, simulações', seen: [SO_A, SO_C, SO_D, SO_E, SO_F],
+  sheet: '<p>Caixa a caixa: partilhado? <b>lock/unlock</b>. Posso ter de esperar? <b>while + cond_wait</b> ou <b>sem_wait antes do lock</b>. Mudei algo de que alguém espera? <b>signal / broadcast / sem_post</b> dessa pessoa.</p><p>Antes de bloquear num semáforo, larga o trinco. Quem sai acorda quem entra. Todos os caminhos fazem unlock.</p>' },
+/* --- Grupo 5: signals --- */
+{ id: 'so-sigapi', t: 'sig', les: ['g-api'], label: 'kill, signal, pause e programas com handlers', seen: [SO_A, SO_B, SO_C, SO_D, SO_F, SO_G],
+  sheet: '<p><b>kill(pid_destino, sig)</b> envia; signal(sig, h) associa; <b>pause()</b> espera; alarm(s) → SIGALRM.</p><p>fork herda as ações; exec repõe handlers mas <b>mantém os ignorados</b>. SIGKILL não se ignora.</p>' },
+{ id: 'so-sigdel', t: 'sig', les: ['g-what', 'g-how'], label: 'Quando e como corre o handler', seen: [SO_B, SO_C, SO_D, SO_E, SO_F, SO_H],
+  sheet: '<p>Signal = só um número. Pendente até o processo <b>voltar ao modo utilizador</b>; o handler corre em modo utilizador. <b>Sem fila.</b></p><p>Multi-tarefa: qualquer tarefa que não o tenha bloqueado. System V: reinstalar no handler. Nada de printf / malloc no handler (write sim).</p>' },
+/* --- Grupo 6: pipes, núcleo e escalonamento --- */
+{ id: 'so-pipe', t: 'pipe', les: ['i-pipe', 'i-fifo', 'i-redir'], label: 'Pipes e FIFOs com fork', seen: [SO_A, SO_B, SO_C, SO_D, SO_E, SO_F, SO_H],
+  sheet: '<p>fds[0] lê, fds[1] escreve. Vazio + escritor vivo → <b>bloqueia</b>; sem escritores → <b>0 (EOF)</b>; sem leitores → SIGPIPE.</p><p>Os bytes lidos saem: conta-os. Quem ainda tem fds[1] aberto (o próprio leitor incluído) impede o EOF.</p><p>FIFO: nome no FS, mkfifo + open (bloqueia até haver o outro lado).</p>' },
+{ id: 'so-kernel', t: 'pipe', les: ['i-kernel'], label: 'Arquitetura do núcleo e despacho', seen: [SO_A, SO_B, SO_C, SO_D, SO_E, SO_F],
+  sheet: '<p>Núcleo entra por interrupções, exceções e chamadas de sistema. Monolítico (Linux) = eficiente; micro-núcleo = resiliente (serviços em modo utilizador).</p><p>Pilha do núcleo = <b>proteção</b>. Despacho acaba em <b>RTI</b>. Comutar tarefas é mais barato do que processos.</p>' },
+{ id: 'so-states', t: 'sched', les: ['c-states'], label: 'Estados e transições', seen: [SO_C, SO_E, SO_F],
+  sheet: '<p>Não existem: <b>Bloqueado → Em execução</b> e <b>Executável → Bloqueado</b>. Desbloquear leva a executável.</p>' },
+{ id: 'so-unix', t: 'sched', les: ['c-unix'], label: 'Prioridades do Unix clássico', seen: [SO_C, SO_D, SO_E, SO_F, SO_G],
+  sheet: '<p><b>Menor número = mais prioritário</b>; núcleo negativo (depende do recurso), utilizador positivo.</p><p>P = base + CPU/2 + nice, com o CPU a decair: bloqueado para sempre → <b>base</b>. Interativos sobem. nice negativo só root.</p>' },
+{ id: 'so-cfs', t: 'sched', les: ['c-cfs'], label: 'CFS: latência efetiva e vruntime', seen: [SO_A, SO_B, SO_C, SO_D, SO_E, SO_G, SO_H],
+  sheet: '<p>n = só <b>executáveis</b>. Se L/n ≥ g: latência = <b>L</b>; senão <b>n × g</b>.</p><p>Corre o menor vruntime (árvore red-black). Novo processo: vruntime mínimo atual. Quem acorda com menor vruntime tira o CPU. Fatia não é fixa.</p>' },
+/* --- Grupo 7: gestão de memória --- */
+{ id: 'so-page', t: 'mem', les: ['v-why', 'v-page', 'v-multi'], label: 'Dimensões: páginas, tabelas e níveis', seen: [SO_B, SO_C, SO_D, SO_E, SO_F, SO_H],
+  sheet: '<p>Página = <b>2^deslocamento</b>; entradas = <b>2^bits de página</b>. Bits por nível = log₂(página / PTE). Bits livres na PTE = tamanho da PTE − bits da trama.</p><p>Paginação: interna sim, externa não. Páginas maiores: mais interna, faltas mais lentas.</p>' },
+{ id: 'so-mmu', t: 'mem', les: ['v-pte', 'v-tlb'], label: 'A tabela da MMU: TLB, falta de página, proteção', seen: [SO_A, SO_B, SO_C, SO_D, SO_E, SO_F, SO_H],
+  sheet: '<p>1. Parte o endereço (4 KB → 3 dígitos hex de deslocamento). 2. TLB válida? hit. 3. Não existe na tabela → <b>inválido</b>; presente N → <b>falta de página</b> (trama nova). 4. Acesso proibido → <b>proteção</b>. 5. Físico = base ‖ deslocamento.</p><p>Depois de um miss a página fica na TLB. Mudar de processo limpa a TLB. Overhead = misses × níveis / acessos.</p>' },
+{ id: 'so-seg', t: 'mem', les: ['v-seg'], label: 'Segmentação', seen: [SO_A, SO_C, SO_E, SO_G],
+  sheet: '<p>Base + limite, segmento <b>contíguo</b>, fragmentação <b>externa</b>. Tamanho máx = 2^deslocamento; nº de segmentos = 2^bits de segmento; tabelas = processos × segmentos × tamanho da entrada.</p>' },
+{ id: 'so-cow', t: 'mem', les: ['v-cow'], label: 'fork e copy-on-write', seen: [SO_G],
+  sheet: '<p>Logo depois do fork: mesmas tramas; as graváveis ficam <b>só leitura + COW</b> nos dois. Na 1.ª escrita: trama nova com RW para quem escreveu. A página virtual não muda.</p>' },
+  ],
+});
+
 /* --- courses/so/lessons/fs.js --- */
 /* ===== SO lessons: file systems (Grupo 1) ===== */
 STUDY.lessons('so', [

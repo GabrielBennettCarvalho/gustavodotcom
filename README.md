@@ -40,6 +40,8 @@ src/
     rc/                  Redes de Computadores (render.js draws space-time diagrams, topologies, addresses)
     ml/                  Aprendizagem / Machine Learning (render.js draws data tables, matrices,
                          point plots and decision trees; exam problems split into steps in questions/exam.js)
+    so/                  Sistemas Operativos (route.js: the exam route; skills.js: past exams and problem types;
+                         render.js: address fields and page tables / TLB)
   vendor/qrcode.js       QR code generator (MIT, Kazuhiko Arase)
 tools/validate.js        content checks, used by build.py
 ```
@@ -71,6 +73,11 @@ New file? Add it to the course's list in `manifest.json`. Lessons work the same 
    `start`/`end` icons, legend), `exam: { n, min, penalty: 'options' }` (mock exam size, minutes and real grading where a
    wrong answer costs 1/number of options), `verdict: { ok, ko }` (tags such as HIT/MISS), `logo` (SVG for the top bar).
    Course-only CSS can be scoped with `:root[data-course="<id>"]`.
+   Also optional (see SO): `route`, the **exam route** mode. It follows the parts of the exam in order:
+   `route: { title, desc, heading, intro, stops: [{ id, part, title, pts, sum, brief, drillIntro, lessons: [ids], topics: [t], drill }] }`.
+   Each stop opens with `brief` (HTML: what this part of the exam asks), then each lesson followed by two of its questions
+   (an easy one and one a level up), then `drill` questions (level 3–4 of `topics`, default 5) as in the exam.
+   It can live in its own file that calls `STUDY.course({ id, route: {...} })` after course.js.
    For the exam (see ML): `parts` (`[{ id, label, topics, note, past }]`, one per test; a part with no topics shows as "em breve"; `past` lists that test's past exams),
    `past` (the past exams the questions come from, newest first, as written at the start of `src`) and `skills`
    (`[{ id, t, label, les: [lessons], seen: [past exams], sheet: 'HTML for the cheat sheet' }]`; `core: true` makes a

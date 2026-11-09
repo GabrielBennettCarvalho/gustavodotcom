@@ -35,7 +35,7 @@ applyTheme();
 
 /* ---------- state ----------
    G holds everything; S points at the open course's slice (G.c[id]). */
-const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, skipped: {}, pins: {}, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '', calcMode: 'all', part: 'all' }, rounds: 0, sessions: [] });
+const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, skipped: {}, pins: {}, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '', calcMode: 'all', part: 'all' }, rounds: 0, sessions: [], route: {} });
 let G = ls.get(LS_KEY);
 if (!G || G.v !== 2) G = { v: 2, cur: null, c: {}, updatedAt: 0 };
 // Progress from the AMS-only version (same browser, same origin): merged once, even if this
@@ -200,7 +200,7 @@ let ses = null; // active session
 function go(name, extra = {}) { view = Object.assign({ name }, extra); renderView(); window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' }); }
 function renderView() {
   const v = C || view.name === 'sync' ? view.name : 'courses';
-  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : Home();
+  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'routepick' ? RoutePick() : v === 'brief' ? BriefScreen() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : Home();
   document.documentElement.dataset.course = C && v !== 'courses' && v !== 'sync' ? C.id : '';
   $app.innerHTML = Top() + html;
   document.title = C && v !== 'courses' ? `${C.code} · Estudo IST` : 'Estudo IST';
@@ -270,6 +270,8 @@ function Home() {
     ['exam', 'Exame simulado', X.desc || `${X.n} perguntas, ${X.min} minutos, sem feedback até ao fim.${X.penalty ? ' Cotação real: resposta errada desconta, saltar deixa em branco.' : ''} Usa primeiro perguntas que não aparecem nos outros modos.`, nFresh ? `${nFresh} perguntas inéditas reservadas` : 'condições de teste', glyph('clock')],
     ['library', 'Biblioteca de teoria', 'Todas as lições, por tema, para leres de seguida.', `${pt.filter(k => LESSONS.some(l => l.t === k)).length} temas`, glyph('list')],
   ];
+  const R = C.route; if (R && R.stops && R.stops.length) { const nd = R.stops.filter(x => routeProgress(x).pct >= UNLOCK).length;
+    std.unshift(['route', esc(R.title || 'Percurso do exame'), esc(R.desc || 'O exame, parte a parte: o que sai, a teoria com exemplos e analogias, e exercícios como no exame.'), `${R.stops.length} partes · ${nd} feita${nd === 1 ? '' : 's'}`, glyph('route')]); }
   const card = ([k, t, d, m, g], act = 'mode') => `<button class="mode" data-act="${act}" data-k="${k}"><h3>${g}${t}</h3><p>${d}</p><span class="meta">${m}</span></button>`;
   const api = extraApi();
   const extras = (C.extras || []).filter(x => !x.hide || !x.hide(api)).map(x => card([x.id, esc(x.title), esc(x.desc), esc(x.meta ? x.meta(api) : ''), glyph(x.icon || 'star')], 'extra')).join('');
@@ -334,8 +336,51 @@ function calcSwitch() {
     `<button data-act="calcMode" data-k="${k}" aria-pressed="${cur === k}" title="${d}">${t} <span class="mono">${pool.filter(q => shown(q, k)).length}</span></button>`).join('')}</div>`;
 }
 function glyph(k) {
-  const p = { book: '<path d="M4 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H4z M24 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/>', loop: '<path d="M6 13a8 8 0 0 1 14-5l2 2 M22 15a8 8 0 0 1-14 5l-2-2 M22 4v6h-6 M6 24v-6h6"/>', lens: '<circle cx="12" cy="12" r="7"/><path d="M17 17l6 6 M9 12h6 M12 9v6"/>', bolt: '<path d="M15 3L6 16h7l-1 9 9-13h-7z"/>', clock: '<circle cx="14" cy="14" r="10"/><path d="M14 8v6l4 3"/>', list: '<path d="M9 7h14 M9 14h14 M9 21h14"/><circle cx="5" cy="7" r="1.3"/><circle cx="5" cy="14" r="1.3"/><circle cx="5" cy="21" r="1.3"/>', plus: '<path d="M14 6v16 M6 14h16"/>', pen: '<path d="M6 22l2-6 11-11 4 4-11 11z M16 7l4 4"/>', star: '<path d="M14 3l3.2 7 7.3.6-5.6 4.8 1.8 7.3L14 18.8 7.3 22.7l1.8-7.3L3.5 10.6l7.3-.6z"/>', flag: '<path d="M6 25V4 M6 5h14l-3 5 3 5H6"/>', sun: '<circle cx="14" cy="14" r="5"/><path d="M14 3v3 M14 22v3 M3 14h3 M22 14h3 M6.2 6.2l2.1 2.1 M19.7 19.7l2.1 2.1 M6.2 21.8l2.1-2.1 M19.7 8.3l2.1-2.1"/>', moon: '<path d="M21 17.5A9 9 0 0 1 10.5 7a9 9 0 1 0 10.5 10.5z"/>', auto: '<circle cx="14" cy="14" r="9"/><path d="M14 5a9 9 0 0 1 0 18z" fill="currentColor"/>', skip: '<path d="M4 18c3-8 13-10 18-3 M22 9v6h-6 M4 22h20"/>', swap: '<path d="M4 9h18l-4-4 M24 19H6l4 4"/>', qr: '<path d="M4 4h7v7H4z M17 4h7v7h-7z M4 17h7v7H4z M17 17h3v3h-3z M21 21h3v3h-3z"/>', share: '<path d="M14 3v14 M9 8l5-5 5 5 M6 13v10h16V13"/>', copy: '<path d="M9 9h13v14H9z M6 19V5h13"/>' }[k] || '';
+  const p = { book: '<path d="M4 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H4z M24 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/>', loop: '<path d="M6 13a8 8 0 0 1 14-5l2 2 M22 15a8 8 0 0 1-14 5l-2-2 M22 4v6h-6 M6 24v-6h6"/>', lens: '<circle cx="12" cy="12" r="7"/><path d="M17 17l6 6 M9 12h6 M12 9v6"/>', bolt: '<path d="M15 3L6 16h7l-1 9 9-13h-7z"/>', clock: '<circle cx="14" cy="14" r="10"/><path d="M14 8v6l4 3"/>', list: '<path d="M9 7h14 M9 14h14 M9 21h14"/><circle cx="5" cy="7" r="1.3"/><circle cx="5" cy="14" r="1.3"/><circle cx="5" cy="21" r="1.3"/>', plus: '<path d="M14 6v16 M6 14h16"/>', pen: '<path d="M6 22l2-6 11-11 4 4-11 11z M16 7l4 4"/>', star: '<path d="M14 3l3.2 7 7.3.6-5.6 4.8 1.8 7.3L14 18.8 7.3 22.7l1.8-7.3L3.5 10.6l7.3-.6z"/>', flag: '<path d="M6 25V4 M6 5h14l-3 5 3 5H6"/>', sun: '<circle cx="14" cy="14" r="5"/><path d="M14 3v3 M14 22v3 M3 14h3 M22 14h3 M6.2 6.2l2.1 2.1 M19.7 19.7l2.1 2.1 M6.2 21.8l2.1-2.1 M19.7 8.3l2.1-2.1"/>', moon: '<path d="M21 17.5A9 9 0 0 1 10.5 7a9 9 0 1 0 10.5 10.5z"/>', auto: '<circle cx="14" cy="14" r="9"/><path d="M14 5a9 9 0 0 1 0 18z" fill="currentColor"/>', skip: '<path d="M4 18c3-8 13-10 18-3 M22 9v6h-6 M4 22h20"/>', swap: '<path d="M4 9h18l-4-4 M24 19H6l4 4"/>', qr: '<path d="M4 4h7v7H4z M17 4h7v7h-7z M4 17h7v7H4z M17 17h3v3h-3z M21 21h3v3h-3z"/>', share: '<path d="M14 3v14 M9 8l5-5 5 5 M6 13v10h16V13"/>', copy: '<path d="M9 9h13v14H9z M6 19V5h13"/>', route: '<circle cx="6" cy="22" r="2.5"/><circle cx="22" cy="6" r="2.5"/><path d="M8.5 22H18a4 4 0 0 0 0-8h-8a4 4 0 0 1 0-8h9.5"/>' }[k] || '';
   return `<svg class="glyph" viewBox="0 0 28 28" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+}
+
+/* ---------- EXAM ROUTE: the exam, part by part ----------
+   course.route = { title, desc, stops: [{ id, part, title, pts, brief, drillIntro, lessons: [ids], topics: [t], drill }] }
+   A stop: briefing (what this part of the exam asks) → each lesson followed by its exercises → a round "as in the exam". */
+const stopQs = x => BANK.filter(q => !isReserved(q) && shown(q) && (x.lessons || []).includes(q.les));
+function routeProgress(x) { const qs = stopQs(x); const done = qs.filter(q => peek(q.id).c > 0).length; return { done, total: qs.length, pct: qs.length ? done / qs.length : 0 }; }
+function RoutePick() {
+  const R = C.route; const last = S.route || {};
+  const next = R.stops.find(x => routeProgress(x).pct < UNLOCK) || R.stops[0];
+  return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="eyebrow">${esc(R.title || 'Percurso do exame')}</span></div>
+  <h2 style="margin-bottom:6px">${esc(R.heading || 'O exame, parte a parte')}</h2><p class="muted" style="margin-bottom:14px">${esc(R.intro || 'Cada parte começa pelo que o exame costuma pedir, explica a teoria com exemplos e analogias e acaba com exercícios no estilo do exame. Faz pela ordem do exame ou salta para a que te preocupa.')}</p>
+  <ol class="route">${R.stops.map((x, i) => { const p = routeProgress(x); const isNext = x === next; const T = TOPICS[(x.topics || [])[0]] || {};
+    return `<li class="stop ${p.pct >= UNLOCK ? 'done' : ''} ${isNext ? 'next' : ''}" style="--c:${T.c || 'var(--accent)'}">
+      <span class="pin" aria-hidden="true">${p.pct >= UNLOCK ? '✓' : i + 1}</span>
+      <button class="stop-card" data-act="routeStop" data-k="${esc(x.id)}">
+        <span class="eyebrow">${esc(x.part || `Parte ${i + 1}`)}${x.pts ? ` · ${esc(x.pts)}` : ''}${last[x.id] ? ' · já passaste aqui' : ''}</span>
+        <h3>${esc(x.title)}</h3>${x.sum ? `<p>${esc(x.sum)}</p>` : ''}
+        <span class="lvl-bar"><span style="width:${Math.round(p.pct * 100)}%"></span></span>
+        <span class="meta">${(x.lessons || []).length} lições · ${p.done}/${p.total} exercícios acertados${isNext ? ' · <b>a seguir</b>' : ''}</span>
+      </button></li>`; }).join('')}</ol>`;
+}
+function routeItems(x) {
+  const items = [{ kind: 'brief', stop: x.id, part: 'intro' }]; const used = new Set();
+  const base = BANK.filter(q => !isReserved(q) && shown(q));
+  (x.lessons || []).forEach(lid => { if (!LBYID[lid]) return; items.push({ kind: 'lesson', id: lid });
+    const qs = base.filter(q => q.les === lid && !used.has(q.id));
+    const ord = qs.sort((a, b) => a.l - b.l || peek(a.id).c - peek(b.id).c || Math.random() - .5);
+    // one to check the idea, one a step up (a different level when there is one)
+    const first = ord[0]; const second = first && (ord.find(q => q !== first && q.l > first.l) || ord[1]);
+    [first, second].filter(Boolean).forEach(q => { used.add(q.id); items.push(makeItem(q)); }); });
+  const n = x.drill === undefined ? 5 : x.drill;
+  if (n) { const topics = x.topics || []; let dq = pick(base.filter(q => topics.includes(q.t) && q.l >= 3 && !used.has(q.id)), n);
+    if (dq.length < n) dq = dq.concat(pick(base.filter(q => topics.includes(q.t) && q.l === 2 && !used.has(q.id) && !dq.includes(q)), n - dq.length));
+    if (dq.length) { items.push({ kind: 'brief', stop: x.id, part: 'drill' }); shuffle(dq).forEach(q => items.push(makeItem(q))); } }
+  return items;
+}
+function BriefScreen() {
+  const it = curItem(); const x = C.route.stops.find(s => s.id === it.stop); const drill = it.part === 'drill'; const T = TOPICS[(x.topics || [])[0]] || { c: 'var(--accent)', short: '' };
+  const body = drill ? (x.drillIntro || '<p>Agora sem rede: perguntas como as do exame, misturadas. Responde como se fosse a sério e usa <b>Saltar</b> se precisares de papel.</p>') : x.brief;
+  return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${esc(x.part || '')}</span><span class="mono muted">${drill ? 'como no exame' : 'briefing'}</span></div>
+    <article class="card brief"><span class="eyebrow">${drill ? 'Ronda final' : `${esc(x.part || '')}${x.pts ? ` · ${esc(x.pts)}` : ''}`}</span><h2 style="margin:6px 0 12px">${drill ? `${esc(x.title)}: como sai no exame` : esc(x.title)}</h2><div class="lesson">${body}</div>
+    <div class="qfoot"><button class="btn primary" data-act="next" id="nextBtn">${drill ? 'Começar a ronda →' : 'Vamos à teoria →'}</button><span class="kbd">Enter</span><span class="spacer"></span><button class="btn ghost small" data-act="quit">Terminar</button></div></article>`;
 }
 
 /* ---------- REVIEW: two tabs ---------- */
@@ -364,10 +409,11 @@ function buildExam() {
   if (qs.length < EXAM_N) qs = qs.concat(shuffle(BANK.filter(q => inTopics(q) && isReserved(q) && !used.has(q.id))).slice(0, EXAM_N - qs.length));
   return shuffle(qs);
 }
+const viewOf = it => it.kind === 'lesson' ? 'lesson' : it.kind === 'brief' ? 'brief' : 'quiz';
 function start(mode, opts = {}) {
   let items = [], title = '', timeLimit = 0;
   const pool = trainPool();
-  if (!BANK.some(inTopics)) { toast('Escolhe pelo menos um tema.'); return; }
+  if (mode !== 'route' && !BANK.some(inTopics)) { toast('Escolhe pelo menos um tema.'); return; }
   if (mode === 'level') { const L = opts.level; items = pick(pool.filter(q => q.l === L), 10).map(makeItem); title = `Nível ${L} · ${LEVELS[L - 1].t}`; }
   if (mode === 'review') { items = reviewPool().slice(0, 12).map(makeItem); title = 'Revisão · erros de treino'; if (!items.length) { toast('Ainda não tens erros de treino para rever.'); return; } }
   if (mode === 'skipped') { items = skippedPool().slice(0, 12).map(makeItem); title = 'Revisão · saltadas'; if (!items.length) { toast('Não tens perguntas saltadas.'); return; } }
@@ -398,9 +444,10 @@ function start(mode, opts = {}) {
       if (!qs.length && calcMode() === 'math') return;
       items.push({ kind: 'lesson', id: l.id }); qs.forEach(q => items.push(makeItem(q))); });
   }
+  if (mode === 'route') { const x = (C.route.stops || []).find(s => s.id === opts.stop); if (!x) return; items = routeItems(x); title = `${x.part ? x.part + ' · ' : ''}${x.title}`; }
   if (mode === 'retry') { items = opts.ids.map(id => BYID[id]).filter(Boolean).map(makeItem); title = 'Repetir erros'; }
   if (!items.length) { toast('Não há perguntas para estes filtros.'); return; }
-  ses = { mode, title, items, i: 0, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, nextWasOpen: !!opts.level && opts.level < LEVELS.length && unlocked(opts.level + 1), topic: opts.topic, skill: mode === 'skill' ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
+  ses = { mode, title, items, i: 0, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, stop: opts.stop, nextWasOpen: !!opts.level && opts.level < LEVELS.length && unlocked(opts.level + 1), topic: opts.topic, skill: mode === 'skill' ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
   if (timeLimit) startTimer();
-  go(items[0].kind === 'lesson' ? 'lesson' : 'quiz');
+  go(viewOf(items[0]));
 }

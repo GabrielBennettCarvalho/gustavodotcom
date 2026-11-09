@@ -102,6 +102,31 @@
         "questions/exam23.js",
         "questions/prep.js"
       ]
+    },
+    "so": {
+      "styles": [
+        "theme.css"
+      ],
+      "files": [
+        "render.js",
+        "course.js",
+        "route.js",
+        "skills.js",
+        "lessons/fs.js",
+        "lessons/proc.js",
+        "lessons/sync.js",
+        "lessons/sig-pipe-sched.js",
+        "lessons/mem.js",
+        "questions/fs.js",
+        "questions/proc.js",
+        "questions/mutex.js",
+        "questions/sync.js",
+        "questions/sig.js",
+        "questions/pipe.js",
+        "questions/sched.js",
+        "questions/mem.js",
+        "questions/exam.js"
+      ]
     }
   }
 }

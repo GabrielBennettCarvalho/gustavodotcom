@@ -35,6 +35,7 @@
         "render.js",
         "course.js",
         "lessons/base.js",
+        "lessons/part2.js",
         "questions/perf.js",
         "questions/bits.js",
         "questions/isa.js",
@@ -43,7 +44,13 @@
         "questions/cperf.js",
         "questions/opt.js",
         "questions/vm.js",
-        "questions/exam.js"
+        "questions/exam.js",
+        "questions/proc.js",
+        "questions/pipe.js",
+        "questions/haz.js",
+        "questions/ctl.js",
+        "questions/adv.js",
+        "questions/exam2.js"
       ]
     },
     "rc": {

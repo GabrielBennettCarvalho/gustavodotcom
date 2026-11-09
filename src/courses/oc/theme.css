@@ -1,7 +1,7 @@
 /* OC: topic colours (global, used by chips) */
-:root{ --t-perf:#2F6FDB; --t-bits:#7A4FD0; --t-isa:#0F7A5A; --t-comp:#6B7A1F; --t-cache:#C2410C; --t-cperf:#B4235A; --t-opt:#0E7C8C; --t-vm:#8A5A12; --t-ocx:#C2392F; }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --t-perf:#7EA8FF; --t-bits:#B59BFF; --t-isa:#4FD1A0; --t-comp:#C3D35A; --t-cache:#FF8F5C; --t-cperf:#FF7AAE; --t-opt:#5CD4E3; --t-vm:#E3B25F; --t-ocx:#FF7468; }}
-:root[data-theme="dark"]{ --t-perf:#7EA8FF; --t-bits:#B59BFF; --t-isa:#4FD1A0; --t-comp:#C3D35A; --t-cache:#FF8F5C; --t-cperf:#FF7AAE; --t-opt:#5CD4E3; --t-vm:#E3B25F; --t-ocx:#FF7468; }
+:root{ --t-perf:#2F6FDB; --t-bits:#7A4FD0; --t-isa:#0F7A5A; --t-comp:#6B7A1F; --t-cache:#C2410C; --t-cperf:#B4235A; --t-opt:#0E7C8C; --t-vm:#8A5A12; --t-ocx:#C2392F; --t-proc:#3F5FB5; --t-pipe:#1A8A7A; --t-haz:#B8560F; --t-ctl:#A33C8C; --t-adv:#5C6B7A; --t-ocy:#D1344A; }
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --t-perf:#7EA8FF; --t-bits:#B59BFF; --t-isa:#4FD1A0; --t-comp:#C3D35A; --t-cache:#FF8F5C; --t-cperf:#FF7AAE; --t-opt:#5CD4E3; --t-vm:#E3B25F; --t-ocx:#FF7468; --t-proc:#93AEFF; --t-pipe:#5FD9C6; --t-haz:#FFB070; --t-ctl:#F08CD9; --t-adv:#A9B7C6; --t-ocy:#FF8496; }}
+:root[data-theme="dark"]{ --t-perf:#7EA8FF; --t-bits:#B59BFF; --t-isa:#4FD1A0; --t-comp:#C3D35A; --t-cache:#FF8F5C; --t-cperf:#FF7AAE; --t-opt:#5CD4E3; --t-vm:#E3B25F; --t-ocx:#FF7468; --t-proc:#93AEFF; --t-pipe:#5FD9C6; --t-haz:#FFB070; --t-ctl:#F08CD9; --t-adv:#A9B7C6; --t-ocy:#FF8496; }
 
 /* OC look: same blue as AMS, green "block" token, graph paper like an exam scratch sheet */
 :root[data-course="oc"]{ --token:#13A06F; --grid:rgba(39,71,201,.07); }
@@ -18,3 +18,11 @@
 .dg.oc .hl{fill:#FFF0C2}
 .dg.oc .th{fill:color-mix(in srgb,var(--sheet) 88%,#8aa0c0)}
 .dg.oc.tbl{display:block;margin:0 auto;width:100%;height:auto}
+.dg.oc.pipe{display:block;margin:0 auto;width:100%;height:auto}
+.dg.oc .p-F{fill:color-mix(in srgb,var(--sheet) 82%,#2F6FDB)}
+.dg.oc .p-D{fill:color-mix(in srgb,var(--sheet) 82%,#7A4FD0)}
+.dg.oc .p-X{fill:color-mix(in srgb,var(--sheet) 80%,#13A06F)}
+.dg.oc .p-M{fill:color-mix(in srgb,var(--sheet) 80%,#D69A1C)}
+.dg.oc .p-W{fill:color-mix(in srgb,var(--sheet) 82%,#0E7C8C)}
+.dg.oc .p-s{fill:color-mix(in srgb,var(--sheet) 72%,#C2392F);stroke-dasharray:3 2}
+.part-row{margin-top:10px}

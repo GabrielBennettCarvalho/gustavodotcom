@@ -129,11 +129,11 @@ function Results() {
 function LearnPick() {
   return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="eyebrow">Aprender</span></div>
   <h2 style="margin-bottom:6px">Escolhe um tema</h2><p class="muted" style="margin-bottom:14px">Cada lição curta é seguida de duas perguntas sobre ela.</p>
-  <div class="lesson-list">${Object.entries(TOPICS).map(([k, t]) => { const n = LESSONS.filter(l => l.t === k).length; return n ? `<button class="lesson-item" style="--c:${t.c}" data-act="learn" data-k="${k}"><span class="sw"></span><span class="lt">${t.label}</span><span class="lc">${n} lições</span></button>` : ''; }).join('')}</div>`;
+  <div class="lesson-list">${Object.entries(TOPICS).filter(([k]) => partTopics().includes(k)).map(([k, t]) => { const n = LESSONS.filter(l => l.t === k).length; return n ? `<button class="lesson-item" style="--c:${t.c}" data-act="learn" data-k="${k}"><span class="sw"></span><span class="lt">${t.label}</span><span class="lc">${n} lições</span></button>` : ''; }).join('')}</div>`;
 }
 function Library() {
   return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="eyebrow">Biblioteca de teoria</span></div>
-  ${Object.entries(TOPICS).map(([k, t]) => { const ls_ = LESSONS.filter(l => l.t === k); if (!ls_.length) return ''; return `<div class="section"><div class="section-h"><h2>${t.label}</h2></div><div class="lesson-list">${ls_.map(l => `<button class="lesson-item" style="--c:${t.c}" data-act="read" data-id="${esc(l.id)}"><span class="sw"></span><span class="lt">${esc(l.title)}</span><span class="lc">${BANK.filter(q => q.les === l.id && !isReserved(q)).length} perguntas</span></button>`).join('')}</div></div>`; }).join('')}`;
+  ${Object.entries(TOPICS).filter(([k]) => partTopics().includes(k)).map(([k, t]) => { const ls_ = LESSONS.filter(l => l.t === k); if (!ls_.length) return ''; return `<div class="section"><div class="section-h"><h2>${t.label}</h2></div><div class="lesson-list">${ls_.map(l => `<button class="lesson-item" style="--c:${t.c}" data-act="read" data-id="${esc(l.id)}"><span class="sw"></span><span class="lt">${esc(l.title)}</span><span class="lc">${BANK.filter(q => q.les === l.id && !isReserved(q)).length} perguntas</span></button>`).join('')}</div></div>`; }).join('')}`;
 }
 function Reader() {
   const L = LBYID[view.id]; if (!L) return Library(); const T = TOPICS[L.t]; const sib = LESSONS.filter(l => l.t === L.t); const idx = sib.indexOf(L);

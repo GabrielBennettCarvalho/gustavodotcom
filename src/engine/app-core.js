@@ -137,7 +137,8 @@ const trainPool = () => basePool().filter(isCore);
 const suppPool = () => basePool().filter(q => !isCore(q));
 const skillQs = k => BANK.filter(q => skillOf(q) === k && !isReserved(q) && q.origin === 'base');
 const partSkills = () => { const pt = partTopics(); return SKILLS.filter(s => pt.includes(s.t)); };
-const pastList = () => C.past || [];
+// The past exams that count now: the chosen part's, or the whole course's
+const pastList = () => { const p = (C.parts || []).find(x => x.id === S.settings.part); return (p && p.past) || C.past || []; };
 // ready: every question of the type answered right and none waiting in review
 function readiness(k) {
   const qs = skillQs(k); let ok = 0, pend = 0, tried = 0;
@@ -264,14 +265,14 @@ function Home() {
       <span class="n">NÍVEL ${L.n}${L.tag ? ` · ${esc(L.tag)}` : ''}</span><span class="t">${L.t}</span>${L.sub ? `<span class="lat">${esc(L.sub)}</span>` : ''}<span class="pct">${m.done}/${m.total} dominadas</span>
       <span class="bar"><span style="width:${Math.round(m.pct * 100)}%"></span></span></button>`; }).join('');
   const std = [
-    ['learn', 'Aprender', 'Teoria em pequenos cartões, cada um seguido de perguntas sobre ele. Começa por aqui.', `${LESSONS.length} lições`, glyph('book')],
+    ['learn', 'Aprender', 'Teoria em pequenos cartões, cada um seguido de perguntas sobre ele. Começa por aqui.', `${LESSONS.filter(l => pt.includes(l.t)).length} lições`, glyph('book')],
     ['review', 'Revisão', 'Volta às perguntas que falhaste (treino e exame simulado) e às que saltaste.', rp || nSk ? [rp ? `${rp} por rever` : '', nSk ? `${nSk} saltada${nSk === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ') : 'nada por rever ainda', glyph('loop')],
     ['exam', 'Exame simulado', X.desc || `${X.n} perguntas, ${X.min} minutos, sem feedback até ao fim.${X.penalty ? ' Cotação real: resposta errada desconta, saltar deixa em branco.' : ''} Usa primeiro perguntas que não aparecem nos outros modos.`, nFresh ? `${nFresh} perguntas inéditas reservadas` : 'condições de teste', glyph('clock')],
-    ['library', 'Biblioteca de teoria', 'Todas as lições, por tema, para leres de seguida.', `${Object.keys(TOPICS).length} temas`, glyph('list')],
+    ['library', 'Biblioteca de teoria', 'Todas as lições, por tema, para leres de seguida.', `${pt.filter(k => LESSONS.some(l => l.t === k)).length} temas`, glyph('list')],
   ];
   const card = ([k, t, d, m, g], act = 'mode') => `<button class="mode" data-act="${act}" data-k="${k}"><h3>${g}${t}</h3><p>${d}</p><span class="meta">${m}</span></button>`;
   const api = extraApi();
-  const extras = (C.extras || []).map(x => card([x.id, esc(x.title), esc(x.desc), esc(x.meta ? x.meta(api) : ''), glyph(x.icon || 'star')], 'extra')).join('');
+  const extras = (C.extras || []).filter(x => !x.hide || !x.hide(api)).map(x => card([x.id, esc(x.title), esc(x.desc), esc(x.meta ? x.meta(api) : ''), glyph(x.icon || 'star')], 'extra')).join('');
   // "Para o exame": readiness checklist, past exams, cheat sheet, supplementary questions
   const RS = SKILLS.length ? readySummary() : null; const PG = pastGroups();
   const prep = [
@@ -294,6 +295,7 @@ function Home() {
       <span class="eyebrow">${esc(C.name)} · IST</span>
       <h1>${esc(C.tagline || C.name)}</h1>
       <p>${nTrain} perguntas${nSupp ? ' prioritárias' : ''} de escolha múltipla em ${LEVELS.length} níveis, com a teoria explicada sempre que falhas. ${dl !== null ? `<b>${dl > 0 ? `Faltam ${dl} dia${dl === 1 ? '' : 's'} para o teste.` : dl === 0 ? 'O teste é hoje. Força!' : 'O teste já passou.'}</b>` : ''}</p>
+      ${partSwitch ? `<div class="row part-row"><span class="eyebrow">Matéria</span>${partSwitch}</div>` : ''}
       <div class="row"><button class="btn primary" ${nextStep(RS)} →</button></div>
     </section>
     ${readyCard}
@@ -303,7 +305,6 @@ function Home() {
       <div class="flow-legend">${(M.legend || ['○ início', '◉ o token marca onde estás', '● fim = pronto para o teste']).map(x => `<span>${esc(x)}</span>`).join('')}</div>
     </div>
     <div class="stack">
-      ${partSwitch ? `<div class="row"><span class="eyebrow">Matéria</span><span class="spacer"></span>${partSwitch}</div>` : ''}
       <div class="row"><span class="eyebrow">Temas em jogo</span><span class="spacer"></span>${hasCalc() ? calcSwitch() : ''}</div>
       <div class="chips">${topicsChips}</div>
     </div>

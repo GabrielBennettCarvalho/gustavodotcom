@@ -36,7 +36,7 @@ src/
       lessons/*.js
       questions/*.js
       ids.json           written by the build; never edit by hand
-    oc/                  Organização de Computadores (same layout; render.js draws address fields and tables)
+    oc/                  Organização de Computadores (same layout; render.js draws address fields, tables and pipeline diagrams)
     rc/                  Redes de Computadores (render.js draws space-time diagrams, topologies, addresses)
     ml/                  Aprendizagem / Machine Learning (render.js draws data tables, matrices,
                          point plots and decision trees; exam problems split into steps in questions/exam.js)
@@ -71,7 +71,7 @@ New file? Add it to the course's list in `manifest.json`. Lessons work the same 
    `start`/`end` icons, legend), `exam: { n, min, penalty: 'options' }` (mock exam size, minutes and real grading where a
    wrong answer costs 1/number of options), `verdict: { ok, ko }` (tags such as HIT/MISS), `logo` (SVG for the top bar).
    Course-only CSS can be scoped with `:root[data-course="<id>"]`.
-   For the exam (see ML): `parts` (`[{ id, label, topics, note }]`, one per test; a part with no topics shows as "em breve"),
+   For the exam (see ML): `parts` (`[{ id, label, topics, note, past }]`, one per test; a part with no topics shows as "em breve"; `past` lists that test's past exams),
    `past` (the past exams the questions come from, newest first, as written at the start of `src`) and `skills`
    (`[{ id, t, label, les: [lessons], seen: [past exams], sheet: 'HTML for the cheat sheet' }]`; `core: true` makes a
    type priority even when it never came up on its own, for base matter such as OC's bits or virtual memory).

@@ -32,7 +32,7 @@ STUDY.lessons('oc', [
 { id: 'p-cpimix', t: 'perf', title: 'Receita: CPI médio de uma mistura de instruções',
   html: `<p>Se cada tipo de instrução gasta um número diferente de ciclos, o CPI do programa é uma <b>média ponderada</b>, como a média de um curso em que cada cadeira pesa os seus créditos.</p>
   <p><b>Ciclos = Σ (CPI<sub>i</sub> × IC<sub>i</sub>)</b> e <b>CPI = Ciclos / IC = Σ (CPI<sub>i</sub> × frequência<sub>i</sub>)</b></p>
-  <p>Exemplo (MAP 2025/26): 600 aritméticas (1 ciclo), 200 loads (4), 100 stores (4), 100 branches (2).</p>
+  <p>Exemplo (MAP 1 2025/26): 600 aritméticas (1 ciclo), 200 loads (4), 100 stores (4), 100 branches (2).</p>
   <ol><li>Ciclos = 600×1 + 200×4 + 100×4 + 100×2 = 600 + 800 + 400 + 200 = <b>2000</b></li>
   <li>CPI = 2000 / 1000 = <b>2,0</b></li></ol>
   <p>Se uma otimização trocar 100 loads, 50 stores e 50 branches por aritméticas (mantendo as 1000 instruções): ciclos = 800×1 + 100×4 + 50×4 + 50×2 = 1500, CPI = 1,5 e speedup = 2,0 / 1,5 ≈ <b>1,33</b> (o IC e o relógio não mudaram).</p>

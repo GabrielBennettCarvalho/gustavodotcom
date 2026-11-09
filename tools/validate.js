@@ -11,7 +11,7 @@ for (const id of REG.order) {
   const L = new Set(c.lessons.map(l => l.id)), seen = new Set();
   for (const l of c.lessons) if (!c.topics[l.t]) err(`${id}/${l.id}: unknown topic "${l.t}"`);
   // parts (1.º teste, 2.º teste…), exam problem types (skills) and past exams
-  for (const p of c.parts || []) { if (!p.id || !p.label || !Array.isArray(p.topics)) err(`${id}: part needs id, label, topics`); (p.topics || []).forEach(t => { if (!c.topics[t]) err(`${id}: part ${p.id} has unknown topic "${t}"`); }); }
+  for (const p of c.parts || []) { if (!p.id || !p.label || !Array.isArray(p.topics)) err(`${id}: part needs id, label, topics`); (p.topics || []).forEach(t => { if (!c.topics[t]) err(`${id}: part ${p.id} has unknown topic "${t}"`); }); if (c.past) (p.past || []).forEach(k => { if (!c.past.includes(k)) err(`${id}: part ${p.id} lists "${k}", which is not in past`); }); }
   const SK = new Map(), lesSk = {};
   for (const s of c.skills || []) {
     if (!s.id || !s.label) err(`${id}: skill needs id and label`); if (SK.has(s.id)) err(`${id}: duplicate skill ${s.id}`); SK.set(s.id, s);

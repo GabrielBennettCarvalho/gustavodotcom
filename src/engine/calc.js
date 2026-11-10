@@ -157,9 +157,9 @@ function tokenize(src) {
 
 /* ---------- parser: + − < × ÷ and implicit products, left to right (3/4 log₂ x = ¾·log₂ x) < unary minus < ^ (right to left) < ! ---------- */
 function parse(src) {
-  const T = tokenize(String(src || '')); let i = 0;
+  const text = String(src || ''), T = tokenize(text); let i = 0;
   const is = (k, v) => !!T[i] && T[i].k === k && (v === undefined || T[i].v === v);
-  const hole = () => ({ t: 'hole', p: i ? T[i - 1].e : 0 });
+  const hole = () => ({ t: 'hole', p: i ? T[i - 1].e : 0, q: T[i] ? T[i].s : text.length });   // the gap where an operand is missing
   const startsAtom = () => is('N') || is('V') || is('K') || is('Fn') || is('(');
   function expr() { let l = term(); while (is('Op', '+') || is('Op', '-')) { const op = T[i++]; l = { t: 'bin', op, a: l, b: term() }; } return l; }
   function term() {
@@ -248,7 +248,8 @@ const leaf = (cls, html, s, e) => `<span class="cl-${cls}" data-s="${s}" data-e=
 // a sign the layout replaces (^ _ / brackets of a fraction, a function's name): zero width, but the caret can sit by it.
 // "open" ones lead into a box (exponent, denominator…), so a caret right after them goes inside that box.
 const hid = (s, e, open) => `<span class="cl-h" data-s="${s}" data-e="${e}"${open ? ' data-open=""' : ''}></span>`;
-const holeH = p => `<span class="cl-hole" data-s="${p}" data-e="${p}" data-hole=""></span>`;
+const holeH = (p, q = p) => `<span class="cl-hole" data-s="${p}" data-e="${q}" data-hole=""></span>`;
+const ghostH = (c, t = '') => `<span class="cl-p ghost${t}" data-ghost="">${c}</span>`;   // a bracket not typed yet
 const fracH = (a, b) => `<span class="cl-frac"><span class="cl-fn">${a}</span><span class="cl-fd">${b}</span></span>`;
 const RAD = '<svg class="cl-rad" viewBox="0 0 12 24" preserveAspectRatio="none" aria-hidden="true"><path d="M1 14 L3.5 12.5 L7 23 L11.4 .8 H12" fill="none" stroke="currentColor" stroke-width="1.4" vector-effect="non-scaling-stroke"/></svg>';
 const OPS = { '+': '+', '-': '−', '*': '×', '=': '=' };
@@ -266,23 +267,26 @@ const G = n => n.t === 'par' ? hid(n.l.s, n.l.e, true) + R(n.a) + (n.r ? hid(n.r
 function callH(n) {
   const f = n.f, nm = f.v, t = n.args.some(tall) ? ' tall' : '';
   const args = n.args.map((a, k) => (k ? leaf('o c', ',', n.commas[k - 1].s, n.commas[k - 1].e) : '') + (n.lp ? R(a) : G(a))).join('');
-  if (nm === 'sqrt' || nm === 'cbrt') return `<span class="cl-sqrt">${nm === 'cbrt' ? '<span class="cl-idx">3</span>' : ''}${RAD}<span class="cl-rc">${hid(f.s, f.ne, true)}${n.lp ? hid(n.lp.s, n.lp.e, true) : ''}${n.lp ? n.args.map((a, k) => (k ? leaf('o c', ',', n.commas[k - 1].s, n.commas[k - 1].e) : '') + G(a)).join('') : args}${n.rp ? hid(n.rp.s, n.rp.e) : ''}</span></span>`;
-  if (nm === 'abs') return leaf('p' + t, '|', f.s, f.ne) + (n.lp ? hid(n.lp.s, n.lp.e, true) : '') + args + (n.rp ? leaf('p' + t, '|', n.rp.s, n.rp.e) : `<span class="cl-p ghost${t}">|</span>`);
-  return leaf('f', esc(DISP[nm] || nm), f.s, f.ne) + (f.sub ? subH(f.sub) : '') +
-    (n.lp ? leaf('p' + t, '(', n.lp.s, n.lp.e) + args + (n.rp ? leaf('p' + t, ')', n.rp.s, n.rp.e) : `<span class="cl-p ghost${t}">)</span>`) : '<span class="cl-sp"></span>' + args);
+  if (nm === 'sqrt' || nm === 'cbrt') return `<span class="cl-sqrt">${nm === 'cbrt' ? '<span class="cl-idx">3</span>' : ''}${RAD}<span class="cl-rc">${hid(f.s, f.ne, true)}${n.lp ? hid(n.lp.s, n.lp.e, true) : ''}${n.lp ? n.args.map((a, k) => (k ? leaf('o c', ',', n.commas[k - 1].s, n.commas[k - 1].e) : '') + G(a)).join('') : args}${n.rp ? hid(n.rp.s, n.rp.e) : n.lp ? '<span data-ghost=""></span>' : ''}</span></span>`;
+  if (nm === 'abs') return leaf('p' + t, '|', f.s, f.ne) + (n.lp ? hid(n.lp.s, n.lp.e, true) : '') + args + (n.rp ? leaf('p' + t, '|', n.rp.s, n.rp.e) : ghostH('|', t));
+  const head = leaf('f', esc(DISP[nm] || nm), f.s, f.ne) + (f.sub ? subH(f.sub) : '');
+  if (n.lp) return head + leaf('p' + t, '(', n.lp.s, n.lp.e) + args + (n.rp ? leaf('p' + t, ')', n.rp.s, n.rp.e) : ghostH(')', t));
+  if (n.args[0].t !== 'hole') return head + '<span class="cl-sp"></span>' + args;   // ln 2
+  if (f.sub && !f.sub.text) return head;   // log_ : only the base's box, not the argument's yet
+  return head + '<span class="cl-p ghost">(</span>' + args + ghostH(')');   // log₂(□): the brackets → will type
 }
 function R(n) {
   switch (n.t) {
     case 'num': return leaf('n', esc(n.tok.m) + (n.tok.x !== null ? sciH(n.tok.x) : ''), n.tok.s, n.tok.e);
     case 'var': return varH(n.tok);
-    case 'hole': return holeH(n.p);
+    case 'hole': return holeH(n.p, n.q);
     case 'bin': return R(n.a) + leaf('o', OPS[n.op.v], n.op.s, n.op.e) + R(n.b);
     case 'neg': return leaf('o u', n.op.v === '-' ? '−' : '+', n.op.s, n.op.e) + R(n.a);
     case 'imp': return R(n.a) + (digitFirst(n.b) ? '<span class="cl-dot">·</span>' : '') + R(n.b);
     case 'frac': return fracH(G(n.a), hid(n.op.s, n.op.e, true) + G(n.b));
     case 'pow': return R(n.a) + `<span class="cl-sup">${hid(n.op.s, n.op.e, true)}${G(n.b)}</span>`;
     case 'fact': return R(n.a) + leaf('o f', '!', n.op.s, n.op.e);
-    case 'par': { const t = tall(n.a) ? ' tall' : ''; return leaf('p' + t, '(', n.l.s, n.l.e) + R(n.a) + (n.r ? leaf('p' + t, ')', n.r.s, n.r.e) : `<span class="cl-p ghost${t}">)</span>`); }
+    case 'par': { const t = tall(n.a) ? ' tall' : ''; return leaf('p' + t, '(', n.l.s, n.l.e) + R(n.a) + (n.r ? leaf('p' + t, ')', n.r.s, n.r.e) : ghostH(')', t)); }
     case 'call': return callH(n);
     case 'set': return varH(n.v) + leaf('o', '=', n.op.s, n.op.e) + R(n.a);
     case 'seq': return n.items.map(R).join('');
@@ -320,5 +324,23 @@ function de(o) { try { return o && (o.n !== undefined ? Q(big(o.n), big(o.d)) : 
 // a word to delete in one go with backspace: "sqrt(", "log_2(", "pi", "ans"
 const CHUNK = new RegExp(`(?:(?:${[...Object.keys(FNS), ...Object.keys(ALIAS)].join('|')})(?:_[A-Za-z0-9]*|\\d+)?\\(|pi|ans)$`, 'i');
 
-ROOT.CALC = { parse, run, render, show, ser, de, CHUNK };
+/* What → types at the end of the text to leave the box being typed in (the text has no boxes, so leaving one needs a
+   sign): "(" after a function's name or base (log₂ → log₂(□)), a space after an index or a one-piece exponent or
+   denominator (2^3 then 4 is 2³·4, not 2³⁴), ")" to close an open bracket. '' when there is nothing to leave. */
+function exitText(src) {
+  const T = tokenize(src); if (!T.length) return '';
+  let open = 0; T.forEach(t => { if (t.k === '(') open++; else if (t.k === ')' && open) open--; });
+  if (/\s$/.test(src)) return open ? ')' : '';
+  const last = T[T.length - 1]; let j = T.length - 1;
+  if (last.k === 'Fn') return last.sub && !last.sub.text ? '' : '(';
+  if (last.sub) return last.sub.text ? ' ' : '';
+  if (last.k === ')') { for (let d = 0; j >= 0; j--) { if (T[j].k === ')') d++; else if (T[j].k === '(' && !--d) break; } if (j > 0 && T[j - 1].k === 'Fn') j--; }
+  if (['N', 'V', 'K', ')'].includes(last.k)) {
+    let pv = T[j - 1]; if (pv && pv.k === 'Op' && (pv.v === '-' || pv.v === '+') && T[j - 2] && T[j - 2].v === '^') pv = T[j - 2];   // 2^-3
+    if (pv && pv.k === 'Op' && (pv.v === '^' || pv.v === '/')) return ' ';
+  }
+  return open ? ')' : '';
+}
+
+ROOT.CALC = { parse, run, render, show, ser, de, CHUNK, exitText };
 })();

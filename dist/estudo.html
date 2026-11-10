@@ -448,7 +448,7 @@ textarea.key{min-height:84px;word-break:break-all}
 .calc-fab{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--accent);box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer;transition:transform .1s ease}
 .calc-fab:hover{transform:translateY(-1px)}
 .calc-fab[hidden]{display:none}
-.calc{position:fixed;right:16px;bottom:16px;z-index:45;width:min(372px,calc(100vw - 32px));max-height:calc(100vh - 32px);display:flex;flex-direction:column;gap:8px;padding:8px 12px 10px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.22)}
+.calc-panel{position:fixed;right:16px;bottom:16px;z-index:45;width:min(372px,calc(100vw - 32px));max-height:calc(100vh - 32px);display:flex;flex-direction:column;gap:8px;padding:8px 12px 10px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.22)}
 .calc-h{display:flex;align-items:center;gap:4px;margin-right:-6px}
 .calc-hist{list-style:none;margin:0;padding:0;overflow-y:auto;max-height:200px;display:flex;flex-direction:column;border-bottom:1px solid var(--line)}
 .calc-hist[hidden]{display:none}
@@ -470,17 +470,20 @@ textarea.key{min-height:84px;word-break:break-all}
 .calc-in{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;border:0;padding:0;pointer-events:none;caret-color:transparent}
 .calc-keys{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
 .calc-keys.pad{display:none}
-.calc-k{height:36px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);cursor:pointer;font:600 15px var(--f-body);display:grid;place-items:center;padding:0;touch-action:manipulation}
+.calc-k{height:36px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);cursor:pointer;font:600 15px var(--f-body);display:grid;place-items:center;padding:0;touch-action:manipulation;white-space:nowrap}
 .calc-k:hover{background:var(--line)}
 .calc-k:active{transform:translateY(1px)}
 .calc-k.eq{grid-column:span 2;background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .calc-k.on{border-color:var(--accent);color:var(--accent)}
 .calc-tip{font-size:11.5px;line-height:1.4;margin:0}
-@media (pointer:coarse){.calc-keys.pad{display:grid}.calc-tip{display:none}.calc-k{height:40px}}
+.calc-abc{display:none}
+.calc-abc.on{color:var(--accent)}
+.calc-k i{font-family:var(--f-read);font-size:17px}
+@media (pointer:coarse){.calc-keys.pad{display:grid}.calc-abc{display:inline-flex}.calc-tip{display:none}.calc-k{height:40px}}
 @media (max-width:700px){
-  .calc{left:0;right:0;bottom:0;width:auto;max-height:88vh;border-radius:14px 14px 0 0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+  .calc-panel{left:0;right:0;bottom:0;width:auto;max-height:88vh;border-radius:14px 14px 0 0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
   .calc-hist{max-height:22vh}}
-@media print{.calc,.calc-fab{display:none}}
+@media print{.calc-panel,.calc-fab{display:none}}
 
 /* natural display: the expression drawn as on paper (calc.js renders it) */
 .cl{font-family:var(--f-read);line-height:1.2;white-space:nowrap;font-variant-numeric:lining-nums}
@@ -19674,9 +19677,9 @@ function tokenize(src) {
 
 /* ---------- parser: + − < × ÷ and implicit products, left to right (3/4 log₂ x = ¾·log₂ x) < unary minus < ^ (right to left) < ! ---------- */
 function parse(src) {
-  const T = tokenize(String(src || '')); let i = 0;
+  const text = String(src || ''), T = tokenize(text); let i = 0;
   const is = (k, v) => !!T[i] && T[i].k === k && (v === undefined || T[i].v === v);
-  const hole = () => ({ t: 'hole', p: i ? T[i - 1].e : 0 });
+  const hole = () => ({ t: 'hole', p: i ? T[i - 1].e : 0, q: T[i] ? T[i].s : text.length });   // the gap where an operand is missing
   const startsAtom = () => is('N') || is('V') || is('K') || is('Fn') || is('(');
   function expr() { let l = term(); while (is('Op', '+') || is('Op', '-')) { const op = T[i++]; l = { t: 'bin', op, a: l, b: term() }; } return l; }
   function term() {
@@ -19765,7 +19768,8 @@ const leaf = (cls, html, s, e) => `<span class="cl-${cls}" data-s="${s}" data-e=
 // a sign the layout replaces (^ _ / brackets of a fraction, a function's name): zero width, but the caret can sit by it.
 // "open" ones lead into a box (exponent, denominator…), so a caret right after them goes inside that box.
 const hid = (s, e, open) => `<span class="cl-h" data-s="${s}" data-e="${e}"${open ? ' data-open=""' : ''}></span>`;
-const holeH = p => `<span class="cl-hole" data-s="${p}" data-e="${p}" data-hole=""></span>`;
+const holeH = (p, q = p) => `<span class="cl-hole" data-s="${p}" data-e="${q}" data-hole=""></span>`;
+const ghostH = (c, t = '') => `<span class="cl-p ghost${t}" data-ghost="">${c}</span>`;   // a bracket not typed yet
 const fracH = (a, b) => `<span class="cl-frac"><span class="cl-fn">${a}</span><span class="cl-fd">${b}</span></span>`;
 const RAD = '<svg class="cl-rad" viewBox="0 0 12 24" preserveAspectRatio="none" aria-hidden="true"><path d="M1 14 L3.5 12.5 L7 23 L11.4 .8 H12" fill="none" stroke="currentColor" stroke-width="1.4" vector-effect="non-scaling-stroke"/></svg>';
 const OPS = { '+': '+', '-': '−', '*': '×', '=': '=' };
@@ -19783,23 +19787,26 @@ const G = n => n.t === 'par' ? hid(n.l.s, n.l.e, true) + R(n.a) + (n.r ? hid(n.r
 function callH(n) {
   const f = n.f, nm = f.v, t = n.args.some(tall) ? ' tall' : '';
   const args = n.args.map((a, k) => (k ? leaf('o c', ',', n.commas[k - 1].s, n.commas[k - 1].e) : '') + (n.lp ? R(a) : G(a))).join('');
-  if (nm === 'sqrt' || nm === 'cbrt') return `<span class="cl-sqrt">${nm === 'cbrt' ? '<span class="cl-idx">3</span>' : ''}${RAD}<span class="cl-rc">${hid(f.s, f.ne, true)}${n.lp ? hid(n.lp.s, n.lp.e, true) : ''}${n.lp ? n.args.map((a, k) => (k ? leaf('o c', ',', n.commas[k - 1].s, n.commas[k - 1].e) : '') + G(a)).join('') : args}${n.rp ? hid(n.rp.s, n.rp.e) : ''}</span></span>`;
-  if (nm === 'abs') return leaf('p' + t, '|', f.s, f.ne) + (n.lp ? hid(n.lp.s, n.lp.e, true) : '') + args + (n.rp ? leaf('p' + t, '|', n.rp.s, n.rp.e) : `<span class="cl-p ghost${t}">|</span>`);
-  return leaf('f', esc(DISP[nm] || nm), f.s, f.ne) + (f.sub ? subH(f.sub) : '') +
-    (n.lp ? leaf('p' + t, '(', n.lp.s, n.lp.e) + args + (n.rp ? leaf('p' + t, ')', n.rp.s, n.rp.e) : `<span class="cl-p ghost${t}">)</span>`) : '<span class="cl-sp"></span>' + args);
+  if (nm === 'sqrt' || nm === 'cbrt') return `<span class="cl-sqrt">${nm === 'cbrt' ? '<span class="cl-idx">3</span>' : ''}${RAD}<span class="cl-rc">${hid(f.s, f.ne, true)}${n.lp ? hid(n.lp.s, n.lp.e, true) : ''}${n.lp ? n.args.map((a, k) => (k ? leaf('o c', ',', n.commas[k - 1].s, n.commas[k - 1].e) : '') + G(a)).join('') : args}${n.rp ? hid(n.rp.s, n.rp.e) : n.lp ? '<span data-ghost=""></span>' : ''}</span></span>`;
+  if (nm === 'abs') return leaf('p' + t, '|', f.s, f.ne) + (n.lp ? hid(n.lp.s, n.lp.e, true) : '') + args + (n.rp ? leaf('p' + t, '|', n.rp.s, n.rp.e) : ghostH('|', t));
+  const head = leaf('f', esc(DISP[nm] || nm), f.s, f.ne) + (f.sub ? subH(f.sub) : '');
+  if (n.lp) return head + leaf('p' + t, '(', n.lp.s, n.lp.e) + args + (n.rp ? leaf('p' + t, ')', n.rp.s, n.rp.e) : ghostH(')', t));
+  if (n.args[0].t !== 'hole') return head + '<span class="cl-sp"></span>' + args;   // ln 2
+  if (f.sub && !f.sub.text) return head;   // log_ : only the base's box, not the argument's yet
+  return head + '<span class="cl-p ghost">(</span>' + args + ghostH(')');   // log₂(□): the brackets → will type
 }
 function R(n) {
   switch (n.t) {
     case 'num': return leaf('n', esc(n.tok.m) + (n.tok.x !== null ? sciH(n.tok.x) : ''), n.tok.s, n.tok.e);
     case 'var': return varH(n.tok);
-    case 'hole': return holeH(n.p);
+    case 'hole': return holeH(n.p, n.q);
     case 'bin': return R(n.a) + leaf('o', OPS[n.op.v], n.op.s, n.op.e) + R(n.b);
     case 'neg': return leaf('o u', n.op.v === '-' ? '−' : '+', n.op.s, n.op.e) + R(n.a);
     case 'imp': return R(n.a) + (digitFirst(n.b) ? '<span class="cl-dot">·</span>' : '') + R(n.b);
     case 'frac': return fracH(G(n.a), hid(n.op.s, n.op.e, true) + G(n.b));
     case 'pow': return R(n.a) + `<span class="cl-sup">${hid(n.op.s, n.op.e, true)}${G(n.b)}</span>`;
     case 'fact': return R(n.a) + leaf('o f', '!', n.op.s, n.op.e);
-    case 'par': { const t = tall(n.a) ? ' tall' : ''; return leaf('p' + t, '(', n.l.s, n.l.e) + R(n.a) + (n.r ? leaf('p' + t, ')', n.r.s, n.r.e) : `<span class="cl-p ghost${t}">)</span>`); }
+    case 'par': { const t = tall(n.a) ? ' tall' : ''; return leaf('p' + t, '(', n.l.s, n.l.e) + R(n.a) + (n.r ? leaf('p' + t, ')', n.r.s, n.r.e) : ghostH(')', t)); }
     case 'call': return callH(n);
     case 'set': return varH(n.v) + leaf('o', '=', n.op.s, n.op.e) + R(n.a);
     case 'seq': return n.items.map(R).join('');
@@ -19837,7 +19844,25 @@ function de(o) { try { return o && (o.n !== undefined ? Q(big(o.n), big(o.d)) : 
 // a word to delete in one go with backspace: "sqrt(", "log_2(", "pi", "ans"
 const CHUNK = new RegExp(`(?:(?:${[...Object.keys(FNS), ...Object.keys(ALIAS)].join('|')})(?:_[A-Za-z0-9]*|\\d+)?\\(|pi|ans)$`, 'i');
 
-ROOT.CALC = { parse, run, render, show, ser, de, CHUNK };
+/* What → types at the end of the text to leave the box being typed in (the text has no boxes, so leaving one needs a
+   sign): "(" after a function's name or base (log₂ → log₂(□)), a space after an index or a one-piece exponent or
+   denominator (2^3 then 4 is 2³·4, not 2³⁴), ")" to close an open bracket. '' when there is nothing to leave. */
+function exitText(src) {
+  const T = tokenize(src); if (!T.length) return '';
+  let open = 0; T.forEach(t => { if (t.k === '(') open++; else if (t.k === ')' && open) open--; });
+  if (/\s$/.test(src)) return open ? ')' : '';
+  const last = T[T.length - 1]; let j = T.length - 1;
+  if (last.k === 'Fn') return last.sub && !last.sub.text ? '' : '(';
+  if (last.sub) return last.sub.text ? ' ' : '';
+  if (last.k === ')') { for (let d = 0; j >= 0; j--) { if (T[j].k === ')') d++; else if (T[j].k === '(' && !--d) break; } if (j > 0 && T[j - 1].k === 'Fn') j--; }
+  if (['N', 'V', 'K', ')'].includes(last.k)) {
+    let pv = T[j - 1]; if (pv && pv.k === 'Op' && (pv.v === '-' || pv.v === '+') && T[j - 2] && T[j - 2].v === '^') pv = T[j - 2];   // 2^-3
+    if (pv && pv.k === 'Op' && (pv.v === '^' || pv.v === '/')) return ' ';
+  }
+  return open ? ')' : '';
+}
+
+ROOT.CALC = { parse, run, render, show, ser, de, CHUNK, exitText };
 })();
 
 /* ===== Estudo IST — engine =====
@@ -20777,10 +20802,10 @@ function calcSync() {
 const CALC_FN = [['/', '<span class="cl-frac sm"><span class="cl-fn">▫</span><span class="cl-fd">▫</span></span>', 'Fração ( / )'], ['^2', 'x²', 'Ao quadrado ( ^2 )'], ['^', 'xⁿ', 'Potência ( ^ )'],
   ['sqrt(', '√', 'Raiz quadrada ( sqrt )'], ['(', '('], [')', ')'],
   ['ln(', 'ln', 'Logaritmo natural ( ln )'], ['log_2(', 'log₂', 'Logaritmo de base 2 ( log_2 ). Outra base: log_b'], ['log(', 'log', 'Logaritmo de base 10 ( log )'],
-  ['pi', 'π', 'Pi ( pi )'], ['e', 'e', 'Número de Euler ( e )'], ['_', 'x₁', 'Índice ( _ ), para variáveis como w_1']];
+  ['pi', 'π', 'Pi ( pi )'], ['e', 'e', 'Número de Euler ( e )'], ['#idx', 'x₁', 'Índice ( _ ): depois de uma letra põe-lhe um índice (w₁, log₂); sozinho escreve x₁']];
 const CALC_PAD = [['7'], ['8'], ['9'], ['/', '÷'], ['#bs', '⌫', 'Apagar'], ['#ac', 'AC', 'Limpar a expressão'],
-  ['4'], ['5'], ['6'], ['*', '×'], ['#l', '←', 'Mover para a esquerda'], ['#r', '→', 'Mover para a direita'],
-  ['1'], ['2'], ['3'], ['-', '−'], [','], ['#abc', 'abc', 'Teclado com letras, para variáveis'],
+  ['4'], ['5'], ['6'], ['*', '×'], ['#l', '←', 'Mover para a esquerda'], ['#r', '→', 'Para a direita, ou sair do índice, expoente ou fração'],
+  ['1'], ['2'], ['3'], ['-', '−'], ['x', '<i>x</i>', 'Variável x'], ['=', '<i>x</i>=', 'Guardar numa variável: x = 2, e depois usar x'],
   ['0'], ['.'], ['ans', 'ans', 'Resultado anterior'], ['+'], ['#eq', '=', 'Calcular']];
 const calcKey = ([k, label, title]) => `<button type="button" class="calc-k${k === '#eq' ? ' eq' : ''}" data-ck="${esc(k)}"${title ? ` title="${esc(title)}" aria-label="${esc(title)}"` : ''}>${label || esc(k)}</button>`;
 
@@ -20788,8 +20813,9 @@ function calcOpen(open, refocus) {
   calcIsOpen = open; let p = calcEl('calc');
   if (!open) { if (p) p.remove(); calcSync(); if (refocus) { const f = calcEl('calc-fab'); if (f && !f.hidden) f.focus({ preventScroll: true }); } return; }
   if (!p) {
-    p = document.createElement('section'); p.id = 'calc'; p.className = 'calc'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Calculadora');
+    p = document.createElement('section'); p.id = 'calc'; p.className = 'calc-panel'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Calculadora');
     p.innerHTML = `<div class="calc-h"><span class="eyebrow">Calculadora</span><span class="spacer"></span>
+        <button type="button" class="btn ghost small calc-abc" data-ck="#abc" title="Teclado com letras, para outras variáveis (w, η…)">abc</button>
         <button type="button" class="btn ghost small" data-ck="#clear" title="Apagar o histórico e as variáveis">Limpar</button>
         <button type="button" class="btn ghost small" data-ck="#close" aria-label="Fechar a calculadora">✕</button></div>
       <ol class="calc-hist" id="calc-hist" aria-label="Contas feitas"></ol>
@@ -20800,7 +20826,7 @@ function calcOpen(open, refocus) {
       </div>
       <div class="calc-keys" id="calc-keys">${CALC_FN.map(calcKey).join('')}</div>
       <div class="calc-keys pad">${CALC_PAD.map(calcKey).join('')}</div>
-      <p class="calc-tip muted">Enter calcula · ↑ ↓ contas anteriores · <code class="mono">x = 2</code> guarda uma variável · ângulos em radianos</p>`;
+      <p class="calc-tip muted">Enter calcula · → sai do índice, expoente ou fração · ↑ ↓ contas anteriores · <code class="mono">x = 2</code> guarda uma variável · ângulos em radianos</p>`;
     document.body.appendChild(p); calcBind(p);
   }
   calcSync(); calcHist(); calcDraw();
@@ -20831,18 +20857,23 @@ function calcDraw() {
   if (calcErr) { pv.textContent = calcErr; return; }
   if (tree.empty) { pv.innerHTML = ''; return; }
   const r = CX.run(tree, calcEnv());
-  pv.innerHTML = r.ok ? (r.name ? `<span class="cl">${esc(r.name)}</span> ` : '') + calcResultH(r.v, 'calc-live') : '';
+  pv.innerHTML = r.ok ? (r.name ? `<span class="cl">${CX.render(CX.parse(r.name))}</span> ` : '') + calcResultH(r.v, 'calc-live') : '';
 }
 function calcCaret(ex, p) {
   const caret = document.createElement('span'); caret.className = 'cl-caret';
-  const leaves = [...ex.querySelectorAll('[data-s]')];
-  const hole = leaves.find(l => 'hole' in l.dataset && +l.dataset.s === p);
-  if (hole) { hole.appendChild(caret); return; }
-  const after = leaves.filter(l => +l.dataset.e === p).pop(), before = leaves.find(l => +l.dataset.s === p);
+  const leaves = [...ex.querySelectorAll('[data-s]')], isHole = l => 'hole' in l.dataset;
+  if (!leaves.length) { ex.prepend(caret); return; }
+  const after = leaves.filter(l => !isHole(l) && +l.dataset.e === p).pop(), before = leaves.find(l => !isHole(l) && +l.dataset.s === p);
+  // right after a number or a name, typing continues it (w_1|2 → w₁₂): the caret stays there; otherwise an empty box takes it
+  const word = after && /(^| )cl-[nvkf]( |$)/.test(after.className);
+  const hole = !word && leaves.find(l => isHole(l) && +l.dataset.s <= p && p <= +l.dataset.e);
+  if (hole) hole.appendChild(caret);
   // right after ^ _ / or an opening bracket the caret belongs inside the box they open
-  if (after && !('open' in after.dataset)) after.after(caret);
+  else if (after && !('open' in after.dataset)) after.after(caret);
   else if (before) before.before(caret);
   else if (after) after.after(caret);
+  // after a space at the end (→ left a box): back on the line, inside the innermost bracket still open
+  else if (leaves.every(l => +l.dataset.e < p)) { const g = ex.querySelector('[data-ghost]'); if (g) g.before(caret); else ex.append(caret); }
   else { const prev = leaves.filter(l => +l.dataset.e < p).pop(); if (prev) prev.after(caret); else ex.prepend(caret); }
 }
 // where a tap on the drawn expression puts the caret: before or after the piece tapped
@@ -20873,6 +20904,13 @@ function calcEnter() {
   calcMem.ans = CX.ser(r.v); calcMem.hist.push({ x: src, v: CX.ser(r.v) }); if (calcMem.hist.length > 40) calcMem.hist.shift();
   ls.set(LS_CALC, calcMem); inp.value = ''; calcHi = -1; calcHist(); calcDraw();
 }
+// → at the end of the text leaves the box being typed in (CX.exitText says which sign does it); false if nothing to leave
+function calcExit() {
+  const inp = calcEl('calc-in'), n = inp.value.length;
+  if (inp.selectionStart !== n || inp.selectionEnd !== n) return false;
+  const t = CX.exitText(inp.value); if (!t) return false;
+  inp.setRangeText(t, n, n, 'end'); calcDraw(); return true;
+}
 function calcRecall(dir) {   // ↑ / ↓ walk through the expressions already calculated
   const inp = calcEl('calc-in'), H = calcMem.hist; if (!H.length) return;
   if (dir < 0) { if (calcHi === -1) { calcDraft = inp.value; calcHi = H.length - 1; } else calcHi = Math.max(0, calcHi - 1); }
@@ -20889,6 +20927,7 @@ function calcBind(p) {
     if (k === 'Enter') { ev.preventDefault(); calcEnter(); }
     else if (k === 'Escape') { ev.preventDefault(); calcOpen(false, true); }
     else if (k === 'ArrowUp' || k === 'ArrowDown') { ev.preventDefault(); calcRecall(k === 'ArrowUp' ? -1 : 1); }
+    else if (k === 'ArrowRight' && !ev.shiftKey && calcExit()) ev.preventDefault();
     else requestAnimationFrame(calcDraw);   // arrows, Home, End: the caret moved
   });
   // beforeinput, not keydown: phone keyboards often send keydown without the key
@@ -20916,6 +20955,8 @@ function calcBind(p) {
     if (c === '#eq') calcEnter();
     else if (c === '#bs') calcBack();
     else if (c === '#ac') { inp.value = ''; calcErr = ''; calcDraw(); }
+    else if (c === '#idx') { const run = /[A-Za-zͰ-Ͽ]+$/.exec(inp.value.slice(0, inp.selectionStart)); calcInsert(run && !/^(pi|ans|e)$/i.test(run[0]) ? '_' : 'x_'); }   // w → w_, alone → x_
+    else if (c === '#r' && calcExit()) { /* left a box */ }
     else if (c === '#l' || c === '#r') { const q = Math.max(0, Math.min(inp.value.length, inp.selectionStart + (c === '#l' ? -1 : 1))); inp.setSelectionRange(q, q); calcDraw(); }
     else if (c === '#abc') { inp.inputMode = inp.inputMode === 'none' ? 'text' : 'none'; k.classList.toggle('on', inp.inputMode === 'text'); inp.blur(); inp.focus({ preventScroll: true }); }
     else calcInsert(c);

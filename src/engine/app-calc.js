@@ -28,10 +28,10 @@ function calcSync() {
 const CALC_FN = [['/', '<span class="cl-frac sm"><span class="cl-fn">▫</span><span class="cl-fd">▫</span></span>', 'Fração ( / )'], ['^2', 'x²', 'Ao quadrado ( ^2 )'], ['^', 'xⁿ', 'Potência ( ^ )'],
   ['sqrt(', '√', 'Raiz quadrada ( sqrt )'], ['(', '('], [')', ')'],
   ['ln(', 'ln', 'Logaritmo natural ( ln )'], ['log_2(', 'log₂', 'Logaritmo de base 2 ( log_2 ). Outra base: log_b'], ['log(', 'log', 'Logaritmo de base 10 ( log )'],
-  ['pi', 'π', 'Pi ( pi )'], ['e', 'e', 'Número de Euler ( e )'], ['_', 'x₁', 'Índice ( _ ), para variáveis como w_1']];
+  ['pi', 'π', 'Pi ( pi )'], ['e', 'e', 'Número de Euler ( e )'], ['#idx', 'x₁', 'Índice ( _ ): depois de uma letra põe-lhe um índice (w₁, log₂); sozinho escreve x₁']];
 const CALC_PAD = [['7'], ['8'], ['9'], ['/', '÷'], ['#bs', '⌫', 'Apagar'], ['#ac', 'AC', 'Limpar a expressão'],
-  ['4'], ['5'], ['6'], ['*', '×'], ['#l', '←', 'Mover para a esquerda'], ['#r', '→', 'Mover para a direita'],
-  ['1'], ['2'], ['3'], ['-', '−'], [','], ['#abc', 'abc', 'Teclado com letras, para variáveis'],
+  ['4'], ['5'], ['6'], ['*', '×'], ['#l', '←', 'Mover para a esquerda'], ['#r', '→', 'Para a direita, ou sair do índice, expoente ou fração'],
+  ['1'], ['2'], ['3'], ['-', '−'], ['x', '<i>x</i>', 'Variável x'], ['=', '<i>x</i>=', 'Guardar numa variável: x = 2, e depois usar x'],
   ['0'], ['.'], ['ans', 'ans', 'Resultado anterior'], ['+'], ['#eq', '=', 'Calcular']];
 const calcKey = ([k, label, title]) => `<button type="button" class="calc-k${k === '#eq' ? ' eq' : ''}" data-ck="${esc(k)}"${title ? ` title="${esc(title)}" aria-label="${esc(title)}"` : ''}>${label || esc(k)}</button>`;
 
@@ -39,8 +39,9 @@ function calcOpen(open, refocus) {
   calcIsOpen = open; let p = calcEl('calc');
   if (!open) { if (p) p.remove(); calcSync(); if (refocus) { const f = calcEl('calc-fab'); if (f && !f.hidden) f.focus({ preventScroll: true }); } return; }
   if (!p) {
-    p = document.createElement('section'); p.id = 'calc'; p.className = 'calc'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Calculadora');
+    p = document.createElement('section'); p.id = 'calc'; p.className = 'calc-panel'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Calculadora');
     p.innerHTML = `<div class="calc-h"><span class="eyebrow">Calculadora</span><span class="spacer"></span>
+        <button type="button" class="btn ghost small calc-abc" data-ck="#abc" title="Teclado com letras, para outras variáveis (w, η…)">abc</button>
         <button type="button" class="btn ghost small" data-ck="#clear" title="Apagar o histórico e as variáveis">Limpar</button>
         <button type="button" class="btn ghost small" data-ck="#close" aria-label="Fechar a calculadora">✕</button></div>
       <ol class="calc-hist" id="calc-hist" aria-label="Contas feitas"></ol>
@@ -51,7 +52,7 @@ function calcOpen(open, refocus) {
       </div>
       <div class="calc-keys" id="calc-keys">${CALC_FN.map(calcKey).join('')}</div>
       <div class="calc-keys pad">${CALC_PAD.map(calcKey).join('')}</div>
-      <p class="calc-tip muted">Enter calcula · ↑ ↓ contas anteriores · <code class="mono">x = 2</code> guarda uma variável · ângulos em radianos</p>`;
+      <p class="calc-tip muted">Enter calcula · → sai do índice, expoente ou fração · ↑ ↓ contas anteriores · <code class="mono">x = 2</code> guarda uma variável · ângulos em radianos</p>`;
     document.body.appendChild(p); calcBind(p);
   }
   calcSync(); calcHist(); calcDraw();
@@ -82,18 +83,23 @@ function calcDraw() {
   if (calcErr) { pv.textContent = calcErr; return; }
   if (tree.empty) { pv.innerHTML = ''; return; }
   const r = CX.run(tree, calcEnv());
-  pv.innerHTML = r.ok ? (r.name ? `<span class="cl">${esc(r.name)}</span> ` : '') + calcResultH(r.v, 'calc-live') : '';
+  pv.innerHTML = r.ok ? (r.name ? `<span class="cl">${CX.render(CX.parse(r.name))}</span> ` : '') + calcResultH(r.v, 'calc-live') : '';
 }
 function calcCaret(ex, p) {
   const caret = document.createElement('span'); caret.className = 'cl-caret';
-  const leaves = [...ex.querySelectorAll('[data-s]')];
-  const hole = leaves.find(l => 'hole' in l.dataset && +l.dataset.s === p);
-  if (hole) { hole.appendChild(caret); return; }
-  const after = leaves.filter(l => +l.dataset.e === p).pop(), before = leaves.find(l => +l.dataset.s === p);
+  const leaves = [...ex.querySelectorAll('[data-s]')], isHole = l => 'hole' in l.dataset;
+  if (!leaves.length) { ex.prepend(caret); return; }
+  const after = leaves.filter(l => !isHole(l) && +l.dataset.e === p).pop(), before = leaves.find(l => !isHole(l) && +l.dataset.s === p);
+  // right after a number or a name, typing continues it (w_1|2 → w₁₂): the caret stays there; otherwise an empty box takes it
+  const word = after && /(^| )cl-[nvkf]( |$)/.test(after.className);
+  const hole = !word && leaves.find(l => isHole(l) && +l.dataset.s <= p && p <= +l.dataset.e);
+  if (hole) hole.appendChild(caret);
   // right after ^ _ / or an opening bracket the caret belongs inside the box they open
-  if (after && !('open' in after.dataset)) after.after(caret);
+  else if (after && !('open' in after.dataset)) after.after(caret);
   else if (before) before.before(caret);
   else if (after) after.after(caret);
+  // after a space at the end (→ left a box): back on the line, inside the innermost bracket still open
+  else if (leaves.every(l => +l.dataset.e < p)) { const g = ex.querySelector('[data-ghost]'); if (g) g.before(caret); else ex.append(caret); }
   else { const prev = leaves.filter(l => +l.dataset.e < p).pop(); if (prev) prev.after(caret); else ex.prepend(caret); }
 }
 // where a tap on the drawn expression puts the caret: before or after the piece tapped
@@ -124,6 +130,13 @@ function calcEnter() {
   calcMem.ans = CX.ser(r.v); calcMem.hist.push({ x: src, v: CX.ser(r.v) }); if (calcMem.hist.length > 40) calcMem.hist.shift();
   ls.set(LS_CALC, calcMem); inp.value = ''; calcHi = -1; calcHist(); calcDraw();
 }
+// → at the end of the text leaves the box being typed in (CX.exitText says which sign does it); false if nothing to leave
+function calcExit() {
+  const inp = calcEl('calc-in'), n = inp.value.length;
+  if (inp.selectionStart !== n || inp.selectionEnd !== n) return false;
+  const t = CX.exitText(inp.value); if (!t) return false;
+  inp.setRangeText(t, n, n, 'end'); calcDraw(); return true;
+}
 function calcRecall(dir) {   // ↑ / ↓ walk through the expressions already calculated
   const inp = calcEl('calc-in'), H = calcMem.hist; if (!H.length) return;
   if (dir < 0) { if (calcHi === -1) { calcDraft = inp.value; calcHi = H.length - 1; } else calcHi = Math.max(0, calcHi - 1); }
@@ -140,6 +153,7 @@ function calcBind(p) {
     if (k === 'Enter') { ev.preventDefault(); calcEnter(); }
     else if (k === 'Escape') { ev.preventDefault(); calcOpen(false, true); }
     else if (k === 'ArrowUp' || k === 'ArrowDown') { ev.preventDefault(); calcRecall(k === 'ArrowUp' ? -1 : 1); }
+    else if (k === 'ArrowRight' && !ev.shiftKey && calcExit()) ev.preventDefault();
     else requestAnimationFrame(calcDraw);   // arrows, Home, End: the caret moved
   });
   // beforeinput, not keydown: phone keyboards often send keydown without the key
@@ -167,6 +181,8 @@ function calcBind(p) {
     if (c === '#eq') calcEnter();
     else if (c === '#bs') calcBack();
     else if (c === '#ac') { inp.value = ''; calcErr = ''; calcDraw(); }
+    else if (c === '#idx') { const run = /[A-Za-zͰ-Ͽ]+$/.exec(inp.value.slice(0, inp.selectionStart)); calcInsert(run && !/^(pi|ans|e)$/i.test(run[0]) ? '_' : 'x_'); }   // w → w_, alone → x_
+    else if (c === '#r' && calcExit()) { /* left a box */ }
     else if (c === '#l' || c === '#r') { const q = Math.max(0, Math.min(inp.value.length, inp.selectionStart + (c === '#l' ? -1 : 1))); inp.setSelectionRange(q, q); calcDraw(); }
     else if (c === '#abc') { inp.inputMode = inp.inputMode === 'none' ? 'text' : 'none'; k.classList.toggle('on', inp.inputMode === 'text'); inp.blur(); inp.focus({ preventScroll: true }); }
     else calcInsert(c);

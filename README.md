@@ -182,6 +182,9 @@ Definições → Calculadora turns the button on or off per course (`settings.ca
 - Typing goes to a hidden input; above it `calc.js` draws the expression as on paper while it is typed: `/` stacks a
   fraction, `^` raises an exponent, `_` lowers an index (`w_1`, `log_2`), `sqrt` draws a radical. A missing operand is
   an empty box and an unclosed bracket a faint one; Enter closes brackets by itself.
+- The text has no boxes, so → at the end of it leaves the one being typed in (`CALC.exitText`): after a function's
+  name or base it types `(` (`log_2` → log₂(□)), after an index or a one-piece exponent or denominator a space
+  (`2^3 4` is 2³·4), inside an open bracket `)`.
 - Numbers stay exact fractions while they can (BigInt): `0.1 + 0.2 = 3/10`, `sqrt(9/4) = 3/2`, `log_2(8) = 3`.
   Roots, logs and trig fall back to floats, which snap back to a fraction when within a few ulps (`sin(pi/6) = 1/2`).
 - Products without a sign bind like `×`, left to right: `3/4 log_2(3/4)` is ¾·log₂(¾), as in an entropy sum.
@@ -189,7 +192,9 @@ Definições → Calculadora turns the button on or off per course (`settings.ca
   earlier expressions, tapping a result inserts it. Functions: sqrt cbrt ln log log_b exp sin cos tan asin acos atan
   sinh cosh tanh abs floor ceil round min max mean sigmoid nCr nPr, and `!`. Greek names (`eta`, `sigma`…) show as
   letters. Angles in radians.
-- On a touch screen a keypad replaces the system keyboard (`abc` brings it back for variable names).
+- On a touch screen a keypad replaces the system keyboard, with `x` and `x=` keys for variables (`abc`, at the top,
+  brings the system keyboard back for other names). The x₁ key adds an index to the letter before it, or types x₁.
+- The panel's class is `calc-panel`, not `calc`: `.badge.calc` already marks calculation questions.
 - History, variables and ans are saved per device in `localStorage` key `estudo-ist-calc`.
 
 ## Progress and the "other device" key

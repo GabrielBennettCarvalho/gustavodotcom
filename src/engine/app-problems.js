@@ -5,7 +5,8 @@
    - a step that is stuck never blocks: hint after hint, and in the end the answer;
    - a concept (step.c) done cleanly last time is filled in next time, so nobody repeats arithmetic they have shown they can do;
    - a clean first problem finishes the type; otherwise the next stage comes the next day;
-   - a finished type comes back once, alone, as a review.
+   - a finished type comes back once, alone, as a review;
+   - the end screen shows the whole worked solution, and the stage's final result (stage.sol: { t, d }) when it has one.
    Progress lives in S.prob = { t: { typeId: { stage, done, due, last: { stageId: ms } } }, con: { concept: 1 | 0 } }.
    A problem left half done (back button, closed tab, refresh) is kept in S.pbCur and picks up where it stopped. */
 const PB_DAY = 864e5, PB_REVIEW = 7 * PB_DAY, PB_TOL = 0.011;
@@ -174,7 +175,9 @@ function pbResults() {
   return `<div class="card pb-end"><span class="eyebrow">${esc(pb.p.title)} · ${esc(pb.review ? 'Revisão' : PB_KIND[S_.kind])}</span><h2 style="margin-top:6px">${title}</h2>
     ${r.marks !== null ? `<p class="pb-score"><b>${pbNum(r.marks)}</b> de ${pbNum(S_.pts)} valores</p><p class="muted">${esc(S_.src ? `${S_.src}, como se fosse o exame` : 'num problema como os do exame')}</p>` : ''}
     <p class="mono muted" style="margin-top:8px">+${r.xp} XP</p>
+    ${S_.sol ? `<div class="section-h" style="margin-top:14px"><h3>O resultado</h3></div>${S_.sol.t ? `<p class="explain">${md(S_.sol.t)}</p>` : ''}${S_.sol.d ? `<div class="diagram">${renderD(S_.sol.d)}</div>` : ''}` : ''}
     ${hard.length ? `<div class="section-h" style="margin-top:14px"><h3>Onde precisaste de ajuda</h3></div><div class="pb-work">${hard.map(pbRow).join('')}</div>` : ''}
+    ${hard.length === pb.steps.length ? '' : `<details class="lesson-peek pb-full" style="margin-top:14px"><summary>Ver a resolução completa (${pb.steps.length} passos)</summary><div class="pb-work">${pb.steps.map(pbRow).join('')}</div></details>`}
     <p style="margin-top:14px">${esc(r.next)}</p>
     <div class="row" style="margin-top:14px">${planNextBtn(!!pb.planKey)}<button class="btn${pb.planKey ? '' : ' primary'}" data-act="pbDone" id="pbEnd">Voltar ao início</button>${r.more ? `<button class="btn" data-act="pbGo" data-k="${esc(pb.p.id)}">Fazer já o próximo</button>` : ''}</div></div>`;
 }

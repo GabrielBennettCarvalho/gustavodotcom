@@ -9,6 +9,7 @@ STUDY.problems('ml', [
   stages: [
   { id: 'dt-build-1', kind: 'guided', src: 'Exame 1 2025/26, 2.a-b', pts: 2, les: 'dt-gain',
     stmt: 'Na tabela de 5 alunos, constrói a árvore de decisão pelo **ganho de informação** para prever Result.', d: TBL_26,
+    sol: { t: 'A árvore final: **Cheated** na raiz e **Studied** no ramo Cheated = No. Slept nunca é usado.', d: { tree: { a: 'Cheated', k: [['Yes', { leaf: 'Failed' }], ['No', { a: 'Studied', k: [['Yes', { leaf: 'Passed' }], ['No', { leaf: 'Failed' }]] }]] } } },
     steps: [
       { name: 'H(Result)', c: 'dt-h', les: 'dt-entropy', ask: 'Qual é a entropia de Shannon **H(Result)**, em bits?', ans: [0.971],
         hints: ['Conta as classes: 2 Passed e 3 Failed, em 5 alunos.', 'H = −Σ pᵢ log₂ pᵢ, com p = (2/5; 3/5).', 'H = −0,4·log₂0,4 − 0,6·log₂0,6.'],
@@ -29,6 +30,7 @@ STUDY.problems('ml', [
   { id: 'dt-build-2', kind: 'half', pts: 2, les: 'dt-gain',
     stmt: 'Na tabela de 6 exemplos, constrói a árvore de decisão pelo **ganho de informação** para prever y.',
     d: { tbl: { h: ['', 'A', 'B', 'y'], r: [['1', 'x', 'p', '+'], ['2', 'x', 'q', '+'], ['3', 'x', 'p', '+'], ['4', 'z', 'q', '−'], ['5', 'z', 'p', '−'], ['6', 'z', 'q', '+']] } },
+    sol: { t: 'A árvore final: **A** na raiz e **B** no ramo A = z. O ramo B = q fica com os exemplos 4 (−) e 6 (+) e já não há atributos: é uma folha empatada, e a classe escolhe-se por um critério de desempate.', d: { tree: { a: 'A', k: [['x', { leaf: '+' }], ['z', { a: 'B', k: [['p', { leaf: '−' }], ['q', { leaf: 'empate (1+, 1−)' }]] }]] } } },
     steps: [
       { name: 'H(y)', c: 'dt-h', les: 'dt-entropy', ask: 'Qual é a entropia **H(y)**?', ans: [0.918], hints: ['Há 4 exemplos + e 2 exemplos −.', 'p = (2/3; 1/3).'], miss: [{ v: [0.637], m: 'Usaste ln. A entropia em bits usa log₂.' }], e: 'p = (2/3; 1/3), logo H = **0,918 bits**.' },
       { name: 'IG (A; B)', c: 'dt-ig', ask: 'Calcula o ganho de **A** e de **B**.', ans: [0.459, 0],
@@ -43,6 +45,7 @@ STUDY.problems('ml', [
   { id: 'dt-build-3', kind: 'alone', alone: true, src: 'Exame 2 2022/23, I.2.a', pts: 2,
     stmt: 'Com estes dados, aprende a árvore de decisão sem limite de profundidade, mostrando o ganho de informação.',
     d: { tbl: { h: ['', 'y₁', 'y₂', 'z'], r: [['x₁', '0', '1', 'A'], ['x₂', '1', '0', 'B'], ['x₃', '0', '1', 'B'], ['x₄', '0', '1', 'B'], ['x₅', '0', '0', 'C']] } },
+    sol: { t: 'A árvore final: **y₂** na raiz. No ramo y₂ = 0, **y₁** separa B de C. O ramo y₂ = 1 ({A, B, B}) não se consegue separar e fica uma folha com a maioria, **B**.', d: { tree: { a: 'y₂', k: [['0', { a: 'y₁', k: [['0', { leaf: 'C' }], ['1', { leaf: 'B' }]] }], ['1', { leaf: 'B' }]] } } },
     steps: [
       { name: 'H(z)', c: 'dt-h', ask: 'Qual é a entropia **H(z)**?', ans: [1.371], e: 'p = (1/5; 3/5; 1/5), logo H = **1,371 bits**.' },
       { name: 'H(z|·) (y₁; y₂)', c: 'dt-ig', ask: 'Calcula as entropias condicionais **H(z|y₁)** e **H(z|y₂)**.', ans: [1.2, 0.951], e: 'y₁: 4/5·H(1/4; 2/4; 1/4) = **1,2**. y₂: 2/5·1 + 3/5·0,918 = **0,951**.' },
@@ -157,6 +160,8 @@ STUDY.problems('ml', [
   { id: 'km-sil-1', kind: 'guided', src: 'Exame 1 2024/25, 5', pts: 3, les: 'c-kmeans',
     stmt: 'Dados **x₁ = (0, 1)**, **x₂ = (1, 0)**, **x₃ = (−1, −1)**, **x₄ = (−2, −2)** e centros **c₁ = (1, 1)**, **c₂ = (−2, −2)**.\nFaz uma iteração do k-means com distância euclidiana e calcula a silhueta do cluster C₂.',
     d: { pts: { p: [{ x: 0, y: 1, l: 'x₁' }, { x: 1, y: 0, l: 'x₂' }, { x: -1, y: -1, l: 'x₃' }, { x: -2, y: -2, l: 'x₄' }], c: [{ x: 1, y: 1, l: 'c₁' }, { x: -2, y: -2, l: 'c₂' }] } },
+    sol: { t: 'Depois da iteração: **C₁ = {x₁, x₂}** (círculos cheios) com c₁ = (0,5; 0,5), e **C₂ = {x₃, x₄}** (quadrados) com c₂ = (−1,5; −1,5). A silhueta de C₂ é 0,488.',
+      d: { pts: { p: [{ x: 0, y: 1, l: 'x₁', c: 1 }, { x: 1, y: 0, l: 'x₂', c: 1 }, { x: -1, y: -1, l: 'x₃', c: 2 }, { x: -2, y: -2, l: 'x₄', c: 2 }], c: [{ x: 0.5, y: 0.5, l: 'c₁' }, { x: -1.5, y: -1.5, l: 'c₂' }] } } },
     steps: [
       { name: 'd(x₃, c)', c: 'km-assign', ask: 'Qual é a distância de **x₃** a cada centro (c₁; c₂)?', ans: [2.828, 1.414], hints: ['d = √Σ(xᵢ − cᵢ)².', 'x₃ − c₁ = (−2, −2) e x₃ − c₂ = (1, 1).'], miss: [{ v: [4, 2], m: 'Isso é a distância Manhattan. Aqui é a euclidiana.' }, { v: [8, 2], m: 'Falta a raiz quadrada.' }], also: 'C₁ = {x₁, x₂} · C₂ = {x₃, x₄}', e: '√8 = **2,828** e √2 = **1,414**: x₃ vai para C₂. x₁ e x₂ ficam em C₁, e x₄ coincide com c₂.' },
       { name: 'c₁ novo', c: 'km-update', ask: 'Quanto vale o **novo c₁**?', ans: [0.5, 0.5], hints: ['É a média dos pontos de C₁ = {x₁, x₂}.'], e: '((0 + 1)/2; (1 + 0)/2) = **(0,5; 0,5)**.' },
@@ -169,6 +174,8 @@ STUDY.problems('ml', [
   { id: 'km-sil-2', kind: 'half', pts: 3, les: 'c-kmeans',
     stmt: 'Dados **x₁ = (0, 0)**, **x₂ = (0, 2)**, **x₃ = (4, 0)**, **x₄ = (4, 2)** e centros **c₁ = (0, 0)**, **c₂ = (4, 2)**.\nFaz uma iteração do k-means com distância euclidiana e calcula a silhueta do cluster C₁.',
     d: { pts: { p: [{ x: 0, y: 0, l: 'x₁' }, { x: 0, y: 2, l: 'x₂' }, { x: 4, y: 0, l: 'x₃' }, { x: 4, y: 2, l: 'x₄' }], c: [{ x: 0, y: 0, l: 'c₁' }, { x: 4, y: 2, l: 'c₂' }] } },
+    sol: { t: 'Depois da iteração: **C₁ = {x₁, x₂}** (círculos cheios) com c₁ = (0; 1), e **C₂ = {x₃, x₄}** (quadrados) com c₂ = (4; 1).',
+      d: { pts: { p: [{ x: 0, y: 0, l: 'x₁', c: 1 }, { x: 0, y: 2, l: 'x₂', c: 1 }, { x: 4, y: 0, l: 'x₃', c: 2 }, { x: 4, y: 2, l: 'x₄', c: 2 }], c: [{ x: 0, y: 1, l: 'c₁' }, { x: 4, y: 1, l: 'c₂' }] } } },
     steps: [
       { name: 'd(x₂, c)', c: 'km-assign', ask: 'Qual é a distância de **x₂** a cada centro (c₁; c₂)?', ans: [2, 4], hints: ['x₂ − c₁ = (0, 2) e x₂ − c₂ = (−4, 0).'], also: 'C₁ = {x₁, x₂} · C₂ = {x₃, x₄}', e: '**2** e **4**: x₂ vai para C₁. Por simetria, x₃ vai para C₂.' },
       { name: 'c₁ novo', c: 'km-update', ask: 'Quanto vale o **novo c₁**?', ans: [0, 1], hints: ['Média de x₁ e x₂.'], e: '**(0; 1)**.' },
@@ -179,6 +186,8 @@ STUDY.problems('ml', [
   { id: 'km-sil-3', kind: 'alone', alone: true, src: 'Exame 1 2022/23, I.2.a-b', pts: 3,
     stmt: 'Dados **x₁ = (0, 3)**, **x₂ = (2, 1)**, **x₃ = (3, 1)**, **x₄ = (3, 2)**. Aplica o k-means com **distância Manhattan** e centros iniciais x₁ e x₂.\nDepois, identifica a silhueta de x₂ com a mesma distância.',
     d: { pts: { p: [{ x: 0, y: 3, l: 'x₁' }, { x: 2, y: 1, l: 'x₂' }, { x: 3, y: 1, l: 'x₃' }, { x: 3, y: 2, l: 'x₄' }], r: [-1, 4, -1, 4] } },
+    sol: { t: 'Convergiu: **C₁ = {x₁}** (círculo cheio) com c₁ = (0; 3), e **C₂ = {x₂, x₃, x₄}** (quadrados) com c₂ = (8/3; 4/3). A silhueta de x₂ é 0,625.',
+      d: { pts: { p: [{ x: 0, y: 3, l: 'x₁', c: 1 }, { x: 2, y: 1, l: 'x₂', c: 2 }, { x: 3, y: 1, l: 'x₃', c: 2 }, { x: 3, y: 2, l: 'x₄', c: 2 }], c: [{ x: 0, y: 3, l: 'c₁' }, { x: 2.667, y: 1.333, l: 'c₂' }], r: [-1, 4, -1, 4] } } },
     steps: [
       { name: 'c₁ novo', c: 'km-update', ask: 'Quanto vale **c₁** depois da 1.ª iteração?', ans: [0, 3], e: 'C₁ = {x₁}: **(0; 3)**.' },
       { name: 'c₂ novo', c: 'km-update', ask: 'Quanto vale **c₂** depois da 1.ª iteração?', ans: [2.667, 1.333], also: 'Na 2.ª iteração nada muda: convergiu', e: 'C₂ = {x₂, x₃, x₄}: **(8/3; 4/3)**.' },

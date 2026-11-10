@@ -2,7 +2,8 @@
    Never change the id of a published problem or stage: progress points at them.
    step: name · ask · ans (list = vector, list of lists = matrix) · show (same shape: 1 = already given) · c (concept:
    done cleanly once, it comes filled in next time) · hints (from the formula to almost the answer) · miss (known
-   mistakes: v is the wrong value, m what went wrong) · also (extra result kept in view) · e (the worked line) · les (lesson). */
+   mistakes: v is the wrong value, m what went wrong) · also (extra result kept in view) · e (the worked line) · les (lesson).
+   stage.sol: { t, d } is the final result (text and a diagram, e.g. the finished tree), drawn on the end screen. */
 STUDY.problems('ml', [
 { id: 'nn-update', t: 'mlp', skill: 'mlp-bp', title: 'Uma atualização completa de uma MLP', short: 'Backprop',
   sub: 'Forward, deltas e novos pesos: o problema que sai em todos os exames.', time: '5 a 8 min',

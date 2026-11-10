@@ -122,7 +122,9 @@ topic by topic and level by level. With everything ready, it offers the mock exa
 
 The big exam problems, solved by typing the key values (`src/engine/app-problems.js`; content in `STUDY.problems`, see
 `src/courses/ml/problems.js`). A type has stages: `guided`, `half`, `alone` (`alone: true`: no hints). Each stage is a whole problem:
-`{ id, kind, src, pts, stmt, d, les, steps }`, and each step `{ name, ask, ans, show, c, hints, miss, also, e, les }`.
+`{ id, kind, src, pts, stmt, d, sol, les, steps }`, and each step `{ name, ask, ans, show, c, hints, miss, also, e, les }`.
+`sol` is the stage's final result, `{ t, d }` (text and a diagram such as the finished tree), shown on the end screen.
+The end screen also folds out the whole worked solution, every step with its line.
 `ans` is a list (vector) or a list of lists (matrix); `show` has the same shape and marks cells already given.
 
 - A step never blocks: hints, then the answer. `miss` names a known mistake (`{ v: wrong value, m: what went wrong }`).

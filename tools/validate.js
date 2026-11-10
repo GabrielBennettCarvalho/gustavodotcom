@@ -37,6 +37,33 @@ for (const id of REG.order) {
     if (q.kind !== undefined && !['method', 'check', 'bug'].includes(q.kind)) err(`${tag}: "kind" must be method, check or bug`);
     if (q.d && c.render) { try { const s = c.render(q.d); if (!s || !String(s).includes('<svg')) err(`${tag}: empty diagram`); } catch (e) { err(`${tag}: diagram fails (${e.message})`); } }
   }
+  // key problems (typed answers): every answer, mask and known mistake must have the same shape
+  const flat = a => Array.isArray(a[0]) ? a.flat() : a, pbIds = new Set();
+  for (const p of c.problems || []) {
+    const ptag = `${id}/problem ${p.id}`;
+    if (pbIds.has(p.id)) err(`${ptag}: duplicate id`); pbIds.add(p.id);
+    if (!c.topics[p.t]) err(`${ptag}: unknown topic "${p.t}"`); if (p.skill && !SK.has(p.skill)) err(`${ptag}: skill "${p.skill}" does not exist`);
+    if (!Array.isArray(p.stages) || !p.stages.length) { err(`${ptag}: needs stages`); continue; }
+    for (const st of p.stages) {
+      const stag = `${ptag}/${st.id}`;
+      if (pbIds.has(st.id)) err(`${stag}: duplicate id`); pbIds.add(st.id);
+      if (!['guided', 'half', 'alone'].includes(st.kind)) err(`${stag}: kind must be guided, half or alone`);
+      if (st.kind === 'alone' && !st.alone) err(`${stag}: an "alone" stage needs alone: true`);
+      if (!st.stmt) err(`${stag}: missing statement`);
+      if (st.d && c.render) { try { if (!String(c.render(st.d)).includes('<svg')) err(`${stag}: empty diagram`); } catch (e) { err(`${stag}: diagram fails (${e.message})`); } }
+      if (!(st.steps || []).length) err(`${stag}: needs steps`);
+      for (const s of st.steps || []) {
+        const t = `${stag}/${s.name}`, n = flat(s.ans || []).length;
+        if (!s.ask || !s.name || !s.e) err(`${t}: needs ask, name and e`);
+        if (!n || flat(s.ans).some(v => typeof v !== 'number' || isNaN(v))) err(`${t}: "ans" must be numbers`);
+        if (s.show && flat(s.show).length !== n) err(`${t}: "show" has a different shape from "ans"`);
+        if (s.show && flat(s.show).every(Boolean)) err(`${t}: nothing left to type`);
+        if (!st.alone && !(s.hints || []).length) err(`${t}: needs hints`);
+        if (s.les && !L.has(s.les)) err(`${t}: lesson "${s.les}" does not exist`);
+        for (const m of s.miss || []) { if (flat(m.v).length !== n) err(`${t}: a known mistake has a different shape`); if (!m.m) err(`${t}: a known mistake needs a message`); if (flat(m.v).every((v, i) => Math.abs(v - flat(s.ans)[i]) < 0.011)) err(`${t}: a known mistake equals the answer`); }
+      }
+    }
+  }
   // Warn when the right answer gives itself away by being clearly the longest option.
   const tell = c.questions.filter(q => { if (Array.isArray(q.a) || !Array.isArray(q.o)) return false;
     const L = q.o.map(o => String(o).length), r = L[q.a], others = L.filter((_, i) => i !== q.a);
@@ -54,6 +81,6 @@ for (const id of REG.order) {
   const skOf = q => q.k !== undefined ? q.k : lesSk[q.les];
   const core = q => !SK.size || /^(exame|teste|map|mini|repescagem)/i.test(q.src || '') || !!(SK.get(skOf(q)) && (SK.get(skOf(q)).core || (SK.get(skOf(q)).seen || []).length));
   const pr = SK.size ? `, ${SK.size} problem types, ${c.questions.filter(core).length} priority / ${c.questions.filter(q => !core(q)).length} supplementary` : '';
-  console.log(`${id}: ${c.lessons.length} lessons, ${c.questions.length} questions (${res} reserved for the exam), ${c.extras.length} extra(s)${pr}${added.length ? `, +${added.length} new ids` : ''}`);
+  console.log(`${id}: ${c.lessons.length} lessons, ${c.questions.length} questions (${res} reserved for the exam), ${c.extras.length} extra(s)${(c.problems || []).length ? `, ${c.problems.length} key problem(s)` : ''}${pr}${added.length ? `, +${added.length} new ids` : ''}`);
 }
 process.exit(errs ? 1 : 0);

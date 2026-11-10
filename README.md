@@ -95,6 +95,19 @@ New file? Add it to the course's list in `manifest.json`. Lessons work the same 
   in the exam's order. Works in every course; a `src` naming two exams is left out.
 - **Cábula**: the `sheet` of each type you got wrong at least once (or pinned), with your notes. It can be printed.
 
+## Key problems (Problemas-chave)
+
+The big exam problems, solved by typing the key values (`src/engine/app-problems.js`; content in `STUDY.problems`, see
+`src/courses/ml/problems.js`). A type has stages: `guided`, `half`, `alone` (`alone: true`: no hints). Each stage is a whole problem:
+`{ id, kind, src, pts, stmt, d, les, steps }`, and each step `{ name, ask, ans, show, c, hints, miss, also, e, les }`.
+`ans` is a list (vector) or a list of lists (matrix); `show` has the same shape and marks cells already given.
+
+- A step never blocks: hints, then the answer. `miss` names a known mistake (`{ v: wrong value, m: what went wrong }`).
+- A concept (`c`) done cleanly comes filled in next time, except in `alone` stages and reviews.
+- A clean first problem finishes the type. Otherwise the next stage is due the next day ("Fazer já" skips the wait).
+- A finished type comes back once, with no hints, a week later.
+- Progress is in `S.prob`. It is not in the "other device" key yet. Never change a published problem or stage id.
+
 ## Skip, Tudo / Só teoria / Só contas, and theme
 
 - **Saltar** (key S): in training a skipped question is not a mistake; it goes to Revisão → Saltadas until answered.

@@ -419,6 +419,115 @@ textarea.key{min-height:84px;word-break:break-all}
 .cab-exam{margin-top:14px;max-height:70vh;overflow:auto}
 .cab-exam .sheet-topic{font-size:15px;margin:12px 0 6px}
 
+/* formulas with a legend ({f:id}): the formula is a button, the card says what each symbol means */
+.fx{font:inherit;color:inherit;background:none;border:0;border-bottom:1.5px dotted var(--accent);border-radius:0;padding:0 1px;margin:0;display:inline;line-height:inherit;text-align:inherit;cursor:help}
+.fx:hover,.fx[aria-expanded="true"]{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.fx:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fx-card{position:fixed;z-index:60;width:min(340px,calc(100vw - 16px));max-height:min(70vh,520px);overflow:auto;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);padding:10px 14px 12px}
+.fx-card.sheet{left:0;right:0;bottom:0;top:auto;width:auto;max-height:60vh;border-radius:14px 14px 0 0}
+.fx-f{font-weight:650;font-size:15px;line-height:1.5;margin:6px 0 8px;overflow-wrap:anywhere}
+.fx-legend{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;margin:0 0 10px;font-size:13.5px;line-height:1.45}
+.fx-legend dt{font-weight:700;white-space:nowrap}
+.fx-legend dd{margin:0}
+.fx-note{font-size:13px;margin:0 0 8px}
+.flash{animation:fxflash 1.8s ease-out}
+@keyframes fxflash{from{box-shadow:0 0 0 3px var(--accent)}to{box-shadow:0 0 0 0 transparent}}
+@media print{.fx-card{display:none}.fx{border:0}}
+
+/* daily review: optional strips on the plan card, and the read mode */
+.plan-extra{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;border:1px dashed var(--line);border-radius:10px;padding:9px 12px;margin:10px 0}
+.plan-extra .pe-t{flex:1 1 220px;min-width:0;font-size:14px}
+.plan-extra .pe-w{display:block;font-size:13px}
+.plan-extra .row{gap:6px;flex-wrap:wrap}
+.rc-opts{margin:12px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.rc-o{padding:6px 10px;border:1px solid var(--line);border-radius:8px}
+.rc-o.ok{border-color:var(--good);background:var(--good-bg);font-weight:600}
+.rc-card .key{margin-top:8px}
+
+/* calculator (app-calc.js): a corner button and a floating panel; a bottom sheet on a phone */
+.calc-fab{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--accent);box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer;transition:transform .1s ease}
+.calc-fab:hover{transform:translateY(-1px)}
+.calc-fab[hidden]{display:none}
+/* above a bar stuck to the bottom of the screen (key problems; the quiz's next bar on a phone), not on its buttons */
+body:has(.pb-actions) .calc-fab{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+@media (max-width:560px){body:has(.qfoot.next-bar) .calc-fab{bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
+.calc-panel{position:fixed;right:16px;bottom:16px;z-index:45;width:min(372px,calc(100vw - 32px));max-height:calc(100vh - 32px);display:flex;flex-direction:column;gap:8px;padding:8px 12px 10px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.22)}
+.calc-h{display:flex;align-items:center;gap:4px;margin-right:-6px}
+.calc-hist{list-style:none;margin:0;padding:0;overflow-y:auto;max-height:200px;display:flex;flex-direction:column;border-bottom:1px solid var(--line)}
+.calc-hist[hidden]{display:none}
+.calc-hist li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 0;border-top:1px solid var(--line)}
+.calc-hist li:first-child{border-top:0}
+.calc-hx,.calc-hr{background:none;border:0;padding:3px 4px;border-radius:6px;cursor:pointer;color:inherit;min-width:0}
+.calc-hx{font-size:16px;overflow-x:auto;text-align:left;color:var(--muted)}
+.calc-hr{display:flex;flex-direction:column;align-items:flex-end;flex:none}
+.calc-hr .cl{font-size:17px;font-weight:600}
+.calc-hx:hover,.calc-hr:hover{background:var(--panel-2)}
+.calc-alt{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.calc-disp{position:relative;border:1.5px solid var(--line);border-radius:10px;background:var(--panel-2);padding:10px 12px 8px;cursor:text;min-height:86px;display:flex;flex-direction:column;justify-content:space-between;gap:4px}
+.calc-disp.focus{border-color:var(--accent)}
+/* a block, not flex: flex items ignore vertical-align, which raises exponents and lowers indices */
+.calc-expr{font-size:24px;min-height:44px;overflow-x:auto;overflow-y:hidden;padding:6px 0 2px;line-height:1.7;white-space:nowrap}
+.calc-ph{color:var(--muted);font-size:15px;font-family:var(--f-body);opacity:.8}
+.calc-prev{display:flex;align-items:baseline;justify-content:flex-end;gap:10px;min-height:22px;text-align:right;color:var(--muted)}
+.calc-prev .cl{font-size:18px}
+.calc-prev.err{display:block;color:var(--bad);font-size:13.5px;line-height:1.45;text-align:left;white-space:normal;overflow-wrap:anywhere}
+.calc-prev.err .cl{font-size:16px;color:var(--ink)}
+.calc-in{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;border:0;padding:0;pointer-events:none;caret-color:transparent}
+.calc-keys{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.calc-keys.pad{display:none}
+.calc-k{height:36px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);cursor:pointer;font:600 15px var(--f-body);display:flex;align-items:center;justify-content:center;padding:0;touch-action:manipulation;white-space:nowrap}
+.calc-k:hover{background:var(--line)}
+.calc-k:active{transform:translateY(1px)}
+.calc-k.eq{grid-column:span 2;background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.calc-k.on{border-color:var(--accent);color:var(--accent)}
+.calc-tip{font-size:11.5px;line-height:1.4;margin:0}
+.calc-abc{display:none}
+.calc-abc.on{color:var(--accent)}
+.calc-k i{font-family:var(--f-read);font-size:17px}
+@media (pointer:coarse){.calc-keys.pad{display:grid}.calc-abc{display:inline-flex}.calc-tip{display:none}.calc-k{height:40px}}
+@media (max-width:700px){
+  .calc-panel{left:0;right:0;bottom:0;width:auto;max-height:88vh;border-radius:14px 14px 0 0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+  .calc-hist{max-height:22vh}}
+@media print{.calc-panel,.calc-fab{display:none}}
+
+/* natural display: the expression drawn as on paper (calc.js renders it) */
+.cl{font-family:var(--f-read);line-height:1.2;white-space:nowrap;font-variant-numeric:lining-nums}
+.cl-v{font-style:italic}
+.cl-k,.cl-n,.cl-f{font-style:normal}
+.cl-f{margin-right:.06em}
+.cl-ans{font-family:var(--f-mono);font-size:.72em}
+.cl-o{margin:0 .2em}
+.cl-o.u{margin:0 .06em 0 0}
+.cl-o.c{margin:0 .25em 0 0}
+.cl-o.f{margin:0}
+.cl-dot{margin:0 .08em}
+.cl-sp{display:inline-block;width:.18em}
+.cl-p.tall{display:inline-block;transform:scaleY(1.7)}
+.cl-p.ghost{opacity:.35}
+.cl-frac{display:inline-flex;flex-direction:column;align-items:stretch;vertical-align:middle;text-align:center;font-size:.86em;margin:0 .12em}
+.cl-fn{padding:0 .12em .06em}
+.cl-fd{border-top:1.5px solid currentColor;padding:.06em .12em 0}
+.cl-frac.sm{font-size:11px;line-height:1;font-family:var(--f-body)}
+.cl-sup{font-size:.68em;vertical-align:.75em;display:inline-block;line-height:1}
+.cl-sub{font-size:.65em;vertical-align:-.4em;display:inline-block;line-height:1}
+.cl-x{margin-left:.1em}
+.cl-x sup{font-size:.7em}
+.cl-sqrt{display:inline-flex;align-items:stretch;vertical-align:middle;margin:0 .06em;position:relative}
+.cl-rad{width:.62em;flex:none;margin-top:.04em;overflow:visible}
+.cl-rc{border-top:1.4px solid currentColor;padding:.08em .12em 0 .06em;margin-top:.06em;display:inline-flex;align-items:center}
+.cl-idx{position:absolute;left:-.05em;top:.05em;font-size:.45em}
+.cl-hole{display:inline-block;width:.62em;height:.9em;border:1.5px dashed var(--muted);border-radius:3px;vertical-align:-.1em;margin:0 .06em;position:relative;background:color-mix(in srgb,var(--muted) 10%,transparent)}
+.calc-disp.focus .cl-hole:has(.cl-caret){border-color:var(--accent);border-style:solid;background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.cl-hole .cl-caret{position:absolute;left:3px;top:.06em;height:.7em;vertical-align:0}
+.cl-sup .cl-hole,.cl-sub .cl-hole{border-width:1.2px;min-width:9px;min-height:12px}
+.cl-caret{display:inline-block;width:0;height:1.05em;border-left:2px solid var(--accent);margin:0 -1px;vertical-align:-.18em;animation:cl-blink 1.05s steps(1) infinite}
+.calc-disp:not(.focus) .cl-caret{visibility:hidden}
+@keyframes cl-blink{50%{opacity:0}}
+.cl .sel{background:color-mix(in srgb,var(--accent) 28%,transparent);border-radius:2px}
+.cl-err{color:var(--bad);text-decoration:underline wavy var(--bad)}
+.cl-h{display:inline}
+@media (prefers-reduced-motion:reduce){.cl-caret{animation:none}}
+
 /* Cores dos temas do AMS */
 :root{ --t-sys:#5452C9; --t-req:#8A55C2; --t-arch:#B88A0B; --t-bpm:#2479B8; --t-bpmn:#238A5E; --t-exam:#C2410C; }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --t-sys:#9C9BFF; --t-req:#C59BF0; --t-arch:#E9C04A; --t-bpm:#6DB8F0; --t-bpmn:#5ACF96; --t-exam:#FF9A62; }}
@@ -10905,65 +11014,157 @@ STUDY.course({
   skills: [
     { id: 'dt-gain', t: 'dt', les: ['dt-entropy', 'dt-gain'], label: 'Entropia e ganho de informação: escolher o atributo',
       seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 1 2021/22'],
-      sheet: '<p><b>H(S) = −Σ pᵢ log₂ pᵢ</b> (0 = nó puro; 1 bit = duas classes meio a meio).</p><p><b>IG(A) = H(S) − Σᵥ (|Sᵥ|/|S|)·H(Sᵥ)</b>. Vai para a raiz o atributo com maior ganho, ou seja, menor entropia condicional.</p><p>Passos: contar as classes no nó → H do nó → para cada atributo, H de cada ramo pesada pelo tamanho do ramo → subtrair.</p><p>Nos slides: I(C) = entropia, E(P) = Σ (|Cᵢ|/|C|)·I(Cᵢ), gain(P) = I(C) − E(P).</p><p><b>Armadilhas:</b> esquecer o peso |Sᵥ|/|S|; usar ln em vez de log₂; 0·log 0 = 0.</p>' },
+      sheet: '<p><b>{f:entropy}</b> (0 = nó puro; 1 bit = duas classes meio a meio).</p><p><b>{f:ig}</b>. Vai para a raiz o atributo com maior ganho, ou seja, menor entropia condicional.</p><p>Passos: contar as classes no nó → H do nó → para cada atributo, H de cada ramo pesada pelo tamanho do ramo → subtrair.</p><p>Nos slides: I(C) = entropia, E(P) = Σ (|Cᵢ|/|C|)·I(Cᵢ), gain(P) = I(C) − E(P).</p><p><b>Armadilhas:</b> esquecer o peso |Sᵥ|/|S|; usar ln em vez de log₂; 0·log 0 = 0.</p>' },
     { id: 'dt-build', t: 'dt', les: ['dt-id3'], label: 'Construir a árvore (ID3) e ler as regras',
       seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 2 2022/23'],
       sheet: '<p>Raiz = maior ganho. Em cada ramo repete <b>só com os exemplos desse ramo</b> e sem os atributos já usados no caminho.</p><p>Pára quando o nó é puro (folha com essa classe) ou já não há atributos (folha com a classe maioritária).</p><p>Cada caminho raiz → folha é uma regra: SE … E … ENTÃO classe.</p><p><b>Armadilha:</b> a entropia de um ramo calcula-se com as contagens do ramo, não do conjunto todo.</p>' },
     { id: 'ev-cm', t: 'eval', les: ['ev-cm'], label: 'Matriz de confusão: precisão, sensibilidade, accuracy',
       seen: ['Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
-      sheet: '<p>Vê primeiro a orientação: as linhas são o previsto ou o real?</p><p>Accuracy = (TP + TN)/N · <b>Precisão</b> = TP/(TP + FP) · <b>Sensibilidade (recall)</b> = TP/(TP + FN) · Especificidade = TN/(TN + FP) · F1 = 2PR/(P + R).</p><p>Várias classes: para a classe c, “positivo” é c e “negativo” é o resto.</p><p><b>Armadilha:</b> trocar FP com FN quando a matriz vem transposta.</p>' },
+      sheet: '<p>Vê primeiro a orientação: as linhas são o previsto ou o real?</p><p>{f:acc} · {f:prec} · Sensibilidade: {f:rec} · Especificidade = TN/(TN + FP) · {f:f1}.</p><p>Várias classes: para a classe c, “positivo” é c e “negativo” é o resto.</p><p><b>Armadilha:</b> trocar FP com FN quando a matriz vem transposta.</p>' },
     { id: 'ev-fit', t: 'eval', les: ['ev-cv'], label: 'Complexidade do modelo e overfitting',
       seen: ['Exame 2 2021/22', 'Exame 1 2021/22'],
       sheet: '<p>Overfitting: erro de treino baixo e de teste alto. Mais parâmetros (graus de liberdade) → mais risco.</p><p>Validação cruzada com k folds: k modelos, média dos k erros. Os hiperparâmetros escolhem-se na validação, nunca no teste.</p><p>Remédios: mais dados, regularização, modelo mais simples, early stopping.</p>' },
     { id: 'bay', t: 'bayes', les: ['b-rule', 'b-map', 'b-naive', 'b-gauss'], label: 'Classificar com Bayes e Naive Bayes (MAP)',
       seen: ['Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
-      sheet: '<p><b>p(c|x) ∝ p(x|c)·p(c)</b>: escolhe a classe com o maior produto (MAP). p(x) só é preciso para normalizar.</p><p>Naive Bayes: p(x|c) = Πᵢ p(xᵢ|c). Atributo contínuo: N(x; μ, σ²) = exp(−(x − μ)²/(2σ²)) / (σ√(2π)), com μ e σ estimados nessa classe.</p><p>Sem independência: p(x|c) pela frequência conjunta (ou gaussiana multivariada).</p><p><b>Armadilhas:</b> ML ignora p(c), MAP usa-o; uma contagem 0 anula o produto (Laplace).</p>' },
+      sheet: '<p><b>{f:bayes}</b>: escolhe a classe com o maior produto (MAP). p(x) só é preciso para normalizar.</p><p>Naive Bayes: {f:nb}. Atributo contínuo: {f:gauss}, com μ e σ estimados nessa classe.</p><p>Sem independência: p(x|c) pela frequência conjunta (ou gaussiana multivariada).</p><p><b>Armadilhas:</b> ML ignora p(c), MAP usa-o; uma contagem 0 anula o produto (Laplace).</p>' },
     { id: 'knn', t: 'knn', les: ['k-dist', 'k-knn'], label: 'Classificar com kNN e distâncias',
       seen: ['Exame 2 2021/22'],
-      sheet: '<p>Euclidiana d₂ = ‖x − y‖₂ = √Σ(xᵢ − yᵢ)² · Manhattan d₁ = ‖x − y‖₁ = Σ|xᵢ − yᵢ| · Hamming = nº de posições diferentes · cosseno xᵀy/(‖x‖‖y‖).</p><p>Classificar: os k mais próximos votam (uniforme, ou com peso 1/d). Regressão: média dos k valores.</p><p><b>Armadilhas:</b> normalizar os atributos antes; em leave-one-out o ponto deixado de fora não é vizinho de si próprio.</p>' },
+      sheet: '<p>Euclidiana {f:d2} · Manhattan {f:d1} · Hamming = nº de posições diferentes · {f:cos}.</p><p>Classificar: os k mais próximos votam (uniforme, ou com peso 1/d). Regressão: média dos k valores.</p><p><b>Armadilhas:</b> normalizar os atributos antes; em leave-one-out o ponto deixado de fora não é vizinho de si próprio.</p>' },
     { id: 'lr-fit', t: 'linreg', les: ['lr-ls', 'lr-basis'], label: 'Regressão linear com funções base: pesos, previsões e erro',
       seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
-      sheet: '<p>Matriz de design Φ: uma linha por exemplo, [1, φ(x), φ(x)², …].</p><p><b>w = (ΦᵀΦ)⁻¹Φᵀt</b> = Φ†t (ridge: (ΦᵀΦ + λI)⁻¹Φᵀt). Previsão ŷ = wᵀφ(x).</p><p>MAE = (1/N)Σ|t − ŷ| · MSE = (1/N)Σ(t − ŷ)² · RMSE = √MSE.</p><p>Inversa 2 × 2: [[a, b], [c, d]]⁻¹ = (1/(ad − bc))·[[d, −b], [−c, a]].</p><p><b>Armadilhas:</b> esquecer a coluna de 1 (bias); aplicar φ (por exemplo ‖x‖₁) antes de elevar ao grau.</p>' },
+      sheet: '<p>Matriz de design Φ: uma linha por exemplo, [1, φ(x), φ(x)², …].</p><p><b>{f:ls}</b> (ridge: {f:ridge}). Previsão ŷ = wᵀφ(x).</p><p>MAE = (1/N)Σ|t − ŷ| · {f:mse} · RMSE = √MSE.</p><p>Inversa 2 × 2: [[a, b], [c, d]]⁻¹ = (1/(ad − bc))·[[d, −b], [−c, a]].</p><p><b>Armadilhas:</b> esquecer a coluna de 1 (bias); aplicar φ (por exemplo ‖x‖₁) antes de elevar ao grau.</p>' },
     { id: 'pe-update', t: 'percep', les: ['p-rosen'], label: 'Perceptrão: classificar e atualizar os pesos',
       seen: ['Exame 2 2022/23', 'Exame 1 2022/23'],
-      sheet: '<p>o = sinal(wᵀx), com x₀ = 1 para o bias. Fronteira: wᵀx = 0.</p><p>Só muda quando erra: <b>w ← w + η(t − o)x</b>.</p><p>Converge se os dados forem linearmente separáveis (o XOR não é).</p><p><b>Armadilha:</b> esquecer o x₀ = 1 no produto e na atualização.</p>' },
+      sheet: '<p>o = sinal(wᵀx), com x₀ = 1 para o bias. Fronteira: wᵀx = 0.</p><p>Só muda quando erra: <b>{f:rosen}</b>.</p><p>Converge se os dados forem linearmente separáveis (o XOR não é).</p><p><b>Armadilha:</b> esquecer o x₀ = 1 no produto e na atualização.</p>' },
     { id: 'gd-rule', t: 'percep', les: ['p-gd'], label: 'Descida do gradiente: derivar e aplicar a regra',
       seen: ['Exame 2 2022/23', 'Exame 1 2021/22'],
-      sheet: '<p><b>Δw = −η ∂E/∂w</b>. Com E = ½Σ(t − o)², o = f(net) (nos slides φ(net)), net = wᵀx: ∂E/∂wⱼ = −Σₖ(tₖ − oₖ)·f′(netₖ)·xₖ,ⱼ.</p><p>Linear: Δw = ηΣ(t − o)x. Sigmoide: f′ = o(1 − o). Outra f (por exemplo (wᵀx)² ou exp(…)): regra da cadeia, deriva f em ordem a net e multiplica por x.</p><p>Batch: soma todos os exemplos e atualiza uma vez. Estocástico: atualiza a cada exemplo.</p>' },
+      sheet: '<p><b>{f:gd}</b>. Com E = ½Σ(t − o)², o = f(net) (nos slides φ(net)), net = wᵀx: {f:gdq}.</p><p>Linear: Δw = ηΣ(t − o)x. Sigmoide: f′ = o(1 − o). Outra f (por exemplo (wᵀx)² ou exp(…)): regra da cadeia, deriva f em ordem a net e multiplica por x.</p><p>Batch: soma todos os exemplos e atualiza uma vez. Estocástico: atualiza a cada exemplo.</p>' },
     { id: 'lg', t: 'logreg', les: ['lg-sig', 'lg-soft'], label: 'Regressão logística e softmax: probabilidades e atualização',
       seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 1 2021/22'],
-      sheet: '<p>p(t = 1|x) = σ(wᵀx) = 1/(1 + e^(−wᵀx)); classe 1 se ≥ 0,5, ou seja wᵀx ≥ 0.</p><p>Entropia cruzada E = −Σ[t log o + (1 − t) log(1 − o)] (log natural) → <b>w ← w − ηΣ(o − t)x</b>.</p><p>Softmax oⱼ = e^(netⱼ)/Σₖe^(netₖ); com entropia cruzada, ∂E/∂netⱼ = oⱼ − tⱼ.</p><p><b>Armadilha:</b> o sinal: (o − t) com menos, ou (t − o) com mais.</p>' },
+      sheet: '<p>p(t = 1|x) = {f:sig}; classe 1 se ≥ 0,5, ou seja wᵀx ≥ 0.</p><p>Entropia cruzada {f:ce} (log natural) → <b>{f:lgupd}</b>.</p><p>Softmax {f:softmax}; com entropia cruzada, ∂E/∂netⱼ = oⱼ − tⱼ.</p><p><b>Armadilha:</b> o sinal: (o − t) com menos, ou (t − o) com mais.</p>' },
     { id: 'mlp-fwd', t: 'mlp', les: ['m-fwd'], label: 'Forward propagation numa MLP',
       seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
-      sheet: '<p><b>z[l] = W[l]x[l−1] + b[l]</b>, <b>x[l] = f(z[l])</b>, com x[0] a entrada.</p><p>Faz camada a camada e guarda z e x: o backprop precisa deles.</p><p>W[l] tem (nº de unidades da camada l) × (nº da camada anterior). Parâmetros: Σ(nₗ₋₁ + 1)·nₗ.</p>' },
+      sheet: '<p><b>{f:fwd}</b>, com x[0] a entrada.</p><p>Faz camada a camada e guarda z e x: o backprop precisa deles.</p><p>W[l] tem (nº de unidades da camada l) × (nº da camada anterior). Parâmetros: Σ(nₗ₋₁ + 1)·nₗ.</p>' },
     { id: 'mlp-bp', t: 'mlp', les: ['m-bp'], label: 'Backpropagation: deltas e atualizar os pesos',
       seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 2 2021/22', 'Exame 1 2021/22'],
-      sheet: '<p>Saída: δ[L] = ∂E/∂z[L]. Softmax ou sigmoide com entropia cruzada, ou linear com erro quadrático: <b>δ[L] = x[L] − t</b>. Sigmoide com erro quadrático: (x[L] − t)∘x[L]∘(1 − x[L]).</p><p>Escondidas: <b>δ[l] = (W[l+1])ᵀδ[l+1] ∘ f′(z[l])</b>.</p><p>∂E/∂W[l] = δ[l](x[l−1])ᵀ · ∂E/∂b[l] = δ[l] · W ← W − η∂E/∂W.</p><p>σ′ = σ(1 − σ) · tanh′ = 1 − tanh² · ReLU′ = 1 se z > 0, senão 0.</p><p>Nos slides o delta tem o sinal trocado: δₖₜ = yₖₜ − oₖₜ e Δw = +ηΣδV. Dá os mesmos pesos.</p><p><b>Armadilha:</b> os deltas usam os pesos antigos; atualiza tudo só no fim.</p>' },
+      sheet: '<p>Saída: δ[L] = ∂E/∂z[L]. Softmax ou sigmoide com entropia cruzada, ou linear com erro quadrático: <b>{f:dout}</b>. Sigmoide com erro quadrático: (x[L] − t)∘x[L]∘(1 − x[L]).</p><p>Escondidas: <b>{f:dhid}</b>.</p><p>{f:grad} · ∂E/∂b[l] = δ[l] · W ← W − η∂E/∂W.</p><p>σ′ = σ(1 − σ) · tanh′ = 1 − tanh² · ReLU′ = 1 se z > 0, senão 0.</p><p>Nos slides o delta tem o sinal trocado: δₖₜ = yₖₜ − oₖₜ e Δw = +ηΣδV. Dá os mesmos pesos.</p><p><b>Armadilha:</b> os deltas usam os pesos antigos; atualiza tudo só no fim.</p>' },
     { id: 'mlp-theory', t: 'mlp', les: ['m-univ'], label: 'O que uma MLP consegue representar',
       seen: ['Exame 1 2024/25', 'Exame 1 2022/23', 'Exame 1 2021/22'],
       sheet: '<p>Uma camada escondida chega para qualquer função booleana (forma normal disjuntiva: uma unidade por mintermo e um OR na saída) e para aproximar qualquer função contínua, com unidades suficientes.</p><p>Cada unidade escondida (degrau ou sigmoide) é um hiperplano; a saída combina-os.</p><p>Mais unidades e camadas → mais parâmetros → mais risco de overfitting.</p>' },
     { id: 'km', t: 'clust', les: ['c-kmeans'], label: 'Iterações do k-means',
       seen: ['Exame 1 2024/25', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
-      sheet: '<p>1) Cada ponto vai para o centróide mais próximo, com a distância que o enunciado pede (euclidiana ou Manhattan). 2) Cada centróide passa a ser a média dos seus pontos: cₖ = (1/|Cₖ|)Σ x. Repete até nada mudar.</p><p>Mostra as atribuições e os centróides em cada iteração. Erro: J = Σₖ Σ_(x∈Cₖ) ‖x − cₖ‖².</p><p><b>Armadilha:</b> em empates e na distância a usar, segue o enunciado à letra.</p>' },
+      sheet: '<p>1) Cada ponto vai para o centróide mais próximo, com a distância que o enunciado pede (euclidiana ou Manhattan). 2) Cada centróide passa a ser a média dos seus pontos: {f:kmc}. Repete até nada mudar.</p><p>Mostra as atribuições e os centróides em cada iteração. Erro: {f:kmj}.</p><p><b>Armadilha:</b> em empates e na distância a usar, segue o enunciado à letra.</p>' },
     { id: 'cl-valid', t: 'clust', les: ['c-valid'], label: 'Validar clusters: silhueta e pureza',
       seen: ['Exame 1 2024/25', 'Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 2 2021/22'],
-      sheet: '<p>Silhueta do ponto i: a(i) = distância média aos outros pontos do seu cluster, b(i) = menor distância média a outro cluster; <b>s(i) = 1 − a(i)/b(i)</b> se a &lt; b (em geral (b − a)/max(a, b)). Ponto sozinho: s = 0.</p><p>Silhueta de um cluster = média das silhuetas dos seus pontos.</p><p><b>Pureza</b> = (1/N)·Σ, por cluster, do nº de pontos da classe mais comum.</p><p><b>Armadilha:</b> a média de a divide por |C| − 1 (sem o próprio ponto).</p>' },
+      sheet: '<p>Silhueta do ponto i: a(i) = distância média aos outros pontos do seu cluster, b(i) = menor distância média a outro cluster; <b>s(i) = 1 − a(i)/b(i)</b> se a &lt; b (em geral {f:sil}). Ponto sozinho: s = 0.</p><p>Silhueta de um cluster = média das silhuetas dos seus pontos.</p><p><b>{f:purity}</b>: por cluster, o nº de pontos da classe mais comum, somado e dividido por N.</p><p><b>Armadilha:</b> a média de a divide por |C| − 1 (sem o próprio ponto).</p>' },
     { id: 'em', t: 'clust', les: ['c-em'], label: 'EM com misturas de gaussianas: passos E e M',
       seen: ['Exame 1 2025/26', 'Exame 2 2022/23'],
-      sheet: '<p><b>E:</b> γ(cₙₖ) = p(cₖ = 1|xₙ) = πₖN(xₙ|μₖ, Σₖ) / Σⱼ πⱼN(xₙ|μⱼ, Σⱼ) (cada ponto soma 1 entre clusters).</p><p><b>M:</b> Nₖ = Σₙγ(cₙₖ); μₖ = (1/Nₖ)Σγ(cₙₖ)xₙ; Σₖ = (1/Nₖ)Σγ(cₙₖ)(xₙ − μₖ)(xₙ − μₖ)ᵀ com a nova μₖ; πₖ = p(cₖ = 1) = Nₖ/N.</p><p>Gaussiana 2D: N(x) = exp(−½(x − μ)ᵀΣ⁻¹(x − μ)) / (2π√|Σ|).</p>' },
+      sheet: '<p><b>E:</b> {f:eme}, ou seja p(cₖ = 1|xₙ) (cada ponto soma 1 entre clusters).</p><p><b>M:</b> Nₖ = Σₙγ(cₙₖ); {f:emmu}; {f:emcov} com a nova μₖ; πₖ = p(cₖ = 1) = Nₖ/N.</p><p>Gaussiana 2D: N(x) = exp(−½(x − μ)ᵀΣ⁻¹(x − μ)) / (2π√|Σ|).</p>' },
     { id: 'pca-cov', t: 'pca', les: ['pc-cov'], label: 'Covariância, valores e vetores próprios',
       seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
-      sheet: '<p>Média x̄; <b>cᵢⱼ = Σₖ(xₖ,ᵢ − x̄ᵢ)(xₖ,ⱼ − x̄ⱼ)/(n − 1)</b>.</p><p>2 × 2: λ² − (traço)λ + det = 0; λ₁ + λ₂ = traço, λ₁λ₂ = det.</p><p>Vetor próprio: C·uᵢ = λᵢ·uᵢ, ou seja (λᵢI − C)uᵢ = 0, depois normaliza (‖u‖ = 1).</p><p><b>Armadilha:</b> n − 1 e não n.</p>' },
+      sheet: '<p>Média x̄; <b>{f:cov}</b>.</p><p>2 × 2: λ² − (traço)λ + det = 0; λ₁ + λ₂ = traço, λ₁λ₂ = det.</p><p>Vetor próprio: {f:eig}, ou seja (λᵢI − C)uᵢ = 0, depois normaliza (‖u‖ = 1).</p><p><b>Armadilha:</b> n − 1 e não n.</p>' },
     { id: 'pca-use', t: 'pca', les: ['pc-pca'], label: 'PCA: variância explicada, quantas componentes, projeção',
       seen: ['Exame 1 2025/26', 'Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
-      sheet: '<p>As componentes ordenam-se por λ. Variância explicada pela k-ésima: λₖ/Σλ.</p><p>Kaiser: fica com as de λ > 1. Ou: as primeiras até chegar à percentagem pedida.</p><p>Projeção como nos slides: <b>y = Uᵀx</b> (só as L primeiras: z = Wᵀx), sem subtrair a média; reconstrução x̂ = Σyᵢuᵢ.</p><p><b>Armadilha:</b> centrar (x − x̄) quando o enunciado não o pede; esquecer de normalizar os uᵢ.</p>' },
+      sheet: '<p>As componentes ordenam-se por λ. Variância explicada pela k-ésima: {f:varexp}.</p><p>Kaiser: fica com as de λ > 1. Ou: as primeiras até chegar à percentagem pedida.</p><p>Projeção como nos slides: <b>{f:proj}</b> (só as L primeiras: z = Wᵀx), sem subtrair a média; reconstrução x̂ = Σyᵢuᵢ.</p><p><b>Armadilha:</b> centrar (x − x̄) quando o enunciado não o pede; esquecer de normalizar os uᵢ.</p>' },
     { id: 'svm', t: 'svm', les: ['s-margin', 's-kernel'], label: 'SVM, margem e kernels',
       seen: ['Exame 2 2021/22'],
-      sheet: '<p>Margem ρ = 2/‖w‖ (vetores de suporte x⁽ˢ⁾ com wᵀx⁽ˢ⁾ + b = ±1). Distância de x ao hiperplano: r = (wᵀx + b)/‖w‖.</p><p>w = Σ αᵢtᵢxᵢ; classificar: o = sgn(Σ αᵢtᵢ k(x, xᵢ) + b).</p><p>Polinomial k(x, xᵢ) = (xᵀxᵢ + 1)ᵖ · gaussiano (RBF) exp(−‖x − xᵢ‖²/(2σ²)).</p><p>Separável com RBF? Sim, a não ser que haja dois pontos iguais com classes diferentes.</p>' },
+      sheet: '<p>Margem {f:margin} (vetores de suporte x⁽ˢ⁾ com wᵀx⁽ˢ⁾ + b = ±1). Distância de x ao hiperplano: r = (wᵀx + b)/‖w‖.</p><p>w = Σ αᵢtᵢxᵢ; classificar: o = sgn(Σ αᵢtᵢ k(x, xᵢ) + b).</p><p>Polinomial k(x, xᵢ) = (xᵀxᵢ + 1)ᵖ · gaussiano (RBF) exp(−‖x − xᵢ‖²/(2σ²)).</p><p>Separável com RBF? Sim, a não ser que haja dois pontos iguais com classes diferentes.</p>' },
     { id: 'dl', t: 'deep', les: ['dl-why'], label: 'Gradiente que desaparece e redes profundas',
       seen: ['Exame 2 2021/22'],
       sheet: '<p>Cada camada multiplica δ por f′. Sigmoide: σ′ ≤ 0,25; com |net| grande satura e f′ ≈ 0.</p><p>Para responder: vê o limite de δ quando net → ±∞.</p><p>Remédios: ReLU, ligações residuais, batch normalization, boa inicialização.</p>' },
   ],
+  // The formulas, with what each symbol means. Text writes {f:id}; a tap on the formula opens its card (README).
+  formulas: {
+    entropy: { t: 'dt', name: 'Entropia', f: 'H(S) = −Σ pᵢ log₂ pᵢ',
+      legend: [['S', 'o conjunto de exemplos que chega a este nó'], ['pᵢ', 'a fração dos exemplos de S que são da classe i'], ['Σ', 'soma sobre todas as classes i'], ['log₂', 'logaritmo de base 2: a entropia vem em bits']],
+      note: 'Nos slides chama-se I(C). Um nó puro tem H = 0; duas classes meio a meio dão 1 bit. Conta 0·log₂0 como 0.' },
+    ig: { t: 'dt', name: 'Ganho de informação', f: 'IG(A) = H(S) − Σᵥ (|Sᵥ|/|S|)·H(Sᵥ)',
+      legend: [['A', 'o atributo que estás a testar'], ['S', 'os exemplos que chegam a este nó'], ['v', 'cada valor possível de A (um ramo)'], ['Sᵥ', 'os exemplos de S em que A = v'], ['|S|, |Sᵥ|', 'quantos exemplos há em S e em Sᵥ'], ['|Sᵥ|/|S|', 'o peso do ramo: a fração dos exemplos que vai para lá'], ['H(·)', 'a entropia desse conjunto']],
+      note: 'Nos slides: gain(P) = I(C) − E(P), com E(P) = Σ (|Cᵢ|/|C|)·I(Cᵢ). A parte que se subtrai é a entropia que fica depois de testar A.' },
+    acc: { t: 'eval', name: 'Accuracy', f: 'Accuracy = (TP + TN)/N',
+      legend: [['TP', 'verdadeiros positivos: positivos previstos como positivos'], ['TN', 'verdadeiros negativos'], ['N', 'o total de exemplos']] },
+    prec: { t: 'eval', name: 'Precisão', f: 'Precisão = TP/(TP + FP)',
+      legend: [['TP', 'positivos previstos como positivos'], ['FP', 'falsos positivos: negativos previstos como positivos'], ['TP + FP', 'tudo o que o modelo disse que era positivo']],
+      note: 'Responde: dos que disse que eram positivos, quantos eram mesmo?' },
+    rec: { t: 'eval', name: 'Recall (sensibilidade)', f: 'Recall = TP/(TP + FN)',
+      legend: [['TP', 'positivos previstos como positivos'], ['FN', 'falsos negativos: positivos que o modelo deixou escapar'], ['TP + FN', 'todos os positivos verdadeiros']],
+      note: 'Responde: dos positivos verdadeiros, quantos apanhou?' },
+    f1: { t: 'eval', name: 'F1', f: 'F1 = 2PR/(P + R)',
+      legend: [['P', 'a precisão, TP/(TP + FP)'], ['R', 'o recall, TP/(TP + FN)']], note: 'É a média harmónica de P e R: só é alta se as duas forem.' },
+    bayes: { t: 'bayes', name: 'Regra de Bayes (MAP)', f: 'p(c|x) ∝ p(x|c)·p(c)',
+      legend: [['c', 'uma classe'], ['x', 'o exemplo a classificar'], ['p(c)', 'o prior: a fração da classe c no treino'], ['p(x|c)', 'a verosimilhança: quão provável é ver x numa classe c'], ['p(c|x)', 'o posterior: a probabilidade da classe depois de ver x'], ['∝', 'proporcional: falta dividir por p(x), que é igual para todas as classes']],
+      note: 'MAP escolhe a classe com o maior p(x|c)·p(c). ML ignora o prior e escolhe o maior p(x|c).' },
+    nb: { t: 'bayes', name: 'Naive Bayes', f: 'p(x|c) = Πᵢ p(xᵢ|c)',
+      legend: [['xᵢ', 'o valor do atributo i no exemplo x'], ['p(xᵢ|c)', 'a fração dos exemplos da classe c com esse valor'], ['Πᵢ', 'produto sobre todos os atributos']],
+      note: 'A hipótese “ingénua”: os atributos são independentes dentro de cada classe.' },
+    gauss: { t: 'bayes', name: 'Gaussiana numa dimensão', f: 'N(x; μ, σ²) = exp(−(x − μ)²/(2σ²)) / (σ√(2π))',
+      legend: [['x', 'o valor em que se calcula a densidade'], ['μ', 'a média'], ['σ', 'o desvio padrão (σ² é a variância)'], ['exp(·)', 'e elevado a (·)']],
+      note: 'É uma densidade, não uma probabilidade: pode passar de 1.' },
+    d2: { t: 'knn', name: 'Distância euclidiana', f: 'd₂ = ‖x − y‖₂ = √Σ(xᵢ − yᵢ)²',
+      legend: [['x, y', 'os dois pontos'], ['xᵢ, yᵢ', 'a componente i de cada um'], ['Σ', 'soma sobre todas as componentes']] },
+    d1: { t: 'knn', name: 'Distância Manhattan', f: 'd₁ = ‖x − y‖₁ = Σ|xᵢ − yᵢ|',
+      legend: [['x, y', 'os dois pontos'], ['|xᵢ − yᵢ|', 'a diferença na componente i, sem sinal']] },
+    cos: { t: 'knn', name: 'Semelhança do cosseno', f: 'cos(x, y) = xᵀy/(‖x‖‖y‖)',
+      legend: [['xᵀy', 'o produto interno: Σ xᵢyᵢ'], ['‖x‖', 'o comprimento de x: √Σ xᵢ²']], note: 'Mede o ângulo, não a distância: 1 = mesma direção.' },
+    ls: { t: 'linreg', name: 'Mínimos quadrados', f: 'w = (ΦᵀΦ)⁻¹Φᵀt = Φ†t',
+      legend: [['Φ', 'a matriz de design: uma linha por exemplo, [1, φ(x), φ(x)², …]'], ['X', 'a matriz de design sem funções base: cada linha é [1, x₁, x₂, …]'], ['Φᵀ', 'a transposta de Φ'], ['(·)⁻¹', 'a inversa da matriz'], ['t', 'o vetor dos alvos'], ['w', 'os pesos; o primeiro é o bias'], ['Φ†', 'a pseudo-inversa, (ΦᵀΦ)⁻¹Φᵀ']] },
+    ridge: { t: 'linreg', name: 'Regressão ridge', f: 'w = (ΦᵀΦ + λI)⁻¹Φᵀt',
+      legend: [['λ', 'a força da regularização: maior λ, pesos menores'], ['I', 'a matriz identidade'], ['Φ, t', 'como nos mínimos quadrados']] },
+    mse: { t: 'linreg', name: 'Erro quadrático médio', f: 'MSE = (1/N)Σ(t − ŷ)²',
+      legend: [['N', 'o número de exemplos'], ['t', 'o alvo de cada exemplo'], ['ŷ (ou y)', 'a previsão do modelo para esse exemplo']], note: 'MAE troca o quadrado pelo valor absoluto; RMSE = √MSE.' },
+    rosen: { t: 'percep', name: 'Regra do perceptrão', f: 'w ← w + η(t − o)x',
+      legend: [['w', 'os pesos, com w₀ = bias'], ['η', 'a taxa de aprendizagem'], ['t', 'o alvo (+1 ou −1)'], ['o', 'a saída, sinal(wᵀx)'], ['x', 'o exemplo, com x₀ = 1 para o bias']],
+      note: 'Quando acerta, t − o = 0 e nada muda.' },
+    gd: { t: 'percep', name: 'Descida do gradiente', f: 'Δw = −η ∂E/∂w',
+      legend: [['Δw', 'quanto mudam os pesos'], ['η', 'a taxa de aprendizagem'], ['E', 'o erro'], ['∂E/∂w (ou ∇E)', 'o gradiente: para onde o erro sobe'], ['−', 'anda no sentido contrário, para o erro descer']] },
+    gdq: { t: 'percep', name: 'Gradiente do erro quadrático', f: '∂E/∂wⱼ = −Σₖ(tₖ − oₖ)·f′(netₖ)·xₖ,ⱼ',
+      legend: [['k', 'cada exemplo de treino'], ['j', 'o peso (e a componente) que estás a derivar'], ['oₖ', 'a saída para o exemplo k, f(netₖ)'], ['netₖ', 'wᵀxₖ'], ['f′', 'a derivada da ativação (nos slides φ)'], ['xₖ,ⱼ', 'a componente j do exemplo k']],
+      note: 'Vem de E = ½Σ(t − o)² e da regra da cadeia.' },
+    sig: { t: 'logreg', name: 'Sigmoide', f: 'σ(wᵀx) = 1/(1 + e^(−wᵀx))',
+      legend: [['wᵀx', 'a soma pesada das entradas, com o bias'], ['σ', 'espreme tudo para (0, 1): uma probabilidade']], note: 'σ′ = σ(1 − σ). Classe 1 se σ ≥ 0,5, ou seja, wᵀx ≥ 0.' },
+    ce: { t: 'logreg', name: 'Entropia cruzada', f: 'E = −Σ[t log o + (1 − t) log(1 − o)]',
+      legend: [['t', 'o alvo, 0 ou 1'], ['o', 'a probabilidade prevista, σ(wᵀx)'], ['log', 'logaritmo natural'], ['Σ', 'soma sobre os exemplos']] },
+    lgupd: { t: 'logreg', name: 'Atualização da regressão logística', f: 'w ← w − ηΣ(o − t)x',
+      legend: [['o', 'a probabilidade prevista para o exemplo, σ(wᵀx)'], ['t', 'o alvo, 0 ou 1'], ['x', 'o exemplo, com 1 para o bias'], ['Σ', 'soma sobre os exemplos (batch); sem Σ é estocástica']] },
+    softmax: { t: 'logreg', name: 'Softmax', f: 'oⱼ = e^(netⱼ)/Σₖe^(netₖ)',
+      legend: [['netⱼ', 'a entrada da unidade de saída j'], ['Σₖ', 'soma sobre todas as unidades de saída'], ['oⱼ', 'a probabilidade da classe j; todas somam 1']], note: 'Com entropia cruzada, ∂E/∂netⱼ = oⱼ − tⱼ.' },
+    fwd: { t: 'mlp', name: 'Propagação para a frente', f: 'z[l] = W[l]x[l−1] + b[l], x[l] = f(z[l])',
+      legend: [['l', 'a camada (x[0] é a entrada)'], ['W[l]', 'os pesos da camada l: uma linha por unidade dessa camada'], ['b[l]', 'os biases da camada l'], ['z[l]', 'as entradas pesadas, antes da ativação'], ['x[l]', 'as saídas da camada l'], ['f', 'a ativação (ReLU, sigmoide, tanh…)'], ['[1], [2]', 'nos problemas, l já vem com o número da camada']] },
+    dout: { t: 'mlp', name: 'Delta da camada de saída', f: 'δ[L] = x[L] − t',
+      legend: [['L', 'a última camada'], ['δ[L]', '∂E/∂z[L]: o “erro” que a camada de saída vê'], ['x[L]', 'a saída da rede'], ['t', 'o alvo']],
+      note: 'Só assim para softmax ou sigmoide com entropia cruzada, ou saída linear com erro quadrático. Noutros casos: δ[L] = (x[L] − t) ∘ f′(z[L]). Nos slides o sinal é o contrário, δ = y − o.' },
+    dhid: { t: 'mlp', name: 'Delta de uma camada escondida', f: 'δ[l] = (W[l+1])ᵀδ[l+1] ∘ f′(z[l])',
+      legend: [['(W[l+1])ᵀ', 'a transposta dos pesos da camada seguinte (os antigos, antes de atualizar)'], ['δ[l+1]', 'o delta da camada seguinte'], ['∘ (ou ⊙)', 'produto componente a componente'], ['f′(z[l])', 'a derivada da ativação nesta camada']] },
+    grad: { t: 'mlp', name: 'Gradiente dos pesos', f: '∂E/∂W[l] = δ[l](x[l−1])ᵀ',
+      legend: [['δ[l]', 'o delta da camada l (coluna)'], ['(x[l−1])ᵀ', 'a entrada dessa camada, em linha'], ['δ[l](x[l−1])ᵀ', 'um produto externo: dá uma matriz com a forma de W[l]']], note: 'Depois: W[l] ← W[l] − η·∂E/∂W[l] e b[l] ← b[l] − η·δ[l].' },
+    kmc: { t: 'clust', name: 'Centróide do k-means', f: 'cₖ = (1/|Cₖ|)Σ x',
+      legend: [['Cₖ', 'os pontos atribuídos ao cluster k'], ['|Cₖ|', 'quantos pontos tem'], ['Σ x', 'a soma desses pontos'], ['cₖ', 'o novo centróide: a média']] },
+    kmj: { t: 'clust', name: 'Erro do k-means', f: 'J = Σₖ Σ_(x∈Cₖ) ‖x − cₖ‖²',
+      legend: [['Σₖ', 'soma sobre os clusters'], ['x∈Cₖ', 'cada ponto do cluster k'], ['‖x − cₖ‖²', 'o quadrado da distância do ponto ao seu centróide']], note: 'Desce sempre que k aumenta, por isso sozinho não escolhe k.' },
+    sil: { t: 'clust', name: 'Silhueta', f: 's(i) = (b(i) − a(i))/max(a(i), b(i))',
+      legend: [['i', 'o ponto'], ['a(i)', 'a distância média aos outros pontos do seu cluster'], ['b(i)', 'a menor distância média aos pontos de outro cluster'], ['max(a, b)', 'o maior dos dois']],
+      note: 'Se a < b, fica 1 − a/b. Perto de 1 é bom; negativo quer dizer que o ponto estaria melhor noutro cluster.' },
+    purity: { t: 'clust', name: 'Pureza', f: 'Pureza = (1/N)·Σₖ maxⱼ |Cₖ ∩ Lⱼ|',
+      legend: [['Cₖ', 'os pontos do cluster k'], ['Lⱼ', 'os pontos da classe j (a verdadeira)'], ['maxⱼ |Cₖ ∩ Lⱼ|', 'quantos pontos tem a classe mais comum no cluster k'], ['N', 'o total de pontos']] },
+    eme: { t: 'clust', name: 'EM: passo E', f: 'γ(cₙₖ) = πₖN(xₙ|μₖ, Σₖ) / Σⱼ πⱼN(xₙ|μⱼ, Σⱼ)',
+      legend: [['n, k', 'o ponto n e o cluster k'], ['γ(cₙₖ)', 'a responsabilidade: a probabilidade de o ponto n ser do cluster k'], ['πₖ', 'o prior (peso) do cluster k'], ['N(xₙ|μₖ, Σₖ)', 'a densidade da gaussiana do cluster k no ponto xₙ'], ['μₖ, Σₖ', 'a média e a matriz de covariância do cluster k'], ['Σⱼ', 'aqui sim é uma soma, sobre todos os clusters']],
+      note: 'Cuidado: Σₖ é a covariância e Σⱼ é a soma. As responsabilidades de cada ponto somam 1.' },
+    emmu: { t: 'clust', name: 'EM: passo M (média)', f: 'μₖ = (1/Nₖ)Σγ(cₙₖ)xₙ',
+      legend: [['Nₖ', 'Σₙγ(cₙₖ): quantos pontos o cluster k “tem”, contando frações'], ['γ(cₙₖ)xₙ', 'cada ponto pesado pela sua responsabilidade'], ['Σ', 'soma sobre os pontos n']], note: 'O prior novo é πₖ = Nₖ/N.' },
+    emcov: { t: 'clust', name: 'EM: passo M (covariância)', f: 'Σₖ = (1/Nₖ)Σγ(cₙₖ)(xₙ − μₖ)(xₙ − μₖ)ᵀ',
+      legend: [['Σₖ (à esquerda)', 'a nova matriz de covariância do cluster k'], ['Σ (à direita)', 'a soma sobre os pontos n'], ['μₖ', 'a média nova, a que acabaste de calcular'], ['(xₙ − μₖ)(xₙ − μₖ)ᵀ', 'coluna vezes linha: uma matriz por ponto']] },
+    cov: { t: 'pca', name: 'Matriz de covariância', f: 'cᵢⱼ = Σₖ(xₖ,ᵢ − x̄ᵢ)(xₖ,ⱼ − x̄ⱼ)/(n − 1)',
+      legend: [['cᵢⱼ', 'a entrada (i, j) da matriz: covariância entre os atributos i e j'], ['k', 'cada ponto'], ['xₖ,ᵢ', 'o atributo i do ponto k'], ['x̄ᵢ', 'a média do atributo i'], ['n', 'o número de pontos']], note: 'Na diagonal ficam as variâncias. Divide por n − 1, não por n.' },
+    eig: { t: 'pca', name: 'Valores e vetores próprios', f: 'C·uᵢ = λᵢ·uᵢ',
+      legend: [['C', 'a matriz de covariância'], ['uᵢ', 'um vetor próprio: uma direção principal'], ['λᵢ', 'o valor próprio: a variância dos dados nessa direção']], note: '2 × 2: λ² − (traço)λ + det = 0. Depois normaliza uᵢ (‖uᵢ‖ = 1).' },
+    varexp: { t: 'pca', name: 'Variância explicada', f: 'λₖ/Σⱼλⱼ',
+      legend: [['λₖ', 'o valor próprio da componente k'], ['Σⱼλⱼ', 'a soma de todos os valores próprios: a variância total']] },
+    proj: { t: 'pca', name: 'Projeção da PCA', f: 'y = Uᵀx',
+      legend: [['U', 'os vetores próprios em colunas, por ordem de λ'], ['Uᵀ', 'a transposta: os vetores próprios em linhas'], ['x', 'o ponto original'], ['y', 'as coordenadas do ponto nas componentes principais']],
+      note: 'Como nos slides: sem subtrair a média. Só com as L primeiras componentes: z = Wᵀx. Reconstrução x̂ = Σ yᵢuᵢ.' },
+    margin: { t: 'svm', name: 'Margem da SVM', f: 'ρ = 2/‖w‖',
+      legend: [['w', 'o vetor normal ao hiperplano'], ['‖w‖', 'o seu comprimento'], ['ρ', 'a largura da margem entre as duas classes']], note: 'Os vetores de suporte ficam em wᵀx + b = ±1.' },
+  },
   logo: '<svg class="brand-mark" viewBox="0 0 30 30" aria-hidden="true"><circle cx="6" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="6" cy="22" r="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="24" cy="15" r="4" fill="var(--token)"/><path d="M9 8.5L20.5 14M9 21.5L20.5 16" stroke="currentColor" stroke-width="2"/></svg>',
 
   render: d => MLD.render(d),
@@ -11058,7 +11259,7 @@ STUDY.lessons('ml', [
   <tr><td>[4, 4]</td><td>1</td></tr><tr><td>[6, 2] (75/25)</td><td>0,811</td></tr><tr><td>[3, 2] (60/40)</td><td>0,971</td></tr><tr><td>[9, 5]</td><td>0,940</td></tr><tr><td>[2, 1, 1]</td><td>1,5</td></tr><tr><td>[2, 1] (2/3, 1/3)</td><td>0,918</td></tr></table></div>
   <p>Exemplo: 3 aprovados e 2 reprovados → H = −0,6·log₂0,6 − 0,4·log₂0,4 = 0,442 + 0,529 = <b>0,971 bits</b>.</p>
   <p>Valores úteis: log₂0,5 = −1; log₂0,25 = −2; log₂0,75 = −0,415; log₂(1/3) = −1,585; log₂(2/3) = −0,585.</p>`,
-  key: 'H = −Σ p log₂ p. Puro = 0; meio a meio = 1 bit; máximo = log₂(nº de classes).' },
+  key: '{f:entropy|H = −Σ p log₂ p}. Puro = 0; meio a meio = 1 bit; máximo = log₂(nº de classes).' },
 { id: 'dt-gain', t: 'dt', title: 'Receita: ganho de informação',
   html: `<p>O ganho de informação de um atributo A é quanto a entropia desce depois de partir os dados por A:</p>
   <p style="text-align:center"><b>IG(Y, A) = H(Y) − H(Y | A)</b>, &nbsp; com &nbsp; <b>H(Y | A) = Σ<sub>v</sub> (|S<sub>v</sub>| / |S|) · H(S<sub>v</sub>)</b></p>
@@ -11067,7 +11268,7 @@ STUDY.lessons('ml', [
   <li>Faz a média ponderada → H(Y | A).</li><li>IG = H(Y) − H(Y | A). Escolhe o <b>maior</b> (equivale a escolher o menor H(Y | A)).</li></ol>
   <!--card--><p>Exemplo: 8 exemplos [4 sim, 4 não], H = 1. O atributo A parte em a₁ = [3 sim, 0 não] e a₂ = [1 sim, 4 não]. H(a₁) = 0; H(a₂) = H(1/5, 4/5) = 0,722. H(Y | A) = 3/8·0 + 5/8·0,722 = 0,451. <b>IG = 1 − 0,451 = 0,549</b>.</p>
   <p>Atenção: o ganho favorece atributos com muitos valores (um ID único dá ramos todos puros). O C4.5 corrige com o <i>gain ratio</i>.</p>
-  <p><b>Nos slides</b> (aula 2) as mesmas contas têm outros nomes: a entropia do nó é I(C) = −Σ p(m<sub>i</sub>) log₂ p(m<sub>i</sub>), a média ponderada dos ramos é E(P) = Σ<sub>i</sub> (|C<sub>i</sub>| / |C|) · I(C<sub>i</sub>) e o ganho é <b>gain(P) = I(C) − E(P)</b>. Os exames escrevem H e IG.</p>`,
+  <p><b>Nos slides</b> (aula 2) as mesmas contas têm outros nomes: a entropia do nó é I(C) = −Σ p(m<sub>i</sub>) log₂ p(m<sub>i</sub>), a média ponderada dos ramos é E(P) = Σ<sub>i</sub> (|C<sub>i</sub>| / |C|) · I(C<sub>i</sub>) e o ganho é <b>{f:ig|gain(P) = I(C) − E(P)}</b>. Os exames escrevem H e IG.</p>`,
   key: 'IG = H(antes) − Σ (|Sᵥ|/|S|)·H(Sᵥ). Maior ganho na raiz. Ramos puros contam 0.' },
 { id: 'dt-more', t: 'dt', title: 'Atributos contínuos, CART, overfitting e bagging',
   html: `<p><b>Atributos contínuos</b>: ou se discretizam antes, ou a árvore escolhe um <b>limiar</b> binário (x ≤ θ vs x &gt; θ). Testam-se os pontos de corte candidatos (entre valores consecutivos ordenados) e fica o de maior ganho.</p>
@@ -11090,7 +11291,7 @@ STUDY.lessons('ml', [
   <p>Com classes desequilibradas a accuracy engana: com 1% de doentes, dizer sempre “saudável” dá 99% de accuracy e recall 0.</p>
   <p>Multiclasse: a sensibilidade da classe B = (exemplos de B previstos B) / (total real de B), ou seja, a diagonal sobre a soma da <b>coluna</b> real B.</p>
   <p>Exemplo: TP = 1, FP = 3, FN = 7, TN = 3. Precision = 1/4 = 0,25; recall = 1/8 = 0,125; accuracy = 4/14 ≈ 0,29.</p>`,
-  key: 'Precision = TP/(TP+FP). Recall = sensibilidade = TP/(TP+FN). Especificidade = TN/(TN+FP).' },
+  key: '{f:prec|Precision = TP/(TP+FP)}. {f:rec|Recall = sensibilidade = TP/(TP+FN)}. Especificidade = TN/(TN+FP).' },
 { id: 'ev-roc', t: 'eval', title: 'Curvas ROC, AUC e lift',
   html: `<p>Um classificador probabilístico dá um score; o <b>limiar</b> decide a classe. Baixar o limiar apanha mais positivos (recall sobe) mas também mais falsos positivos.</p>
   <ul><li><b>Curva ROC</b>: TPR (recall) no eixo y contra FPR (1 − especificidade) no eixo x, para todos os limiares. Vai de (0, 0) a (1, 1).</li>
@@ -11187,10 +11388,10 @@ STUDY.lessons('ml', [
   html: `<p>Traçar a reta que passa “o mais perto possível” de uma nuvem de pontos. O modelo é y(x, w) = w₀ + w₁x₁ + … + w<sub>D</sub>x<sub>D</sub> = wᵀx, com x₀ = 1 para o bias w₀.</p>
   <p>“O mais perto possível” = minimizar a <b>soma dos quadrados dos erros</b>: E(w) = ½ Σ<sub>k</sub> (t<sub>k</sub> − wᵀx<sub>k</sub>)² (o MSE é a mesma coisa a dividir por N).</p>
   <!--card--><p>Junta os exemplos numa <b>matriz de design</b> X (uma linha por exemplo, a primeira coluna toda a 1) e os alvos num vetor t. Igualando o gradiente a zero, obtém-se a solução fechada:</p>
-  <p style="text-align:center"><b>w = (XᵀX)⁻¹ Xᵀ t</b> &nbsp; = X<sup>†</sup> t (X<sup>†</sup>: pseudo-inversa de Moore-Penrose)</p>
+  <p style="text-align:center"><b>{f:ls|w = (XᵀX)⁻¹ Xᵀ t}</b> &nbsp; = X<sup>†</sup> t (X<sup>†</sup>: pseudo-inversa de Moore-Penrose)</p>
   <p>Se XᵀX não tem inversa (atributos que são combinações lineares de outros, ou menos exemplos do que parâmetros), usa-se a pseudo-inversa ou regularização.</p>
   <!--card--><p>Exemplo: pontos (1, 1), (2, 3), (3, 4). X = [[1,1],[1,2],[1,3]]; XᵀX = [[3, 6],[6, 14]], Xᵀt = (8, 19). det = 42 − 36 = 6. w = (1/6)·[[14, −6],[−6, 3]]·(8, 19) = (−2/6, 9/6) → <b>y = −0,333 + 1,5x</b>.</p>
-  <p>Medidas de erro no treino: MAE = (1/N) Σ |t − y|; MSE = (1/N) Σ (t − y)²; RMSE = √MSE.</p>`,
+  <p>Medidas de erro no treino: MAE = (1/N) Σ |t − y|; {f:mse|MSE = (1/N) Σ (t − y)²}; RMSE = √MSE.</p>`,
   key: 'w = (XᵀX)⁻¹Xᵀt. A matriz de design tem uma linha por exemplo e a coluna de 1s do bias.' },
 { id: 'lr-basis', t: 'linreg', title: 'Funções base: regressão “não linear” que continua linear',
   html: `<p>Truque: transforma primeiro cada entrada com funções fixas φ<sub>j</sub>(x) e faz regressão linear sobre elas: y(x, w) = Σ<sub>j</sub> w<sub>j</sub> φ<sub>j</sub>(x). O modelo é <b>linear nos pesos</b>, por isso a solução continua a ser w = (ΦᵀΦ)⁻¹Φᵀt, só que agora com a matriz de design Φ.</p>
@@ -11203,7 +11404,7 @@ STUDY.lessons('ml', [
   key: 'Linha da matriz de design = [1, φ(x), φ(x)², …]. Linear nos pesos → a mesma fórmula fechada.' },
 { id: 'lr-reg', t: 'linreg', title: 'Regularização: ridge, lasso e a visão Bayesiana',
   html: `<p>Pesos enormes são o sintoma do overfitting. A regularização castiga-os, juntando um termo ao erro:</p>
-  <ul><li><b>Ridge</b> (l₂, Tikhonov): E(w) = ½ Σ (t − wᵀφ)² + (λ/2) ‖w‖₂². Solução fechada: <b>w = (ΦᵀΦ + λI)⁻¹ Φᵀ t</b>. Encolhe todos os pesos.</li>
+  <ul><li><b>Ridge</b> (l₂, Tikhonov): E(w) = ½ Σ (t − wᵀφ)² + (λ/2) ‖w‖₂². Solução fechada: <b>{f:ridge|w = (ΦᵀΦ + λI)⁻¹ Φᵀ t}</b>. Encolhe todos os pesos.</li>
   <li><b>Lasso</b> (l₁): E(w) = ½ Σ (t − wᵀφ)² + (λ/2) ‖w‖₁, com ‖w‖₁ = Σ |w<sub>j</sub>|. Põe muitos pesos exatamente a 0 (soluções esparsas, seleção de atributos). Não tem solução fechada.</li></ul>
   <!--card--><p>λ grande → modelo simples (underfitting); λ = 0 → mínimos quadrados normais. Escolhe-se λ por validação.</p>
   <p><b>Visão Bayesiana</b>: se o ruído é gaussiano, maximizar a verosimilhança (ML) é o mesmo que minimizar a soma dos quadrados. Se, além disso, pusermos um <b>prior gaussiano</b> nos pesos (média 0), a solução <b>MAP</b> é exatamente a regressão ridge, com λ = σ² / σ<sub>w</sub>² (variância do ruído sobre a variância do prior). O prior é a regularização. Com um prior laplaciano nos pesos, o MAP dá o lasso.</p>`,
@@ -11214,14 +11415,14 @@ STUDY.lessons('ml', [
   html: `<p>Um neurónio artificial: soma pesada das entradas e um interruptor. net = Σ<sub>j</sub> w<sub>j</sub>x<sub>j</sub> = wᵀx (com x₀ = 1 para o bias), saída o = sgn(net) ∈ {−1, +1}.</p>
   <p>A fronteira wᵀx = 0 é uma reta em 2D, um <b>hiperplano</b> em D dimensões. O perceptrão só resolve problemas <b>linearmente separáveis</b>: o XOR não é (Minsky e Papert, 1969).</p>
   <p><b>Regra de aprendizagem</b> (para cada exemplo, por ordem):</p>
-  <p style="text-align:center"><b>w ← w + η (t − o) x</b></p>
+  <p style="text-align:center"><b>{f:rosen|w ← w + η (t − o) x}</b></p>
   <ul><li>Se acertou (t = o), nada muda.</li><li>Se errou, t − o = ±2: o hiperplano roda na direção certa.</li></ul>
   <!--card--><p>Se os dados forem separáveis, o algoritmo <b>converge</b> num número finito de passos (teorema de convergência). Uma época = uma passagem por todos os exemplos; quando uma época inteira não muda nada, terminou.</p>
   <p>Exemplo: w = (w₀, w₁, w₂) = (−1, 1, 1), η = 0,1, x = (1, 7, 5) (com o 1 do bias), t = −1. net = −1 + 7 + 5 = 11 → o = +1. Errou: w ← w + 0,1·(−2)·(1, 7, 5) = <b>(−1,2; −0,4; 0)</b>.</p>`,
   key: 'Rosenblatt: w ← w + η(t − o)x, só muda quando erra. Só separa o que é linearmente separável.' },
 { id: 'p-gd', t: 'percep', title: 'Descida do gradiente e a regra delta',
   html: `<p>Num nevoeiro na montanha, para descer dás um passo na direção em que o chão desce mais. É a <b>descida do gradiente</b>:</p>
-  <p style="text-align:center"><b>w<sup>new</sup> = w<sup>old</sup> + Δw</b>, &nbsp; com &nbsp; <b>Δw = −η ∇E(w)</b></p>
+  <p style="text-align:center"><b>w<sup>new</sup> = w<sup>old</sup> + Δw</b>, &nbsp; com &nbsp; <b>{f:gd|Δw = −η ∇E(w)}</b></p>
   <p>Com uma unidade <b>linear</b> (o<sub>k</sub> = net<sub>k</sub> = Σ<sub>j</sub> w<sub>j</sub> x<sub>k,j</sub>) e E(w) = ½ Σ<sub>k</sub> (t<sub>k</sub> − o<sub>k</sub>)²: ∂E/∂w<sub>j</sub> = −Σ (t<sub>k</sub> − o<sub>k</sub>) x<sub>k,j</sub>, onde x<sub>k,j</sub> é o atributo j do exemplo k. Regra delta / LMS / Widrow-Hoff (ADALINE):</p>
   <p style="text-align:center"><b>Δw<sub>j</sub> = η Σ<sub>k</sub> (t<sub>k</sub> − o<sub>k</sub>) x<sub>k,j</sub></b></p>
   <ul><li><b>Batch</b>: soma os gradientes de todos os exemplos e só depois atualiza.</li>
@@ -11233,7 +11434,7 @@ STUDY.lessons('ml', [
 
 /* ---------------- LOGISTIC REGRESSION ---------------- */
 { id: 'lg-sig', t: 'logreg', title: 'Regressão logística e entropia cruzada',
-  html: `<p>Apesar do nome, é um <b>classificador</b>: um neurónio com ativação sigmoide σ(net) = 1/(1 + e<sup>−net</sup>), cuja saída é interpretada como p(C₁ | x). Decide-se pela classe 1 se σ(net) ≥ 0,5, ou seja se net ≥ 0: a fronteira continua a ser um hiperplano.</p>
+  html: `<p>Apesar do nome, é um <b>classificador</b>: um neurónio com ativação sigmoide {f:sig|σ(net) = 1/(1 + e<sup>−net</sup>)}, cuja saída é interpretada como p(C₁ | x). Decide-se pela classe 1 se σ(net) ≥ 0,5, ou seja se net ≥ 0: a fronteira continua a ser um hiperplano.</p>
   <p>Em vez do erro quadrático usa-se a <b>entropia cruzada</b> (cross-entropy), que vem da verosimilhança de Bernoulli:</p>
   <p style="text-align:center">E(w) = −log p(t | w) = −Σ<sub>k</sub> [t<sub>k</sub> log o<sub>k</sub> + (1 − t<sub>k</sub>) log(1 − o<sub>k</sub>)]</p>
   <p>Aqui log é o logaritmo natural (ln), com o<sub>k</sub> = p(C₁ | x<sub>k</sub>) = σ(net<sub>k</sub>).</p>
@@ -11257,7 +11458,7 @@ STUDY.lessons('ml', [
 /* ---------------- MLP ---------------- */
 { id: 'm-fwd', t: 'mlp', title: 'Redes multicamada: forward propagation',
   html: `<p>Um perceptrão sozinho não faz o XOR. Empilhando camadas com ativações não lineares, a rede aprende fronteiras quaisquer. Notação dos exames e das resoluções (camada l, com x[0] = entrada):</p>
-  <p style="text-align:center"><b>z[l] = W[l] x[l−1] + b[l]</b>, &nbsp; <b>x[l] = f(z[l])</b></p>
+  <p style="text-align:center"><b>{f:fwd|z[l] = W[l] x[l−1] + b[l]}</b>, &nbsp; <b>{f:fwd|x[l] = f(z[l])}</b></p>
   <ul><li>W[l] tem uma <b>linha por neurónio</b> da camada l e uma coluna por entrada.</li>
   <li>Ativações: sigmoide, tanh (em [−1, 1], tanh' = 1 − tanh²), ReLU = max(0, x), softmax na saída para classificação.</li>
   <li>Contar parâmetros de uma camada com n<sub>in</sub> entradas e n<sub>out</sub> neurónios: n<sub>out</sub>·n<sub>in</sub> pesos + n<sub>out</sub> biases.</li></ul>
@@ -11266,8 +11467,8 @@ STUDY.lessons('ml', [
   key: 'z[l] = W[l]x[l−1] + b[l], x[l] = f(z[l]). Uma linha de W por neurónio.' },
 { id: 'm-bp', t: 'mlp', title: 'Backpropagation: os deltas',
   html: `<p>Para saber quanto cada peso contribuiu para o erro, propaga-se o erro de trás para a frente com a regra da cadeia. Define-se <b>δ[l] = ∂E/∂z[l]</b>.</p>
-  <ol><li><b>Saída</b>: δ[L] = ∂E/∂x[L] ⊙ f'(z[L]). Com erro quadrático E = ½Σ(x − t)²: δ[L] = (x[L] − t) ⊙ f'(z[L]). Com softmax (ou sigmoide) + entropia cruzada: <b>δ[L] = x[L] − t</b>.</li>
-  <li><b>Camadas escondidas</b>: <b>δ[l] = (W[l+1]ᵀ δ[l+1]) ⊙ f'(z[l])</b>.</li>
+  <ol><li><b>Saída</b>: δ[L] = ∂E/∂x[L] ⊙ f'(z[L]). Com erro quadrático E = ½Σ(x − t)²: δ[L] = (x[L] − t) ⊙ f'(z[L]). Com softmax (ou sigmoide) + entropia cruzada: <b>{f:dout|δ[L] = x[L] − t}</b>.</li>
+  <li><b>Camadas escondidas</b>: <b>{f:dhid|δ[l] = (W[l+1]ᵀ δ[l+1]) ⊙ f'(z[l])}</b>.</li>
   <li><b>Gradientes</b>: ∂E/∂W[l] = δ[l] · x[l−1]ᵀ (produto externo) e ∂E/∂b[l] = δ[l].</li>
   <li><b>Atualização</b>: W[l] ← W[l] − η δ[l] x[l−1]ᵀ; b[l] ← b[l] − η δ[l].</li></ol>
   <!--card--><p>Derivadas: σ' = σ(1 − σ); tanh' = 1 − tanh²; ReLU' = 1 se z &gt; 0, senão 0.</p>
@@ -11295,7 +11496,7 @@ STUDY.lessons('ml', [
   html: `<p>Sem professor (não supervisionado), queremos agrupar pontos parecidos. O k-means representa cada grupo por um <b>centróide</b> e alterna dois passos até nada mudar:</p>
   <ol><li><b>Atribuição</b>: cada ponto vai para o centróide mais próximo.</li>
   <li><b>Atualização</b>: cada centróide passa a ser a média dos pontos do seu grupo.</li></ol>
-  <!--card--><p>Notação dos slides: centróides c₁, …, c<sub>K</sub> e clusters C₁, …, C<sub>K</sub>; cada centróide é c<sub>k</sub> = (1/|C<sub>k</sub>|) Σ<sub>x∈C<sub>k</sub></sub> x. O k-means minimiza a soma das distâncias quadráticas aos centróides, J = Σ<sub>k</sub> Σ<sub>x∈C<sub>k</sub></sub> ‖x − c<sub>k</sub>‖². Cada passo nunca aumenta J, por isso <b>converge</b>, mas para um ótimo <b>local</b>: depende da inicialização (por isso corre-se várias vezes ou usa-se k-means++).</p>
+  <!--card--><p>Notação dos slides: centróides c₁, …, c<sub>K</sub> e clusters C₁, …, C<sub>K</sub>; cada centróide é {f:kmc|c<sub>k</sub> = (1/|C<sub>k</sub>|) Σ<sub>x∈C<sub>k</sub></sub> x}. O k-means minimiza a soma das distâncias quadráticas aos centróides, {f:kmj|J = Σ<sub>k</sub> Σ<sub>x∈C<sub>k</sub></sub> ‖x − c<sub>k</sub>‖²}. Cada passo nunca aumenta J, por isso <b>converge</b>, mas para um ótimo <b>local</b>: depende da inicialização (por isso corre-se várias vezes ou usa-se k-means++).</p>
   <ul><li>k é escolhido por nós (método do cotovelo, índices de validação).</li>
   <li>Com distância Manhattan, o centro que minimiza a soma das distâncias é a <b>mediana</b> (k-medians), mas nos exames costuma pedir-se a média.</li>
   <li><b>Sequencial</b> (adaptativo): para cada ponto x<sub>η</sub>, só o centróide vencedor muda: c<sub>k</sub><sup>new</sup> = c<sub>k</sub><sup>old</sup> + (1/(|C<sub>k</sub><sup>old</sup>| + 1))·(x<sub>η</sub> − c<sub>k</sub><sup>old</sup>).</li></ul>
@@ -11312,11 +11513,11 @@ STUDY.lessons('ml', [
   <li><b>π<sub>k</sub> = p(c<sub>k</sub> = 1) = N<sub>k</sub> / N</b></li></ul>
   <!--card--><p>Repete-se até a verosimilhança estabilizar. É o k-means “suave”: com covariâncias iguais e a tender para 0, o EM vira k-means. Problema: se uma gaussiana colapsa num único ponto, a variância vai a 0 e a verosimilhança explode (singularidade).</p>
   <p>Exemplo: se p(x₁ | c₁ = 1) = 0,03 e p(x₁ | c₂ = 1) = 0,01 com π = (0,5; 0,5), γ(c₁₁) = 0,015/(0,015 + 0,005) = 0,75. Somando as responsabilidades de cada cluster obtêm-se os N<sub>k</sub> e os novos π<sub>k</sub> = N<sub>k</sub>/N.</p>`,
-  key: 'E: γ(cₙₖ) = p(cₖ = 1|xₙ) ∝ πₖ N(xₙ|μₖ,Σₖ). M: μₖ média pesada, Σₖ covariância pesada, πₖ = Nₖ/N.' },
+  key: 'E: {f:eme|γ(cₙₖ) = p(cₖ = 1|xₙ) ∝ πₖ N(xₙ|μₖ,Σₖ)}. M: μₖ média pesada, Σₖ covariância pesada, πₖ = Nₖ/N.' },
 { id: 'c-valid', t: 'clust', title: 'Validar clusters: pureza, silhueta, Dunn, Davies-Bouldin',
   html: `<p><b>Critérios externos</b> (há etiquetas verdadeiras): <b>pureza</b> = (1/N) Σ<sub>k</sub> max<sub>c</sub> |C<sub>k</sub> ∩ classe c|. Cada cluster conta os pontos da sua classe maioritária. Exemplo: clusters {A, C} e {B, B} → (1 + 2)/4 = 0,75.</p>
   <p><b>Critérios internos</b> (só os dados):</p>
-  <ul><li><b>Silhueta</b> de um ponto i: a(i) = distância média aos outros pontos do <b>seu</b> cluster (divide por |C<sub>i</sub>| − 1); b(i) = a menor, entre os outros clusters, da distância média aos pontos desse cluster. <b>s(i) = 1 − a(i)/b(i)</b> se a(i) &lt; b(i), 0 se forem iguais, b(i)/a(i) − 1 se a(i) &gt; b(i) (o mesmo que (b − a)/max(a, b)). s ∈ [−1, 1]: perto de 1 = bem agrupado; negativo = provavelmente no cluster errado. A silhueta de um cluster é a média dos seus pontos.</li>
+  <ul><li><b>Silhueta</b> de um ponto i: a(i) = distância média aos outros pontos do <b>seu</b> cluster (divide por |C<sub>i</sub>| − 1); b(i) = a menor, entre os outros clusters, da distância média aos pontos desse cluster. <b>{f:sil|s(i) = 1 − a(i)/b(i)}</b> se a(i) &lt; b(i), 0 se forem iguais, b(i)/a(i) − 1 se a(i) &gt; b(i) (o mesmo que (b − a)/max(a, b)). s ∈ [−1, 1]: perto de 1 = bem agrupado; negativo = provavelmente no cluster errado. A silhueta de um cluster é a média dos seus pontos.</li>
   <li><b>Dunn</b>: menor distância entre clusters ÷ maior diâmetro de um cluster. Maior é melhor.</li>
   <li><b>Davies-Bouldin</b>: média, por cluster, do pior rácio (dispersão<sub>i</sub> + dispersão<sub>j</sub>)/distância(centros). Menor é melhor.</li></ul>
   <!--card--><p>Exemplo: a = 4, b = 7 → s = 1 − 4/7 = 3/7 ≈ 0,43.</p>
@@ -11336,7 +11537,7 @@ STUDY.lessons('ml', [
   key: 'λ² − traço·λ + det = 0. Vetor próprio (b, λ − a), normalizado (C uᵢ = λᵢ uᵢ). Covariância amostral divide por n−1.' },
 { id: 'pc-pca', t: 'pca', title: 'PCA: projeção, reconstrução e quantas componentes',
   html: `<p>A PCA (transformada de Karhunen-Loève) roda os eixos para que fiquem alinhados com as direções de maior variância. Os novos eixos são os <b>vetores próprios</b> da matriz de covariância, ordenados pelos <b>valores próprios</b> (= variância ao longo de cada eixo). Na nova base a covariância é diagonal: as novas variáveis não estão correlacionadas.</p>
-  <ul><li><b>Projeção</b> (como nos slides e nas resoluções oficiais): <b>y = Uᵀx</b>, com os vetores próprios normalizados nas colunas de U. Na componente k: y<sub>k</sub> = u<sub>k</sub>ᵀx. Para reduzir a L dimensões usa-se só as primeiras L colunas, W: <b>z = Wᵀx</b>. A média <b>não</b> se subtrai.</li>
+  <ul><li><b>Projeção</b> (como nos slides e nas resoluções oficiais): <b>{f:proj|y = Uᵀx}</b>, com os vetores próprios normalizados nas colunas de U. Na componente k: y<sub>k</sub> = u<sub>k</sub>ᵀx. Para reduzir a L dimensões usa-se só as primeiras L colunas, W: <b>{f:proj|z = Wᵀx}</b>. A média <b>não</b> se subtrai.</li>
   <li><b>Reconstrução</b> com as primeiras L componentes: x̂ = W z = Σ<sub>k≤L</sub> y<sub>k</sub> u<sub>k</sub>. O erro é a parte ao longo das componentes deitadas fora.</li>
   <li>Nos livros (e no scikit-learn) centra-se primeiro: y = u<sub>k</sub>ᵀ(x − x̄) e x̂ = x̄ + Σ y<sub>k</sub>u<sub>k</sub>. Só uses esta forma se o enunciado a pedir.</li>
   <li><b>Variância explicada</b> pelas primeiras L: Σ<sub>k≤L</sub> λ<sub>k</sub> / Σ λ.</li>
@@ -11371,7 +11572,7 @@ STUDY.lessons('ml', [
 { id: 's-margin', t: 'svm', title: 'SVM: a margem máxima',
   html: `<p>Entre todas as retas que separam duas classes, qual escolher? A SVM escolhe a que deixa a <b>maior margem</b>: a maior “estrada” vazia entre as classes. Intuitivamente, é a que generaliza melhor.</p>
   <ul><li>Hiperplano: y(x) = wᵀx + b = 0 (nos slides também wᵀx + w₀). A distância (com sinal) de x ao hiperplano é r = y(x)/‖w‖.</li>
-  <li>Exemplos {x<sub>i</sub>, t<sub>i</sub>} com t<sub>i</sub> ∈ {−1, +1}. Escalando w para que os pontos mais próximos tenham t<sub>i</sub>(wᵀx<sub>i</sub> + b) = 1, a margem vale <b>ρ = 2/‖w‖</b>.</li>
+  <li>Exemplos {x<sub>i</sub>, t<sub>i</sub>} com t<sub>i</sub> ∈ {−1, +1}. Escalando w para que os pontos mais próximos tenham t<sub>i</sub>(wᵀx<sub>i</sub> + b) = 1, a margem vale <b>{f:margin}</b>.</li>
   <li>Problema: minimizar ½wᵀw sujeito a t<sub>i</sub>(wᵀx<sub>i</sub> + b) ≥ 1 para todos os i (otimização quadrática convexa: mínimo global).</li>
   <li><b>Vetores de suporte</b> x<sup>(s)</sup>: os pontos que ficam em cima da margem, wᵀx<sup>(s)</sup> + b = ±1. Só eles definem o hiperplano; os outros podiam ser removidos sem mudar nada.</li></ul>
   <!--card--><p><b>Problema dual</b> (multiplicadores de Lagrange α<sub>i</sub> ≥ 0): maximiza Q(α) = Σ α<sub>i</sub> − ½ Σ<sub>i</sub> Σ<sub>j</sub> α<sub>i</sub>α<sub>j</sub>t<sub>i</sub>t<sub>j</sub> x<sub>i</sub>ᵀx<sub>j</sub>. Depois w = Σ α<sub>i</sub> t<sub>i</sub> x<sub>i</sub>, com α<sub>i</sub> &gt; 0 só nos vetores de suporte, e b = 1 − wᵀx<sup>(s)</sup> para um vetor de suporte com t<sup>(s)</sup> = 1. Os dados só aparecem em produtos internos x<sub>i</sub>ᵀx<sub>j</sub>, e isso abre a porta ao truque do kernel.</p>
@@ -13136,23 +13337,23 @@ STUDY.problems('ml', [
     d: { mat: [{ n: 'W[1]', v: [[-1, -1, -1], [1, 0, 0]] }, { n: 'b[1]', v: [[0], [0]] }, { n: 'W[2]', v: [[1, 1], [0, 0], [1, 1]] }, { n: 'b[2]', v: [[0], [0], [0]] }] },
     steps: [
       { name: 'x[1]', c: 'nn-fwd', les: 'm-fwd', ask: 'Propagação para a frente: quanto vale **x[1]**, a saída da camada escondida?', ans: [0, 1],
-        hints: ['Primeiro z[1] = W[1]x[0] + b[1]; depois aplica a ReLU a cada componente.', 'z[1] = (−1 − 1 − 1; 1 + 0 + 0) = (−3; 1).', 'ReLU(z) = max(0, z): o que é negativo passa a 0.'],
+        hints: ['Primeiro {f:fwd|z[1] = W[1]x[0] + b[1]}; depois aplica a ReLU a cada componente.', 'z[1] = (−1 − 1 − 1; 1 + 0 + 0) = (−3; 1).', 'ReLU(z) = max(0, z): o que é negativo passa a 0.'],
         miss: [{ v: [-3, 1], m: 'Isso é z[1]. Falta aplicar a ReLU, max(0, z).' }, { v: [3, 1], m: 'A ReLU não tira o sinal: max(0, −3) = 0.' }],
         also: 'z[1] = (−3; 1)', e: 'z[1] = (−3; 1) e a ReLU corta o negativo: x[1] = **(0; 1)**.' },
       { name: 'x[2]', c: 'nn-fwd', les: 'm-fwd', ask: 'Quanto vale **x[2]**, a saída da rede?', ans: [2, 0, 2],
-        hints: ['z[2] = W[2]x[1] + b[2]; depois f(z) = 2z² em cada componente.', 'z[2] = (1·0 + 1·1; 0; 1·0 + 1·1) = (1; 0; 1).'],
+        hints: ['{f:fwd|z[2] = W[2]x[1] + b[2]}; depois f(z) = 2z² em cada componente.', 'z[2] = (1·0 + 1·1; 0; 1·0 + 1·1) = (1; 0; 1).'],
         miss: [{ v: [1, 0, 1], m: 'Isso é z[2]. Falta a ativação da saída, f(z) = 2z².' }, { v: [4, 0, 4], m: 'Calculaste (2z)². A ativação é 2·z².' }],
         also: 'z[2] = (1; 0; 1)', e: 'z[2] = (1; 0; 1) e f(z) = 2z² dá x[2] = **(2; 0; 2)**.' },
       { name: 'δ[2]', c: 'nn-delta-out', ask: 'Agora para trás. Quanto vale **δ[2] = ∂E/∂z[2]**?', ans: [4, 0, -24],
-        hints: ['Regra da cadeia: δ[2] = (x[2] − t) ⊙ f′(z[2]).', 'x[2] − t = (1; 0; −6). Falta f′: se f(z) = 2z², quanto é f′(z)?', 'f′(z) = 4z, logo f′(z[2]) = (4; 0; 4). Multiplica componente a componente.'],
+        hints: ['Regra da cadeia: {f:dout|δ[2] = (x[2] − t) ⊙ f′(z[2])}.', 'x[2] − t = (1; 0; −6). Falta f′: se f(z) = 2z², quanto é f′(z)?', 'f′(z) = 4z, logo f′(z[2]) = (4; 0; 4). Multiplica componente a componente.'],
         miss: [{ v: [1, 0, -6], m: 'Isso é só x[2] − t. Falta multiplicar por f′(z[2]).' }, { v: [-4, 0, 24], m: 'Sinal trocado: é x[2] − t, não t − x[2].' }, { v: [2, 0, -12], m: 'Usaste f′ = 2z. Com f(z) = 2z², f′(z) = 4z.' }],
         e: 'x[2] − t = (1; 0; −6) e f′(z[2]) = 4z[2] = (4; 0; 4), por isso δ[2] = **(4; 0; −24)**.' },
       { name: 'δ[1]', c: 'nn-delta-hid', ask: 'Quanto vale **δ[1]**? (Os deltas usam sempre os pesos antigos.)', ans: [0, -20],
-        hints: ['δ[1] = (W[2])ᵀδ[2] ⊙ f′(z[1]).', '(W[2])ᵀδ[2] = (4 + 0 − 24; 4 + 0 − 24) = (−20; −20).', 'ReLU′ é 1 onde z > 0 e 0 onde z < 0, e z[1] = (−3; 1).'],
+        hints: ['{f:dhid|δ[1] = (W[2])ᵀδ[2] ⊙ f′(z[1])}.', '(W[2])ᵀδ[2] = (4 + 0 − 24; 4 + 0 − 24) = (−20; −20).', 'ReLU′ é 1 onde z > 0 e 0 onde z < 0, e z[1] = (−3; 1).'],
         miss: [{ v: [-20, -20], m: 'Falta multiplicar por ReLU′(z[1]) = (0; 1).' }, { v: [-20, 0], m: 'ReLU′ trocada: z[1]₁ = −3 dá 0 e z[1]₂ = 1 dá 1.' }, { v: [0, 20], m: 'Sinal trocado: confirma (W[2])ᵀδ[2].' }],
         e: '(W[2])ᵀδ[2] = (−20; −20) e ReLU′(z[1]) = (0; 1), logo δ[1] = **(0; −20)**.' },
       { name: 'W[2] novo', c: 'nn-update', ask: 'Atualiza **W[2]** (as caixas vazias são o que muda).', ans: [[1, 0.6], [0, 0], [1, 3.4]], show: [[1, 0], [1, 1], [1, 0]],
-        hints: ['W[2] ← W[2] − η·δ[2](x[1])ᵀ.', 'δ[2](x[1])ᵀ = (4; 0; −24)·(0; 1): só a 2.ª coluna não é zero, (4; 0; −24).'],
+        hints: ['{f:grad|W[2] ← W[2] − η·δ[2](x[1])ᵀ}.', 'δ[2](x[1])ᵀ = (4; 0; −24)·(0; 1): só a 2.ª coluna não é zero, (4; 0; −24).'],
         miss: [{ v: [[1, 1.4], [0, 0], [1, -1.4]], m: 'Somaste o gradiente. A descida subtrai: W ← W − η·∂E/∂W.' }, { v: [[1, -3], [0, 0], [1, 25]], m: 'Esqueceste η = 0,1.' }],
         e: '∂E/∂W[2] tem só a 2.ª coluna: (4; 0; −24). W[2] ← W[2] − 0,1·isso: a 2.ª coluna fica **(0,6; 0; 3,4)**.' },
       { name: 'b[2] novo', c: 'nn-update', ask: 'Atualiza **b[2]**.', ans: [-0.4, 0, 2.4], show: [0, 1, 0],
@@ -13160,7 +13361,7 @@ STUDY.problems('ml', [
         miss: [{ v: [0.4, 0, -2.4], m: 'Sinal trocado: b ← b − η·δ.' }],
         e: 'b[2] = 0 − 0,1·(4; 0; −24) = **(−0,4; 0; 2,4)**.' },
       { name: 'W[1] novo', c: 'nn-update', ask: 'Atualiza **W[1]** (só a 2.ª linha muda, porque δ[1]₁ = 0).', ans: [[-1, -1, -1], [3, 2, 2]], show: [[1, 1, 1], [0, 0, 0]],
-        hints: ['W[1] ← W[1] − η·δ[1](x[0])ᵀ.', 'δ[1](x[0])ᵀ tem a 2.ª linha (−20; −20; −20).'],
+        hints: ['{f:grad|W[1] ← W[1] − η·δ[1](x[0])ᵀ}.', 'δ[1](x[0])ᵀ tem a 2.ª linha (−20; −20; −20).'],
         miss: [{ v: [[-1, -1, -1], [-1, -2, -2]], m: 'Somaste o gradiente. A descida subtrai: W ← W − η·∂E/∂W.' }],
         e: '2.ª linha: (1; 0; 0) − 0,1·(−20; −20; −20) = **(3; 2; 2)**.' },
       { name: 'b[1] novo', c: 'nn-update', ask: 'Por fim, atualiza **b[1]**.', ans: [0, 2], show: [1, 0],
@@ -13173,23 +13374,23 @@ STUDY.problems('ml', [
     d: { mat: [{ n: 'W[1]', v: [[1, 1], [-1, 0]] }, { n: 'b[1]', v: [[0], [0]] }, { n: 'W[2]', v: [[1, 2], [-1, 1]] }, { n: 'b[2]', v: [[-1], [1]] }] },
     steps: [
       { name: 'x[1]', c: 'nn-fwd', les: 'm-fwd', ask: 'Quanto vale **x[1]**?', ans: [3, 0],
-        hints: ['z[1] = W[1]x[0] + b[1]; depois a ReLU.', 'z[1] = (2 + 1; −2) = (3; −2).'],
+        hints: ['{f:fwd|z[1] = W[1]x[0] + b[1]}; depois a ReLU.', 'z[1] = (2 + 1; −2) = (3; −2).'],
         miss: [{ v: [3, -2], m: 'Isso é z[1]. Falta aplicar a ReLU, max(0, z).' }],
         also: 'z[1] = (3; −2)', e: 'z[1] = (3; −2) e a ReLU corta o negativo: x[1] = **(3; 0)**.' },
       { name: 'x[2]', c: 'nn-fwd', les: 'm-fwd', ask: 'Quanto vale **x[2]**?', ans: [4, 4],
-        hints: ['z[2] = W[2]x[1] + b[2]; depois f(z) = z².', 'z[2] = (3 + 0 − 1; −3 + 0 + 1) = (2; −2).'],
+        hints: ['{f:fwd|z[2] = W[2]x[1] + b[2]}; depois f(z) = z².', 'z[2] = (3 + 0 − 1; −3 + 0 + 1) = (2; −2).'],
         miss: [{ v: [2, -2], m: 'Isso é z[2]. Falta a ativação da saída, f(z) = z².' }],
         also: 'z[2] = (2; −2)', e: 'z[2] = (2; −2) e f(z) = z² dá x[2] = **(4; 4)**.' },
       { name: 'δ[2]', c: 'nn-delta-out', ask: 'Quanto vale **δ[2]**?', ans: [4, 8],
-        hints: ['δ[2] = (x[2] − t) ⊙ f′(z[2]).', 'x[2] − t = (1; −2) e f′(z) = 2z, com z[2] = (2; −2).'],
+        hints: ['{f:dout|δ[2] = (x[2] − t) ⊙ f′(z[2])}.', 'x[2] − t = (1; −2) e f′(z) = 2z, com z[2] = (2; −2).'],
         miss: [{ v: [1, -2], m: 'Isso é só x[2] − t. Falta multiplicar por f′(z[2]).' }, { v: [-4, -8], m: 'Sinal trocado: é x[2] − t, não t − x[2].' }],
         e: 'x[2] − t = (1; −2) e f′(z[2]) = 2z[2] = (4; −4), por isso δ[2] = **(4; 8)**.' },
       { name: 'δ[1]', c: 'nn-delta-hid', ask: 'Quanto vale **δ[1]**?', ans: [-4, 0],
-        hints: ['δ[1] = (W[2])ᵀδ[2] ⊙ f′(z[1]). Atenção à transposta.', '(W[2])ᵀδ[2] = (1·4 − 1·8; 2·4 + 1·8) = (−4; 16).', 'ReLU′(z[1]) = (1; 0), porque z[1] = (3; −2).'],
+        hints: ['{f:dhid|δ[1] = (W[2])ᵀδ[2] ⊙ f′(z[1])}. Atenção à transposta.', '(W[2])ᵀδ[2] = (1·4 − 1·8; 2·4 + 1·8) = (−4; 16).', 'ReLU′(z[1]) = (1; 0), porque z[1] = (3; −2).'],
         miss: [{ v: [-4, 16], m: 'Falta multiplicar por ReLU′(z[1]) = (1; 0).' }, { v: [20, 0], m: 'Usaste W[2] em vez de (W[2])ᵀ.' }],
         e: '(W[2])ᵀδ[2] = (−4; 16) e ReLU′(z[1]) = (1; 0), logo δ[1] = **(−4; 0)**.' },
       { name: 'W[2] novo', c: 'nn-update', ask: 'Atualiza **W[2]** (as caixas vazias são o que muda).', ans: [[-0.2, 2], [-3.4, 1]], show: [[0, 1], [0, 1]],
-        hints: ['W[2] ← W[2] − η·δ[2](x[1])ᵀ.', 'δ[2](x[1])ᵀ = (4; 8)·(3; 0): 1.ª coluna (12; 24).'],
+        hints: ['{f:grad|W[2] ← W[2] − η·δ[2](x[1])ᵀ}.', 'δ[2](x[1])ᵀ = (4; 8)·(3; 0): 1.ª coluna (12; 24).'],
         miss: [{ v: [[2.2, 2], [1.4, 1]], m: 'Somaste o gradiente. A descida subtrai: W ← W − η·∂E/∂W.' }],
         e: '1.ª coluna: (1; −1) − 0,1·(12; 24) = **(−0,2; −3,4)**.' },
       { name: 'b[2] novo', c: 'nn-update', ask: 'Atualiza **b[2]**.', ans: [-1.4, 0.2],
@@ -13197,7 +13398,7 @@ STUDY.problems('ml', [
         miss: [{ v: [-0.6, 1.8], m: 'Sinal trocado: b ← b − η·δ.' }],
         e: 'b[2] = (−1; 1) − 0,1·(4; 8) = **(−1,4; 0,2)**.' },
       { name: 'W[1] novo', c: 'nn-update', ask: 'Atualiza **W[1]** (só a 1.ª linha muda).', ans: [[1.8, 1.4], [-1, 0]], show: [[0, 0], [1, 1]],
-        hints: ['W[1] ← W[1] − η·δ[1](x[0])ᵀ.', 'δ[1](x[0])ᵀ tem a 1.ª linha −4·(2; 1) = (−8; −4).'],
+        hints: ['{f:grad|W[1] ← W[1] − η·δ[1](x[0])ᵀ}.', 'δ[1](x[0])ᵀ tem a 1.ª linha −4·(2; 1) = (−8; −4).'],
         miss: [{ v: [[0.2, 0.6], [-1, 0]], m: 'Somaste o gradiente. A descida subtrai: W ← W − η·∂E/∂W.' }],
         e: '1.ª linha: (1; 1) − 0,1·(−8; −4) = **(1,8; 1,4)**.' },
     ] },
@@ -13206,9 +13407,9 @@ STUDY.problems('ml', [
     d: { mat: [{ n: 'W[1]', v: [[1, 1, 1], [1, 2, 1], [1, 1, 0.4]] }, { n: 'b[1]', v: [[0], [1], [0]] }, { n: 'W[2]', v: [[2, 1, 1], [1, 1, 1]] }, { n: 'b[2]', v: [[0.2], [0]] }] },
     steps: [
       { name: 'x[1]', c: 'nn-fwd', ask: 'Quanto vale **x[1]**?', ans: [1, 1.8, 1], miss: [{ v: [1, 3, 1], m: 'Isso é z[1]. Falta a ativação.' }],
-        also: 'z[1] = (1; 3; 1)', e: 'z[1] = W[1]x[0] + b[1] = (1; 3; 1), e 0,4z + 0,6 dá x[1] = **(1; 1,8; 1)**.' },
+        also: 'z[1] = (1; 3; 1)', e: '{f:fwd|z[1] = W[1]x[0] + b[1]} = (1; 3; 1), e 0,4z + 0,6 dá x[1] = **(1; 1,8; 1)**.' },
       { name: 'x[2]', c: 'nn-fwd', ask: 'Quanto vale **x[2]**?', ans: [2.6, 2.12], miss: [{ v: [5, 3.8], m: 'Isso é z[2]. Falta a ativação.' }],
-        also: 'z[2] = (5; 3,8)', e: 'z[2] = W[2]x[1] + b[2] = (5; 3,8), e 0,4z + 0,6 dá x[2] = **(2,6; 2,12)**.' },
+        also: 'z[2] = (5; 3,8)', e: '{f:fwd|z[2] = W[2]x[1] + b[2]} = (5; 3,8), e 0,4z + 0,6 dá x[2] = **(2,6; 2,12)**.' },
       { name: 'δ[2]', c: 'nn-delta-out', ask: 'Quanto vale **δ[2]**?', ans: [1.04, 0.448], miss: [{ v: [2.6, 1.12], m: 'Isso é só x[2] − t. Falta multiplicar por f′ = 0,4.' }],
         e: 'x[2] − t = (2,6; 1,12) e f′ = 0,4, logo δ[2] = **(1,04; 0,448)**.' },
       { name: 'W[2] novo', c: 'nn-update', ask: 'Escreve o novo **W[2]**.', ans: [[0.96, -0.872, -0.04], [0.552, 0.1936, 0.552]],
@@ -13235,11 +13436,11 @@ STUDY.problems('ml', [
     sol: { t: 'A árvore final: **Cheated** na raiz e **Studied** no ramo Cheated = No. Slept nunca é usado.', d: { tree: { a: 'Cheated', k: [['Yes', { leaf: 'Failed' }], ['No', { a: 'Studied', k: [['Yes', { leaf: 'Passed' }], ['No', { leaf: 'Failed' }]] }]] } } },
     steps: [
       { name: 'H(Result)', c: 'dt-h', les: 'dt-entropy', ask: 'Qual é a entropia de Shannon **H(Result)**, em bits?', ans: [0.971],
-        hints: ['Conta as classes: 2 Passed e 3 Failed, em 5 alunos.', 'H = −Σ pᵢ log₂ pᵢ, com p = (2/5; 3/5).', 'H = −0,4·log₂0,4 − 0,6·log₂0,6.'],
+        hints: ['Conta as classes: 2 Passed e 3 Failed, em 5 alunos.', '{f:entropy|H = −Σ pᵢ log₂ pᵢ}, com p = (2/5; 3/5).', 'H = −0,4·log₂0,4 − 0,6·log₂0,6.'],
         miss: [{ v: [0.673], m: 'Usaste ln. A entropia em bits usa log₂.' }, { v: [0.529], m: 'Essa é só a parcela de Passed. Falta somar a de Failed.' }],
         e: 'p = (2/5; 3/5), logo H = 0,529 + 0,442 = **0,971 bits**.' },
       { name: 'IG (Studied; Slept; Cheated)', c: 'dt-ig', ask: 'Calcula o **ganho de informação** dos três atributos, por esta ordem: Studied, Slept, Cheated.', ans: [0.171, 0.02, 0.42],
-        hints: ['IG(A) = H(Result) − Σᵥ (|Sᵥ|/|S|)·H(Sᵥ).', 'Studied: Yes = [2 P, 2 F], No = [1 F]. Slept: No = [1 P, 1 F], Yes = [1 P, 2 F]. Cheated: Yes = [2 F], No = [2 P, 1 F].', 'H condicional: Studied = 4/5·1 = 0,8; Slept = 2/5·1 + 3/5·0,918 = 0,951; Cheated = 3/5·0,918 = 0,551.'],
+        hints: ['{f:ig|IG(A) = H(Result) − Σᵥ (|Sᵥ|/|S|)·H(Sᵥ)}.', 'Studied: Yes = [2 P, 2 F], No = [1 F]. Slept: No = [1 P, 1 F], Yes = [1 P, 2 F]. Cheated: Yes = [2 F], No = [2 P, 1 F].', 'H condicional: Studied = 4/5·1 = 0,8; Slept = 2/5·1 + 3/5·0,918 = 0,951; Cheated = 3/5·0,918 = 0,551.'],
         miss: [{ v: [-0.029, -0.947, 0.053], m: 'Esqueceste o peso |Sᵥ|/|S| de cada ramo: a entropia condicional é uma média pesada.' }, { v: [0.8, 0.951, 0.551], m: 'Isso são as entropias condicionais. O ganho é H(Result) menos cada uma.' }],
         also: 'Raiz: Cheated, o maior ganho', e: 'H(Result|·) = 0,8; 0,951; 0,551. Os ganhos são **0,171; 0,020; 0,420**, por isso **Cheated** vai para a raiz.' },
       { name: 'H(ramo No)', c: 'dt-branch', ask: 'O ramo Cheated = Yes é puro (Failed). Qual é a entropia do ramo **Cheated = No** (S1, S3, S5)?', ans: [0.918],
@@ -13257,7 +13458,7 @@ STUDY.problems('ml', [
     steps: [
       { name: 'H(O)', c: 'dt-h', les: 'dt-entropy', ask: 'Qual é a entropia **H(O)**?', ans: [1], hints: ['Há 3 exemplos + e 3 exemplos −.'], miss: [{ v: [0.693], m: 'Usaste ln. A entropia em bits usa log₂.' }], e: 'Meio a meio: H = **1 bit**.' },
       { name: 'IG (F1; F2; F3)', c: 'dt-ig', ask: 'Calcula o ganho de **F1**, **F2** e **F3**.', ans: [0.667, 0.082, 0],
-        hints: ['IG(A) = H(O) − Σᵥ (|Sᵥ|/|S|)·H(Sᵥ).', 'F1: a = [1+, 1−], b = [2−], c = [2+]. F2: a = [2+, 1−], b = [1+, 2−]. F3: a = [1+, 1−], c = [2+, 2−].', 'H condicional: F1 = 2/6·1 = 0,333; F2 = 0,918; F3 = 1.'],
+        hints: ['{f:ig|IG(A) = H(O) − Σᵥ (|Sᵥ|/|S|)·H(Sᵥ)}.', 'F1: a = [1+, 1−], b = [2−], c = [2+]. F2: a = [2+, 1−], b = [1+, 2−]. F3: a = [1+, 1−], c = [2+, 2−].', 'H condicional: F1 = 2/6·1 = 0,333; F2 = 0,918; F3 = 1.'],
         miss: [{ v: [0.333, 0.918, 1], m: 'Isso são as entropias condicionais. O ganho é H(O) menos cada uma.' }, { v: [0, -0.837, -1], m: 'Esqueceste os pesos |Sᵥ|/|S| dos ramos.' }],
         also: 'Raiz: F1 · F1 = b → − · F1 = c → +', e: 'H(O|·) = 0,333; 0,918; 1. Os ganhos são **0,667; 0,082; 0**: **F1** vai para a raiz, e os ramos b e c já são puros.' },
       { name: 'H(ramo a)', c: 'dt-branch', ask: 'Qual é a entropia do ramo **F1 = a** (exemplos 1 e 5)?', ans: [1], hints: ['O ramo tem um + e um −.'], miss: [{ v: [0], m: 'Esse ramo não é puro: o exemplo 1 é + e o 5 é −.' }], e: 'Um + e um −: H = **1 bit**.' },
@@ -13310,7 +13511,7 @@ STUDY.problems('ml', [
       { name: 'p(c)', c: 'nb-prior', ask: 'Quanto valem os **priors**?', ans: [0.571, 0.429], hints: ['Há 4 exemplos Sim e 3 Não, em 7.'], e: 'p(Sim) = 4/7 e p(Não) = 3/7.' },
       { name: 'p(y₁ = a | c)', c: 'nb-like', ask: 'Quanto vale **p(y₁ = a | c)**?', ans: [0.75, 0.333], hints: ['Conta só dentro de cada classe.'], miss: [{ v: [0.429, 0.143], m: 'Dividiste pelo total de exemplos. Divide pelos exemplos da classe.' }], e: 'Sim: 3 em 4 = **0,75**. Não: 1 em 3 = **0,333**.' },
       { name: 'N(2,5 | c)', c: 'nb-gauss', ask: 'Quanto vale a **densidade** de y₂ = 2,5 em cada classe?', ans: [0.352, 0.13], tol: 0.006,
-        hints: ['N(x; μ, σ) = exp(−(x − μ)²/(2σ²)) / (σ√(2π)).', 'Sim: exp(−0,125)/2,507. Não: exp(−1,125)/2,507.'],
+        hints: ['{f:gauss|N(x; μ, σ) = exp(−(x − μ)²/(2σ²)) / (σ√(2π))}.', 'Sim: exp(−0,125)/2,507. Não: exp(−1,125)/2,507.'],
         miss: [{ v: [0.882, 0.325], m: 'Falta dividir por σ√(2π) ≈ 2,507.' }], e: 'Sim: 0,882/2,507 = **0,352**. Não: 0,325/2,507 = **0,130**.' },
       { name: 'p(c)·p(x|c)', c: 'nb-map', ask: 'Quanto vale **p(c)·p(y₁|c)·p(y₂|c)** em cada classe?', ans: [0.151, 0.019], tol: 0.004,
         hints: ['Multiplica os três fatores que já tens.', 'Sim: 0,571·0,75·0,352.'], miss: [{ v: [0.264, 0.043], m: 'Isso é só p(x|c). O MAP ainda multiplica pelo prior.' }],
@@ -13368,7 +13569,7 @@ STUDY.problems('ml', [
       { name: 'Σ(t − o)x', c: 'lg-grad', ask: 'Quanto vale **Σ(t − o)x**? (Vetor de 3 componentes: bias, x₁, x₂.)', ans: [-0.953, -0.684, -0.684],
         hints: ['Cada exemplo entra com o 1 do bias: x = (1, x₁, x₂).', 't − o = (0,269; −0,269; −0,953).', '0,269·(1, 0, 0) − 0,269·(1, −1, −1) − 0,953·(1, 1, 1).'],
         miss: [{ v: [0.953, 0.684, 0.684], m: 'Calculaste Σ(o − t)x. Esta é com (t − o).' }, { v: [0, -0.684, -0.684], m: 'Faltou o bias: cada exemplo tem x₀ = 1.' }], e: '0,269·(1, 0, 0) − 0,269·(1, −1, −1) − 0,953·(1, 1, 1) = **(−0,953; −0,684; −0,684)**.' },
-      { name: 'w novo', c: 'lg-up', ask: 'Quanto vale **w** depois da atualização?', ans: [0.047, 0.316, 0.316], hints: ['w ← w + ηΣ(t − o)x.'], miss: [{ v: [1.953, 1.684, 1.684], m: SIGN }], e: '(1, 1, 1) + (−0,953; −0,684; −0,684) = **(0,047; 0,316; 0,316)**.' },
+      { name: 'w novo', c: 'lg-up', ask: 'Quanto vale **w** depois da atualização?', ans: [0.047, 0.316, 0.316], hints: ['{f:lgupd|w ← w + ηΣ(t − o)x}.'], miss: [{ v: [1.953, 1.684, 1.684], m: SIGN }], e: '(1, 1, 1) + (−0,953; −0,684; −0,684) = **(0,047; 0,316; 0,316)**.' },
     ] },
   { id: 'lg-update-2', kind: 'half', pts: 2.5, les: 'lg-sig',
     stmt: 'Treino: **x₁ = (1, 0)** com t = 1 e **x₂ = (0, 1)** com t = 0. Pesos iniciais **w = (−1, 2, 0)** (bias primeiro) e **η = 0,5**.\nCalcula uma atualização batch com entropia cruzada.\nUsa σ(1) = 0,731 e σ(−1) = 0,269.',
@@ -13376,7 +13577,7 @@ STUDY.problems('ml', [
       { name: 'net', c: 'lg-out', ask: 'Quanto vale **net** nos 2 exemplos?', ans: [1, -1], hints: ['net = w₀ + w₁x₁ + w₂x₂.'], miss: [{ v: [2, 0], m: 'Esqueceste o bias, w₀ = −1.' }], e: 'net = **(1; −1)**.' },
       { name: 'o', c: 'lg-out', ask: 'Quanto valem as **saídas**?', ans: [0.731, 0.269], hints: ['Usa os valores de σ dados.'], e: '**(0,731; 0,269)**.' },
       { name: 'Σ(t − o)x', c: 'lg-grad', ask: 'Quanto vale **Σ(t − o)x**?', ans: [0, 0.269, -0.269], hints: ['t − o = (0,269; −0,269).', '0,269·(1, 1, 0) − 0,269·(1, 0, 1).'], miss: [{ v: [0, -0.269, 0.269], m: 'Calculaste Σ(o − t)x. Esta é com (t − o).' }], e: '0,269·(1, 1, 0) − 0,269·(1, 0, 1) = **(0; 0,269; −0,269)**.' },
-      { name: 'w novo', c: 'lg-up', ask: 'Quanto vale **w** depois da atualização?', ans: [-1, 2.135, -0.135], hints: ['w ← w + ηΣ(t − o)x, com η = 0,5.'], miss: [{ v: [-1, 2.269, -0.269], m: 'Esqueceste η = 0,5.' }, { v: [-1, 1.865, 0.135], m: SIGN }], e: '(−1, 2, 0) + 0,5·(0; 0,269; −0,269) = **(−1; 2,135; −0,135)**.' },
+      { name: 'w novo', c: 'lg-up', ask: 'Quanto vale **w** depois da atualização?', ans: [-1, 2.135, -0.135], hints: ['{f:lgupd|w ← w + ηΣ(t − o)x}, com η = 0,5.'], miss: [{ v: [-1, 2.269, -0.269], m: 'Esqueceste η = 0,5.' }, { v: [-1, 1.865, 0.135], m: SIGN }], e: '(−1, 2, 0) + 0,5·(0; 0,269; −0,269) = **(−1; 2,135; −0,135)**.' },
     ] },
   { id: 'lg-update-3', kind: 'alone', alone: true, src: 'Exame 1 2022/23, III.1', pts: 2,
     stmt: 'Treino: **x₁ = (0, −1)** com t = 0, **x₂ = (2, 2)** com t = 1 e **x₃ = (1, 1)** com t = 1. Todos os pesos começam a 1 (bias incluído) e **η = 1**.\nCom sigmoide e entropia cruzada, calcula a primeira atualização batch.',
@@ -13396,12 +13597,12 @@ STUDY.problems('ml', [
     sol: { t: 'Depois da iteração: **C₁ = {x₁, x₂}** (círculos cheios) com c₁ = (0,5; 0,5), e **C₂ = {x₃, x₄}** (quadrados) com c₂ = (−1,5; −1,5). A silhueta de C₂ é 0,488.',
       d: { pts: { p: [{ x: 0, y: 1, l: 'x₁', c: 1 }, { x: 1, y: 0, l: 'x₂', c: 1 }, { x: -1, y: -1, l: 'x₃', c: 2 }, { x: -2, y: -2, l: 'x₄', c: 2 }], c: [{ x: 0.5, y: 0.5, l: 'c₁' }, { x: -1.5, y: -1.5, l: 'c₂' }] } } },
     steps: [
-      { name: 'd(x₃, c)', c: 'km-assign', ask: 'Qual é a distância de **x₃** a cada centro (c₁; c₂)?', ans: [2.828, 1.414], hints: ['d = √Σ(xᵢ − cᵢ)².', 'x₃ − c₁ = (−2, −2) e x₃ − c₂ = (1, 1).'], miss: [{ v: [4, 2], m: 'Isso é a distância Manhattan. Aqui é a euclidiana.' }, { v: [8, 2], m: 'Falta a raiz quadrada.' }], also: 'C₁ = {x₁, x₂} · C₂ = {x₃, x₄}', e: '√8 = **2,828** e √2 = **1,414**: x₃ vai para C₂. x₁ e x₂ ficam em C₁, e x₄ coincide com c₂.' },
+      { name: 'd(x₃, c)', c: 'km-assign', ask: 'Qual é a distância de **x₃** a cada centro (c₁; c₂)?', ans: [2.828, 1.414], hints: ['{f:d2|d = √Σ(xᵢ − cᵢ)²}.', 'x₃ − c₁ = (−2, −2) e x₃ − c₂ = (1, 1).'], miss: [{ v: [4, 2], m: 'Isso é a distância Manhattan. Aqui é a euclidiana.' }, { v: [8, 2], m: 'Falta a raiz quadrada.' }], also: 'C₁ = {x₁, x₂} · C₂ = {x₃, x₄}', e: '√8 = **2,828** e √2 = **1,414**: x₃ vai para C₂. x₁ e x₂ ficam em C₁, e x₄ coincide com c₂.' },
       { name: 'c₁ novo', c: 'km-update', ask: 'Quanto vale o **novo c₁**?', ans: [0.5, 0.5], hints: ['É a média dos pontos de C₁ = {x₁, x₂}.'], e: '((0 + 1)/2; (1 + 0)/2) = **(0,5; 0,5)**.' },
       { name: 'c₂ novo', c: 'km-update', ask: 'Quanto vale o **novo c₂**?', ans: [-1.5, -1.5], hints: ['É a média dos pontos de C₂ = {x₃, x₄}.'], e: '((−1 − 2)/2; (−1 − 2)/2) = **(−1,5; −1,5)**.' },
       { name: 'a(x₃); b(x₃)', c: 'km-sil', les: 'c-valid', ask: 'Para **x₃**, quanto valem **a** (distância média ao seu cluster) e **b** (distância média ao outro cluster)?', ans: [1.414, 2.236],
         hints: ['Usa os pontos dos clusters, não os centros.', 'a = d(x₃, x₄). b = média de d(x₃, x₁) e d(x₃, x₂).', 'd(x₃, x₁) = d(x₃, x₂) = √5.'], miss: [{ v: [0.707, 2.915], m: 'Usaste os centros. A silhueta usa as distâncias aos pontos.' }], e: 'a = √2 = **1,414** e b = (√5 + √5)/2 = **2,236**.' },
-      { name: 's(x₃)', c: 'km-sil', les: 'c-valid', ask: 'Quanto vale a **silhueta de x₃**?', ans: [0.368], hints: ['s = (b − a)/max(a, b).'], miss: [{ v: [0.582], m: 'Dividiste pelo mínimo. A silhueta divide pelo máximo de a e b.' }], e: '1 − 1,414/2,236 = **0,368**.' },
+      { name: 's(x₃)', c: 'km-sil', les: 'c-valid', ask: 'Quanto vale a **silhueta de x₃**?', ans: [0.368], hints: ['{f:sil|s = (b − a)/max(a, b)}.'], miss: [{ v: [0.582], m: 'Dividiste pelo mínimo. A silhueta divide pelo máximo de a e b.' }], e: '1 − 1,414/2,236 = **0,368**.' },
       { name: 's(C₂)', c: 'km-sil', les: 'c-valid', ask: 'A silhueta de **x₄** dá 0,608 (a = √2, b = √13). Quanto vale a **silhueta do cluster C₂**?', ans: [0.488], hints: ['É a média das silhuetas dos pontos do cluster.'], e: '(0,368 + 0,608)/2 = **0,488**.' },
     ] },
   { id: 'km-sil-2', kind: 'half', src: 'Ficha P09, ex. 1 e Lab 9', pts: 3, les: 'c-kmeans',
@@ -13414,7 +13615,7 @@ STUDY.problems('ml', [
       { name: 'c₁ novo', c: 'km-update', ask: 'Quanto vale o **novo c₁**?', ans: [0.5, 0], hints: ['Média de x₁ e x₂.'], e: '**(0,5; 0)**.' },
       { name: 'c₂ novo', c: 'km-update', ask: 'Quanto vale o **novo c₂**?', ans: [1, 2], hints: ['Média de x₃ e x₄.'], also: 'Na 2.ª iteração nada muda: convergiu', e: '**(1; 2)**. Com estes centros, cada ponto fica no mesmo cluster, por isso o k-means pára.' },
       { name: 'a(x₁); b(x₁)', c: 'km-sil', les: 'c-valid', ask: 'Para **x₁**, quanto valem **a** e **b**?', ans: [1, 2.414], hints: ['a = d(x₁, x₂). b = média de d(x₁, x₃) e d(x₁, x₄).', 'd(x₁, x₃) = 2 e d(x₁, x₄) = √8.'], miss: [{ v: [0.5, 2.236], m: 'Usaste os centros. A silhueta usa as distâncias aos pontos.' }], e: 'a = **1** e b = (2 + 2,828)/2 = **2,414**.' },
-      { name: 's(x₁)', c: 'km-sil', les: 'c-valid', ask: 'Quanto vale a **silhueta de x₁**?', ans: [0.586], hints: ['s = (b − a)/max(a, b).'], miss: [{ v: [1.414], m: 'Dividiste pelo mínimo. A silhueta divide pelo máximo de a e b.' }], e: '1 − 1/2,414 = **0,586**.' },
+      { name: 's(x₁)', c: 'km-sil', les: 'c-valid', ask: 'Quanto vale a **silhueta de x₁**?', ans: [0.586], hints: ['{f:sil|s = (b − a)/max(a, b)}.'], miss: [{ v: [1.414], m: 'Dividiste pelo mínimo. A silhueta divide pelo máximo de a e b.' }], e: '1 − 1/2,414 = **0,586**.' },
       { name: 's(C₁)', c: 'km-sil', les: 'c-valid', ask: 'A silhueta de **x₂** dá 0,553 (a = 1, b = √5). Quanto vale a **silhueta do cluster C₁**?', ans: [0.569], hints: ['É a média das silhuetas dos pontos do cluster.'], e: '(0,586 + 0,553)/2 = **0,569**.' },
       { name: 'Pureza', c: 'km-pur', les: 'c-valid', ask: 'x₁, x₂ e x₄ são positivos e x₃ é negativo. Quanto vale a **pureza** do agrupamento?', ans: [0.75], hints: ['Em cada cluster conta a classe mais frequente; soma e divide pelo nº de pontos.', 'C₁ = {+, +} e C₂ = {−, +}.'], miss: [{ v: [0.5], m: 'Em C₂ há um ponto de cada classe: a maioria conta 1, não 0.' }], e: 'C₁ dá 2 e C₂ dá 1: (2 + 1)/4 = **0,75**.' },
     ] },
@@ -13446,10 +13647,10 @@ STUDY.problems('ml', [
   { id: 'em-step-1', kind: 'guided', src: 'Exame 1 2025/26, 5', pts: 3, les: 'c-em',
     stmt: 'Dados **x₁ = (0,2; 0,3)**, **x₂ = (2; 1,5)**, **x₃ = (0,4; 0,7)**. EM com dois clusters.\nDepois do passo E: **γ₁ = (0,712; 0,110; 0,576)** e **γ₂ = (0,288; 0,890; 0,424)**. Depois do passo M, as novas médias são **μ₁ = (0,4237; 0,5589)** e **μ₂ = (1,2534; 1,0726)**.\nCalcula as novas matrizes de covariância e os priors.',
     steps: [
-      { name: 'N (N₁; N₂)', c: 'em-n', ask: 'Quanto valem **N₁** e **N₂**?', ans: [1.398, 1.602], hints: ['Nₖ = Σₙ γₙₖ: soma as responsabilidades de cada cluster.'], e: 'N₁ = 0,712 + 0,110 + 0,576 = **1,398** e N₂ = **1,602**.' },
-      { name: 'π (π₁; π₂)', c: 'em-n', ask: 'Quanto valem os **novos priors**?', ans: [0.466, 0.534], hints: ['πₖ = Nₖ/N, com N = 3 pontos.'], miss: [{ v: [1.398, 1.602], m: 'Isso são os Nₖ. Falta dividir pelo número de pontos.' }, { v: [0.6, 0.4], m: 'Esses são os priors antigos.' }], e: '1,398/3 = **0,466** e 1,602/3 = **0,534**.' },
+      { name: 'N (N₁; N₂)', c: 'em-n', ask: 'Quanto valem **N₁** e **N₂**?', ans: [1.398, 1.602], hints: ['{f:emmu|Nₖ = Σₙ γₙₖ}: soma as responsabilidades de cada cluster.'], e: 'N₁ = 0,712 + 0,110 + 0,576 = **1,398** e N₂ = **1,602**.' },
+      { name: 'π (π₁; π₂)', c: 'em-n', ask: 'Quanto valem os **novos priors**?', ans: [0.466, 0.534], hints: ['{f:emmu|πₖ = Nₖ/N}, com N = 3 pontos.'], miss: [{ v: [1.398, 1.602], m: 'Isso são os Nₖ. Falta dividir pelo número de pontos.' }, { v: [0.6, 0.4], m: 'Esses são os priors antigos.' }], e: '1,398/3 = **0,466** e 1,602/3 = **0,534**.' },
       { name: 'Σ₁ (c₁₁; c₁₂; c₂₂)', c: 'em-cov', ask: 'Quanto vale **Σ₁**? Escreve c₁₁, c₁₂ e c₂₂ (a matriz é simétrica).', ans: [0.221, 0.145, 0.112], tol: 0.015,
-        hints: ['Σ₁ = (1/N₁)·Σₙ γₙ₁(xₙ − μ₁)(xₙ − μ₁)ᵀ, com a média nova.', 'Desvios em x: (−0,224; 1,576; −0,024). Desvios em y: (−0,259; 0,941; 0,141).', 'c₁₁ = [0,712·0,050 + 0,110·2,484 + 0,576·0,001]/1,398.'],
+        hints: ['{f:emcov|Σ₁ = (1/N₁)·Σₙ γₙ₁(xₙ − μ₁)(xₙ − μ₁)ᵀ}, com a média nova.', 'Desvios em x: (−0,224; 1,576; −0,024). Desvios em y: (−0,259; 0,941; 0,141).', 'c₁₁ = [0,712·0,050 + 0,110·2,484 + 0,576·0,001]/1,398.'],
         miss: [{ v: [0.4, 0.381, 0.424], m: 'Usaste a média antiga (0, 0). Usa a nova, μ₁.' }, { v: [0.308, 0.202, 0.156], m: 'Falta dividir por N₁.' }], e: 'c₁₁ = **0,221**, c₁₂ = **0,145**, c₂₂ = **0,112**.' },
       { name: 'Σ₂ (c₁₁; c₁₂; c₂₂)', c: 'em-cov', ask: 'Quanto vale **Σ₂**? Escreve c₁₁, c₁₂ e c₂₂.', ans: [0.702, 0.408, 0.245], tol: 0.015,
         hints: ['A mesma fórmula, com γ₂, μ₂ e N₂.', 'Desvios em x: (−1,053; 0,747; −0,853). Desvios em y: (−0,773; 0,427; −0,373).'], e: 'c₁₁ = **0,702**, c₁₂ = **0,408**, c₂₂ = **0,245**.' },
@@ -13457,10 +13658,10 @@ STUDY.problems('ml', [
   { id: 'em-step-2', kind: 'half', pts: 3, les: 'c-em',
     stmt: 'EM com dois clusters, **π₁ = π₂ = 0,5**, e os pontos **x₁ = (0, 0)**, **x₂ = (2, 2)**, **x₃ = (1, 0)**.\nAs densidades no passo E são **p(x|c₁) = (0,4; 0,1; 0,2)** e **p(x|c₂) = (0,1; 0,4; 0,2)**.\nFaz os passos E e M para o cluster 1.',
     steps: [
-      { name: 'γ₁', c: 'em-e', ask: 'Passo E: quanto vale **γ₁ = p(c₁|x)** nos 3 pontos?', ans: [0.8, 0.2, 0.5], hints: ['γₙ₁ = π₁p(xₙ|c₁) / (π₁p(xₙ|c₁) + π₂p(xₙ|c₂)).', 'Para x₁: 0,2/(0,2 + 0,05).'], miss: [{ v: [0.2, 0.05, 0.1], m: 'Falta normalizar: divide pela soma dos dois clusters.' }], e: '0,2/0,25 = **0,8**; 0,05/0,25 = **0,2**; 0,1/0,2 = **0,5**.' },
+      { name: 'γ₁', c: 'em-e', ask: 'Passo E: quanto vale **γ₁ = p(c₁|x)** nos 3 pontos?', ans: [0.8, 0.2, 0.5], hints: ['{f:eme|γₙ₁ = π₁p(xₙ|c₁) / (π₁p(xₙ|c₁) + π₂p(xₙ|c₂))}.', 'Para x₁: 0,2/(0,2 + 0,05).'], miss: [{ v: [0.2, 0.05, 0.1], m: 'Falta normalizar: divide pela soma dos dois clusters.' }], e: '0,2/0,25 = **0,8**; 0,05/0,25 = **0,2**; 0,1/0,2 = **0,5**.' },
       { name: 'N₁; π₁', c: 'em-n', ask: 'Passo M: quanto valem **N₁** e o novo **π₁**?', ans: [1.5, 0.5], hints: ['N₁ = Σₙ γₙ₁ e π₁ = N₁/3.'], e: 'N₁ = 0,8 + 0,2 + 0,5 = **1,5** e π₁ = **0,5**.' },
-      { name: 'μ₁', c: 'em-mu', ask: 'Quanto vale a nova média **μ₁**?', ans: [0.6, 0.267], hints: ['μ₁ = (1/N₁)·Σₙ γₙ₁xₙ.', '(0,8·(0, 0) + 0,2·(2, 2) + 0,5·(1, 0))/1,5.'], miss: [{ v: [1, 0.667], m: 'Usaste a média simples dos pontos. Os pontos entram pesados por γ.' }, { v: [0.9, 0.4], m: 'Falta dividir por N₁ = 1,5.' }], e: '(0,9; 0,4)/1,5 = **(0,6; 0,267)**.' },
-      { name: 'Σ₁ (c₁₁; c₁₂; c₂₂)', c: 'em-cov', ask: 'Quanto vale **Σ₁**? Escreve c₁₁, c₁₂ e c₂₂.', ans: [0.507, 0.373, 0.462], tol: 0.015, hints: ['Σ₁ = (1/N₁)·Σₙ γₙ₁(xₙ − μ₁)(xₙ − μ₁)ᵀ, com a média nova.', 'Desvios: (−0,6; −0,267), (1,4; 1,733), (0,4; −0,267).'], e: 'c₁₁ = 0,76/1,5 = **0,507**, c₁₂ = 0,56/1,5 = **0,373**, c₂₂ = 0,693/1,5 = **0,462**.' },
+      { name: 'μ₁', c: 'em-mu', ask: 'Quanto vale a nova média **μ₁**?', ans: [0.6, 0.267], hints: ['{f:emmu|μ₁ = (1/N₁)·Σₙ γₙ₁xₙ}.', '(0,8·(0, 0) + 0,2·(2, 2) + 0,5·(1, 0))/1,5.'], miss: [{ v: [1, 0.667], m: 'Usaste a média simples dos pontos. Os pontos entram pesados por γ.' }, { v: [0.9, 0.4], m: 'Falta dividir por N₁ = 1,5.' }], e: '(0,9; 0,4)/1,5 = **(0,6; 0,267)**.' },
+      { name: 'Σ₁ (c₁₁; c₁₂; c₂₂)', c: 'em-cov', ask: 'Quanto vale **Σ₁**? Escreve c₁₁, c₁₂ e c₂₂.', ans: [0.507, 0.373, 0.462], tol: 0.015, hints: ['{f:emcov|Σ₁ = (1/N₁)·Σₙ γₙ₁(xₙ − μ₁)(xₙ − μ₁)ᵀ}, com a média nova.', 'Desvios: (−0,6; −0,267), (1,4; 1,733), (0,4; −0,267).'], e: 'c₁₁ = 0,76/1,5 = **0,507**, c₁₂ = 0,56/1,5 = **0,373**, c₂₂ = 0,693/1,5 = **0,462**.' },
     ] },
   { id: 'em-step-3', kind: 'alone', alone: true, src: 'Ficha P09, EM ex. 2', pts: 3,
     stmt: 'Os pontos **x₁ = 4**, **x₂ = 0** e **x₃ = 1** vão ser modelados por uma mistura de duas gaussianas.\nInício: **p(x|c₁) = N(μ₁ = 0, σ₁ = 1)**, **p(x|c₂) = N(μ₂ = 1, σ₂ = 1)** e **π₁ = π₂ = 0,5**.\nFaz uma iteração de EM: as densidades, os passos E e M, e as novas variâncias.',
@@ -13496,12 +13697,12 @@ STUDY.problems('ml', [
     steps: [
       { name: 'm', c: 'pca-cov', les: 'pc-cov', ask: 'Quanto vale a **média** da amostra?', ans: [1.667, 0.333], hints: ['Média de cada coordenada, em 3 pontos.'], e: '(5/3; 1/3) = **(1,667; 0,333)**.' },
       { name: 'C (c₁₁; c₁₂; c₂₂)', c: 'pca-cov', les: 'pc-cov', ask: 'Quanto vale a **covariância**? Escreve c₁₁, c₁₂ e c₂₂.', ans: [4.333, -0.333, 0.333],
-        hints: ['cᵢⱼ = Σₖ(xₖ,ᵢ − x̄ᵢ)(xₖ,ⱼ − x̄ⱼ)/(n − 1).', 'Desvios: (−5/3; −1/3), (7/3; −1/3), (−2/3; 2/3).'], miss: [{ v: [2.889, -0.222, 0.222], m: 'Dividiste por n. A covariância de uma amostra divide por n − 1.' }], e: 'c₁₁ = (78/9)/2 = **4,333**; c₁₂ = (−6/9)/2 = **−0,333**; c₂₂ = (6/9)/2 = **0,333**.' },
-      { name: 'λ (λ₁; λ₂)', c: 'pca-eig', les: 'pc-cov', ask: 'Quanto valem os **valores próprios**, do maior para o menor?', ans: [4.361, 0.306], hints: ['λ² − (traço)λ + det = 0.', 'Traço = 4,667 e det = 1,333.'], miss: [{ v: [4.333, 0.333], m: 'Isso é a diagonal. Só seriam os valores próprios se c₁₂ fosse 0.' }], e: 'λ = (4,667 ± √(21,78 − 5,33))/2 = **4,361** e **0,306**.' },
+        hints: ['{f:cov}.', 'Desvios: (−5/3; −1/3), (7/3; −1/3), (−2/3; 2/3).'], miss: [{ v: [2.889, -0.222, 0.222], m: 'Dividiste por n. A covariância de uma amostra divide por n − 1.' }], e: 'c₁₁ = (78/9)/2 = **4,333**; c₁₂ = (−6/9)/2 = **−0,333**; c₂₂ = (6/9)/2 = **0,333**.' },
+      { name: 'λ (λ₁; λ₂)', c: 'pca-eig', les: 'pc-cov', ask: 'Quanto valem os **valores próprios**, do maior para o menor?', ans: [4.361, 0.306], hints: ['{f:eig|λ² − (traço)λ + det = 0}.', 'Traço = 4,667 e det = 1,333.'], miss: [{ v: [4.333, 0.333], m: 'Isso é a diagonal. Só seriam os valores próprios se c₁₂ fosse 0.' }], e: 'λ = (4,667 ± √(21,78 − 5,33))/2 = **4,361** e **0,306**.' },
       { name: 'u₁', c: 'pca-eig', les: 'pc-cov', ask: 'Quanto vale o **vetor próprio normalizado u₁**? (Escolhe o sinal com a 1.ª componente positiva.)', ans: [0.997, -0.083], hints: ['(C − λ₁I)u = 0.', 'Da 2.ª linha: −0,333·u₁ + (0,333 − 4,361)·u₂ = 0, logo u₂ ≈ −0,0827·u₁.', 'Normaliza: divide por √(1 + 0,0827²).'], e: 'u₂/u₁ = −0,0827, e normalizado dá **(0,997; −0,083)**.' },
       { name: 'u₂', c: 'pca-eig', les: 'pc-cov', ask: 'Quanto vale **u₂**? (Escolhe o sinal com a 2.ª componente positiva.)', ans: [0.083, 0.997], hints: ['Os vetores próprios de uma matriz simétrica são ortogonais a u₁.'], e: 'Ortogonal a u₁: **(0,083; 0,997)**.' },
-      { name: 'y', c: 'pca-proj', ask: 'Quanto vale a **projeção** de x = (1, 1) em u₁?', ans: [0.914], tol: 0.015, hints: ['Como nos slides: y = u₁ᵀx, sem subtrair a média.', '0,997·1 + (−0,083)·1.'], miss: [{ v: [-0.719], m: 'Essa é a projeção centrada, u₁ᵀ(x − x̄). Os slides e as resoluções projetam x diretamente: y = u₁ᵀx.' }], e: '0,997·1 − 0,083·1 = **0,914**.' },
-      { name: 'x̂', c: 'pca-proj', ask: 'Quanto vale a **reconstrução** x̂?', ans: [0.911, -0.076], tol: 0.015, hints: ['x̂ = y·u₁.'], miss: [{ v: [2.578, 0.257], m: 'Somaste a média. Com y = u₁ᵀx a reconstrução é só y·u₁.' }, { v: [0.95, 0.393], m: 'Essa é a reconstrução centrada (x̄ + y·u₁ com y = −0,719). Segue os slides: x̂ = y·u₁ com y = 0,914.' }], e: '0,914·(0,997; −0,083) = **(0,911; −0,076)**.' },
+      { name: 'y', c: 'pca-proj', ask: 'Quanto vale a **projeção** de x = (1, 1) em u₁?', ans: [0.914], tol: 0.015, hints: ['Como nos slides: {f:proj|y = u₁ᵀx}, sem subtrair a média.', '0,997·1 + (−0,083)·1.'], miss: [{ v: [-0.719], m: 'Essa é a projeção centrada, u₁ᵀ(x − x̄). Os slides e as resoluções projetam x diretamente: {f:proj|y = u₁ᵀx}.' }], e: '0,997·1 − 0,083·1 = **0,914**.' },
+      { name: 'x̂', c: 'pca-proj', ask: 'Quanto vale a **reconstrução** x̂?', ans: [0.911, -0.076], tol: 0.015, hints: ['x̂ = y·u₁.'], miss: [{ v: [2.578, 0.257], m: 'Somaste a média. Com {f:proj|y = u₁ᵀx} a reconstrução é só y·u₁.' }, { v: [0.95, 0.393], m: 'Essa é a reconstrução centrada (x̄ + y·u₁ com y = −0,719). Segue os slides: x̂ = y·u₁ com y = 0,914.' }], e: '0,914·(0,997; −0,083) = **(0,911; −0,076)**.' },
     ] },
   { id: 'pca-full-2', kind: 'half', pts: 4, les: 'pc-pca',
     stmt: 'Amostra **X = {(4, 3), (1, 3), (1, 0), (2, 2)}**. Calcula a covariância, os valores próprios, u₁ normalizado, a variância explicada, e a projeção de **x = (4, 3)** com a reconstrução.',
@@ -13511,8 +13712,8 @@ STUDY.problems('ml', [
       { name: 'λ (λ₁; λ₂)', c: 'pca-eig', les: 'pc-cov', ask: 'Quanto valem os **valores próprios**, do maior para o menor?', ans: [3, 1], hints: ['Traço = 4 e det = 3.'], miss: [{ v: [2, 2], m: 'Isso é a diagonal. Só seriam os valores próprios se c₁₂ fosse 0.' }], e: 'λ² − 4λ + 3 = 0: **3** e **1**.' },
       { name: 'u₁', c: 'pca-eig', les: 'pc-cov', ask: 'Quanto vale **u₁ normalizado**? (Escolhe o sinal com a 1.ª componente positiva.)', ans: [0.707, 0.707], hints: ['(C − 3I)u = 0 dá u₁ = u₂.'], miss: [{ v: [1, 1], m: 'Falta normalizar, para ficar ‖u‖ = 1.' }], e: '(1; 1)/√2 = **(0,707; 0,707)**.' },
       { name: 'Variância explicada', c: 'pca-eig', ask: 'Que **fração** da variância explica a 1.ª componente? (Entre 0 e 1.)', ans: [0.75], hints: ['λ₁/(λ₁ + λ₂).'], miss: [{ v: [3], m: 'Divide pela soma dos valores próprios.' }], e: '3/4 = **0,75**.' },
-      { name: 'y', c: 'pca-proj', ask: 'Quanto vale a **projeção** de x = (4, 3) em u₁?', ans: [4.95], hints: ['y = u₁ᵀx, sem subtrair a média.'], miss: [{ v: [2.121], m: 'Essa é a projeção centrada, u₁ᵀ(x − x̄). Os slides projetam x diretamente: y = u₁ᵀx.' }], e: '0,707·4 + 0,707·3 = **4,95**.' },
-      { name: 'x̂', c: 'pca-proj', ask: 'Quanto vale a **reconstrução** x̂?', ans: [3.5, 3.5], hints: ['x̂ = y·u₁.'], miss: [{ v: [5.5, 5.5], m: 'Somaste a média. Com y = u₁ᵀx a reconstrução é só y·u₁.' }], e: '4,95·(0,707; 0,707) = **(3,5; 3,5)**.' },
+      { name: 'y', c: 'pca-proj', ask: 'Quanto vale a **projeção** de x = (4, 3) em u₁?', ans: [4.95], hints: ['{f:proj|y = u₁ᵀx}, sem subtrair a média.'], miss: [{ v: [2.121], m: 'Essa é a projeção centrada, u₁ᵀ(x − x̄). Os slides projetam x diretamente: {f:proj|y = u₁ᵀx}.' }], e: '0,707·4 + 0,707·3 = **4,95**.' },
+      { name: 'x̂', c: 'pca-proj', ask: 'Quanto vale a **reconstrução** x̂?', ans: [3.5, 3.5], hints: ['x̂ = y·u₁.'], miss: [{ v: [5.5, 5.5], m: 'Somaste a média. Com {f:proj|y = u₁ᵀx} a reconstrução é só y·u₁.' }], e: '4,95·(0,707; 0,707) = **(3,5; 3,5)**.' },
     ] },
   { id: 'pca-full-3', kind: 'alone', alone: true, src: 'Exame 1 2024/25, 6', pts: 4,
     stmt: 'Amostra **D = {(0, 2), (1, 2), (2, 2)}**. Determina a matriz de covariância, os seus valores próprios e os vetores próprios normalizados.',
@@ -19322,6 +19523,353 @@ window.PROGRESS_KEY = (() => {
   return { encode, decode, extract, merge, summary };
 })();
 
+/* ===== Calculator maths: parser, exact arithmetic and natural-display rendering =====
+   Pure functions with no state: app-calc.js draws the panel around them (window.CALC).
+   Numbers stay exact fractions (BigInt) while they can: 3/4 + 1/4 = 1, 0.1 + 0.2 = 3/10.
+   Roots, logs and trig fall back to floating point unless the answer is exact (√(9/4) = 3/2, log₂ 8 = 3);
+   a float within a few ulps of a fraction with a small denominator snaps back to it (sin(π/6) = 1/2).
+   The parser never fails: a missing operand becomes a hole and an unclosed bracket a ghost one, so what is
+   being typed always renders. Every rendered leaf carries its source range (data-s, data-e) for the caret. */
+(() => {
+const ROOT = typeof window !== 'undefined' ? window : globalThis;
+const big = BigInt;
+const E = m => Object.assign(new Error(m), { calc: true });
+const INCOMPLETE = 'Falta completar a expressão';
+
+/* ---------- numbers: { n, d } exact fraction (BigInt, d > 0, reduced) or { f } float ---------- */
+const gcd = (a, b) => { a = a < 0n ? -a : a; b = b < 0n ? -b : b; while (b) [a, b] = [b, a % b]; return a; };
+function Q(n, d = 1n) { if (d === 0n) throw E('Divisão por zero'); if (d < 0n) { n = -n; d = -d; } const g = gcd(n, d) || 1n; return { n: n / g, d: d / g }; }
+const isQ = v => v.n !== undefined;
+const bits = q => Math.max(q.n.toString(16).length, q.d.toString(16).length) * 4;
+function qToNum(q) {
+  const a = Number(q.n), b = Number(q.d); if (isFinite(a) && isFinite(b)) return a / b;
+  const k = 10n ** big(Math.max(0, Math.max(q.n.toString().length, q.d.toString().length) - 300));   // too big for doubles: drop digits from both
+  return Number(q.n / k) / Number(q.d / k);
+}
+const num = v => isQ(v) ? qToNum(v) : v.f;
+function F(x) {
+  if (!isFinite(x)) throw E(isNaN(x) ? 'Fora do domínio' : 'Resultado demasiado grande');
+  if (Number.isInteger(x) && Math.abs(x) < 1e15) return Q(big(x));
+  for (let q = 1; q <= 1000; q++) { const p = Math.round(x * q); if (Math.abs(x - p / q) <= 4e-15 * Math.abs(x) && Math.abs(p) < 1e15) return Q(big(p), big(q)); }
+  return { f: x };
+}
+const fit = q => bits(q) > 3000 ? F(qToNum(q)) : q;   // keeps fractions from growing without end
+const both = (a, b) => isQ(a) && isQ(b);
+const isZero = v => isQ(v) ? v.n === 0n : v.f === 0;
+const neg = a => isQ(a) ? { n: -a.n, d: a.d } : { f: -a.f };
+const add = (a, b) => both(a, b) ? fit(Q(a.n * b.d + b.n * a.d, a.d * b.d)) : F(num(a) + num(b));
+const sub = (a, b) => add(a, neg(b));
+const mul = (a, b) => both(a, b) ? fit(Q(a.n * b.n, a.d * b.d)) : F(num(a) * num(b));
+function div(a, b) { if (isZero(b)) throw E('Divisão por zero'); return both(a, b) ? fit(Q(a.n * b.d, a.d * b.n)) : F(num(a) / num(b)); }
+const cmp = (a, b) => both(a, b) ? Math.sign(Number(a.n * b.d - b.n * a.d)) : Math.sign(num(a) - num(b));
+const ZERO = Q(0n), ONE = Q(1n);
+const intOf = (v, what) => { if (!isQ(v) || v.d !== 1n) throw E(`${what} só aceita números inteiros`); return v.n; };
+
+function iroot(n, k) {   // exact integer k-th root of n ≥ 0, or null
+  if (n < 2n) return n; const x = Number(n); if (!isFinite(x)) return null;
+  const r = big(Math.round(Math.pow(x, 1 / k)));
+  for (const c of [r - 1n, r, r + 1n]) if (c >= 0n && c ** big(k) === n) return c;
+  return null;
+}
+function pow(a, b) {
+  if (both(a, b)) {
+    if (b.d === 1n) {
+      const e = b.n, ea = e < 0n ? -e : e;
+      if (a.n === 0n) { if (e < 0n) throw E('Divisão por zero'); return e === 0n ? ONE : ZERO; }
+      if (ea * big(bits(a)) <= 20000n) { const r = Q(a.n ** ea, a.d ** ea); return fit(e < 0n ? Q(r.d, r.n) : r); }
+    } else if (b.d <= 64n) {   // exponent p/q: exact when the q-th root is
+      const q = Number(b.d), sg = a.n < 0n;
+      if (!sg || q % 2) { const rn = iroot(sg ? -a.n : a.n, q), rd = iroot(a.d, q); if (rn !== null && rd !== null) return pow(Q(sg ? -rn : rn, rd), Q(b.n)); }
+    }
+  }
+  const x = num(a), y = num(b);
+  if (x < 0 && !Number.isInteger(y)) {   // real odd root of a negative number: (−8)^(1/3) = −2
+    if (isQ(b) && b.d % 2n === 1n) return F((b.n % 2n === 0n ? 1 : -1) * Math.pow(-x, y));
+    throw E('Fora do domínio');
+  }
+  return F(Math.pow(x, y));
+}
+function log(x, b) {   // b: base, or undefined for ln
+  if (cmp(x, ZERO) <= 0) throw E('Logaritmo de um número ≤ 0');
+  if (!b) return F(Math.log(num(x)));
+  if (cmp(b, ZERO) <= 0 || cmp(b, ONE) === 0) throw E('Base do logaritmo inválida');
+  const bn = num(b), r = bn === 2 ? Math.log2(num(x)) : bn === 10 ? Math.log10(num(x)) : Math.log(num(x)) / Math.log(bn);
+  if (both(x, b) && isFinite(r)) for (let q = 1; q <= 12; q++) {   // exact when bᵖ = xᵠ (log₂ 8 = 3, log₄ 2 = 1/2)
+    const p = Math.round(r * q); if (Math.abs(r * q - p) > 1e-9 || Math.abs(p) > 2000) continue;
+    try { const l = pow(b, Q(big(p))), rr = pow(x, Q(big(q))); if (isQ(l) && isQ(rr) && l.n === rr.n && l.d === rr.d) return Q(big(p), big(q)); } catch { /* too big: not exact */ }
+  }
+  return F(r);
+}
+const trig = f => v => { const r = f(num(v)); return F(Math.abs(r) < 1e-15 ? 0 : r); };
+function floorQ(v) { if (!isQ(v)) return F(Math.floor(v.f)); let f = v.n / v.d; if (v.n % v.d !== 0n && v.n < 0n) f -= 1n; return Q(f); }
+function fact(v) { const n = intOf(v, 'O fatorial'); if (n < 0n) throw E('Fatorial de um número negativo'); if (n > 1000n) throw E('Resultado demasiado grande'); let r = 1n; for (let k = 2n; k <= n; k++) r *= k; return fit(Q(r)); }
+function choose(nv, kv, perm) {
+  const n = intOf(nv, perm ? 'nPr' : 'nCr'), k = intOf(kv, perm ? 'nPr' : 'nCr');
+  if (n < 0n || k < 0n || k > n) throw E('Precisa de 0 ≤ k ≤ n'); if (n > 10000n) throw E('Resultado demasiado grande');
+  let r = 1n; for (let i = 0n; i < k; i++) r = r * (n - i) / (perm ? 1n : i + 1n); return fit(Q(r));
+}
+// [arity (0 = one or more), implementation]
+const FNS = {
+  sqrt: [1, a => { if (cmp(a, ZERO) < 0) throw E('Raiz quadrada de um número negativo'); return pow(a, Q(1n, 2n)); }],
+  cbrt: [1, a => pow(a, Q(1n, 3n))],
+  ln: [1, a => log(a)], log: [1, (a, base) => log(a, base || Q(10n))], exp: [1, a => pow(F(Math.E), a)],
+  sin: [1, trig(Math.sin)], cos: [1, trig(Math.cos)], tan: [1, trig(Math.tan)],
+  asin: [1, trig(Math.asin)], acos: [1, trig(Math.acos)], atan: [1, trig(Math.atan)],
+  sinh: [1, trig(Math.sinh)], cosh: [1, trig(Math.cosh)], tanh: [1, trig(Math.tanh)],
+  abs: [1, a => cmp(a, ZERO) < 0 ? neg(a) : a], floor: [1, floorQ], ceil: [1, a => neg(floorQ(neg(a)))], round: [1, a => floorQ(add(a, Q(1n, 2n)))],
+  sigmoid: [1, a => F(1 / (1 + Math.exp(-num(a))))],
+  min: [0, (...A) => A.reduce((x, y) => cmp(y, x) < 0 ? y : x)], max: [0, (...A) => A.reduce((x, y) => cmp(y, x) > 0 ? y : x)],
+  mean: [0, (...A) => div(A.reduce(add), Q(big(A.length)))],
+  ncr: [2, (n, k) => choose(n, k, false)], npr: [2, (n, k) => choose(n, k, true)],
+};
+const ALIAS = { arcsin: 'asin', arccos: 'acos', arctan: 'atan', raiz: 'sqrt' };
+const DISP = { asin: 'sin⁻¹', acos: 'cos⁻¹', atan: 'tan⁻¹', sigmoid: 'σ', ncr: 'nCr', npr: 'nPr' };
+const GREEK = { alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ε', eta: 'η', theta: 'θ', lambda: 'λ', mu: 'μ', rho: 'ρ', sigma: 'σ', tau: 'τ', phi: 'φ', omega: 'ω' };
+const WORDS = [...Object.keys(FNS), ...Object.keys(ALIAS), ...Object.keys(GREEK), 'pi', 'ans'].sort((a, b) => b.length - a.length);
+
+/* ---------- tokens: N number, V variable, K constant (pi, e, ans), Fn function, Op, ( ) , and X (unknown) ---------- */
+const isD = c => c >= '0' && c <= '9';
+const OPCH = { '+': '+', '-': '-', '−': '-', '–': '-', '*': '*', '×': '*', '·': '*', '⋅': '*', '∗': '*', '/': '/', '÷': '/', '∕': '/', '^': '^', '!': '!', '=': '=' };
+function decQ(m, x) { const [ip, fp = ''] = m.split('.'); let n = big((ip || '0') + fp), d = 10n ** big(fp.length); if (x > 0) n *= 10n ** big(x); else if (x < 0) d *= 10n ** big(-x); return Q(n, d); }
+function readSub(src, j) {   // after "_": a run of digits or of letters
+  const m = /^(\d+|[A-Za-zͰ-Ͽ]+)/.exec(src.slice(j + 1));
+  return { u: j, s: j + 1, e: j + 1 + (m ? m[0].length : 0), text: m ? m[0] : '' };
+}
+function tokenize(src) {
+  const T = [], ctx = []; let i = 0;   // ctx: for each open bracket, 'f' after a function name (commas separate) or 'g'
+  const push = (k, v, s, e, x) => { const t = Object.assign({ k, v, s, e, raw: src.slice(s, e) }, x); T.push(t); return t; };
+  while (i < src.length) {
+    const c = src[i];
+    if (/\s/.test(c)) { i++; continue; }
+    if (isD(c) || (c === '.' && isD(src[i + 1] || ''))) {
+      let j = i, m = '';
+      while (j < src.length) {
+        const d = src[j];
+        if (isD(d)) { m += d; j++; }
+        else if ((d === '.' || (d === ',' && ctx[ctx.length - 1] !== 'f')) && !m.includes('.') && isD(src[j + 1] || '')) { m += '.'; j++; }   // 0,5 works outside f(…, …)
+        else break;
+      }
+      let x = null; const sci = /^[eE]([+\-−]?)(\d{1,4})/.exec(src.slice(j));
+      if (sci) { x = (sci[1] && sci[1] !== '+' ? -1 : 1) * +sci[2]; j += sci[0].length; }
+      if (Math.abs(x || 0) > 1000) { push('X', src.slice(i, j), i, j); i = j; continue; }
+      push('N', decQ(m, x || 0), i, j, { m, x }); i = j; continue;
+    }
+    if (c === '²' || c === '³') { push('Op', '^', i, i + 1); push('N', Q(c === '²' ? 2n : 3n), i + 1, i + 1, { m: c === '²' ? '2' : '3', x: null }); i++; continue; }
+    if (/[A-Za-z]/.test(c)) {
+      const run = /^[A-Za-z]+/.exec(src.slice(i))[0], low = run.toLowerCase();
+      const w = WORDS.find(x => low.startsWith(x)); let j = i + (w ? w.length : 1), t;
+      if (!w) t = c === 'e' ? push('K', 'e', i, j) : push('V', c, i, j);
+      else if (w === 'pi' || w === 'ans') t = push('K', w, i, j);
+      else if (GREEK[w]) t = push('V', GREEK[w], i, j);
+      else t = push('Fn', ALIAS[w] || w, i, j);
+      t.ne = j;
+      if (src[j] === '_') { t.sub = readSub(src, j); j = t.e = t.sub.e; }
+      else if (t.v === 'log' && /^\d+\(/.test(src.slice(j))) { const d = /^\d+/.exec(src.slice(j))[0]; t.sub = { u: null, s: j, e: j + d.length, text: d }; j = t.e = t.sub.e; }   // log2(8)
+      t.raw = src.slice(i, j); i = j; continue;
+    }
+    if (c === 'π') { push('K', 'pi', i, i + 1, { ne: i + 1 }); i++; continue; }
+    if (c === '√' || c === '∛') { push('Fn', c === '√' ? 'sqrt' : 'cbrt', i, i + 1, { ne: i + 1 }); i++; continue; }
+    if (/\p{L}/u.test(c)) { const t = push('V', c, i, i + 1, { ne: i + 1 }); if (src[i + 1] === '_') { t.sub = readSub(src, i + 1); t.e = t.sub.e; t.raw = src.slice(i, t.e); } i = t.e; continue; }
+    if (c === '*' && src[i + 1] === '*') { push('Op', '^', i, i + 2); i += 2; continue; }   // 2**3, as in Python
+    if (OPCH[c]) { push('Op', OPCH[c], i, i + 1); i++; continue; }
+    if (c === '(') { const p = T[T.length - 1]; ctx.push(p && p.k === 'Fn' ? 'f' : 'g'); push('(', c, i, i + 1); i++; continue; }
+    if (c === ')') { ctx.pop(); push(')', c, i, i + 1); i++; continue; }
+    if (c === ',' || c === ';') { push(',', c, i, i + 1); i++; continue; }
+    push('X', c, i, i + 1); i++;
+  }
+  return T;
+}
+
+/* ---------- parser: + − < × ÷ and implicit products, left to right (3/4 log₂ x = ¾·log₂ x) < unary minus < ^ (right to left) < ! ---------- */
+function parse(src) {
+  const text = String(src || ''), T = tokenize(text); let i = 0;
+  const is = (k, v) => !!T[i] && T[i].k === k && (v === undefined || T[i].v === v);
+  const hole = () => ({ t: 'hole', p: i ? T[i - 1].e : 0, q: T[i] ? T[i].s : text.length });   // the gap where an operand is missing
+  const startsAtom = () => is('N') || is('V') || is('K') || is('Fn') || is('(');
+  function expr() { let l = term(); while (is('Op', '+') || is('Op', '-')) { const op = T[i++]; l = { t: 'bin', op, a: l, b: term() }; } return l; }
+  function term() {
+    let l = unary();
+    for (;;) {
+      if (is('Op', '*') || is('Op', '/')) { const op = T[i++], r = unary(); l = { t: op.v === '/' ? 'frac' : 'bin', op, a: l, b: r }; }
+      else if (startsAtom()) l = { t: 'imp', a: l, b: power() };
+      else return l;
+    }
+  }
+  function unary() { if (is('Op', '-') || is('Op', '+')) { const op = T[i++]; return { t: 'neg', op, a: unary() }; } return power(); }
+  function power() { const a = post(); if (is('Op', '^')) { const op = T[i++]; return { t: 'pow', op, a, b: unary() }; } return a; }
+  function post() { let a = atom(); while (is('Op', '!')) a = { t: 'fact', op: T[i++], a }; return a; }
+  function atom() {
+    const t = T[i]; if (!t) return hole();
+    if (t.k === 'N') { i++; return { t: 'num', tok: t }; }
+    if (t.k === 'V' || t.k === 'K') { i++; return { t: 'var', tok: t }; }
+    if (t.k === 'Fn') {
+      i++; const n = { t: 'call', f: t, args: [], commas: [], lp: null, rp: null };
+      if (is('(')) { n.lp = T[i++]; n.args.push(expr()); while (is(',')) { n.commas.push(T[i++]); n.args.push(expr()); } if (is(')')) n.rp = T[i++]; }
+      else n.args.push(power());   // ln 2, √2
+      return n;
+    }
+    if (t.k === '(') { i++; const n = { t: 'par', l: t, a: expr(), r: null }; if (is(')')) n.r = T[i++]; return n; }
+    return hole();
+  }
+  let root;
+  if (is('V') && T[i + 1] && T[i + 1].k === 'Op' && T[i + 1].v === '=') { const v = T[i++], op = T[i++]; root = { t: 'set', v, op, a: expr() }; }
+  else root = expr();
+  if (i < T.length) {   // leftovers (a stray bracket, an unknown sign): shown in red, never computed
+    const items = [root];
+    while (i < T.length) { items.push({ t: 'junk', tok: T[i++] }); if (startsAtom() || is('Op', '-') || is('Op', '+')) items.push(expr()); }
+    root = { t: 'seq', items };
+  }
+  root.src = src; root.empty = !T.length;
+  return root;
+}
+
+/* ---------- evaluation: env = { vars: { name: value }, ans } ---------- */
+const varName = tok => tok.v + (tok.sub ? '_' + tok.sub.text : '');
+function run(tree, env = {}) {
+  const vars = env.vars || {};
+  function lookup(tok) {
+    if (tok.sub && !tok.sub.text) throw E(INCOMPLETE);
+    if (tok.k === 'K') {
+      if (tok.sub) throw E(`${tok.raw} não leva índice`);
+      if (tok.v === 'pi') return F(Math.PI); if (tok.v === 'e') return F(Math.E);
+      if (!env.ans) throw E('Ainda não há resultado anterior (ans)'); return env.ans;
+    }
+    const k = varName(tok); if (!vars[k]) throw Object.assign(E(`${k} ainda não tem valor. Guarda-o antes, por exemplo ${k} = 2`), { unset: k }); return vars[k];
+  }
+  function ev(n) {
+    switch (n.t) {
+      case 'num': return n.tok.v;
+      case 'var': return lookup(n.tok);
+      case 'hole': throw E(INCOMPLETE);
+      case 'bin': { const a = ev(n.a), b = ev(n.b); return n.op.v === '+' ? add(a, b) : n.op.v === '-' ? sub(a, b) : mul(a, b); }
+      case 'imp': return mul(ev(n.a), ev(n.b));
+      case 'frac': return div(ev(n.a), ev(n.b));
+      case 'neg': return n.op.v === '-' ? neg(ev(n.a)) : ev(n.a);
+      case 'pow': return pow(ev(n.a), ev(n.b));
+      case 'fact': return fact(ev(n.a));
+      case 'par': return ev(n.a);   // an unclosed bracket closes at the end, as on a calculator
+      case 'call': {
+        const name = n.f.v, [arity, fn] = FNS[name], sb = n.f.sub;
+        if (sb && name !== 'log') throw E(`${n.f.raw.split('_')[0]} não leva índice`);
+        if (sb && !sb.text) throw E(INCOMPLETE);
+        if (arity && n.args.length !== arity) throw E(`${DISP[name] || name} leva ${arity === 1 ? 'um valor' : arity + ' valores'}`);
+        const A = n.args.map(ev);
+        if (name === 'log' && sb) return fn(A[0], /^\d+$/.test(sb.text) ? Q(big(sb.text)) : lookup({ k: /^(e|pi)$/.test(sb.text) ? 'K' : 'V', v: GREEK[sb.text] || sb.text, raw: sb.text }));
+        return fn(...A);
+      }
+      default: throw E('Expressão mal formada');
+    }
+  }
+  try {
+    if (tree.empty) return { ok: false, err: '' };
+    if (tree.t === 'set') { if (tree.v.sub && !tree.v.sub.text) throw E(INCOMPLETE); const v = ev(tree.a); return { ok: true, v, name: varName(tree.v) }; }
+    return { ok: true, v: ev(tree) };
+  } catch (e) { return { ok: false, err: e.calc ? e.message : 'Não consegui calcular isto', incomplete: e.message === INCOMPLETE, unset: e.unset }; }   // unset: the variable with no value
+}
+
+/* ---------- rendering (HTML, natural display) ---------- */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const leaf = (cls, html, s, e) => `<span class="cl-${cls}" data-s="${s}" data-e="${e}">${html}</span>`;
+// a sign the layout replaces (^ _ / brackets of a fraction, a function's name): zero width, but the caret can sit by it.
+// "open" ones lead into a box (exponent, denominator…), so a caret right after them goes inside that box.
+const hid = (s, e, open) => `<span class="cl-h" data-s="${s}" data-e="${e}"${open ? ' data-open=""' : ''}></span>`;
+const holeH = (p, q = p) => `<span class="cl-hole" data-s="${p}" data-e="${q}" data-hole=""></span>`;
+const ghostH = (c, t = '') => `<span class="cl-p ghost${t}" data-ghost="">${c}</span>`;   // a bracket not typed yet
+const fracH = (a, b) => `<span class="cl-frac"><span class="cl-fn">${a}</span><span class="cl-fd">${b}</span></span>`;
+const RAD = '<svg class="cl-rad" viewBox="0 0 12 24" preserveAspectRatio="none" aria-hidden="true"><path d="M1 14 L3.5 12.5 L7 23 L11.4 .8 H12" fill="none" stroke="currentColor" stroke-width="1.4" vector-effect="non-scaling-stroke"/></svg>';
+const OPS = { '+': '+', '-': '−', '*': '×', '=': '=' };
+const sciH = x => `<span class="cl-x">×10<sup>${x < 0 ? '−' : ''}${Math.abs(x)}</sup></span>`;
+const tall = n => !!n && (n.t === 'frac' || [n.a, n.b, ...(n.args || []), ...(n.items || [])].some(tall));
+const digitFirst = n => n.t === 'num' || (['pow', 'fact', 'imp'].includes(n.t) && digitFirst(n.a));
+function subH(sb) {
+  return `<span class="cl-sub">${sb.u !== null ? hid(sb.u, sb.u + 1, true) : ''}${sb.text ? leaf(/^\d+$/.test(sb.text) ? 'n' : 'v', esc(GREEK[sb.text] || sb.text), sb.s, sb.e) : holeH(sb.s)}</span>`;
+}
+function varH(tok) {
+  const name = tok.k === 'K' ? (tok.v === 'pi' ? leaf('k', 'π', tok.s, tok.ne) : tok.v === 'e' ? leaf('v', 'e', tok.s, tok.ne) : leaf('k ans', 'ans', tok.s, tok.ne)) : leaf('v', esc(tok.v), tok.s, tok.ne);
+  return name + (tok.sub ? subH(tok.sub) : '');
+}
+const G = n => n.t === 'par' ? hid(n.l.s, n.l.e, true) + R(n.a) + (n.r ? hid(n.r.s, n.r.e) : '') : R(n);   // brackets the layout already shows
+function callH(n) {
+  const f = n.f, nm = f.v, t = n.args.some(tall) ? ' tall' : '';
+  const args = n.args.map((a, k) => (k ? leaf('o c', ',', n.commas[k - 1].s, n.commas[k - 1].e) : '') + (n.lp ? R(a) : G(a))).join('');
+  if (nm === 'sqrt' || nm === 'cbrt') return `<span class="cl-sqrt">${nm === 'cbrt' ? '<span class="cl-idx">3</span>' : ''}${RAD}<span class="cl-rc">${hid(f.s, f.ne, true)}${n.lp ? hid(n.lp.s, n.lp.e, true) : ''}${n.lp ? n.args.map((a, k) => (k ? leaf('o c', ',', n.commas[k - 1].s, n.commas[k - 1].e) : '') + G(a)).join('') : args}${n.rp ? hid(n.rp.s, n.rp.e) : n.lp ? '<span data-ghost=""></span>' : ''}</span></span>`;
+  if (nm === 'abs') return leaf('p' + t, '|', f.s, f.ne) + (n.lp ? hid(n.lp.s, n.lp.e, true) : '') + args + (n.rp ? leaf('p' + t, '|', n.rp.s, n.rp.e) : ghostH('|', t));
+  const head = leaf('f', esc(DISP[nm] || nm), f.s, f.ne) + (f.sub ? subH(f.sub) : '');
+  if (n.lp) return head + leaf('p' + t, '(', n.lp.s, n.lp.e) + args + (n.rp ? leaf('p' + t, ')', n.rp.s, n.rp.e) : ghostH(')', t));
+  if (n.args[0].t !== 'hole') return head + '<span class="cl-sp"></span>' + args;   // ln 2
+  if (f.sub && !f.sub.text) return head;   // log_ : only the base's box, not the argument's yet
+  return head + '<span class="cl-p ghost">(</span>' + args + ghostH(')');   // log₂(□): the brackets → will type
+}
+function R(n) {
+  switch (n.t) {
+    case 'num': return leaf('n', esc(n.tok.m) + (n.tok.x !== null ? sciH(n.tok.x) : ''), n.tok.s, n.tok.e);
+    case 'var': return varH(n.tok);
+    case 'hole': return holeH(n.p, n.q);
+    case 'bin': return R(n.a) + leaf('o', OPS[n.op.v], n.op.s, n.op.e) + R(n.b);
+    case 'neg': return leaf('o u', n.op.v === '-' ? '−' : '+', n.op.s, n.op.e) + R(n.a);
+    case 'imp': return R(n.a) + (digitFirst(n.b) ? '<span class="cl-dot">·</span>' : '') + R(n.b);
+    case 'frac': return fracH(G(n.a), hid(n.op.s, n.op.e, true) + G(n.b));
+    case 'pow': return R(n.a) + `<span class="cl-sup">${hid(n.op.s, n.op.e, true)}${G(n.b)}</span>`;
+    case 'fact': return R(n.a) + leaf('o f', '!', n.op.s, n.op.e);
+    case 'par': { const t = tall(n.a) ? ' tall' : ''; return leaf('p' + t, '(', n.l.s, n.l.e) + R(n.a) + (n.r ? leaf('p' + t, ')', n.r.s, n.r.e) : ghostH(')', t)); }
+    case 'call': return callH(n);
+    case 'set': return varH(n.v) + leaf('o', '=', n.op.s, n.op.e) + R(n.a);
+    case 'seq': return n.items.map(R).join('');
+    case 'junk': return leaf('err', esc(n.tok.raw), n.tok.s, n.tok.e);
+  }
+  return '';
+}
+const render = tree => R(tree);
+
+/* ---------- showing a result: fraction when it is short, decimal beside it ---------- */
+const trimZ = s => s.includes('.') ? s.replace(/0+$/, '').replace(/\.$/, '') : s;
+function fmtNum(x) {
+  const a = Math.abs(x); let m, e = null;
+  if (a !== 0 && (a >= 1e10 || a < 1e-6)) { const [mm, ee] = x.toExponential(9).split('e'); m = trimZ(mm); e = +ee; } else m = trimZ(x.toPrecision(10));
+  return { h: m.replace('-', '−') + (e === null ? '' : sciH(e)), approx: Number(e === null ? m : m + 'e' + e) !== x, t: x < 0 ? `(${x})` : String(x) };
+}
+function exactDec(q) {   // the decimal, when it ends and is short (3/8 = 0.375)
+  let d = q.d, k2 = 0, k5 = 0; while (d % 2n === 0n) { d /= 2n; k2++; } while (d % 5n === 0n) { d /= 5n; k5++; }
+  const k = Math.max(k2, k5); if (d !== 1n || k > 12) return null;
+  const n = q.n * 10n ** big(k) / q.d, ng = n < 0n, s = (ng ? -n : n).toString().padStart(k + 1, '0');
+  if (s.length > 16) return null;
+  return (ng ? '−' : '') + trimZ(s.slice(0, s.length - k) + '.' + s.slice(s.length - k));
+}
+// { h: html, approx: shown value is rounded, t: text to insert in an expression, alt: { h, approx } a second form }
+function show(v) {
+  if (!isQ(v)) return fmtNum(v.f);
+  const ng = v.n < 0n, an = (ng ? -v.n : v.n).toString(), ds = v.d.toString();
+  if (v.d === 1n) return an.length <= 20 ? { h: (ng ? '−' : '') + an, approx: false, t: ng ? `(${v.n})` : an } : Object.assign(fmtNum(qToNum(v)), { t: ng ? `(${v.n})` : an });
+  const dec = exactDec(v), x = fmtNum(qToNum(v)), alt = dec !== null ? { h: dec, approx: false } : { h: x.h, approx: true };
+  if (an.length + ds.length <= 18 && (dec === null || ds.length <= 4)) return { h: (ng ? '<span class="cl-o u">−</span>' : '') + fracH(an, ds), approx: false, t: `(${v.n}/${ds})`, alt };
+  return { h: alt.h, approx: alt.approx, t: x.t };
+}
+const ser = v => isQ(v) ? { n: v.n.toString(), d: v.d.toString() } : { f: v.f };
+function de(o) { try { return o && (o.n !== undefined ? Q(big(o.n), big(o.d)) : typeof o.f === 'number' ? { f: o.f } : null); } catch { return null; } }
+// a word to delete in one go with backspace: "sqrt(", "log_2(", "pi", "ans"
+const CHUNK = new RegExp(`(?:(?:${[...Object.keys(FNS), ...Object.keys(ALIAS)].join('|')})(?:_[A-Za-z0-9]*|\\d+)?\\(|pi|ans)$`, 'i');
+
+/* What → types at the end of the text to leave the box being typed in (the text has no boxes, so leaving one needs a
+   sign): "(" after a function's name or base (log₂ → log₂(□)), a space after an index or a one-piece exponent or
+   denominator (2^3 then 4 is 2³·4, not 2³⁴), ")" to close an open bracket. '' when there is nothing to leave. */
+function exitText(src) {
+  const T = tokenize(src); if (!T.length) return '';
+  let open = 0; T.forEach(t => { if (t.k === '(') open++; else if (t.k === ')' && open) open--; });
+  if (/\s$/.test(src)) return open ? ')' : '';
+  const last = T[T.length - 1]; let j = T.length - 1;
+  if (last.k === 'Fn') return last.sub && !last.sub.text ? '' : '(';
+  if (last.sub) return last.sub.text ? ' ' : '';
+  if (last.k === ')') { for (let d = 0; j >= 0; j--) { if (T[j].k === ')') d++; else if (T[j].k === '(' && !--d) break; } if (j > 0 && T[j - 1].k === 'Fn') j--; }
+  if (['N', 'V', 'K', ')'].includes(last.k)) {
+    let pv = T[j - 1]; if (pv && pv.k === 'Op' && (pv.v === '-' || pv.v === '+') && T[j - 2] && T[j - 2].v === '^') pv = T[j - 2];   // 2^-3
+    if (pv && pv.k === 'Op' && (pv.v === '^' || pv.v === '/')) return ' ';
+  }
+  return open ? ')' : '';
+}
+
+ROOT.CALC = { parse, run, render, show, ser, de, CHUNK, exitText };
+})();
+
 /* ===== Estudo IST — engine =====
    Shared by every course: course menu, levels, standard modes
    (Learn, Review, Mock exam, Library) and progress storage.
@@ -19345,8 +19893,17 @@ const LEGACY = { state: 'ams-treino-v1', packs: 'ams-treino-packs-v1', course: '
 
 const $app = document.getElementById('app');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-// light markup for text fields: **bold**, `code`, line breaks
-const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code class="mono">$1</code>').replace(/\n/g, '<br>');
+/* Formulas with a legend. A course lists them in C.formulas: { id: { t, name, f, legend: [[symbol, meaning], …] } }.
+   Text (and lesson or cheat-sheet HTML) writes {f:id}: it shows the formula, and a tap opens a card that says what each
+   symbol means (fxOpen, in app-views.js). */
+// {f:id|text} shows the text as written there (a variant, or the formula with that problem's indices) with the same card
+const fxTag = (id, txt) => { const F = C && C.formulas && C.formulas[id];
+  return F ? `<button type="button" class="fx" data-fx="${esc(id)}" aria-haspopup="dialog" title="O que quer dizer cada símbolo">${txt !== undefined ? txt : esc(F.f)}</button>` : txt !== undefined ? txt : `{f:${esc(id)}}`; };
+const fxify = h => String(h ?? '').replace(/\{f:([a-z0-9-]+)(?:\|([^}]*))?\}/g, (_, id, txt) => fxTag(id, txt));
+let fxBtn = null;   // the formula whose card is open
+function fxClose() { const c = document.getElementById('fxcard'); if (c) c.remove(); if (fxBtn) fxBtn.setAttribute('aria-expanded', 'false'); fxBtn = null; }
+// light markup for text fields: **bold**, `code`, line breaks, {f:id} formulas
+const md = s => fxify(esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code class="mono">$1</code>').replace(/\n/g, '<br>'));
 const shuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 const ls = { get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
@@ -19527,14 +20084,16 @@ let view = { name: 'home' };
 let ses = null; // active session
 function go(name, extra = {}) { view = Object.assign({ name }, extra); renderView(); window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' }); }
 function renderView() {
+  fxClose();
   const v = C || view.name === 'sync' ? view.name : 'courses';
-  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'routepick' ? RoutePick() : v === 'brief' ? BriefScreen() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : v === 'prob' ? ProblemPick() : v === 'problem' ? Problem() : Home();
+  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'routepick' ? RoutePick() : v === 'brief' ? BriefScreen() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : v === 'formulas' ? Formulas() : v === 'recap' ? Recap() : v === 'prob' ? ProblemPick() : v === 'problem' ? Problem() : Home();
   document.documentElement.dataset.course = C && v !== 'courses' && v !== 'sync' ? C.id : '';
   $app.innerHTML = Top() + html;
   document.title = C && v !== 'courses' ? `${C.code} · Estudo IST` : 'Estudo IST';
   if (v === 'quiz') afterQuizRender();
   if (v === 'sync') afterSyncRender();
   if (v === 'problem') afterProblemRender();
+  calcSync();
 }
 const toast = (msg) => { const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); };
 
@@ -19603,6 +20162,7 @@ function Home() {
     RS && RS.rows.length ? ['ready', 'Prontidão', 'A checklist dos tipos de problema que saem nos exames, com o teu estado em cada um.', `${RS.ready}/${RS.rows.length} tipos prontos`, glyph('flag')] : null,
     PG.length ? ['past', 'Exames anteriores', 'Cada exame, pela ordem original, com as perguntas reescritas aqui. Os problemas grandes vêm por partes.', `${PG.length} exame${PG.length === 1 ? '' : 's'}`, glyph('clock')] : null,
     RS && RS.rows.length ? ['sheet', 'Cábula', 'A folha para levar para o exame: fórmulas, passos e armadilhas dos tipos onde falhaste, mais as tuas notas.', `${partSkills().filter(s => sheetMine(s)).length} na tua cábula`, glyph('pen')] : null,
+    C.formulas && Object.keys(C.formulas).length ? ['formulas', 'Formulário', 'Todas as fórmulas da cadeira, com o que quer dizer cada símbolo. Nas lições e nos problemas, toca numa fórmula para ver o mesmo.', `${Object.keys(C.formulas).length} fórmulas`, glyph('pen')] : null,
     nSupp ? ['supp', 'Suplementares', 'Perguntas sobre matéria que ainda não saiu nos exames. Para ir mais fundo, depois do resto.', `${nSupp} perguntas`, glyph('plus')] : null,
   ].filter(Boolean);
   const readyCard = RS && RS.rows.length ? `<div class="ready-card">
@@ -19641,6 +20201,7 @@ function Home() {
       <summary class="section-h"><h2>Definições</h2><span class="muted" style="font-size:13px">notas, importar, recomeçar</span></summary>
       <div class="row">
         <label class="toggle"><input type="checkbox" id="unlockAll" data-act="unlockAll" ${S.settings.unlockAll ? 'checked' : ''}> Desbloquear todos os níveis</label>
+        <label class="toggle" title="Um botão no canto abre uma calculadora com frações, potências e logaritmos"><input type="checkbox" id="calcPad" ${S.settings.calc ?? hasCalc() ? 'checked' : ''}> Calculadora</label>
       </div>
       <div class="row">
         <button class="btn" data-act="bank">${glyph('plus')} Banco de perguntas e importar</button>
@@ -19659,7 +20220,7 @@ function calcSwitch() {
     `<button data-act="calcMode" data-k="${k}" aria-pressed="${cur === k}" title="${d}">${t} <span class="mono">${pool.filter(q => shown(q, k)).length}</span></button>`).join('')}</div>`;
 }
 function glyph(k) {
-  const p = { book: '<path d="M4 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H4z M24 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/>', loop: '<path d="M6 13a8 8 0 0 1 14-5l2 2 M22 15a8 8 0 0 1-14 5l-2-2 M22 4v6h-6 M6 24v-6h6"/>', lens: '<circle cx="12" cy="12" r="7"/><path d="M17 17l6 6 M9 12h6 M12 9v6"/>', bolt: '<path d="M15 3L6 16h7l-1 9 9-13h-7z"/>', clock: '<circle cx="14" cy="14" r="10"/><path d="M14 8v6l4 3"/>', list: '<path d="M9 7h14 M9 14h14 M9 21h14"/><circle cx="5" cy="7" r="1.3"/><circle cx="5" cy="14" r="1.3"/><circle cx="5" cy="21" r="1.3"/>', plus: '<path d="M14 6v16 M6 14h16"/>', pen: '<path d="M6 22l2-6 11-11 4 4-11 11z M16 7l4 4"/>', star: '<path d="M14 3l3.2 7 7.3.6-5.6 4.8 1.8 7.3L14 18.8 7.3 22.7l1.8-7.3L3.5 10.6l7.3-.6z"/>', flag: '<path d="M6 25V4 M6 5h14l-3 5 3 5H6"/>', sun: '<circle cx="14" cy="14" r="5"/><path d="M14 3v3 M14 22v3 M3 14h3 M22 14h3 M6.2 6.2l2.1 2.1 M19.7 19.7l2.1 2.1 M6.2 21.8l2.1-2.1 M19.7 8.3l2.1-2.1"/>', moon: '<path d="M21 17.5A9 9 0 0 1 10.5 7a9 9 0 1 0 10.5 10.5z"/>', auto: '<circle cx="14" cy="14" r="9"/><path d="M14 5a9 9 0 0 1 0 18z" fill="currentColor"/>', skip: '<path d="M4 18c3-8 13-10 18-3 M22 9v6h-6 M4 22h20"/>', swap: '<path d="M4 9h18l-4-4 M24 19H6l4 4"/>', qr: '<path d="M4 4h7v7H4z M17 4h7v7h-7z M4 17h7v7H4z M17 17h3v3h-3z M21 21h3v3h-3z"/>', share: '<path d="M14 3v14 M9 8l5-5 5 5 M6 13v10h16V13"/>', copy: '<path d="M9 9h13v14H9z M6 19V5h13"/>', route: '<circle cx="6" cy="22" r="2.5"/><circle cx="22" cy="6" r="2.5"/><path d="M8.5 22H18a4 4 0 0 0 0-8h-8a4 4 0 0 1 0-8h9.5"/>' }[k] || '';
+  const p = { book: '<path d="M4 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H4z M24 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/>', loop: '<path d="M6 13a8 8 0 0 1 14-5l2 2 M22 15a8 8 0 0 1-14 5l-2-2 M22 4v6h-6 M6 24v-6h6"/>', lens: '<circle cx="12" cy="12" r="7"/><path d="M17 17l6 6 M9 12h6 M12 9v6"/>', bolt: '<path d="M15 3L6 16h7l-1 9 9-13h-7z"/>', clock: '<circle cx="14" cy="14" r="10"/><path d="M14 8v6l4 3"/>', list: '<path d="M9 7h14 M9 14h14 M9 21h14"/><circle cx="5" cy="7" r="1.3"/><circle cx="5" cy="14" r="1.3"/><circle cx="5" cy="21" r="1.3"/>', plus: '<path d="M14 6v16 M6 14h16"/>', pen: '<path d="M6 22l2-6 11-11 4 4-11 11z M16 7l4 4"/>', star: '<path d="M14 3l3.2 7 7.3.6-5.6 4.8 1.8 7.3L14 18.8 7.3 22.7l1.8-7.3L3.5 10.6l7.3-.6z"/>', flag: '<path d="M6 25V4 M6 5h14l-3 5 3 5H6"/>', sun: '<circle cx="14" cy="14" r="5"/><path d="M14 3v3 M14 22v3 M3 14h3 M22 14h3 M6.2 6.2l2.1 2.1 M19.7 19.7l2.1 2.1 M6.2 21.8l2.1-2.1 M19.7 8.3l2.1-2.1"/>', moon: '<path d="M21 17.5A9 9 0 0 1 10.5 7a9 9 0 1 0 10.5 10.5z"/>', auto: '<circle cx="14" cy="14" r="9"/><path d="M14 5a9 9 0 0 1 0 18z" fill="currentColor"/>', skip: '<path d="M4 18c3-8 13-10 18-3 M22 9v6h-6 M4 22h20"/>', swap: '<path d="M4 9h18l-4-4 M24 19H6l4 4"/>', qr: '<path d="M4 4h7v7H4z M17 4h7v7h-7z M4 17h7v7H4z M17 17h3v3h-3z M21 21h3v3h-3z"/>', share: '<path d="M14 3v14 M9 8l5-5 5 5 M6 13v10h16V13"/>', copy: '<path d="M9 9h13v14H9z M6 19V5h13"/>', calc: '<rect x="6" y="3" width="16" height="22" rx="2.5"/><path d="M10 8h8 M10 13.5h.01 M14 13.5h.01 M18 13.5h.01 M10 18h.01 M14 18h.01 M10 22h.01 M14 22h.01 M18 18v4"/>', route: '<circle cx="6" cy="22" r="2.5"/><circle cx="22" cy="6" r="2.5"/><path d="M8.5 22H18a4 4 0 0 0 0-8h-8a4 4 0 0 1 0-8h9.5"/>' }[k] || '';
   return `<svg class="glyph" viewBox="0 0 28 28" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 }
 
@@ -19765,6 +20326,7 @@ function start(mode, opts = {}) {
   if (mode === 'review') { items = reviewPool().slice(0, 12).map(makeItem); title = 'Revisão · erros de treino'; if (!items.length) { toast('Ainda não tens erros de treino para rever.'); return; } }
   if (mode === 'skipped') { items = skippedPool().slice(0, 12).map(makeItem); title = 'Revisão · saltadas'; if (!items.length) { toast('Não tens perguntas saltadas.'); return; } }
   if (mode === 'reviewExam') { items = examReviewPool().slice(0, 12).map(makeItem); title = 'Revisão · erros de exame'; if (!items.length) { toast('Ainda não tens erros de exame para rever.'); return; } }
+  if (mode === 'warm' || mode === 'recap') { items = (opts.ids || []).filter(id => BYID[id]).map(id => makeItem(BYID[id])); title = mode === 'warm' ? 'Aquecimento' : 'Resumo de hoje'; if (!items.length) { toast('Nada para rever agora.'); return; } }
   if (mode === 'extra') { const x = (C.extras || []).find(e => e.id === opts.extra); if (!x) return; items = (x.questions(extraApi()) || []).map(makeItem); title = x.title; }
   if (mode === 'exam') { items = buildExam().map(makeItem); title = 'Exame simulado'; timeLimit = examCfg().min * 60; }
   if (mode === 'supp') { items = pick(suppPool(), 10).sort((a, b) => a.l - b.l).map(makeItem); title = 'Suplementares'; }
@@ -20141,11 +20703,12 @@ function PlanCard() {
   const note = `<p class="plan-note">${S.pace && S.pace.n >= 3 ? 'Os tempos já usam o teu ritmo.' : 'Os tempos são intervalos e ajustam-se ao teu ritmo à medida que usas a app.'}</p>`;
   if (p.done && !view.planMore) return `<section class="plan-card done"><div class="row"><h2>Hoje ✓</h2><span class="spacer"></span><span class="mono muted">${Math.round(p.spent)} min feitos</span></div>
       <p>Plano de hoje feito.${p.next ? ` Amanhã começas por <b>${esc(p.next.label)}</b>.` : ''}</p>
-      <div class="row"><button class="btn" data-act="planMore">Fazer mais um pouco</button></div><p class="plan-pace">${pace}</p>${set}</section>`;
+      <div class="row"><button class="btn" data-act="planMore">Fazer mais um pouco</button></div>${rcStrip('recap')}<p class="plan-pace">${pace}</p>${set}</section>`;
   const items = p.list.map((t, i) => `<li><button class="plan-item" data-act="planGo" data-i="${i}"><span class="pi-n mono">${i + 1}</span><span class="pi-main"><b>${esc(t.label)}</b><span class="muted">${esc(t.why)}</span></span><span class="pi-t mono">${minRange(taskMin(t))}</span></button></li>`).join('');
   return `<section class="plan-card"><div class="row"><h2>Hoje</h2><span class="spacer"></span><span class="mono muted">${minRange(p.min)}</span></div>
+    ${rcStrip('warm')}
     <ol class="plan-list">${items}</ol>
-    <div class="row"><button class="btn primary" data-act="planGo" data-i="0">Começar →</button>${p.spent >= 1 ? `<span class="muted" style="font-size:13px">${Math.round(p.spent)} min feitos hoje</span>` : ''}</div>
+    <div class="row"><button class="btn primary" data-act="planGo" data-i="0">Começar →</button>${p.spent >= 1 ? `<span class="muted" style="font-size:13px">${Math.round(p.spent)} min feitos hoje</span>` : ''}</div>${rcStrip('recap')}
     <p class="plan-pace">${pace}</p>${set}${note}</section>`;
 }
 // At the end of a session started from the plan: the next step, or "done for today".
@@ -20155,6 +20718,260 @@ function planNextBtn(fromPlan) {
   if (p.done || !p.list.length) return `<button class="btn primary" data-act="home">Plano de hoje feito ✓</button>`;
   return `<button class="btn primary" data-act="planGo" data-i="0">Seguinte no plano: ${esc(p.list[0].label)} →</button>`;
 }
+
+/* ---------- DAILY REVIEW: "Aquecimento" and "Resumo de hoje" ----------
+   Two small, optional extras around the plan. They never enter the plan list, never count in the pace and never show
+   as a debt: skipping one leaves nothing behind.
+   - Aquecimento (start of the day): at most WARM_N questions answered right on earlier days, due again by their box
+     (WARM_GAP days), the least known first. No calculations: it should take no effort to start. Whatever is not
+     picked just waits; the number shown never grows past WARM_N.
+   - Resumo de hoje (end of the day): at most RECAP_N things from today: the key line of lessons seen today, then the
+     questions answered today, the ones answered wrong first.
+   Each one can be read (question, then "Ver solução") or done (a normal session). Reading never raises a box:
+   "Não sabia" brings the question back tomorrow, "Sabia" only postpones it. Done today: S.today.did has 'warm'/'recap'; S.today.rd lists the questions only read today (local, not in the key). */
+const WARM_N = 3, RECAP_N = 5, RECAP_LES = 2, WARM_GAP = [1, 1, 3, 7, 14, 30];
+const daysSince = ms => Math.round((new Date(todayStr()) - new Date(new Date(ms).toLocaleDateString('sv'))) / 864e5);
+const rcDone = k => planToday().did.includes(k);
+function warmPool() {
+  return basePool().filter(q => { const s = peek(q.id);
+    if (!s.c || !s.last || q.calc || q.ch || q.code) return false;
+    if (s.w && s.box < TRAIN_CLEAR) return false;   // still a mistake: the mistakes task has it
+    const d = daysSince(s.last); return d >= 1 && d >= WARM_GAP[Math.min(5, s.box)]; })
+    .sort((a, b) => peek(a.id).box - peek(b.id).box || peek(a.id).last - peek(b.id).last).slice(0, WARM_N);
+}
+function recapItems() {
+  const les = LESSONS.filter(l => S.seenL && S.seenL[l.id] && daysSince(S.seenL[l.id]) === 0 && l.key && activeTopics().includes(l.t)).slice(0, RECAP_LES).map(l => ({ kind: 'les', id: l.id }));
+  const wrongNow = q => { const s = peek(q.id); return s.w > 0 && s.box === 0; };
+  const rd = planToday().rd || [];   // only read today (in the warm-up), not done: not part of today's work
+  const qs = BANK.filter(q => inTopics(q) && !isReserved(q) && !rd.includes(q.id) && peek(q.id).last && daysSince(peek(q.id).last) === 0)
+    .sort((a, b) => wrongNow(b) - wrongNow(a) || peek(b.id).last - peek(a.id).last).map(q => ({ kind: 'q', id: q.id }));
+  return les.concat(qs).slice(0, RECAP_N);
+}
+const rcMode = k => (S.settings.rc && S.settings.rc[k]) || (k === 'warm' ? 'do' : 'read');
+// the two strips of the plan card (empty when there is nothing, or it was done or skipped today)
+function rcStrip(k) {
+  const n = k === 'warm' ? warmPool().length : recapItems().length; if (!n || rcDone(k)) return '';
+  const m = rcMode(k), btn = (mm, t) => `<button class="btn small${m === mm ? ' primary' : ''}" data-act="rcGo" data-k="${k}" data-m="${mm}">${t}</button>`;
+  const what = k === 'warm' ? `${n === 1 ? '1 pergunta' : `${n} perguntas`} que já acertaste noutros dias, para não esquecer` : `${n === 1 ? '1 coisa' : `${n} coisas`} do que fizeste hoje`;
+  return `<div class="plan-extra"><div class="pe-t"><b>${k === 'warm' ? 'Aquecimento' : 'Fechar o dia'}</b> <span class="muted">· opcional</span><span class="muted pe-w">${what}.</span></div>
+    <div class="row">${btn('read', 'Ler')}${btn('do', 'Fazer')}<button class="btn ghost small" data-act="rcSkip" data-k="${k}">Hoje não</button></div></div>`;
+}
+// read mode: its own small screen; do mode: a normal session with these questions
+let rc = null;
+function rcStart(k, m) {
+  if (!S.settings.rc) S.settings.rc = {}; S.settings.rc[k] = m;
+  const items = k === 'warm' ? warmPool().map(q => ({ kind: 'q', id: q.id })) : recapItems();
+  if (!items.length) { toast('Nada para rever agora.'); return; }
+  if (m === 'do') { const ids = items.filter(x => x.kind === 'q').map(x => x.id); if (!ids.length) { rc = { k, items, i: 0, shown: false, t0: Date.now() }; go('recap'); return; }
+    start(k, { ids, planKey: k }); return; }
+  rc = { k, items, i: 0, shown: false, t0: Date.now() }; save(); go('recap');
+}
+function rcSkip(k) { const td = planToday(); if (!td.did.includes(k)) td.did.push(k); save(); renderView(); }
+function rcNext(rate) {
+  const it = rc.items[rc.i];
+  if (it.kind === 'q' && rate) { const s = st(it.id), td = planToday(); if (!td.rd) td.rd = []; if (!td.rd.includes(it.id)) td.rd.push(it.id);
+    if (rate === 'no') { s.box = Math.min(s.box, 1); s.last = Date.now(); }   // back tomorrow, to be done
+    else s.last = Date.now(); }                                               // known: later, by its box
+  rc.i++; rc.shown = false;
+  if (rc.i >= rc.items.length) { planLog(rc.k, Date.now() - rc.t0, rc.items.length, 0, true); rc.done = true; }
+  save(); renderView(); window.scrollTo(0, 0);
+}
+
+/* ---------- CALCULATOR: a floating panel (the maths is in calc.js) ----------
+   A round button in the corner opens it on every screen of a course. Definições turns the button on or off per
+   course (S.settings.calc; by default on where the course has questions with calculations).
+   What is typed lives in a transparent input; above it the expression is drawn as on paper (fractions stacked,
+   exponents raised, √ over its radicand) with our own caret, so ^ and _ format as you type.
+   History, variables and ans stay on this device (LS_CALC). */
+const LS_CALC = 'estudo-ist-calc', CX = window.CALC;
+const calcMem = Object.assign({ hist: [], vars: {}, ans: null }, ls.get(LS_CALC) || {});
+let calcIsOpen = false, calcHi = -1, calcDraft = '', calcErr = '';   // calcErr: why Enter could not calculate (HTML), until the next edit   // calcHi: history entry recalled with ↑ (−1: what was being typed)
+const calcWanted = () => !!(C && S && !['courses', 'sync'].includes(view.name) && (S.settings.calc ?? hasCalc()));
+const calcEnv = () => { const vars = {}; for (const k in calcMem.vars) { const v = CX.de(calcMem.vars[k]); if (v) vars[k] = v; } return { vars, ans: CX.de(calcMem.ans) }; };
+const calcEl = id => document.getElementById(id);
+const coarse = () => window.matchMedia('(pointer: coarse)').matches;
+
+// called by renderView: the button follows the course setting and the screen
+function calcSync() {
+  let fab = calcEl('calc-fab');
+  if (!fab) {
+    fab = document.createElement('button'); fab.id = 'calc-fab'; fab.type = 'button'; fab.className = 'calc-fab';
+    fab.title = 'Calculadora'; fab.setAttribute('aria-label', 'Abrir a calculadora'); fab.innerHTML = glyph('calc');
+    fab.addEventListener('click', () => calcOpen(true)); document.body.appendChild(fab);
+  }
+  const on = calcWanted(); fab.hidden = !on || calcIsOpen;
+  if (!on && calcIsOpen) calcOpen(false);
+}
+
+// [text to insert, label, title]; special keys start with '#'
+const CALC_FN = [['/', '<span class="cl-frac sm"><span class="cl-fn">▫</span><span class="cl-fd">▫</span></span>', 'Fração ( / )'], ['^2', 'x²', 'Ao quadrado ( ^2 )'], ['^', 'xⁿ', 'Potência ( ^ )'],
+  ['sqrt(', '√', 'Raiz quadrada ( sqrt )'], ['(', '('], [')', ')'],
+  ['ln(', 'ln', 'Logaritmo natural ( ln )'], ['log_2(', 'log₂', 'Logaritmo de base 2 ( log_2 ). Outra base: log_b'], ['log(', 'log', 'Logaritmo de base 10 ( log )'],
+  ['pi', 'π', 'Pi ( pi )'], ['e', 'e', 'Número de Euler ( e )'], ['#idx', 'x₁', 'Índice ( _ ): depois de uma letra põe-lhe um índice (w₁, log₂); sozinho escreve x₁']];
+const CALC_PAD = [['7'], ['8'], ['9'], ['/', '÷'], ['#bs', '⌫', 'Apagar'], ['#ac', 'AC', 'Limpar a expressão'],
+  ['4'], ['5'], ['6'], ['*', '×'], ['#l', '←', 'Mover para a esquerda'], ['#r', '→', 'Para a direita, ou sair do índice, expoente ou fração'],
+  ['1'], ['2'], ['3'], ['-', '−'], ['x', '<i>x</i>', 'Variável x'], ['=', '<i>x</i>=', 'Guardar numa variável: x = 2, e depois usar x'],
+  ['0'], ['.'], ['ans', 'ans', 'Resultado anterior'], ['+'], ['#eq', '=', 'Calcular']];
+const calcKey = ([k, label, title]) => `<button type="button" class="calc-k${k === '#eq' ? ' eq' : ''}" data-ck="${esc(k)}"${title ? ` title="${esc(title)}" aria-label="${esc(title)}"` : ''}>${label || esc(k)}</button>`;
+
+function calcOpen(open, refocus) {
+  calcIsOpen = open; let p = calcEl('calc');
+  if (!open) { if (p) p.remove(); calcSync(); if (refocus) { const f = calcEl('calc-fab'); if (f && !f.hidden) f.focus({ preventScroll: true }); } return; }
+  if (!p) {
+    p = document.createElement('section'); p.id = 'calc'; p.className = 'calc-panel'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Calculadora');
+    p.innerHTML = `<div class="calc-h"><span class="eyebrow">Calculadora</span><span class="spacer"></span>
+        <button type="button" class="btn ghost small calc-abc" data-ck="#abc" title="Teclado com letras, para outras variáveis (w, η…)">abc</button>
+        <button type="button" class="btn ghost small" data-ck="#clear" title="Apagar o histórico e as variáveis">Limpar</button>
+        <button type="button" class="btn ghost small" data-ck="#close" aria-label="Fechar a calculadora">✕</button></div>
+      <ol class="calc-hist" id="calc-hist" aria-label="Contas feitas"></ol>
+      <div class="calc-disp" id="calc-disp">
+        <div class="cl calc-expr" id="calc-expr" aria-hidden="true"></div>
+        <div class="calc-prev" id="calc-prev" aria-live="polite"></div>
+        <input class="calc-in" id="calc-in" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-label="Expressão a calcular" aria-describedby="calc-prev">
+      </div>
+      <div class="calc-keys" id="calc-keys">${CALC_FN.map(calcKey).join('')}</div>
+      <div class="calc-keys pad">${CALC_PAD.map(calcKey).join('')}</div>
+      <p class="calc-tip muted">Enter calcula · → sai do índice, expoente ou fração · ↑ ↓ contas anteriores · <code class="mono">x = 2</code> guarda uma variável · ângulos em radianos</p>`;
+    document.body.appendChild(p); calcBind(p);
+  }
+  calcSync(); calcHist(); calcDraw();
+  calcEl('calc-in').focus({ preventScroll: true });
+}
+
+function calcResultH(v, cls = '') {
+  const s = CX.show(v);
+  return `<span class="cl ${cls}">${s.approx ? '≈' : '='} ${s.h}</span>${s.alt ? `<span class="calc-alt">${s.alt.approx ? '≈' : '='} ${s.alt.h}</span>` : ''}`;
+}
+function calcHist() {
+  const ol = calcEl('calc-hist'); if (!ol) return;
+  ol.innerHTML = calcMem.hist.map((h, i) => { const v = CX.de(h.v); return v ? `<li>
+    <button type="button" class="calc-hx cl" data-ci="${i}" title="Editar outra vez">${CX.render(CX.parse(h.x))}</button>
+    <button type="button" class="calc-hr" data-cv="${i}" title="Usar este resultado na conta">${calcResultH(v)}</button></li>` : ''; }).join('');
+  ol.hidden = !calcMem.hist.length; ol.scrollTop = ol.scrollHeight;
+}
+
+// draws the expression with the caret (and the selection) where the input has them, then the live result
+function calcDraw() {
+  const inp = calcEl('calc-in'), ex = calcEl('calc-expr'), pv = calcEl('calc-prev'); if (!inp) return;
+  const src = inp.value, tree = CX.parse(src);
+  ex.innerHTML = tree.empty ? '<span class="calc-ph">por exemplo 3/4 + log_2(8)</span>' : CX.render(tree);
+  const a = inp.selectionStart ?? src.length, b = inp.selectionEnd ?? a;
+  if (a !== b) ex.querySelectorAll('[data-s]').forEach(l => { if (+l.dataset.s >= a && +l.dataset.e <= b && +l.dataset.e > +l.dataset.s) l.classList.add('sel'); });
+  else calcCaret(ex, inp.selectionDirection === 'backward' ? a : b);
+  pv.classList.toggle('err', !!calcErr);
+  if (calcErr) { pv.innerHTML = calcErr; return; }
+  if (tree.empty) { pv.innerHTML = ''; return; }
+  const r = CX.run(tree, calcEnv());
+  pv.innerHTML = r.ok ? (r.name ? `<span class="cl">${CX.render(CX.parse(r.name))}</span> ` : '') + calcResultH(r.v, 'calc-live') : '';
+}
+function calcCaret(ex, p) {
+  const caret = document.createElement('span'); caret.className = 'cl-caret';
+  const leaves = [...ex.querySelectorAll('[data-s]')], isHole = l => 'hole' in l.dataset;
+  if (!leaves.length) { ex.prepend(caret); return; }
+  const after = leaves.filter(l => !isHole(l) && +l.dataset.e === p).pop(), before = leaves.find(l => !isHole(l) && +l.dataset.s === p);
+  // right after a number or a name, typing continues it (w_1|2 → w₁₂): the caret stays there; otherwise an empty box takes it
+  const word = after && /(^| )cl-[nvkf]( |$)/.test(after.className);
+  const hole = !word && leaves.find(l => isHole(l) && +l.dataset.s <= p && p <= +l.dataset.e);
+  if (hole) hole.appendChild(caret);
+  // right after ^ _ / or an opening bracket the caret belongs inside the box they open
+  else if (after && !('open' in after.dataset)) after.after(caret);
+  else if (before) before.before(caret);
+  else if (after) after.after(caret);
+  // after a space at the end (→ left a box): back on the line, inside the innermost bracket still open
+  else if (leaves.every(l => +l.dataset.e < p)) { const g = ex.querySelector('[data-ghost]'); if (g) g.before(caret); else ex.append(caret); }
+  else { const prev = leaves.filter(l => +l.dataset.e < p).pop(); if (prev) prev.after(caret); else ex.prepend(caret); }
+}
+// where a tap on the drawn expression puts the caret: before or after the piece tapped
+function calcPosAt(ev, len) {
+  const l = ev.target.closest && ev.target.closest('#calc-expr [data-s]');
+  if (!l) { const r = calcEl('calc-expr').getBoundingClientRect(); return ev.clientX < r.left + 8 ? 0 : len; }
+  if ('hole' in l.dataset) return +l.dataset.s;
+  const r = l.getBoundingClientRect(); return ev.clientX < r.left + r.width / 2 ? +l.dataset.s : +l.dataset.e;
+}
+
+function calcInsert(t) {
+  const inp = calcEl('calc-in'), a = inp.selectionStart, b = inp.selectionEnd;
+  // an operator on an empty line continues from the last result, as on a calculator
+  if (!inp.value.trim() && /^[+*/^!]/.test(t) && calcMem.ans) t = 'ans' + t;
+  inp.setRangeText(t, a, b, 'end'); calcHi = -1; calcErr = ''; calcDraw();
+}
+function calcBack() {
+  const inp = calcEl('calc-in'), a = inp.selectionStart, b = inp.selectionEnd;
+  if (a !== b) inp.setRangeText('', a, b, 'end');
+  else if (a > 0) { const m = CX.CHUNK.exec(inp.value.slice(0, a)); inp.setRangeText('', a - (m ? m[0].length : 1), a, 'end'); }   // "log_2(" goes in one press
+  calcHi = -1; calcErr = ''; calcDraw();
+}
+function calcEnter() {
+  const inp = calcEl('calc-in'), src = inp.value; if (!src.trim()) return;
+  const r = CX.run(CX.parse(src), calcEnv()), pv = calcEl('calc-prev');
+  if (!r.ok) {   // a variable with no value: its name drawn as in the expression, and how to give it one
+    const nm = r.unset && `<span class="cl">${CX.render(CX.parse(r.unset))}</span>`;
+    calcErr = nm ? `${nm} ainda não tem valor. Guarda-o antes, por exemplo <span class="cl">${CX.render(CX.parse(r.unset + ' = 2'))}</span>` : esc(r.err);
+    calcDraw(); return;
+  }
+  if (r.name) calcMem.vars[r.name] = CX.ser(r.v);
+  calcMem.ans = CX.ser(r.v); calcMem.hist.push({ x: src, v: CX.ser(r.v) }); if (calcMem.hist.length > 40) calcMem.hist.shift();
+  ls.set(LS_CALC, calcMem); inp.value = ''; calcHi = -1; calcHist(); calcDraw();
+}
+// → at the end of the text leaves the box being typed in (CX.exitText says which sign does it); false if nothing to leave
+function calcExit() {
+  const inp = calcEl('calc-in'), n = inp.value.length;
+  if (inp.selectionStart !== n || inp.selectionEnd !== n) return false;
+  const t = CX.exitText(inp.value); if (!t) return false;
+  inp.setRangeText(t, n, n, 'end'); calcDraw(); return true;
+}
+function calcRecall(dir) {   // ↑ / ↓ walk through the expressions already calculated
+  const inp = calcEl('calc-in'), H = calcMem.hist; if (!H.length) return;
+  if (dir < 0) { if (calcHi === -1) { calcDraft = inp.value; calcHi = H.length - 1; } else calcHi = Math.max(0, calcHi - 1); }
+  else { if (calcHi === -1) return; calcHi++; if (calcHi >= H.length) calcHi = -1; }
+  inp.value = calcHi === -1 ? calcDraft : H[calcHi].x; calcErr = ''; inp.setSelectionRange(inp.value.length, inp.value.length); calcDraw();
+}
+
+function calcBind(p) {
+  const inp = p.querySelector('#calc-in'), disp = p.querySelector('#calc-disp');
+  inp.inputMode = coarse() ? 'none' : 'text';   // on a phone the keypad below replaces the system keyboard
+  inp.addEventListener('input', () => { calcHi = -1; calcErr = ''; calcDraw(); });
+  inp.addEventListener('keydown', ev => {
+    const k = ev.key;
+    if (k === 'Enter') { ev.preventDefault(); calcEnter(); }
+    else if (k === 'Escape') { ev.preventDefault(); calcOpen(false, true); }
+    else if (k === 'ArrowUp' || k === 'ArrowDown') { ev.preventDefault(); calcRecall(k === 'ArrowUp' ? -1 : 1); }
+    else if (k === 'ArrowRight' && !ev.shiftKey && calcExit()) ev.preventDefault();
+    else requestAnimationFrame(calcDraw);   // arrows, Home, End: the caret moved
+  });
+  // beforeinput, not keydown: phone keyboards often send keydown without the key
+  inp.addEventListener('beforeinput', ev => {
+    if (ev.inputType === 'deleteContentBackward') { ev.preventDefault(); calcBack(); }
+    else if (ev.inputType === 'insertText' && /^[+*/^!]/.test(ev.data || '') && !inp.value.trim() && calcMem.ans) { ev.preventDefault(); calcInsert(ev.data); }
+  });
+  inp.addEventListener('focus', () => { disp.classList.add('focus'); calcDraw(); });
+  inp.addEventListener('blur', () => disp.classList.remove('focus'));
+  disp.addEventListener('pointerdown', ev => {
+    if (ev.target === inp) return; ev.preventDefault();
+    const pos = calcPosAt(ev, inp.value.length); inp.focus({ preventScroll: true }); inp.setSelectionRange(pos, pos); calcDraw();
+  });
+  // keys keep the focus in the input (and the phone keyboard as it was)
+  p.addEventListener('pointerdown', ev => { if (ev.target.closest('.calc-k')) ev.preventDefault(); });
+  p.addEventListener('click', ev => {
+    const k = ev.target.closest('[data-ck]'), hx = ev.target.closest('[data-ci]'), hr = ev.target.closest('[data-cv]');
+    if (hx) { inp.value = calcMem.hist[+hx.dataset.ci].x; calcErr = ''; inp.focus({ preventScroll: true }); inp.setSelectionRange(inp.value.length, inp.value.length); calcDraw(); return; }
+    if (hr) { const v = CX.de(calcMem.hist[+hr.dataset.cv].v); if (v) { inp.focus({ preventScroll: true }); calcInsert(CX.show(v).t); } return; }
+    if (!k) return;
+    const c = k.dataset.ck;
+    if (c === '#close') return calcOpen(false, true);
+    if (c === '#clear') { calcMem.hist = []; calcMem.vars = {}; calcMem.ans = null; ls.set(LS_CALC, calcMem); calcHist(); calcDraw(); toast('Histórico e variáveis apagados.'); return; }
+    inp.focus({ preventScroll: true });
+    if (c === '#eq') calcEnter();
+    else if (c === '#bs') calcBack();
+    else if (c === '#ac') { inp.value = ''; calcErr = ''; calcDraw(); }
+    else if (c === '#idx') { const run = /[A-Za-zͰ-Ͽ]+$/.exec(inp.value.slice(0, inp.selectionStart)); calcInsert(run && !/^(pi|ans|e)$/i.test(run[0]) ? '_' : 'x_'); }   // w → w_, alone → x_
+    else if (c === '#r' && calcExit()) { /* left a box */ }
+    else if (c === '#l' || c === '#r') { const q = Math.max(0, Math.min(inp.value.length, inp.selectionStart + (c === '#l' ? -1 : 1))); inp.setSelectionRange(q, q); calcDraw(); }
+    else if (c === '#abc') { inp.inputMode = inp.inputMode === 'none' ? 'text' : 'none'; k.classList.toggle('on', inp.inputMode === 'text'); inp.blur(); inp.focus({ preventScroll: true }); }
+    else calcInsert(c);
+  });
+}
+document.addEventListener('selectionchange', () => { if (document.activeElement && document.activeElement.id === 'calc-in') calcDraw(); });
 
 let tick = null;
 function startTimer() { clearInterval(tick); tick = setInterval(() => { if (!ses || ses.ended) { clearInterval(tick); return; } const left = ses.timeLimit - Math.floor((Date.now() - ses.startedAt) / 1000); const el = document.getElementById('timer'); if (el) { el.textContent = fmt(Math.max(0, left)); el.classList.toggle('hot', left <= 120); } if (left <= 0) finish(); }, 250); }
@@ -20211,21 +21028,21 @@ const pickOne = a => a[Math.floor(Math.random() * a.length)];
 const codeBlock = c => `<pre class="codeblk">${esc(c)}</pre>`;
 // k: only card k of the lesson (the diagram and the key line belong to the last card)
 function lessonBody(L, k) { const cs = lessonCards(L), one = k && cs.length > 1 && cs[k - 1] !== undefined, last = !one || k === cs.length;
-  const h = one ? cs[k - 1] : (L.html || ''), body = L.trusted ? h : md(h);
-  return `${body}${L.d && last ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key && last ? `<p class="key">${L.trusted ? L.key : md(L.key)}</p>` : ''}`; }
+  const h = one ? cs[k - 1] : (L.html || ''), body = L.trusted ? fxify(h) : md(h);
+  return `${body}${L.d && last ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key && last ? `<p class="key">${L.trusted ? fxify(L.key) : md(L.key)}</p>` : ''}`; }
 /* The cheat sheet while solving (open-book courses only). Opening it is free, as in the exam: it never counts as a hint.
    Not in Aprender, which is for learning, and not after answering, when the theory is already there. */
 const sheetNotes = s => BANK.filter(q => skillOf(q) === s.id && S.notes[q.id]).map(q => `<li>${md(S.notes[q.id])}</li>`).join('');
 let cabOpen = '';   // the peek that is open (a question id or 'pb:<problem>'), so it stays open across re-renders
 function cabPeek(sid, key) { const s = SKBYID[sid]; if (!openBook() || !s || !s.sheet) return ''; const n = sheetNotes(s);
-  return `<details class="lesson-peek cab-peek" data-k="${esc(key)}" ${cabOpen === key ? 'open' : ''}><summary>Cábula: ${esc(s.label)}</summary><div class="lbody lesson">${s.sheet}${n ? `<ul class="sheet-notes">${n}</ul>` : ''}<p class="cab-tip">Consultar é livre, como no exame: não conta como pista.</p></div></details>`; }
+  return `<details class="lesson-peek cab-peek" data-k="${esc(key)}" ${cabOpen === key ? 'open' : ''}><summary>Cábula: ${esc(s.label)}</summary><div class="lbody lesson">${fxify(s.sheet)}${n ? `<ul class="sheet-notes">${n}</ul>` : ''}<p class="cab-tip">Consultar é livre, como no exame: não conta como pista.</p></div></details>`; }
 // Every type's entry, by topic. tools: the pin buttons and exam chips of the Cábula screen.
 function sheetItems(sk, tools) {
   return Object.entries(TOPICS).map(([t, T]) => { const rows = sk.filter(s => s.t === t); if (!rows.length) return '';
     return `<h2 class="sheet-topic">${esc(T.label)}</h2>${rows.map(s => { const mine = sheetMine(s), notes = sheetNotes(s);
       return `<div class="sheet-item" style="--c:${T.c}"><div class="row"><b>${esc(s.label)}</b>${tools ? `<span class="spacer"></span><span class="no-print">${seenChips(s)}</span>
         <button class="btn ghost small no-print" data-act="pin" data-k="${esc(s.id)}" data-v="${mine ? 0 : 1}">${mine ? 'Tirar' : 'Pôr na cábula'}</button>` : ''}</div>
-        <div class="lesson">${s.sheet || '<p class="muted">Sem resumo ainda.</p>'}</div>${notes ? `<ul class="sheet-notes">${notes}</ul>` : ''}</div>`; }).join('')}`; }).join('');
+        <div class="lesson">${s.sheet ? fxify(s.sheet) : '<p class="muted">Sem resumo ainda.</p>'}</div>${notes ? `<ul class="sheet-notes">${notes}</ul>` : ''}</div>`; }).join('')}`; }).join('');
 }
 // The mock exam's sheet: the student's own, or every type while they have none yet
 function cabExam() { const mine = partSkills().filter(sheetMine), sk = mine.length ? mine : partSkills();
@@ -20246,7 +21063,7 @@ function grade() {
   if (S.skipped && S.skipped[q.id]) delete S.skipped[q.id];   // answered: leaves the "Saltadas" list
   if (ses.mode === 'exam') { if (ok) s.c++; else { s.ew++; s.eb = 0; } }           // exam mistake: goes to the exam review
   else if (ses.examGrading) { if (ok) { s.c++; s.eb++; } else { s.ew++; s.eb = 0; } }
-  else if (ok) { s.c++; s.box = Math.min(5, s.box + 1); } else { s.w++; s.box = 0; }
+  else if (ok) { s.c++; if (ses.mode !== 'recap') s.box = Math.min(5, s.box + 1); } else { s.w++; s.box = 0; }   // the same day again proves no spacing
   if (ses.mode !== 'exam') { const gain = ok ? XP[q.l] + (s.c === 1 && !s.w && !s.ew ? 5 : 0) : 0; S.xp += gain; ses.xp += gain; }
   save();
   if (ses.mode === 'exam') { next(); return; }
@@ -20370,6 +21187,72 @@ function Sheet() {
     ${items || `<p class="muted">${all ? 'Esta cadeira ainda não tem resumos.' : 'Ainda não falhaste nenhum tipo de problema. Quando falhares, ele aparece aqui; ou vê “Todos os tipos” e põe à mão os que quiseres.'}</p>`}
     ${loose.length ? `<h2 class="sheet-topic">Outras notas</h2><ul class="sheet-notes">${loose.map(noteOf).join('')}</ul>` : ''}`;
 }
+
+/* ---------- DAILY REVIEW, read mode (app-plan.js): the question, then its solution; nothing is graded ---------- */
+function Recap() {
+  if (!rc) return `<div class="qhead">${BACK}</div><p class="muted">Nada para rever agora.</p>`;
+  const name = rc.k === 'warm' ? 'Aquecimento' : 'Resumo de hoje', n = rc.items.length;
+  const head = `<div class="qhead">${BACK}<span class="eyebrow">${name} · ler</span><span class="spacer"></span><span class="mono muted">${Math.min(rc.i + 1, n)}/${n}</span></div>`;
+  if (rc.done || rc.i >= n) return `${head}<div class="card"><h2>${rc.k === 'warm' ? 'Aquecido.' : 'Dia fechado.'}</h2><p class="muted" style="margin-top:6px">${rc.k === 'warm' ? 'O que marcaste como “Não sabia” volta amanhã, para fazeres.' : 'Amanhã, o que marcaste como “Não sabia” vem no aquecimento.'}</p><div class="row" style="margin-top:12px"><button class="btn primary" data-act="home">Voltar ao início</button></div></div>`;
+  const it = rc.items[rc.i];
+  if (it.kind === 'les') { const L = LBYID[it.id], T = TOPICS[L.t];
+    return `${head}<article class="card rc-card"><span class="badge" style="--c:${T.c}"><span class="sw"></span>${esc(T.short)} · lição de hoje</span><h3 style="margin-top:8px">${esc(L.title)}</h3><p class="key">${L.trusted ? fxify(L.key) : md(L.key)}</p>
+      <div class="row"><button class="btn primary" data-act="rcNext" data-k="">Seguinte →</button><button class="btn ghost small" data-act="read" data-id="${esc(L.id)}">Abrir a lição</button></div></article>`; }
+  const q = BYID[it.id], T = TOPICS[q.t], A = Array.isArray(q.a) ? q.a : [q.a];
+  const opts = q.o.map((o, i) => `<li class="rc-o${rc.shown && A.includes(i) ? ' ok' : ''}">${md(o)}</li>`).join('');
+  const sol = rc.shown ? `<div class="feedback ok"><p class="explain">${md(q.e)}</p></div>
+    <div class="row" style="margin-top:12px"><button class="btn primary" data-act="rcNext" data-k="yes">Sabia</button><button class="btn" data-act="rcNext" data-k="no">Não sabia</button></div>`
+    : `<div class="row" style="margin-top:12px"><button class="btn primary" data-act="rcShow">Ver solução</button><button class="btn ghost small" data-act="rcNext" data-k="">Passar</button></div>`;
+  return `${head}<article class="card rc-card"><span class="badge" style="--c:${T.c}"><span class="sw"></span>${esc(T.short)}</span>
+    <p class="qtext" style="margin-top:8px">${md(q.q)}</p>${q.code ? codeBlock(q.code) : ''}${q.d ? `<div class="diagram">${renderD(q.d)}</div>` : ''}
+    <ol class="rc-opts" type="A">${opts}</ol>${sol}</article>`;
+}
+
+/* ---------- FORMULAS: every formula of the course with what each symbol means ---------- */
+const fxLegend = F => `<dl class="fx-legend">${(F.legend || []).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${md(v)}</dd>`).join('')}</dl>`;
+function Formulas() {
+  const all = Object.entries(C.formulas || {}), pt = partTopics();
+  const groups = Object.entries(TOPICS).filter(([t]) => pt.includes(t)).map(([t, T]) => { const fs = all.filter(([, F]) => F.t === t); if (!fs.length) return '';
+    return `<h2 class="sheet-topic">${esc(T.label)}</h2>${fs.map(([id, F]) => `<div class="sheet-item fx-item" id="fx-${esc(id)}" style="--c:${T.c}"><b>${esc(F.name)}</b><p class="fx-f">${esc(F.f)}</p>${fxLegend(F)}${F.note ? `<p class="muted fx-note">${md(F.note)}</p>` : ''}</div>`).join('')}`; }).join('');
+  return `<div class="qhead no-print">${BACK}<span class="eyebrow">Formulário</span><span class="spacer"></span><button class="btn small" data-act="print">Imprimir</button></div>
+    <p class="muted no-print" style="font-size:13.5px;margin-bottom:12px">Cada fórmula com o que quer dizer cada símbolo, na notação das aulas. Nas lições, na cábula e nos problemas, as fórmulas sublinhadas abrem este mesmo cartão.</p>
+    ${groups || '<p class="muted">Esta cadeira ainda não tem formulário.</p>'}`;
+}
+// The card beside a formula: to the right of the content when there is room, under the formula otherwise, and as a
+// sheet at the bottom of a phone screen.
+function fxOpen(b) {
+  const id = b.dataset.fx, F = C && C.formulas && C.formulas[id]; if (!F) return;
+  if (fxBtn === b) { fxClose(); return; }
+  fxClose(); fxBtn = b; b.setAttribute('aria-expanded', 'true');
+  const c = document.createElement('div'); c.id = 'fxcard'; c.className = 'fx-card'; c.setAttribute('role', 'dialog'); c.setAttribute('aria-label', F.name);
+  c.innerHTML = `<div class="row"><span class="eyebrow">${esc(F.name)}</span><span class="spacer"></span><button type="button" class="btn ghost small" data-fxx aria-label="Fechar">✕</button></div>
+    <p class="fx-f">${esc(F.f)}</p>${fxLegend(F)}${F.note ? `<p class="muted fx-note">${md(F.note)}</p>` : ''}${view.name !== 'formulas' ? `<button type="button" class="btn ghost small" data-fxall="${esc(id)}">Ver no formulário →</button>` : ''}`;
+  document.body.appendChild(c); fxPlace(); c.querySelector('[data-fxx]').focus({ preventScroll: true });
+}
+function fxPlace() {
+  const c = document.getElementById('fxcard'); if (!c || !fxBtn) return; if (!fxBtn.isConnected) { fxClose(); return; }
+  if (innerWidth < 700) { c.classList.add('sheet'); c.style.left = c.style.top = c.style.width = ''; return; }
+  c.classList.remove('sheet');
+  const r = fxBtn.getBoundingClientRect(), col = (fxBtn.closest('.card, .sheet-item, .lesson, .review-item') || fxBtn).getBoundingClientRect(), room = innerWidth - col.right - 28;
+  c.style.width = room >= 260 ? Math.min(340, room) + 'px' : '';   // beside the content when 260 px or more are free
+  const w = c.offsetWidth, h = c.offsetHeight;
+  let left, top;
+  if (room >= 260) { left = col.right + 16; top = Math.min(Math.max(8, r.top - 10), innerHeight - h - 8); }
+  else { left = Math.min(Math.max(8, r.left), innerWidth - w - 8); top = r.bottom + 6 + h > innerHeight - 8 ? Math.max(8, r.top - h - 6) : r.bottom + 6; }
+  c.style.left = left + 'px'; c.style.top = top + 'px';
+}
+// capture phase: a tap on a formula must not also count as a tap on what holds it
+document.addEventListener('click', ev => {
+  const t = ev.target, b = t.closest && t.closest('.fx');
+  if (b) { ev.preventDefault(); ev.stopPropagation(); fxOpen(b); return; }
+  const c = document.getElementById('fxcard'); if (!c) return;
+  const all = t.closest && t.closest('[data-fxall]');
+  if (all) { ev.stopPropagation(); const id = all.dataset.fxall; fxClose(); go('formulas'); const e = document.getElementById('fx-' + id); if (e) { e.scrollIntoView({ block: 'center' }); e.classList.add('flash'); } return; }
+  const x = t.closest && t.closest('[data-fxx]');
+  if (x || !c.contains(t)) { const back = fxBtn; fxClose(); if (x && back) back.focus(); }
+}, true);
+window.addEventListener('scroll', fxPlace, { passive: true }); window.addEventListener('resize', fxPlace);
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && fxBtn) { const b = fxBtn; fxClose(); b.focus(); } });
 
 /* ---------- NOTES ---------- */
 function Notes() {
@@ -20524,13 +21407,17 @@ document.addEventListener('click', async ev => {
     case 'cabExam': if (ses) { ses.cab = !ses.cab; renderView(); if (ses.cab) { const c = document.querySelector('.cab-exam'); if (c) c.scrollIntoView({ block: 'start' }); } } break;
     case 'level': { const n = +b.dataset.n; if (!unlocked(n)) { toast(`Bloqueado: precisas de ${Math.round(UNLOCK * 100)}% do nível ${n - 1} (ou ativa “Desbloquear todos”).`); return; } start('level', { level: n }); break; }
     case 'routeStop': start('route', { stop: b.dataset.k }); break;
-    case 'mode': { const k = b.dataset.k; if (k === 'route') { ses = null; go('routepick'); } else if (k === 'learn') go('learnpick'); else if (k === 'library') go('library'); else if (k === 'review') go('reviewpick'); else if (['ready', 'past', 'sheet', 'prob'].includes(k)) go(k); else start(k); break; }
+    case 'mode': { const k = b.dataset.k; if (k === 'route') { ses = null; go('routepick'); } else if (k === 'learn') go('learnpick'); else if (k === 'library') go('library'); else if (k === 'review') go('reviewpick'); else if (['ready', 'past', 'sheet', 'prob', 'formulas'].includes(k)) go(k); else start(k); break; }
     case 'learn': start('learn', { topic: b.dataset.k }); break;
     case 'library': go('library'); break;
     case 'read': go('reader', { id: b.dataset.id }); break;
     case 'practice': { const ids = BANK.filter(q => q.les === b.dataset.id).sort((x, y) => x.l - y.l).map(q => q.id); start('retry', { ids }); if (ses) ses.title = 'Praticar lição'; break; }
     case 'pbGo': pbStart(b.dataset.k); break;
     case 'planGo': planRun(+b.dataset.i, !!view.planMore); break;
+    case 'rcGo': rcStart(b.dataset.k, b.dataset.m); break;
+    case 'rcSkip': rcSkip(b.dataset.k); break;
+    case 'rcShow': if (rc) { rc.shown = true; renderView(); } break;
+    case 'rcNext': if (rc) rcNext(b.dataset.k); break;
     case 'planMore': view.planMore = true; renderView(); break;
     case 'minDay': S.settings.minDay = +b.dataset.k; save(); renderView(); break;
     case 'pbCheck': pbCheck(); break;
@@ -20562,6 +21449,7 @@ document.addEventListener('change', ev => {
   const t = ev.target;
   if (t.id === 'includeNotes') { view.notes = t.checked; renderView(); return; }
   if (t.id === 'unlockAll') { S.settings.unlockAll = t.checked; save(); renderView(); }
+  if (t.id === 'calcPad') { S.settings.calc = t.checked; save(); renderView(); if (t.checked) toast('A calculadora está no canto do ecrã.'); }
   if (t.id === 'testDate') { S.settings.testDate = t.value; save(); renderView(); }
   if (t.id === 'importFile' && t.files && t.files[0]) { const r = new FileReader(); r.onload = () => doImport(String(r.result || '')); r.readAsText(t.files[0]); }
 });

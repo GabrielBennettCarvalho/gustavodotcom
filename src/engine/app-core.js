@@ -21,8 +21,17 @@ const LEGACY = { state: 'ams-treino-v1', packs: 'ams-treino-packs-v1', course: '
 
 const $app = document.getElementById('app');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-// light markup for text fields: **bold**, `code`, line breaks
-const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code class="mono">$1</code>').replace(/\n/g, '<br>');
+/* Formulas with a legend. A course lists them in C.formulas: { id: { t, name, f, legend: [[symbol, meaning], …] } }.
+   Text (and lesson or cheat-sheet HTML) writes {f:id}: it shows the formula, and a tap opens a card that says what each
+   symbol means (fxOpen, in app-views.js). */
+// {f:id|text} shows the text as written there (a variant, or the formula with that problem's indices) with the same card
+const fxTag = (id, txt) => { const F = C && C.formulas && C.formulas[id];
+  return F ? `<button type="button" class="fx" data-fx="${esc(id)}" aria-haspopup="dialog" title="O que quer dizer cada símbolo">${txt !== undefined ? txt : esc(F.f)}</button>` : txt !== undefined ? txt : `{f:${esc(id)}}`; };
+const fxify = h => String(h ?? '').replace(/\{f:([a-z0-9-]+)(?:\|([^}]*))?\}/g, (_, id, txt) => fxTag(id, txt));
+let fxBtn = null;   // the formula whose card is open
+function fxClose() { const c = document.getElementById('fxcard'); if (c) c.remove(); if (fxBtn) fxBtn.setAttribute('aria-expanded', 'false'); fxBtn = null; }
+// light markup for text fields: **bold**, `code`, line breaks, {f:id} formulas
+const md = s => fxify(esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code class="mono">$1</code>').replace(/\n/g, '<br>'));
 const shuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 const ls = { get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
@@ -203,14 +212,16 @@ let view = { name: 'home' };
 let ses = null; // active session
 function go(name, extra = {}) { view = Object.assign({ name }, extra); renderView(); window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' }); }
 function renderView() {
+  fxClose();
   const v = C || view.name === 'sync' ? view.name : 'courses';
-  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'routepick' ? RoutePick() : v === 'brief' ? BriefScreen() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : v === 'prob' ? ProblemPick() : v === 'problem' ? Problem() : Home();
+  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'routepick' ? RoutePick() : v === 'brief' ? BriefScreen() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : v === 'formulas' ? Formulas() : v === 'recap' ? Recap() : v === 'prob' ? ProblemPick() : v === 'problem' ? Problem() : Home();
   document.documentElement.dataset.course = C && v !== 'courses' && v !== 'sync' ? C.id : '';
   $app.innerHTML = Top() + html;
   document.title = C && v !== 'courses' ? `${C.code} · Estudo IST` : 'Estudo IST';
   if (v === 'quiz') afterQuizRender();
   if (v === 'sync') afterSyncRender();
   if (v === 'problem') afterProblemRender();
+  calcSync();
 }
 const toast = (msg) => { const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); };
 
@@ -279,6 +290,7 @@ function Home() {
     RS && RS.rows.length ? ['ready', 'Prontidão', 'A checklist dos tipos de problema que saem nos exames, com o teu estado em cada um.', `${RS.ready}/${RS.rows.length} tipos prontos`, glyph('flag')] : null,
     PG.length ? ['past', 'Exames anteriores', 'Cada exame, pela ordem original, com as perguntas reescritas aqui. Os problemas grandes vêm por partes.', `${PG.length} exame${PG.length === 1 ? '' : 's'}`, glyph('clock')] : null,
     RS && RS.rows.length ? ['sheet', 'Cábula', 'A folha para levar para o exame: fórmulas, passos e armadilhas dos tipos onde falhaste, mais as tuas notas.', `${partSkills().filter(s => sheetMine(s)).length} na tua cábula`, glyph('pen')] : null,
+    C.formulas && Object.keys(C.formulas).length ? ['formulas', 'Formulário', 'Todas as fórmulas da cadeira, com o que quer dizer cada símbolo. Nas lições e nos problemas, toca numa fórmula para ver o mesmo.', `${Object.keys(C.formulas).length} fórmulas`, glyph('pen')] : null,
     nSupp ? ['supp', 'Suplementares', 'Perguntas sobre matéria que ainda não saiu nos exames. Para ir mais fundo, depois do resto.', `${nSupp} perguntas`, glyph('plus')] : null,
   ].filter(Boolean);
   const readyCard = RS && RS.rows.length ? `<div class="ready-card">
@@ -317,6 +329,7 @@ function Home() {
       <summary class="section-h"><h2>Definições</h2><span class="muted" style="font-size:13px">notas, importar, recomeçar</span></summary>
       <div class="row">
         <label class="toggle"><input type="checkbox" id="unlockAll" data-act="unlockAll" ${S.settings.unlockAll ? 'checked' : ''}> Desbloquear todos os níveis</label>
+        <label class="toggle" title="Um botão no canto abre uma calculadora com frações, potências e logaritmos"><input type="checkbox" id="calcPad" ${S.settings.calc ?? hasCalc() ? 'checked' : ''}> Calculadora</label>
       </div>
       <div class="row">
         <button class="btn" data-act="bank">${glyph('plus')} Banco de perguntas e importar</button>
@@ -335,7 +348,7 @@ function calcSwitch() {
     `<button data-act="calcMode" data-k="${k}" aria-pressed="${cur === k}" title="${d}">${t} <span class="mono">${pool.filter(q => shown(q, k)).length}</span></button>`).join('')}</div>`;
 }
 function glyph(k) {
-  const p = { book: '<path d="M4 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H4z M24 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/>', loop: '<path d="M6 13a8 8 0 0 1 14-5l2 2 M22 15a8 8 0 0 1-14 5l-2-2 M22 4v6h-6 M6 24v-6h6"/>', lens: '<circle cx="12" cy="12" r="7"/><path d="M17 17l6 6 M9 12h6 M12 9v6"/>', bolt: '<path d="M15 3L6 16h7l-1 9 9-13h-7z"/>', clock: '<circle cx="14" cy="14" r="10"/><path d="M14 8v6l4 3"/>', list: '<path d="M9 7h14 M9 14h14 M9 21h14"/><circle cx="5" cy="7" r="1.3"/><circle cx="5" cy="14" r="1.3"/><circle cx="5" cy="21" r="1.3"/>', plus: '<path d="M14 6v16 M6 14h16"/>', pen: '<path d="M6 22l2-6 11-11 4 4-11 11z M16 7l4 4"/>', star: '<path d="M14 3l3.2 7 7.3.6-5.6 4.8 1.8 7.3L14 18.8 7.3 22.7l1.8-7.3L3.5 10.6l7.3-.6z"/>', flag: '<path d="M6 25V4 M6 5h14l-3 5 3 5H6"/>', sun: '<circle cx="14" cy="14" r="5"/><path d="M14 3v3 M14 22v3 M3 14h3 M22 14h3 M6.2 6.2l2.1 2.1 M19.7 19.7l2.1 2.1 M6.2 21.8l2.1-2.1 M19.7 8.3l2.1-2.1"/>', moon: '<path d="M21 17.5A9 9 0 0 1 10.5 7a9 9 0 1 0 10.5 10.5z"/>', auto: '<circle cx="14" cy="14" r="9"/><path d="M14 5a9 9 0 0 1 0 18z" fill="currentColor"/>', skip: '<path d="M4 18c3-8 13-10 18-3 M22 9v6h-6 M4 22h20"/>', swap: '<path d="M4 9h18l-4-4 M24 19H6l4 4"/>', qr: '<path d="M4 4h7v7H4z M17 4h7v7h-7z M4 17h7v7H4z M17 17h3v3h-3z M21 21h3v3h-3z"/>', share: '<path d="M14 3v14 M9 8l5-5 5 5 M6 13v10h16V13"/>', copy: '<path d="M9 9h13v14H9z M6 19V5h13"/>', route: '<circle cx="6" cy="22" r="2.5"/><circle cx="22" cy="6" r="2.5"/><path d="M8.5 22H18a4 4 0 0 0 0-8h-8a4 4 0 0 1 0-8h9.5"/>' }[k] || '';
+  const p = { book: '<path d="M4 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H4z M24 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/>', loop: '<path d="M6 13a8 8 0 0 1 14-5l2 2 M22 15a8 8 0 0 1-14 5l-2-2 M22 4v6h-6 M6 24v-6h6"/>', lens: '<circle cx="12" cy="12" r="7"/><path d="M17 17l6 6 M9 12h6 M12 9v6"/>', bolt: '<path d="M15 3L6 16h7l-1 9 9-13h-7z"/>', clock: '<circle cx="14" cy="14" r="10"/><path d="M14 8v6l4 3"/>', list: '<path d="M9 7h14 M9 14h14 M9 21h14"/><circle cx="5" cy="7" r="1.3"/><circle cx="5" cy="14" r="1.3"/><circle cx="5" cy="21" r="1.3"/>', plus: '<path d="M14 6v16 M6 14h16"/>', pen: '<path d="M6 22l2-6 11-11 4 4-11 11z M16 7l4 4"/>', star: '<path d="M14 3l3.2 7 7.3.6-5.6 4.8 1.8 7.3L14 18.8 7.3 22.7l1.8-7.3L3.5 10.6l7.3-.6z"/>', flag: '<path d="M6 25V4 M6 5h14l-3 5 3 5H6"/>', sun: '<circle cx="14" cy="14" r="5"/><path d="M14 3v3 M14 22v3 M3 14h3 M22 14h3 M6.2 6.2l2.1 2.1 M19.7 19.7l2.1 2.1 M6.2 21.8l2.1-2.1 M19.7 8.3l2.1-2.1"/>', moon: '<path d="M21 17.5A9 9 0 0 1 10.5 7a9 9 0 1 0 10.5 10.5z"/>', auto: '<circle cx="14" cy="14" r="9"/><path d="M14 5a9 9 0 0 1 0 18z" fill="currentColor"/>', skip: '<path d="M4 18c3-8 13-10 18-3 M22 9v6h-6 M4 22h20"/>', swap: '<path d="M4 9h18l-4-4 M24 19H6l4 4"/>', qr: '<path d="M4 4h7v7H4z M17 4h7v7h-7z M4 17h7v7H4z M17 17h3v3h-3z M21 21h3v3h-3z"/>', share: '<path d="M14 3v14 M9 8l5-5 5 5 M6 13v10h16V13"/>', copy: '<path d="M9 9h13v14H9z M6 19V5h13"/>', calc: '<rect x="6" y="3" width="16" height="22" rx="2.5"/><path d="M10 8h8 M10 13.5h.01 M14 13.5h.01 M18 13.5h.01 M10 18h.01 M14 18h.01 M10 22h.01 M14 22h.01 M18 18v4"/>', route: '<circle cx="6" cy="22" r="2.5"/><circle cx="22" cy="6" r="2.5"/><path d="M8.5 22H18a4 4 0 0 0 0-8h-8a4 4 0 0 1 0-8h9.5"/>' }[k] || '';
   return `<svg class="glyph" viewBox="0 0 28 28" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 }
 
@@ -441,6 +454,7 @@ function start(mode, opts = {}) {
   if (mode === 'review') { items = reviewPool().slice(0, 12).map(makeItem); title = 'Revisão · erros de treino'; if (!items.length) { toast('Ainda não tens erros de treino para rever.'); return; } }
   if (mode === 'skipped') { items = skippedPool().slice(0, 12).map(makeItem); title = 'Revisão · saltadas'; if (!items.length) { toast('Não tens perguntas saltadas.'); return; } }
   if (mode === 'reviewExam') { items = examReviewPool().slice(0, 12).map(makeItem); title = 'Revisão · erros de exame'; if (!items.length) { toast('Ainda não tens erros de exame para rever.'); return; } }
+  if (mode === 'warm' || mode === 'recap') { items = (opts.ids || []).filter(id => BYID[id]).map(id => makeItem(BYID[id])); title = mode === 'warm' ? 'Aquecimento' : 'Resumo de hoje'; if (!items.length) { toast('Nada para rever agora.'); return; } }
   if (mode === 'extra') { const x = (C.extras || []).find(e => e.id === opts.extra); if (!x) return; items = (x.questions(extraApi()) || []).map(makeItem); title = x.title; }
   if (mode === 'exam') { items = buildExam().map(makeItem); title = 'Exame simulado'; timeLimit = examCfg().min * 60; }
   if (mode === 'supp') { items = pick(suppPool(), 10).sort((a, b) => a.l - b.l).map(makeItem); title = 'Suplementares'; }

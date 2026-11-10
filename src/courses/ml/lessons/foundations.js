@@ -57,7 +57,7 @@ STUDY.lessons('ml', [
   <tr><td>[4, 4]</td><td>1</td></tr><tr><td>[6, 2] (75/25)</td><td>0,811</td></tr><tr><td>[3, 2] (60/40)</td><td>0,971</td></tr><tr><td>[9, 5]</td><td>0,940</td></tr><tr><td>[2, 1, 1]</td><td>1,5</td></tr><tr><td>[2, 1] (2/3, 1/3)</td><td>0,918</td></tr></table></div>
   <p>Exemplo: 3 aprovados e 2 reprovados → H = −0,6·log₂0,6 − 0,4·log₂0,4 = 0,442 + 0,529 = <b>0,971 bits</b>.</p>
   <p>Valores úteis: log₂0,5 = −1; log₂0,25 = −2; log₂0,75 = −0,415; log₂(1/3) = −1,585; log₂(2/3) = −0,585.</p>`,
-  key: 'H = −Σ p log₂ p. Puro = 0; meio a meio = 1 bit; máximo = log₂(nº de classes).' },
+  key: '{f:entropy|H = −Σ p log₂ p}. Puro = 0; meio a meio = 1 bit; máximo = log₂(nº de classes).' },
 { id: 'dt-gain', t: 'dt', title: 'Receita: ganho de informação',
   html: `<p>O ganho de informação de um atributo A é quanto a entropia desce depois de partir os dados por A:</p>
   <p style="text-align:center"><b>IG(Y, A) = H(Y) − H(Y | A)</b>, &nbsp; com &nbsp; <b>H(Y | A) = Σ<sub>v</sub> (|S<sub>v</sub>| / |S|) · H(S<sub>v</sub>)</b></p>
@@ -66,7 +66,7 @@ STUDY.lessons('ml', [
   <li>Faz a média ponderada → H(Y | A).</li><li>IG = H(Y) − H(Y | A). Escolhe o <b>maior</b> (equivale a escolher o menor H(Y | A)).</li></ol>
   <!--card--><p>Exemplo: 8 exemplos [4 sim, 4 não], H = 1. O atributo A parte em a₁ = [3 sim, 0 não] e a₂ = [1 sim, 4 não]. H(a₁) = 0; H(a₂) = H(1/5, 4/5) = 0,722. H(Y | A) = 3/8·0 + 5/8·0,722 = 0,451. <b>IG = 1 − 0,451 = 0,549</b>.</p>
   <p>Atenção: o ganho favorece atributos com muitos valores (um ID único dá ramos todos puros). O C4.5 corrige com o <i>gain ratio</i>.</p>
-  <p><b>Nos slides</b> (aula 2) as mesmas contas têm outros nomes: a entropia do nó é I(C) = −Σ p(m<sub>i</sub>) log₂ p(m<sub>i</sub>), a média ponderada dos ramos é E(P) = Σ<sub>i</sub> (|C<sub>i</sub>| / |C|) · I(C<sub>i</sub>) e o ganho é <b>gain(P) = I(C) − E(P)</b>. Os exames escrevem H e IG.</p>`,
+  <p><b>Nos slides</b> (aula 2) as mesmas contas têm outros nomes: a entropia do nó é I(C) = −Σ p(m<sub>i</sub>) log₂ p(m<sub>i</sub>), a média ponderada dos ramos é E(P) = Σ<sub>i</sub> (|C<sub>i</sub>| / |C|) · I(C<sub>i</sub>) e o ganho é <b>{f:ig|gain(P) = I(C) − E(P)}</b>. Os exames escrevem H e IG.</p>`,
   key: 'IG = H(antes) − Σ (|Sᵥ|/|S|)·H(Sᵥ). Maior ganho na raiz. Ramos puros contam 0.' },
 { id: 'dt-more', t: 'dt', title: 'Atributos contínuos, CART, overfitting e bagging',
   html: `<p><b>Atributos contínuos</b>: ou se discretizam antes, ou a árvore escolhe um <b>limiar</b> binário (x ≤ θ vs x &gt; θ). Testam-se os pontos de corte candidatos (entre valores consecutivos ordenados) e fica o de maior ganho.</p>
@@ -89,7 +89,7 @@ STUDY.lessons('ml', [
   <p>Com classes desequilibradas a accuracy engana: com 1% de doentes, dizer sempre “saudável” dá 99% de accuracy e recall 0.</p>
   <p>Multiclasse: a sensibilidade da classe B = (exemplos de B previstos B) / (total real de B), ou seja, a diagonal sobre a soma da <b>coluna</b> real B.</p>
   <p>Exemplo: TP = 1, FP = 3, FN = 7, TN = 3. Precision = 1/4 = 0,25; recall = 1/8 = 0,125; accuracy = 4/14 ≈ 0,29.</p>`,
-  key: 'Precision = TP/(TP+FP). Recall = sensibilidade = TP/(TP+FN). Especificidade = TN/(TN+FP).' },
+  key: '{f:prec|Precision = TP/(TP+FP)}. {f:rec|Recall = sensibilidade = TP/(TP+FN)}. Especificidade = TN/(TN+FP).' },
 { id: 'ev-roc', t: 'eval', title: 'Curvas ROC, AUC e lift',
   html: `<p>Um classificador probabilístico dá um score; o <b>limiar</b> decide a classe. Baixar o limiar apanha mais positivos (recall sobe) mas também mais falsos positivos.</p>
   <ul><li><b>Curva ROC</b>: TPR (recall) no eixo y contra FPR (1 − especificidade) no eixo x, para todos os limiares. Vai de (0, 0) a (1, 1).</li>

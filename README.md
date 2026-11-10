@@ -25,7 +25,9 @@ src/
   engine/                shared by every course
     registry.js          STUDY.course / .lessons / .questions / .ids
     progress-key.js      the "other device" key: encode, decode, merge
+    calc.js              calculator maths: parser, exact fractions, natural-display HTML (window.CALC)
     app-core.js          state, course menu, course home, sessions, mock exam
+    app-calc.js          the calculator panel and its corner button
     app-views.js         quiz, results, library, question bank, other device, events
     style.css
   courses/
@@ -123,6 +125,23 @@ topic by topic and level by level. With everything ready, it offers the mock exa
 - **Times:** shown as ranges. They start wide and narrow to the student's own pace, measured from their sessions (`S.pace`).
 - **Today:** time studied and tasks done today are in `S.today`; lessons seen are in `S.seenL`. Both travel in the progress key.
 - **Explorar:** everything else on the home (levels, topics, modes, past exams, settings) is folded under it.
+- **Daily review** (`app-plan.js`, end of file): two optional strips on the plan card, never in the plan list, never in
+  the pace, never shown as a debt ("Hoje não" hides one for the day). **Aquecimento**: at most 3 questions answered
+  right on earlier days and due again by their box (1, 3, 7, 14, 30 days), least known first, no `calc`, `ch` or `code`
+  questions. **Fechar o dia** (once something was done today): at most 5 things from today, the key line of today's
+  lessons first, then today's questions, wrong ones first. Each can be read (question, "Ver solução", then Sabia /
+  Não sabia: reading never raises a box; "Não sabia" brings it back tomorrow) or done (a normal session; in Resumo de
+  hoje a right answer doesn't raise the box, since the same day proves no spacing). No time is shown, only counts.
+
+## Formulas with a legend (Formulário)
+
+A course lists its formulas in `course.js`: `formulas: { id: { t, name, f, legend: [[symbol, meaning], …], note } }`.
+Any text (questions, explanations, lessons, cheat sheets, key problems) writes `{f:id}` to show the formula, or
+`{f:id|text}` to show its own wording (a variant, or the formula with that problem's indices) with the same legend.
+The formula is underlined; a tap opens a card with what each symbol means: beside the content on a wide screen, under
+the formula otherwise, at the bottom on a phone. "Para o exame" → Formulário lists them all, by topic.
+The build fails on an unknown id, and on tags in options, step names or `also` (shown as plain text).
+Write the legend in the notation of the lectures, and say in `note` when the slides write it differently.
 
 ## Key problems (Problemas-chave)
 
@@ -153,6 +172,30 @@ The end screen also folds out the whole worked solution, every step with its lin
   and a level with nothing shown in the current mode doesn't block the next one. The old `noCalc: true` setting
   becomes "Só teoria".
 - The top bar cycles the colour theme (auto / claro / escuro), saved per device. Total XP is the sum of all courses.
+
+## Calculator
+
+A round button in the corner of every course screen opens a calculator panel (a bottom sheet on a phone).
+Definições → Calculadora turns the button on or off per course (`settings.calc`; by default on where the course has
+`calc: true` questions, so off in AMS). The setting does not travel in the progress key.
+
+- Typing goes to a hidden input; above it `calc.js` draws the expression as on paper while it is typed: `/` stacks a
+  fraction, `^` raises an exponent, `_` lowers an index (`w_1`, `log_2`), `sqrt` draws a radical. A missing operand is
+  an empty box and an unclosed bracket a faint one; Enter closes brackets by itself.
+- The text has no boxes, so → at the end of it leaves the one being typed in (`CALC.exitText`): after a function's
+  name or base it types `(` (`log_2` → log₂(□)), after an index or a one-piece exponent or denominator a space
+  (`2^3 4` is 2³·4), inside an open bracket `)`.
+- Numbers stay exact fractions while they can (BigInt): `0.1 + 0.2 = 3/10`, `sqrt(9/4) = 3/2`, `log_2(8) = 3`.
+  Roots, logs and trig fall back to floats, which snap back to a fraction when within a few ulps (`sin(pi/6) = 1/2`).
+- Products without a sign bind like `×`, left to right: `3/4 log_2(3/4)` is ¾·log₂(¾), as in an entropy sum.
+- `x = 2` stores a variable, `ans` is the last result (an operator on an empty line starts from it), ↑ ↓ recall
+  earlier expressions, tapping a result inserts it. Functions: sqrt cbrt ln log log_b exp sin cos tan asin acos atan
+  sinh cosh tanh abs floor ceil round min max mean sigmoid nCr nPr, and `!`. Greek names (`eta`, `sigma`…) show as
+  letters. Angles in radians.
+- On a touch screen a keypad replaces the system keyboard, with `x` and `x=` keys for variables (`abc`, at the top,
+  brings the system keyboard back for other names). The x₁ key adds an index to the letter before it, or types x₁.
+- The panel's class is `calc-panel`, not `calc`: `.badge.calc` already marks calculation questions.
+- History, variables and ans are saved per device in `localStorage` key `estudo-ist-calc`.
 
 ## Progress and the "other device" key
 

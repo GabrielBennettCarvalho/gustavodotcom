@@ -412,3 +412,112 @@ textarea.key{min-height:84px;word-break:break-all}
 .cab-btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .cab-exam{margin-top:14px;max-height:70vh;overflow:auto}
 .cab-exam .sheet-topic{font-size:15px;margin:12px 0 6px}
+
+/* formulas with a legend ({f:id}): the formula is a button, the card says what each symbol means */
+.fx{font:inherit;color:inherit;background:none;border:0;border-bottom:1.5px dotted var(--accent);border-radius:0;padding:0 1px;margin:0;display:inline;line-height:inherit;text-align:inherit;cursor:help}
+.fx:hover,.fx[aria-expanded="true"]{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.fx:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fx-card{position:fixed;z-index:60;width:min(340px,calc(100vw - 16px));max-height:min(70vh,520px);overflow:auto;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);padding:10px 14px 12px}
+.fx-card.sheet{left:0;right:0;bottom:0;top:auto;width:auto;max-height:60vh;border-radius:14px 14px 0 0}
+.fx-f{font-weight:650;font-size:15px;line-height:1.5;margin:6px 0 8px;overflow-wrap:anywhere}
+.fx-legend{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;margin:0 0 10px;font-size:13.5px;line-height:1.45}
+.fx-legend dt{font-weight:700;white-space:nowrap}
+.fx-legend dd{margin:0}
+.fx-note{font-size:13px;margin:0 0 8px}
+.flash{animation:fxflash 1.8s ease-out}
+@keyframes fxflash{from{box-shadow:0 0 0 3px var(--accent)}to{box-shadow:0 0 0 0 transparent}}
+@media print{.fx-card{display:none}.fx{border:0}}
+
+/* daily review: optional strips on the plan card, and the read mode */
+.plan-extra{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;border:1px dashed var(--line);border-radius:10px;padding:9px 12px;margin:10px 0}
+.plan-extra .pe-t{flex:1 1 220px;min-width:0;font-size:14px}
+.plan-extra .pe-w{display:block;font-size:13px}
+.plan-extra .row{gap:6px;flex-wrap:wrap}
+.rc-opts{margin:12px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.rc-o{padding:6px 10px;border:1px solid var(--line);border-radius:8px}
+.rc-o.ok{border-color:var(--good);background:var(--good-bg);font-weight:600}
+.rc-card .key{margin-top:8px}
+
+/* calculator (app-calc.js): a corner button and a floating panel; a bottom sheet on a phone */
+.calc-fab{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--accent);box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer;transition:transform .1s ease}
+.calc-fab:hover{transform:translateY(-1px)}
+.calc-fab[hidden]{display:none}
+/* above a bar stuck to the bottom of the screen (key problems; the quiz's next bar on a phone), not on its buttons */
+body:has(.pb-actions) .calc-fab{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+@media (max-width:560px){body:has(.qfoot.next-bar) .calc-fab{bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
+.calc-panel{position:fixed;right:16px;bottom:16px;z-index:45;width:min(372px,calc(100vw - 32px));max-height:calc(100vh - 32px);display:flex;flex-direction:column;gap:8px;padding:8px 12px 10px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.22)}
+.calc-h{display:flex;align-items:center;gap:4px;margin-right:-6px}
+.calc-hist{list-style:none;margin:0;padding:0;overflow-y:auto;max-height:200px;display:flex;flex-direction:column;border-bottom:1px solid var(--line)}
+.calc-hist[hidden]{display:none}
+.calc-hist li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 0;border-top:1px solid var(--line)}
+.calc-hist li:first-child{border-top:0}
+.calc-hx,.calc-hr{background:none;border:0;padding:3px 4px;border-radius:6px;cursor:pointer;color:inherit;min-width:0}
+.calc-hx{font-size:16px;overflow-x:auto;text-align:left;color:var(--muted)}
+.calc-hr{display:flex;flex-direction:column;align-items:flex-end;flex:none}
+.calc-hr .cl{font-size:17px;font-weight:600}
+.calc-hx:hover,.calc-hr:hover{background:var(--panel-2)}
+.calc-alt{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.calc-disp{position:relative;border:1.5px solid var(--line);border-radius:10px;background:var(--panel-2);padding:10px 12px 8px;cursor:text;min-height:86px;display:flex;flex-direction:column;justify-content:space-between;gap:4px}
+.calc-disp.focus{border-color:var(--accent)}
+/* a block, not flex: flex items ignore vertical-align, which raises exponents and lowers indices */
+.calc-expr{font-size:24px;min-height:44px;overflow-x:auto;overflow-y:hidden;padding:6px 0 2px;line-height:1.7;white-space:nowrap}
+.calc-ph{color:var(--muted);font-size:15px;font-family:var(--f-body);opacity:.8}
+.calc-prev{display:flex;align-items:baseline;justify-content:flex-end;gap:10px;min-height:22px;text-align:right;color:var(--muted)}
+.calc-prev .cl{font-size:18px}
+.calc-prev.err{display:block;color:var(--bad);font-size:13.5px;line-height:1.45;text-align:left;white-space:normal;overflow-wrap:anywhere}
+.calc-prev.err .cl{font-size:16px;color:var(--ink)}
+.calc-in{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;border:0;padding:0;pointer-events:none;caret-color:transparent}
+.calc-keys{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.calc-keys.pad{display:none}
+.calc-k{height:36px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);cursor:pointer;font:600 15px var(--f-body);display:flex;align-items:center;justify-content:center;padding:0;touch-action:manipulation;white-space:nowrap}
+.calc-k:hover{background:var(--line)}
+.calc-k:active{transform:translateY(1px)}
+.calc-k.eq{grid-column:span 2;background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.calc-k.on{border-color:var(--accent);color:var(--accent)}
+.calc-tip{font-size:11.5px;line-height:1.4;margin:0}
+.calc-abc{display:none}
+.calc-abc.on{color:var(--accent)}
+.calc-k i{font-family:var(--f-read);font-size:17px}
+@media (pointer:coarse){.calc-keys.pad{display:grid}.calc-abc{display:inline-flex}.calc-tip{display:none}.calc-k{height:40px}}
+@media (max-width:700px){
+  .calc-panel{left:0;right:0;bottom:0;width:auto;max-height:88vh;border-radius:14px 14px 0 0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+  .calc-hist{max-height:22vh}}
+@media print{.calc-panel,.calc-fab{display:none}}
+
+/* natural display: the expression drawn as on paper (calc.js renders it) */
+.cl{font-family:var(--f-read);line-height:1.2;white-space:nowrap;font-variant-numeric:lining-nums}
+.cl-v{font-style:italic}
+.cl-k,.cl-n,.cl-f{font-style:normal}
+.cl-f{margin-right:.06em}
+.cl-ans{font-family:var(--f-mono);font-size:.72em}
+.cl-o{margin:0 .2em}
+.cl-o.u{margin:0 .06em 0 0}
+.cl-o.c{margin:0 .25em 0 0}
+.cl-o.f{margin:0}
+.cl-dot{margin:0 .08em}
+.cl-sp{display:inline-block;width:.18em}
+.cl-p.tall{display:inline-block;transform:scaleY(1.7)}
+.cl-p.ghost{opacity:.35}
+.cl-frac{display:inline-flex;flex-direction:column;align-items:stretch;vertical-align:middle;text-align:center;font-size:.86em;margin:0 .12em}
+.cl-fn{padding:0 .12em .06em}
+.cl-fd{border-top:1.5px solid currentColor;padding:.06em .12em 0}
+.cl-frac.sm{font-size:11px;line-height:1;font-family:var(--f-body)}
+.cl-sup{font-size:.68em;vertical-align:.75em;display:inline-block;line-height:1}
+.cl-sub{font-size:.65em;vertical-align:-.4em;display:inline-block;line-height:1}
+.cl-x{margin-left:.1em}
+.cl-x sup{font-size:.7em}
+.cl-sqrt{display:inline-flex;align-items:stretch;vertical-align:middle;margin:0 .06em;position:relative}
+.cl-rad{width:.62em;flex:none;margin-top:.04em;overflow:visible}
+.cl-rc{border-top:1.4px solid currentColor;padding:.08em .12em 0 .06em;margin-top:.06em;display:inline-flex;align-items:center}
+.cl-idx{position:absolute;left:-.05em;top:.05em;font-size:.45em}
+.cl-hole{display:inline-block;width:.62em;height:.9em;border:1.5px dashed var(--muted);border-radius:3px;vertical-align:-.1em;margin:0 .06em;position:relative;background:color-mix(in srgb,var(--muted) 10%,transparent)}
+.calc-disp.focus .cl-hole:has(.cl-caret){border-color:var(--accent);border-style:solid;background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.cl-hole .cl-caret{position:absolute;left:3px;top:.06em;height:.7em;vertical-align:0}
+.cl-sup .cl-hole,.cl-sub .cl-hole{border-width:1.2px;min-width:9px;min-height:12px}
+.cl-caret{display:inline-block;width:0;height:1.05em;border-left:2px solid var(--accent);margin:0 -1px;vertical-align:-.18em;animation:cl-blink 1.05s steps(1) infinite}
+.calc-disp:not(.focus) .cl-caret{visibility:hidden}
+@keyframes cl-blink{50%{opacity:0}}
+.cl .sel{background:color-mix(in srgb,var(--accent) 28%,transparent);border-radius:2px}
+.cl-err{color:var(--bad);text-decoration:underline wavy var(--bad)}
+.cl-h{display:inline}
+@media (prefers-reduced-motion:reduce){.cl-caret{animation:none}}

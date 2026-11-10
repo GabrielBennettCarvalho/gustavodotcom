@@ -35,7 +35,7 @@ applyTheme();
 
 /* ---------- state ----------
    G holds everything; S points at the open course's slice (G.c[id]). */
-const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, skipped: {}, pins: {}, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '', calcMode: 'all', part: 'all' }, rounds: 0, sessions: [], route: {} });
+const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, skipped: {}, pins: {}, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '', calcMode: 'all', part: 'all' }, rounds: 0, sessions: [], route: {}, prob: { t: {}, con: {} } });
 let G = ls.get(LS_KEY);
 if (!G || G.v !== 2) G = { v: 2, cur: null, c: {}, updatedAt: 0 };
 // Progress from the AMS-only version (same browser, same origin): merged once, even if this
@@ -200,12 +200,13 @@ let ses = null; // active session
 function go(name, extra = {}) { view = Object.assign({ name }, extra); renderView(); window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' }); }
 function renderView() {
   const v = C || view.name === 'sync' ? view.name : 'courses';
-  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'routepick' ? RoutePick() : v === 'brief' ? BriefScreen() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : Home();
+  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'routepick' ? RoutePick() : v === 'brief' ? BriefScreen() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : v === 'prob' ? ProblemPick() : v === 'problem' ? Problem() : Home();
   document.documentElement.dataset.course = C && v !== 'courses' && v !== 'sync' ? C.id : '';
   $app.innerHTML = Top() + html;
   document.title = C && v !== 'courses' ? `${C.code} · Estudo IST` : 'Estudo IST';
   if (v === 'quiz') afterQuizRender();
   if (v === 'sync') afterSyncRender();
+  if (v === 'problem') afterProblemRender();
 }
 const toast = (msg) => { const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); };
 
@@ -249,6 +250,7 @@ function nextStep(RS) {
   const r = reviewPool().length, e = examReviewPool().length, tl = topLevel(), L = LEVELS.find(x => x.n === tl) || LEVELS[0];
   if (r) return `data-act="startReview" data-k="review">Rever ${r} erro${r === 1 ? '' : 's'}`;
   if (e) return `data-act="startReview" data-k="reviewExam">Rever ${e} erro${e === 1 ? '' : 's'} de exame`;
+  const pn = pbNext(); if (pn) return `data-act="pbGo" data-k="${esc(pn.id)}">Problema-chave: ${esc(pn.short || pn.title)}`;
   if (RS && RS.next && (tl === LEVELS[LEVELS.length - 1].n || S.settings.unlockAll)) return `data-act="skill" data-k="${esc(RS.next.id)}">Treinar: ${esc(RS.next.label)}`;
   return `data-act="level" data-n="${tl}">Nível ${tl} · ${esc(L.t)}`;
 }
@@ -277,7 +279,9 @@ function Home() {
   const extras = (C.extras || []).filter(x => !x.hide || !x.hide(api)).map(x => card([x.id, esc(x.title), esc(x.desc), esc(x.meta ? x.meta(api) : ''), glyph(x.icon || 'star')], 'extra')).join('');
   // "Para o exame": readiness checklist, past exams, cheat sheet, supplementary questions
   const RS = SKILLS.length ? readySummary() : null; const PG = pastGroups();
+  const PBS = pbTypes();
   const prep = [
+    PBS.length ? ['prob', 'Problemas-chave', 'Os grandes problemas do exame, feitos por ti: escreves os valores, pedes pistas se encravares, e o que já sabes passa a vir feito.', `${PBS.filter(p => S.prob.t[p.id] && S.prob.t[p.id].done).length}/${PBS.length} pronto${PBS.length === 1 ? '' : 's'}`, glyph('star')] : null,
     RS && RS.rows.length ? ['ready', 'Prontidão', 'A checklist dos tipos de problema que saem nos exames, com o teu estado em cada um.', `${RS.ready}/${RS.rows.length} tipos prontos`, glyph('flag')] : null,
     PG.length ? ['past', 'Exames anteriores', 'Cada exame, pela ordem original, com as perguntas reescritas aqui. Os problemas grandes vêm por partes.', `${PG.length} exame${PG.length === 1 ? '' : 's'}`, glyph('clock')] : null,
     RS && RS.rows.length ? ['sheet', 'Cábula', 'A folha para levar para o exame: fórmulas, passos e armadilhas dos tipos onde falhaste, mais as tuas notas.', `${partSkills().filter(s => sheetMine(s)).length} na tua cábula`, glyph('pen')] : null,

@@ -341,11 +341,18 @@ document.addEventListener('click', async ev => {
     case 'print': window.print(); break;
     case 'level': { const n = +b.dataset.n; if (!unlocked(n)) { toast(`Bloqueado: precisas de ${Math.round(UNLOCK * 100)}% do nível ${n - 1} (ou ativa “Desbloquear todos”).`); return; } start('level', { level: n }); break; }
     case 'routeStop': start('route', { stop: b.dataset.k }); break;
-    case 'mode': { const k = b.dataset.k; if (k === 'route') { ses = null; go('routepick'); } else if (k === 'learn') go('learnpick'); else if (k === 'library') go('library'); else if (k === 'review') go('reviewpick'); else if (['ready', 'past', 'sheet'].includes(k)) go(k); else start(k); break; }
+    case 'mode': { const k = b.dataset.k; if (k === 'route') { ses = null; go('routepick'); } else if (k === 'learn') go('learnpick'); else if (k === 'library') go('library'); else if (k === 'review') go('reviewpick'); else if (['ready', 'past', 'sheet', 'prob'].includes(k)) go(k); else start(k); break; }
     case 'learn': start('learn', { topic: b.dataset.k }); break;
     case 'library': go('library'); break;
     case 'read': go('reader', { id: b.dataset.id }); break;
     case 'practice': { const ids = BANK.filter(q => q.les === b.dataset.id).sort((x, y) => x.l - y.l).map(q => q.id); start('retry', { ids }); if (ses) ses.title = 'Praticar lição'; break; }
+    case 'pbGo': pbStart(b.dataset.k); break;
+    case 'pbCheck': pbCheck(); break;
+    case 'pbHint': pbHint(); break;
+    case 'pbSign': pbSign(); break;
+    case 'pbNext': pbAdvance(); break;
+    case 'pbQuit': pb = null; go('prob'); break;
+    case 'pbDone': pb = null; go('home'); break;
     case 'opt': choose(+b.dataset.oi); break;
     case 'confirm': if (ses && ses.picked.size) grade(); break;
     case 'next': next(); break;

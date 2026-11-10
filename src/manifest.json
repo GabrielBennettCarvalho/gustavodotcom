@@ -7,6 +7,7 @@
     "engine/registry.js",
     "engine/progress-key.js",
     "engine/app-core.js",
+    "engine/app-problems.js",
     "engine/app-views.js"
   ],
   "courses": {
@@ -100,7 +101,9 @@
         "questions/exam.js",
         "questions/exam22b.js",
         "questions/exam23.js",
-        "questions/prep.js"
+        "questions/prep.js",
+        "problems.js",
+        "problems-more.js"
       ]
     },
     "so": {

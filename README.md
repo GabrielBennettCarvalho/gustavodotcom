@@ -109,11 +109,11 @@ A lesson with no markers works as before: the whole text, then its two easiest q
 
 The top of every course's home (`src/engine/app-plan.js`). It answers "what do I do now?": mistakes in review first, then each
 exam problem type not ready yet, in the order the course teaches them (topic order, then the order of `skills`; its theory if unseen, up to 3 lessons or about 12 minutes at a time, then
-its key problem or its questions). A key problem left half done comes right after the mistakes. Courses without `skills` go
+its key problem or its questions). A topic's lessons that belong to no type (APRE's Dados) come after that topic's types. A key problem left half done comes right after the mistakes. Courses without `skills` go
 topic by topic and level by level. With everything ready, it offers the mock exam.
 
 - **Pace:** with the test date and the minutes per day (15, 30, 45 or 60), the work left is spread over the days left.
-  When it doesn't fit, the types that came up least are cut, and the card says which.
+  When it doesn't fit, the lessons outside every type are cut first, then the types that came up least, and the card says which.
 - **Times:** shown as ranges. They start wide and narrow to the student's own pace, measured from their sessions (`S.pace`).
 - **Today:** time studied and tasks done today are in `S.today`; lessons seen are in `S.seenL`. Both travel in the progress key.
 - **Explorar:** everything else on the home (levels, topics, modes, past exams, settings) is folded under it.

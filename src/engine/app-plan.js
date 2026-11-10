@@ -3,11 +3,11 @@
    and fills today with it:
    1. mistakes waiting in review (fixed while fresh);
    2. per exam problem type not ready yet, in course order (topic order, then C.skills order): its theory if unseen,
-      then its key problem or its questions;
+      then its key problem or its questions; a topic's lessons outside every type come after that topic's types;
       a course without types (AMS) goes topic by topic, then level by level;
    3. when everything is ready, the mock exam.
    With the test date and the minutes per day, the work left is spread over the days left; what doesn't fit is cut from
-   the bottom (the types that came up least) and the student is told what was cut.
+   the bottom (lessons outside every type, then the types that came up least) and the student is told what was cut.
    Times are ranges that start wide and narrow to the student's own pace, measured from their sessions:
    S.pace = { s: seconds per unit (a question = 1, a lesson = 2), n: samples, pb: key-problem time / nominal, pbn }.
    S.today = { d: 'YYYY-MM-DD', ms: time studied today, did: [plan keys done today] }. */
@@ -20,6 +20,8 @@ const pbNominal = p => { const m = String(p.time || '').match(/(\d+)\D+(\d+)/); 
 const lesUnits = ids => ids.reduce((a, id) => a + learnUnits(LBYID[id]), 0);
 // one sitting of theory: up to LEARN_MAX lessons, fewer when they are long (about 12 minutes of work)
 const learnBatch = ids => { const out = []; let u = 0; for (const id of ids) { const x = learnUnits(LBYID[id]); if (out.length && (out.length >= LEARN_MAX || u + x > 16)) break; out.push(id); u += x; } return out; };
+// what the pace cuts together: a problem type, or a topic's lessons outside every type (cut first, weight 0)
+const planGroup = t => t.skill || (t.base ? 'base:' + t.base : '');
 const taskMin = t => t.min !== undefined ? t.min : t.units * paceS() / 60;
 function minRange(m) {
   const [a, b] = paceSpread(), r = v => m > 20 ? Math.round(v / 5) * 5 : Math.round(v);
@@ -40,7 +42,14 @@ function planAll() {
     T.push({ key: 'pb:' + half.id, kind: 'pb', skill: half.skill, w: 1e9, id: half.id, label: `Acabar o problema: ${half.short || half.title}`, why: 'Ficou a meio: continuas no passo onde paraste.', min: Math.max(2, pbNominal(half) * left * ((S.pace && S.pace.pbn) ? S.pace.pb : 1)), full: 0 }); }
   if (SKILLS.length) {
     const nExams = pastList().length || pastGroups().length;
-    readySummary().rows.filter(x => x.r.state !== 'ready').sort((a, b) => skillAt(a.s) - skillAt(b.s)).forEach(({ s, r, w }) => {
+    const steps = readySummary().rows.filter(x => x.r.state !== 'ready').map(x => ({ at: skillAt(x.s), x })), TK = Object.keys(TOPICS);
+    // lessons outside every type (APRE's Dados, for example) go in their topic's place, after that topic's types
+    TK.filter(k => pt.includes(k)).forEach(k => { const L = unseen(LESSONS.filter(l => l.t === k && !LES2SK[l.id]).map(l => l.id)); if (L.length) steps.push({ at: TK.indexOf(k) * 1000 + 999, k, L }); });
+    steps.sort((a, b) => a.at - b.at).forEach(st => {
+      if (st.k) { const B = learnBatch(st.L), n = st.L.length;
+        T.push({ key: 'learnT:' + st.k, kind: 'learn', base: st.k, w: 0, t: st.k, les: B, label: `Aprender: ${TOPICS[st.k].label || TOPICS[st.k].short}`, why: `Teoria das aulas que ainda não viste (${n === 1 ? '1 lição' : `${n} lições`}${n > B.length ? `, ${B.length} de cada vez` : ''}). Não é um tipo de problema de exame.`, units: lesUnits(B), full: lesUnits(st.L) });
+        return; }
+      const { s, r, w } = st.x;
       const why = (s.seen || []).length ? `Saiu em ${s.seen.length} de ${nExams} exames e ainda não está pronto.` : 'Matéria base que os exames usam.';
       const L = unseen(s.les || []);
       const B = learnBatch(L);
@@ -68,14 +77,14 @@ function planPace(T) {
   const total = T.reduce((a, t) => a + work(t), 0);
   if (d === null || d < 1) return { d, total, per, cut: [] };
   const budget = d * per; let need = total; const cut = [];
-  const bySkill = {}; T.forEach(t => { if (t.skill) (bySkill[t.skill] = bySkill[t.skill] || { w: t.w, m: 0, label: SKBYID[t.skill].label, n: (SKBYID[t.skill].seen || []).length }).m += work(t); });
+  const bySkill = {}; T.forEach(t => { const g = planGroup(t); if (g) (bySkill[g] = bySkill[g] || { w: t.w, m: 0, label: t.skill ? SKBYID[t.skill].label : `${TOPICS[t.base].short} (teoria extra)`, n: t.skill ? (SKBYID[t.skill].seen || []).length : 0 }).m += work(t); });
   Object.entries(bySkill).sort((a, b) => a[1].w - b[1].w).forEach(([k, v]) => { if (need > budget) { need -= v.m; cut.push(Object.assign({ k }, v)); } });
   return { d, total, per, cut, need: total / d };
 }
 function planFor(more) {
   const all = planAll(), P = planPace(all), cut = new Set(P.cut.map(c => c.k)), td = planToday();
   const left = more ? (S.settings.minDay || 30) : (S.settings.minDay || 30) - td.ms / 60000;
-  const pool = all.filter(t => !td.did.includes(t.key) && !cut.has(t.skill)), list = []; let m = 0;
+  const pool = all.filter(t => !td.did.includes(t.key) && !cut.has(planGroup(t))), list = []; let m = 0;
   for (const t of pool) { const x = taskMin(t); if (list.length && m + x > left) break; list.push(t); m += x; if (m >= left) break; }
   return { all, P, list: left > 0 ? list : [], min: m, done: left <= 0, next: pool[0], spent: td.ms / 60000 };
 }
@@ -98,6 +107,11 @@ function planLog(key, ms, units, nominal, noPace) {
   if (nominal) { const r = t / 60000 / nominal; if (r > 0.2 && r < 5) { P.pb = P.pbn ? P.pb * 0.7 + r * 0.3 : r; P.pbn++; } }
   else if (units >= 3) { const x = t / 1000 / units; if (x > 5 && x < 300) { P.s = P.n ? P.s * 0.7 + x * 0.3 : x; P.n++; } }
 }
+// What the pace cut, for the card: the lessons outside every type as one entry, then each type
+function cutNames(cut) {
+  const b = cut.filter(c => c.k.startsWith('base:')).length;
+  return [...(b ? [`a teoria que não é tipo de exame (${b} tópico${b === 1 ? '' : 's'})`] : []), ...cut.filter(c => !c.k.startsWith('base:')).map(c => `${esc(c.label)}${c.n ? ` (saiu em ${c.n})` : ''}`)];
+}
 function PlanCard() {
   const p = planFor(!!view.planMore), P = p.P, per = S.settings.minDay || 30;
   const seg = `<span class="seg" role="group" aria-label="Minutos por dia">${PLAN_MIN.map(m => `<button data-act="minDay" data-k="${m}" aria-pressed="${per === m}">${m}</button>`).join('')}</span>`;
@@ -105,7 +119,7 @@ function PlanCard() {
   let pace;
   if (P.d === null) pace = 'Diz quando é o teste e a app reparte o que falta pelos dias que tens.';
   else if (P.d < 1) pace = P.d === 0 ? 'O teste é hoje: revê os erros e as cábulas. Força!' : 'O teste já passou. Muda a data se houver outro.';
-  else if (P.cut.length) pace = `Faltam ${P.d} dia${P.d === 1 ? '' : 's'} e cerca de ${hoursText(P.total)} de trabalho: precisavas de ~${Math.round(P.need)} min por dia. Com ${per} min, fica de fora: ${P.cut.slice(0, 3).map(c => `${esc(c.label)}${c.n ? ` (saiu em ${c.n})` : ''}`).join('; ')}${P.cut.length > 3 ? ` e mais ${P.cut.length - 3}` : ''}. É o que sai menos.`;
+  else if (P.cut.length) pace = `Faltam ${P.d} dia${P.d === 1 ? '' : 's'} e cerca de ${hoursText(P.total)} de trabalho: precisavas de ~${Math.round(P.need)} min por dia. Com ${per} min, fica de fora: ${cutNames(P.cut).slice(0, 3).join('; ')}${cutNames(P.cut).length > 3 ? ` e mais ${cutNames(P.cut).length - 3}` : ''}. É o que sai menos.`;
   else pace = `Faltam ${P.d} dia${P.d === 1 ? '' : 's'} e cerca de ${hoursText(P.total)} de trabalho: chegam ~${Math.max(5, Math.round(P.need / 5) * 5)} min por dia.${P.need < per * 0.6 ? ' Estás adiantado: sobra tempo para rever.' : ' Estás em dia.'}`;
   const note = `<p class="plan-note">${S.pace && S.pace.n >= 3 ? 'Os tempos já usam o teu ritmo.' : 'Os tempos são intervalos e ajustam-se ao teu ritmo à medida que usas a app.'}</p>`;
   if (p.done && !view.planMore) return `<section class="plan-card done"><div class="row"><h2>Hoje ✓</h2><span class="spacer"></span><span class="mono muted">${Math.round(p.spent)} min feitos</span></div>

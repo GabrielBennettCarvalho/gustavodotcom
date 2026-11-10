@@ -125,6 +125,13 @@ topic by topic and level by level. With everything ready, it offers the mock exa
 - **Times:** shown as ranges. They start wide and narrow to the student's own pace, measured from their sessions (`S.pace`).
 - **Today:** time studied and tasks done today are in `S.today`; lessons seen are in `S.seenL`. Both travel in the progress key.
 - **Explorar:** everything else on the home (levels, topics, modes, past exams, settings) is folded under it.
+- **Daily review** (`app-plan.js`, end of file): two optional strips on the plan card, never in the plan list, never in
+  the pace, never shown as a debt ("Hoje não" hides one for the day). **Aquecimento**: at most 3 questions answered
+  right on earlier days and due again by their box (1, 3, 7, 14, 30 days), least known first, no `calc`, `ch` or `code`
+  questions. **Fechar o dia** (once something was done today): at most 5 things from today, the key line of today's
+  lessons first, then today's questions, wrong ones first. Each can be read (question, "Ver solução", then Sabia /
+  Não sabia: reading never raises a box; "Não sabia" brings it back tomorrow) or done (a normal session; in Resumo de
+  hoje a right answer doesn't raise the box, since the same day proves no spacing). No time is shown, only counts.
 
 ## Formulas with a legend (Formulário)
 

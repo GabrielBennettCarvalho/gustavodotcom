@@ -434,6 +434,16 @@ textarea.key{min-height:84px;word-break:break-all}
 @keyframes fxflash{from{box-shadow:0 0 0 3px var(--accent)}to{box-shadow:0 0 0 0 transparent}}
 @media print{.fx-card{display:none}.fx{border:0}}
 
+/* daily review: optional strips on the plan card, and the read mode */
+.plan-extra{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;border:1px dashed var(--line);border-radius:10px;padding:9px 12px;margin:10px 0}
+.plan-extra .pe-t{flex:1 1 220px;min-width:0;font-size:14px}
+.plan-extra .pe-w{display:block;font-size:13px}
+.plan-extra .row{gap:6px;flex-wrap:wrap}
+.rc-opts{margin:12px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.rc-o{padding:6px 10px;border:1px solid var(--line);border-radius:8px}
+.rc-o.ok{border-color:var(--good);background:var(--good-bg);font-weight:600}
+.rc-card .key{margin-top:8px}
+
 /* calculator (app-calc.js): a corner button and a floating panel; a bottom sheet on a phone */
 .calc-fab{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--accent);box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer;transition:transform .1s ease}
 .calc-fab:hover{transform:translateY(-1px)}
@@ -20046,7 +20056,7 @@ function go(name, extra = {}) { view = Object.assign({ name }, extra); renderVie
 function renderView() {
   fxClose();
   const v = C || view.name === 'sync' ? view.name : 'courses';
-  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'routepick' ? RoutePick() : v === 'brief' ? BriefScreen() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : v === 'formulas' ? Formulas() : v === 'prob' ? ProblemPick() : v === 'problem' ? Problem() : Home();
+  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'routepick' ? RoutePick() : v === 'brief' ? BriefScreen() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : v === 'formulas' ? Formulas() : v === 'recap' ? Recap() : v === 'prob' ? ProblemPick() : v === 'problem' ? Problem() : Home();
   document.documentElement.dataset.course = C && v !== 'courses' && v !== 'sync' ? C.id : '';
   $app.innerHTML = Top() + html;
   document.title = C && v !== 'courses' ? `${C.code} · Estudo IST` : 'Estudo IST';
@@ -20286,6 +20296,7 @@ function start(mode, opts = {}) {
   if (mode === 'review') { items = reviewPool().slice(0, 12).map(makeItem); title = 'Revisão · erros de treino'; if (!items.length) { toast('Ainda não tens erros de treino para rever.'); return; } }
   if (mode === 'skipped') { items = skippedPool().slice(0, 12).map(makeItem); title = 'Revisão · saltadas'; if (!items.length) { toast('Não tens perguntas saltadas.'); return; } }
   if (mode === 'reviewExam') { items = examReviewPool().slice(0, 12).map(makeItem); title = 'Revisão · erros de exame'; if (!items.length) { toast('Ainda não tens erros de exame para rever.'); return; } }
+  if (mode === 'warm' || mode === 'recap') { items = (opts.ids || []).filter(id => BYID[id]).map(id => makeItem(BYID[id])); title = mode === 'warm' ? 'Aquecimento' : 'Resumo de hoje'; if (!items.length) { toast('Nada para rever agora.'); return; } }
   if (mode === 'extra') { const x = (C.extras || []).find(e => e.id === opts.extra); if (!x) return; items = (x.questions(extraApi()) || []).map(makeItem); title = x.title; }
   if (mode === 'exam') { items = buildExam().map(makeItem); title = 'Exame simulado'; timeLimit = examCfg().min * 60; }
   if (mode === 'supp') { items = pick(suppPool(), 10).sort((a, b) => a.l - b.l).map(makeItem); title = 'Suplementares'; }
@@ -20662,11 +20673,12 @@ function PlanCard() {
   const note = `<p class="plan-note">${S.pace && S.pace.n >= 3 ? 'Os tempos já usam o teu ritmo.' : 'Os tempos são intervalos e ajustam-se ao teu ritmo à medida que usas a app.'}</p>`;
   if (p.done && !view.planMore) return `<section class="plan-card done"><div class="row"><h2>Hoje ✓</h2><span class="spacer"></span><span class="mono muted">${Math.round(p.spent)} min feitos</span></div>
       <p>Plano de hoje feito.${p.next ? ` Amanhã começas por <b>${esc(p.next.label)}</b>.` : ''}</p>
-      <div class="row"><button class="btn" data-act="planMore">Fazer mais um pouco</button></div><p class="plan-pace">${pace}</p>${set}</section>`;
+      <div class="row"><button class="btn" data-act="planMore">Fazer mais um pouco</button></div>${rcStrip('recap')}<p class="plan-pace">${pace}</p>${set}</section>`;
   const items = p.list.map((t, i) => `<li><button class="plan-item" data-act="planGo" data-i="${i}"><span class="pi-n mono">${i + 1}</span><span class="pi-main"><b>${esc(t.label)}</b><span class="muted">${esc(t.why)}</span></span><span class="pi-t mono">${minRange(taskMin(t))}</span></button></li>`).join('');
   return `<section class="plan-card"><div class="row"><h2>Hoje</h2><span class="spacer"></span><span class="mono muted">${minRange(p.min)}</span></div>
+    ${rcStrip('warm')}
     <ol class="plan-list">${items}</ol>
-    <div class="row"><button class="btn primary" data-act="planGo" data-i="0">Começar →</button>${p.spent >= 1 ? `<span class="muted" style="font-size:13px">${Math.round(p.spent)} min feitos hoje</span>` : ''}</div>
+    <div class="row"><button class="btn primary" data-act="planGo" data-i="0">Começar →</button>${p.spent >= 1 ? `<span class="muted" style="font-size:13px">${Math.round(p.spent)} min feitos hoje</span>` : ''}</div>${rcStrip('recap')}
     <p class="plan-pace">${pace}</p>${set}${note}</section>`;
 }
 // At the end of a session started from the plan: the next step, or "done for today".
@@ -20675,6 +20687,64 @@ function planNextBtn(fromPlan) {
   const p = planFor(false);
   if (p.done || !p.list.length) return `<button class="btn primary" data-act="home">Plano de hoje feito ✓</button>`;
   return `<button class="btn primary" data-act="planGo" data-i="0">Seguinte no plano: ${esc(p.list[0].label)} →</button>`;
+}
+
+/* ---------- DAILY REVIEW: "Aquecimento" and "Resumo de hoje" ----------
+   Two small, optional extras around the plan. They never enter the plan list, never count in the pace and never show
+   as a debt: skipping one leaves nothing behind.
+   - Aquecimento (start of the day): at most WARM_N questions answered right on earlier days, due again by their box
+     (WARM_GAP days), the least known first. No calculations: it should take no effort to start. Whatever is not
+     picked just waits; the number shown never grows past WARM_N.
+   - Resumo de hoje (end of the day): at most RECAP_N things from today: the key line of lessons seen today, then the
+     questions answered today, the ones answered wrong first.
+   Each one can be read (question, then "Ver solução") or done (a normal session). Reading never raises a box:
+   "Não sabia" brings the question back tomorrow, "Sabia" only postpones it. Done today: S.today.did has 'warm'/'recap'; S.today.rd lists the questions only read today (local, not in the key). */
+const WARM_N = 3, RECAP_N = 5, RECAP_LES = 2, WARM_GAP = [1, 1, 3, 7, 14, 30];
+const daysSince = ms => Math.round((new Date(todayStr()) - new Date(new Date(ms).toLocaleDateString('sv'))) / 864e5);
+const rcDone = k => planToday().did.includes(k);
+function warmPool() {
+  return basePool().filter(q => { const s = peek(q.id);
+    if (!s.c || !s.last || q.calc || q.ch || q.code) return false;
+    if (s.w && s.box < TRAIN_CLEAR) return false;   // still a mistake: the mistakes task has it
+    const d = daysSince(s.last); return d >= 1 && d >= WARM_GAP[Math.min(5, s.box)]; })
+    .sort((a, b) => peek(a.id).box - peek(b.id).box || peek(a.id).last - peek(b.id).last).slice(0, WARM_N);
+}
+function recapItems() {
+  const les = LESSONS.filter(l => S.seenL && S.seenL[l.id] && daysSince(S.seenL[l.id]) === 0 && l.key && activeTopics().includes(l.t)).slice(0, RECAP_LES).map(l => ({ kind: 'les', id: l.id }));
+  const wrongNow = q => { const s = peek(q.id); return s.w > 0 && s.box === 0; };
+  const rd = planToday().rd || [];   // only read today (in the warm-up), not done: not part of today's work
+  const qs = BANK.filter(q => inTopics(q) && !isReserved(q) && !rd.includes(q.id) && peek(q.id).last && daysSince(peek(q.id).last) === 0)
+    .sort((a, b) => wrongNow(b) - wrongNow(a) || peek(b.id).last - peek(a.id).last).map(q => ({ kind: 'q', id: q.id }));
+  return les.concat(qs).slice(0, RECAP_N);
+}
+const rcMode = k => (S.settings.rc && S.settings.rc[k]) || (k === 'warm' ? 'do' : 'read');
+// the two strips of the plan card (empty when there is nothing, or it was done or skipped today)
+function rcStrip(k) {
+  const n = k === 'warm' ? warmPool().length : recapItems().length; if (!n || rcDone(k)) return '';
+  const m = rcMode(k), btn = (mm, t) => `<button class="btn small${m === mm ? ' primary' : ''}" data-act="rcGo" data-k="${k}" data-m="${mm}">${t}</button>`;
+  const what = k === 'warm' ? `${n === 1 ? '1 pergunta' : `${n} perguntas`} que já acertaste noutros dias, para não esquecer` : `${n === 1 ? '1 coisa' : `${n} coisas`} do que fizeste hoje`;
+  return `<div class="plan-extra"><div class="pe-t"><b>${k === 'warm' ? 'Aquecimento' : 'Fechar o dia'}</b> <span class="muted">· opcional</span><span class="muted pe-w">${what}.</span></div>
+    <div class="row">${btn('read', 'Ler')}${btn('do', 'Fazer')}<button class="btn ghost small" data-act="rcSkip" data-k="${k}">Hoje não</button></div></div>`;
+}
+// read mode: its own small screen; do mode: a normal session with these questions
+let rc = null;
+function rcStart(k, m) {
+  if (!S.settings.rc) S.settings.rc = {}; S.settings.rc[k] = m;
+  const items = k === 'warm' ? warmPool().map(q => ({ kind: 'q', id: q.id })) : recapItems();
+  if (!items.length) { toast('Nada para rever agora.'); return; }
+  if (m === 'do') { const ids = items.filter(x => x.kind === 'q').map(x => x.id); if (!ids.length) { rc = { k, items, i: 0, shown: false, t0: Date.now() }; go('recap'); return; }
+    start(k, { ids, planKey: k }); return; }
+  rc = { k, items, i: 0, shown: false, t0: Date.now() }; save(); go('recap');
+}
+function rcSkip(k) { const td = planToday(); if (!td.did.includes(k)) td.did.push(k); save(); renderView(); }
+function rcNext(rate) {
+  const it = rc.items[rc.i];
+  if (it.kind === 'q' && rate) { const s = st(it.id), td = planToday(); if (!td.rd) td.rd = []; if (!td.rd.includes(it.id)) td.rd.push(it.id);
+    if (rate === 'no') { s.box = Math.min(s.box, 1); s.last = Date.now(); }   // back tomorrow, to be done
+    else s.last = Date.now(); }                                               // known: later, by its box
+  rc.i++; rc.shown = false;
+  if (rc.i >= rc.items.length) { planLog(rc.k, Date.now() - rc.t0, rc.items.length, 0, true); rc.done = true; }
+  save(); renderView(); window.scrollTo(0, 0);
 }
 
 /* ---------- CALCULATOR: a floating panel (the maths is in calc.js) ----------
@@ -20943,7 +21013,7 @@ function grade() {
   if (S.skipped && S.skipped[q.id]) delete S.skipped[q.id];   // answered: leaves the "Saltadas" list
   if (ses.mode === 'exam') { if (ok) s.c++; else { s.ew++; s.eb = 0; } }           // exam mistake: goes to the exam review
   else if (ses.examGrading) { if (ok) { s.c++; s.eb++; } else { s.ew++; s.eb = 0; } }
-  else if (ok) { s.c++; s.box = Math.min(5, s.box + 1); } else { s.w++; s.box = 0; }
+  else if (ok) { s.c++; if (ses.mode !== 'recap') s.box = Math.min(5, s.box + 1); } else { s.w++; s.box = 0; }   // the same day again proves no spacing
   if (ses.mode !== 'exam') { const gain = ok ? XP[q.l] + (s.c === 1 && !s.w && !s.ew ? 5 : 0) : 0; S.xp += gain; ses.xp += gain; }
   save();
   if (ses.mode === 'exam') { next(); return; }
@@ -21066,6 +21136,26 @@ function Sheet() {
     <p class="muted" style="font-size:13.5px;margin-top:8px">${openBook() ? 'O exame é com consulta. ' : ''}A tua cábula junta os tipos de problema onde já falhaste (e os que puseres à mão), com as tuas notas por baixo. ${openBook() ? 'Imprime-a ou copia-a para a tua folha. Também a abres enquanto treinas e no exame simulado.' : 'Serve para rever antes do exame.'}</p></div>
     ${items || `<p class="muted">${all ? 'Esta cadeira ainda não tem resumos.' : 'Ainda não falhaste nenhum tipo de problema. Quando falhares, ele aparece aqui; ou vê “Todos os tipos” e põe à mão os que quiseres.'}</p>`}
     ${loose.length ? `<h2 class="sheet-topic">Outras notas</h2><ul class="sheet-notes">${loose.map(noteOf).join('')}</ul>` : ''}`;
+}
+
+/* ---------- DAILY REVIEW, read mode (app-plan.js): the question, then its solution; nothing is graded ---------- */
+function Recap() {
+  if (!rc) return `<div class="qhead">${BACK}</div><p class="muted">Nada para rever agora.</p>`;
+  const name = rc.k === 'warm' ? 'Aquecimento' : 'Resumo de hoje', n = rc.items.length;
+  const head = `<div class="qhead">${BACK}<span class="eyebrow">${name} · ler</span><span class="spacer"></span><span class="mono muted">${Math.min(rc.i + 1, n)}/${n}</span></div>`;
+  if (rc.done || rc.i >= n) return `${head}<div class="card"><h2>${rc.k === 'warm' ? 'Aquecido.' : 'Dia fechado.'}</h2><p class="muted" style="margin-top:6px">${rc.k === 'warm' ? 'O que marcaste como “Não sabia” volta amanhã, para fazeres.' : 'Amanhã, o que marcaste como “Não sabia” vem no aquecimento.'}</p><div class="row" style="margin-top:12px"><button class="btn primary" data-act="home">Voltar ao início</button></div></div>`;
+  const it = rc.items[rc.i];
+  if (it.kind === 'les') { const L = LBYID[it.id], T = TOPICS[L.t];
+    return `${head}<article class="card rc-card"><span class="badge" style="--c:${T.c}"><span class="sw"></span>${esc(T.short)} · lição de hoje</span><h3 style="margin-top:8px">${esc(L.title)}</h3><p class="key">${L.trusted ? fxify(L.key) : md(L.key)}</p>
+      <div class="row"><button class="btn primary" data-act="rcNext" data-k="">Seguinte →</button><button class="btn ghost small" data-act="read" data-id="${esc(L.id)}">Abrir a lição</button></div></article>`; }
+  const q = BYID[it.id], T = TOPICS[q.t], A = Array.isArray(q.a) ? q.a : [q.a];
+  const opts = q.o.map((o, i) => `<li class="rc-o${rc.shown && A.includes(i) ? ' ok' : ''}">${md(o)}</li>`).join('');
+  const sol = rc.shown ? `<div class="feedback ok"><p class="explain">${md(q.e)}</p></div>
+    <div class="row" style="margin-top:12px"><button class="btn primary" data-act="rcNext" data-k="yes">Sabia</button><button class="btn" data-act="rcNext" data-k="no">Não sabia</button></div>`
+    : `<div class="row" style="margin-top:12px"><button class="btn primary" data-act="rcShow">Ver solução</button><button class="btn ghost small" data-act="rcNext" data-k="">Passar</button></div>`;
+  return `${head}<article class="card rc-card"><span class="badge" style="--c:${T.c}"><span class="sw"></span>${esc(T.short)}</span>
+    <p class="qtext" style="margin-top:8px">${md(q.q)}</p>${q.code ? codeBlock(q.code) : ''}${q.d ? `<div class="diagram">${renderD(q.d)}</div>` : ''}
+    <ol class="rc-opts" type="A">${opts}</ol>${sol}</article>`;
 }
 
 /* ---------- FORMULAS: every formula of the course with what each symbol means ---------- */
@@ -21274,6 +21364,10 @@ document.addEventListener('click', async ev => {
     case 'practice': { const ids = BANK.filter(q => q.les === b.dataset.id).sort((x, y) => x.l - y.l).map(q => q.id); start('retry', { ids }); if (ses) ses.title = 'Praticar lição'; break; }
     case 'pbGo': pbStart(b.dataset.k); break;
     case 'planGo': planRun(+b.dataset.i, !!view.planMore); break;
+    case 'rcGo': rcStart(b.dataset.k, b.dataset.m); break;
+    case 'rcSkip': rcSkip(b.dataset.k); break;
+    case 'rcShow': if (rc) { rc.shown = true; renderView(); } break;
+    case 'rcNext': if (rc) rcNext(b.dataset.k); break;
     case 'planMore': view.planMore = true; renderView(); break;
     case 'minDay': S.settings.minDay = +b.dataset.k; save(); renderView(); break;
     case 'pbCheck': pbCheck(); break;

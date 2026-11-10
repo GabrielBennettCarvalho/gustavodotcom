@@ -88,7 +88,7 @@ function grade() {
   if (S.skipped && S.skipped[q.id]) delete S.skipped[q.id];   // answered: leaves the "Saltadas" list
   if (ses.mode === 'exam') { if (ok) s.c++; else { s.ew++; s.eb = 0; } }           // exam mistake: goes to the exam review
   else if (ses.examGrading) { if (ok) { s.c++; s.eb++; } else { s.ew++; s.eb = 0; } }
-  else if (ok) { s.c++; s.box = Math.min(5, s.box + 1); } else { s.w++; s.box = 0; }
+  else if (ok) { s.c++; if (ses.mode !== 'recap') s.box = Math.min(5, s.box + 1); } else { s.w++; s.box = 0; }   // the same day again proves no spacing
   if (ses.mode !== 'exam') { const gain = ok ? XP[q.l] + (s.c === 1 && !s.w && !s.ew ? 5 : 0) : 0; S.xp += gain; ses.xp += gain; }
   save();
   if (ses.mode === 'exam') { next(); return; }
@@ -211,6 +211,26 @@ function Sheet() {
     <p class="muted" style="font-size:13.5px;margin-top:8px">${openBook() ? 'O exame é com consulta. ' : ''}A tua cábula junta os tipos de problema onde já falhaste (e os que puseres à mão), com as tuas notas por baixo. ${openBook() ? 'Imprime-a ou copia-a para a tua folha. Também a abres enquanto treinas e no exame simulado.' : 'Serve para rever antes do exame.'}</p></div>
     ${items || `<p class="muted">${all ? 'Esta cadeira ainda não tem resumos.' : 'Ainda não falhaste nenhum tipo de problema. Quando falhares, ele aparece aqui; ou vê “Todos os tipos” e põe à mão os que quiseres.'}</p>`}
     ${loose.length ? `<h2 class="sheet-topic">Outras notas</h2><ul class="sheet-notes">${loose.map(noteOf).join('')}</ul>` : ''}`;
+}
+
+/* ---------- DAILY REVIEW, read mode (app-plan.js): the question, then its solution; nothing is graded ---------- */
+function Recap() {
+  if (!rc) return `<div class="qhead">${BACK}</div><p class="muted">Nada para rever agora.</p>`;
+  const name = rc.k === 'warm' ? 'Aquecimento' : 'Resumo de hoje', n = rc.items.length;
+  const head = `<div class="qhead">${BACK}<span class="eyebrow">${name} · ler</span><span class="spacer"></span><span class="mono muted">${Math.min(rc.i + 1, n)}/${n}</span></div>`;
+  if (rc.done || rc.i >= n) return `${head}<div class="card"><h2>${rc.k === 'warm' ? 'Aquecido.' : 'Dia fechado.'}</h2><p class="muted" style="margin-top:6px">${rc.k === 'warm' ? 'O que marcaste como “Não sabia” volta amanhã, para fazeres.' : 'Amanhã, o que marcaste como “Não sabia” vem no aquecimento.'}</p><div class="row" style="margin-top:12px"><button class="btn primary" data-act="home">Voltar ao início</button></div></div>`;
+  const it = rc.items[rc.i];
+  if (it.kind === 'les') { const L = LBYID[it.id], T = TOPICS[L.t];
+    return `${head}<article class="card rc-card"><span class="badge" style="--c:${T.c}"><span class="sw"></span>${esc(T.short)} · lição de hoje</span><h3 style="margin-top:8px">${esc(L.title)}</h3><p class="key">${L.trusted ? fxify(L.key) : md(L.key)}</p>
+      <div class="row"><button class="btn primary" data-act="rcNext" data-k="">Seguinte →</button><button class="btn ghost small" data-act="read" data-id="${esc(L.id)}">Abrir a lição</button></div></article>`; }
+  const q = BYID[it.id], T = TOPICS[q.t], A = Array.isArray(q.a) ? q.a : [q.a];
+  const opts = q.o.map((o, i) => `<li class="rc-o${rc.shown && A.includes(i) ? ' ok' : ''}">${md(o)}</li>`).join('');
+  const sol = rc.shown ? `<div class="feedback ok"><p class="explain">${md(q.e)}</p></div>
+    <div class="row" style="margin-top:12px"><button class="btn primary" data-act="rcNext" data-k="yes">Sabia</button><button class="btn" data-act="rcNext" data-k="no">Não sabia</button></div>`
+    : `<div class="row" style="margin-top:12px"><button class="btn primary" data-act="rcShow">Ver solução</button><button class="btn ghost small" data-act="rcNext" data-k="">Passar</button></div>`;
+  return `${head}<article class="card rc-card"><span class="badge" style="--c:${T.c}"><span class="sw"></span>${esc(T.short)}</span>
+    <p class="qtext" style="margin-top:8px">${md(q.q)}</p>${q.code ? codeBlock(q.code) : ''}${q.d ? `<div class="diagram">${renderD(q.d)}</div>` : ''}
+    <ol class="rc-opts" type="A">${opts}</ol>${sol}</article>`;
 }
 
 /* ---------- FORMULAS: every formula of the course with what each symbol means ---------- */
@@ -419,6 +439,10 @@ document.addEventListener('click', async ev => {
     case 'practice': { const ids = BANK.filter(q => q.les === b.dataset.id).sort((x, y) => x.l - y.l).map(q => q.id); start('retry', { ids }); if (ses) ses.title = 'Praticar lição'; break; }
     case 'pbGo': pbStart(b.dataset.k); break;
     case 'planGo': planRun(+b.dataset.i, !!view.planMore); break;
+    case 'rcGo': rcStart(b.dataset.k, b.dataset.m); break;
+    case 'rcSkip': rcSkip(b.dataset.k); break;
+    case 'rcShow': if (rc) { rc.shown = true; renderView(); } break;
+    case 'rcNext': if (rc) rcNext(b.dataset.k); break;
     case 'planMore': view.planMore = true; renderView(); break;
     case 'minDay': S.settings.minDay = +b.dataset.k; save(); renderView(); break;
     case 'pbCheck': pbCheck(); break;

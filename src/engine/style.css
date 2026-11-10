@@ -428,6 +428,16 @@ textarea.key{min-height:84px;word-break:break-all}
 @keyframes fxflash{from{box-shadow:0 0 0 3px var(--accent)}to{box-shadow:0 0 0 0 transparent}}
 @media print{.fx-card{display:none}.fx{border:0}}
 
+/* daily review: optional strips on the plan card, and the read mode */
+.plan-extra{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;border:1px dashed var(--line);border-radius:10px;padding:9px 12px;margin:10px 0}
+.plan-extra .pe-t{flex:1 1 220px;min-width:0;font-size:14px}
+.plan-extra .pe-w{display:block;font-size:13px}
+.plan-extra .row{gap:6px;flex-wrap:wrap}
+.rc-opts{margin:12px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.rc-o{padding:6px 10px;border:1px solid var(--line);border-radius:8px}
+.rc-o.ok{border-color:var(--good);background:var(--good-bg);font-weight:600}
+.rc-card .key{margin-top:8px}
+
 /* calculator (app-calc.js): a corner button and a floating panel; a bottom sheet on a phone */
 .calc-fab{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--accent);box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer;transition:transform .1s ease}
 .calc-fab:hover{transform:translateY(-1px)}

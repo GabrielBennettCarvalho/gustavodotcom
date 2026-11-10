@@ -10905,7 +10905,7 @@ STUDY.course({
   skills: [
     { id: 'dt-gain', t: 'dt', les: ['dt-entropy', 'dt-gain'], label: 'Entropia e ganho de informação: escolher o atributo',
       seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 1 2021/22'],
-      sheet: '<p><b>H(S) = −Σ pᵢ log₂ pᵢ</b> (0 = nó puro; 1 bit = duas classes meio a meio).</p><p><b>IG(A) = H(S) − Σᵥ (|Sᵥ|/|S|)·H(Sᵥ)</b>. Vai para a raiz o atributo com maior ganho, ou seja, menor entropia condicional.</p><p>Passos: contar as classes no nó → H do nó → para cada atributo, H de cada ramo pesada pelo tamanho do ramo → subtrair.</p><p><b>Armadilhas:</b> esquecer o peso |Sᵥ|/|S|; usar ln em vez de log₂; 0·log 0 = 0.</p>' },
+      sheet: '<p><b>H(S) = −Σ pᵢ log₂ pᵢ</b> (0 = nó puro; 1 bit = duas classes meio a meio).</p><p><b>IG(A) = H(S) − Σᵥ (|Sᵥ|/|S|)·H(Sᵥ)</b>. Vai para a raiz o atributo com maior ganho, ou seja, menor entropia condicional.</p><p>Passos: contar as classes no nó → H do nó → para cada atributo, H de cada ramo pesada pelo tamanho do ramo → subtrair.</p><p>Nos slides: I(C) = entropia, E(P) = Σ (|Cᵢ|/|C|)·I(Cᵢ), gain(P) = I(C) − E(P).</p><p><b>Armadilhas:</b> esquecer o peso |Sᵥ|/|S|; usar ln em vez de log₂; 0·log 0 = 0.</p>' },
     { id: 'dt-build', t: 'dt', les: ['dt-id3'], label: 'Construir a árvore (ID3) e ler as regras',
       seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 2 2022/23'],
       sheet: '<p>Raiz = maior ganho. Em cada ramo repete <b>só com os exemplos desse ramo</b> e sem os atributos já usados no caminho.</p><p>Pára quando o nó é puro (folha com essa classe) ou já não há atributos (folha com a classe maioritária).</p><p>Cada caminho raiz → folha é uma regra: SE … E … ENTÃO classe.</p><p><b>Armadilha:</b> a entropia de um ramo calcula-se com as contagens do ramo, não do conjunto todo.</p>' },
@@ -10920,46 +10920,46 @@ STUDY.course({
       sheet: '<p><b>p(c|x) ∝ p(x|c)·p(c)</b>: escolhe a classe com o maior produto (MAP). p(x) só é preciso para normalizar.</p><p>Naive Bayes: p(x|c) = Πᵢ p(xᵢ|c). Atributo contínuo: N(x; μ, σ²) = exp(−(x − μ)²/(2σ²)) / (σ√(2π)), com μ e σ estimados nessa classe.</p><p>Sem independência: p(x|c) pela frequência conjunta (ou gaussiana multivariada).</p><p><b>Armadilhas:</b> ML ignora p(c), MAP usa-o; uma contagem 0 anula o produto (Laplace).</p>' },
     { id: 'knn', t: 'knn', les: ['k-dist', 'k-knn'], label: 'Classificar com kNN e distâncias',
       seen: ['Exame 2 2021/22'],
-      sheet: '<p>Euclidiana √Σ(xᵢ − yᵢ)² · Manhattan Σ|xᵢ − yᵢ| · Hamming = nº de posições diferentes · cosseno xᵀy/(‖x‖‖y‖).</p><p>Classificar: os k mais próximos votam (uniforme, ou com peso 1/d). Regressão: média dos k valores.</p><p><b>Armadilhas:</b> normalizar os atributos antes; em leave-one-out o ponto deixado de fora não é vizinho de si próprio.</p>' },
+      sheet: '<p>Euclidiana d₂ = ‖x − y‖₂ = √Σ(xᵢ − yᵢ)² · Manhattan d₁ = ‖x − y‖₁ = Σ|xᵢ − yᵢ| · Hamming = nº de posições diferentes · cosseno xᵀy/(‖x‖‖y‖).</p><p>Classificar: os k mais próximos votam (uniforme, ou com peso 1/d). Regressão: média dos k valores.</p><p><b>Armadilhas:</b> normalizar os atributos antes; em leave-one-out o ponto deixado de fora não é vizinho de si próprio.</p>' },
     { id: 'lr-fit', t: 'linreg', les: ['lr-ls', 'lr-basis'], label: 'Regressão linear com funções base: pesos, previsões e erro',
       seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
-      sheet: '<p>Matriz de design Φ: uma linha por exemplo, [1, φ(x), φ(x)², …].</p><p><b>w = (ΦᵀΦ)⁻¹Φᵀt</b> (ridge: (ΦᵀΦ + λI)⁻¹Φᵀt). Previsão ŷ = wᵀφ(x).</p><p>MAE = (1/N)Σ|t − ŷ| · MSE = (1/N)Σ(t − ŷ)² · RMSE = √MSE.</p><p>Inversa 2 × 2: [[a, b], [c, d]]⁻¹ = (1/(ad − bc))·[[d, −b], [−c, a]].</p><p><b>Armadilhas:</b> esquecer a coluna de 1 (bias); aplicar φ (por exemplo ‖x‖₁) antes de elevar ao grau.</p>' },
+      sheet: '<p>Matriz de design Φ: uma linha por exemplo, [1, φ(x), φ(x)², …].</p><p><b>w = (ΦᵀΦ)⁻¹Φᵀt</b> = Φ†t (ridge: (ΦᵀΦ + λI)⁻¹Φᵀt). Previsão ŷ = wᵀφ(x).</p><p>MAE = (1/N)Σ|t − ŷ| · MSE = (1/N)Σ(t − ŷ)² · RMSE = √MSE.</p><p>Inversa 2 × 2: [[a, b], [c, d]]⁻¹ = (1/(ad − bc))·[[d, −b], [−c, a]].</p><p><b>Armadilhas:</b> esquecer a coluna de 1 (bias); aplicar φ (por exemplo ‖x‖₁) antes de elevar ao grau.</p>' },
     { id: 'pe-update', t: 'percep', les: ['p-rosen'], label: 'Perceptrão: classificar e atualizar os pesos',
       seen: ['Exame 2 2022/23', 'Exame 1 2022/23'],
       sheet: '<p>o = sinal(wᵀx), com x₀ = 1 para o bias. Fronteira: wᵀx = 0.</p><p>Só muda quando erra: <b>w ← w + η(t − o)x</b>.</p><p>Converge se os dados forem linearmente separáveis (o XOR não é).</p><p><b>Armadilha:</b> esquecer o x₀ = 1 no produto e na atualização.</p>' },
     { id: 'gd-rule', t: 'percep', les: ['p-gd'], label: 'Descida do gradiente: derivar e aplicar a regra',
       seen: ['Exame 2 2022/23', 'Exame 1 2021/22'],
-      sheet: '<p><b>Δw = −η ∂E/∂w</b>. Com E = ½Σ(t − o)², o = f(net), net = wᵀx: ∂E/∂w = −Σ(t − o)·f′(net)·x.</p><p>Linear: Δw = ηΣ(t − o)x. Sigmoide: f′ = o(1 − o). Outra f (por exemplo (wᵀx)² ou exp(…)): regra da cadeia, deriva f em ordem a net e multiplica por x.</p><p>Batch: soma todos os exemplos e atualiza uma vez. Estocástico: atualiza a cada exemplo.</p>' },
+      sheet: '<p><b>Δw = −η ∂E/∂w</b>. Com E = ½Σ(t − o)², o = f(net) (nos slides φ(net)), net = wᵀx: ∂E/∂wⱼ = −Σₖ(tₖ − oₖ)·f′(netₖ)·xₖ,ⱼ.</p><p>Linear: Δw = ηΣ(t − o)x. Sigmoide: f′ = o(1 − o). Outra f (por exemplo (wᵀx)² ou exp(…)): regra da cadeia, deriva f em ordem a net e multiplica por x.</p><p>Batch: soma todos os exemplos e atualiza uma vez. Estocástico: atualiza a cada exemplo.</p>' },
     { id: 'lg', t: 'logreg', les: ['lg-sig', 'lg-soft'], label: 'Regressão logística e softmax: probabilidades e atualização',
       seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 1 2021/22'],
-      sheet: '<p>p(t = 1|x) = σ(wᵀx) = 1/(1 + e^(−wᵀx)); classe 1 se ≥ 0,5, ou seja wᵀx ≥ 0.</p><p>Entropia cruzada E = −Σ[t ln o + (1 − t) ln(1 − o)] → <b>w ← w − ηΣ(o − t)x</b>.</p><p>Softmax oⱼ = e^(netⱼ)/Σₖe^(netₖ); com entropia cruzada, ∂E/∂netⱼ = oⱼ − tⱼ.</p><p><b>Armadilha:</b> o sinal: (o − t) com menos, ou (t − o) com mais.</p>' },
+      sheet: '<p>p(t = 1|x) = σ(wᵀx) = 1/(1 + e^(−wᵀx)); classe 1 se ≥ 0,5, ou seja wᵀx ≥ 0.</p><p>Entropia cruzada E = −Σ[t log o + (1 − t) log(1 − o)] (log natural) → <b>w ← w − ηΣ(o − t)x</b>.</p><p>Softmax oⱼ = e^(netⱼ)/Σₖe^(netₖ); com entropia cruzada, ∂E/∂netⱼ = oⱼ − tⱼ.</p><p><b>Armadilha:</b> o sinal: (o − t) com menos, ou (t − o) com mais.</p>' },
     { id: 'mlp-fwd', t: 'mlp', les: ['m-fwd'], label: 'Forward propagation numa MLP',
       seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
       sheet: '<p><b>z[l] = W[l]x[l−1] + b[l]</b>, <b>x[l] = f(z[l])</b>, com x[0] a entrada.</p><p>Faz camada a camada e guarda z e x: o backprop precisa deles.</p><p>W[l] tem (nº de unidades da camada l) × (nº da camada anterior). Parâmetros: Σ(nₗ₋₁ + 1)·nₗ.</p>' },
     { id: 'mlp-bp', t: 'mlp', les: ['m-bp'], label: 'Backpropagation: deltas e atualizar os pesos',
       seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 2 2021/22', 'Exame 1 2021/22'],
-      sheet: '<p>Saída: δ[L] = ∂E/∂z[L]. Softmax ou sigmoide com entropia cruzada, ou linear com erro quadrático: <b>δ[L] = x[L] − t</b>. Sigmoide com erro quadrático: (x[L] − t)∘x[L]∘(1 − x[L]).</p><p>Escondidas: <b>δ[l] = (W[l+1])ᵀδ[l+1] ∘ f′(z[l])</b>.</p><p>∂E/∂W[l] = δ[l](x[l−1])ᵀ · ∂E/∂b[l] = δ[l] · W ← W − η∂E/∂W.</p><p>σ′ = σ(1 − σ) · tanh′ = 1 − tanh² · ReLU′ = 1 se z > 0, senão 0.</p><p><b>Armadilha:</b> os deltas usam os pesos antigos; atualiza tudo só no fim.</p>' },
+      sheet: '<p>Saída: δ[L] = ∂E/∂z[L]. Softmax ou sigmoide com entropia cruzada, ou linear com erro quadrático: <b>δ[L] = x[L] − t</b>. Sigmoide com erro quadrático: (x[L] − t)∘x[L]∘(1 − x[L]).</p><p>Escondidas: <b>δ[l] = (W[l+1])ᵀδ[l+1] ∘ f′(z[l])</b>.</p><p>∂E/∂W[l] = δ[l](x[l−1])ᵀ · ∂E/∂b[l] = δ[l] · W ← W − η∂E/∂W.</p><p>σ′ = σ(1 − σ) · tanh′ = 1 − tanh² · ReLU′ = 1 se z > 0, senão 0.</p><p>Nos slides o delta tem o sinal trocado: δₖₜ = yₖₜ − oₖₜ e Δw = +ηΣδV. Dá os mesmos pesos.</p><p><b>Armadilha:</b> os deltas usam os pesos antigos; atualiza tudo só no fim.</p>' },
     { id: 'mlp-theory', t: 'mlp', les: ['m-univ'], label: 'O que uma MLP consegue representar',
       seen: ['Exame 1 2024/25', 'Exame 1 2022/23', 'Exame 1 2021/22'],
       sheet: '<p>Uma camada escondida chega para qualquer função booleana (forma normal disjuntiva: uma unidade por mintermo e um OR na saída) e para aproximar qualquer função contínua, com unidades suficientes.</p><p>Cada unidade escondida (degrau ou sigmoide) é um hiperplano; a saída combina-os.</p><p>Mais unidades e camadas → mais parâmetros → mais risco de overfitting.</p>' },
     { id: 'km', t: 'clust', les: ['c-kmeans'], label: 'Iterações do k-means',
       seen: ['Exame 1 2024/25', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
-      sheet: '<p>1) Cada ponto vai para o centróide mais próximo, com a distância que o enunciado pede (euclidiana ou Manhattan). 2) Cada centróide passa a ser a média dos seus pontos. Repete até nada mudar.</p><p>Mostra as atribuições e os centróides em cada iteração. Erro: Σ‖x − μ_c‖².</p><p><b>Armadilha:</b> em empates e na distância a usar, segue o enunciado à letra.</p>' },
+      sheet: '<p>1) Cada ponto vai para o centróide mais próximo, com a distância que o enunciado pede (euclidiana ou Manhattan). 2) Cada centróide passa a ser a média dos seus pontos: cₖ = (1/|Cₖ|)Σ x. Repete até nada mudar.</p><p>Mostra as atribuições e os centróides em cada iteração. Erro: J = Σₖ Σ_(x∈Cₖ) ‖x − cₖ‖².</p><p><b>Armadilha:</b> em empates e na distância a usar, segue o enunciado à letra.</p>' },
     { id: 'cl-valid', t: 'clust', les: ['c-valid'], label: 'Validar clusters: silhueta e pureza',
       seen: ['Exame 1 2024/25', 'Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 2 2021/22'],
-      sheet: '<p>Silhueta de um ponto: a = distância média aos outros pontos do seu cluster, b = menor distância média a outro cluster; <b>s = (b − a)/max(a, b)</b>. Ponto sozinho: s = 0.</p><p>Silhueta de um cluster = média das silhuetas dos seus pontos.</p><p><b>Pureza</b> = (1/N)·Σ, por cluster, do nº de pontos da classe mais comum.</p><p><b>Armadilha:</b> a média de a divide por |C| − 1 (sem o próprio ponto).</p>' },
+      sheet: '<p>Silhueta do ponto i: a(i) = distância média aos outros pontos do seu cluster, b(i) = menor distância média a outro cluster; <b>s(i) = 1 − a(i)/b(i)</b> se a &lt; b (em geral (b − a)/max(a, b)). Ponto sozinho: s = 0.</p><p>Silhueta de um cluster = média das silhuetas dos seus pontos.</p><p><b>Pureza</b> = (1/N)·Σ, por cluster, do nº de pontos da classe mais comum.</p><p><b>Armadilha:</b> a média de a divide por |C| − 1 (sem o próprio ponto).</p>' },
     { id: 'em', t: 'clust', les: ['c-em'], label: 'EM com misturas de gaussianas: passos E e M',
       seen: ['Exame 1 2025/26', 'Exame 2 2022/23'],
-      sheet: '<p><b>E:</b> γₙₖ = πₖN(xₙ|μₖ, Σₖ) / Σⱼ πⱼN(xₙ|μⱼ, Σⱼ) (cada ponto soma 1 entre clusters).</p><p><b>M:</b> Nₖ = Σₙγₙₖ; μₖ = (1/Nₖ)Σγₙₖxₙ; Σₖ = (1/Nₖ)Σγₙₖ(xₙ − μₖ)(xₙ − μₖ)ᵀ com a nova μₖ; πₖ = Nₖ/N.</p><p>Gaussiana 2D: N(x) = exp(−½(x − μ)ᵀΣ⁻¹(x − μ)) / (2π√|Σ|).</p>' },
+      sheet: '<p><b>E:</b> γ(cₙₖ) = p(cₖ = 1|xₙ) = πₖN(xₙ|μₖ, Σₖ) / Σⱼ πⱼN(xₙ|μⱼ, Σⱼ) (cada ponto soma 1 entre clusters).</p><p><b>M:</b> Nₖ = Σₙγ(cₙₖ); μₖ = (1/Nₖ)Σγ(cₙₖ)xₙ; Σₖ = (1/Nₖ)Σγ(cₙₖ)(xₙ − μₖ)(xₙ − μₖ)ᵀ com a nova μₖ; πₖ = p(cₖ = 1) = Nₖ/N.</p><p>Gaussiana 2D: N(x) = exp(−½(x − μ)ᵀΣ⁻¹(x − μ)) / (2π√|Σ|).</p>' },
     { id: 'pca-cov', t: 'pca', les: ['pc-cov'], label: 'Covariância, valores e vetores próprios',
       seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
-      sheet: '<p>Média m; <b>C = (1/(n − 1))Σ(x − m)(x − m)ᵀ</b>.</p><p>2 × 2: λ² − (traço)λ + det = 0; λ₁ + λ₂ = traço, λ₁λ₂ = det.</p><p>Vetor próprio: (C − λI)u = 0, depois normaliza (‖u‖ = 1).</p><p><b>Armadilha:</b> n − 1 e não n.</p>' },
+      sheet: '<p>Média x̄; <b>cᵢⱼ = Σₖ(xₖ,ᵢ − x̄ᵢ)(xₖ,ⱼ − x̄ⱼ)/(n − 1)</b>.</p><p>2 × 2: λ² − (traço)λ + det = 0; λ₁ + λ₂ = traço, λ₁λ₂ = det.</p><p>Vetor próprio: C·uᵢ = λᵢ·uᵢ, ou seja (λᵢI − C)uᵢ = 0, depois normaliza (‖u‖ = 1).</p><p><b>Armadilha:</b> n − 1 e não n.</p>' },
     { id: 'pca-use', t: 'pca', les: ['pc-pca'], label: 'PCA: variância explicada, quantas componentes, projeção',
       seen: ['Exame 1 2025/26', 'Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
-      sheet: '<p>As componentes ordenam-se por λ. Variância explicada pela k-ésima: λₖ/Σλ.</p><p>Kaiser: fica com as de λ > 1. Ou: as primeiras até chegar à percentagem pedida.</p><p>Projeção <b>y = uᵀ(x − m)</b>; reconstrução x̂ = m + Σyᵢuᵢ.</p><p><b>Armadilha:</b> subtrair a média antes de projetar; normalizar se as escalas forem diferentes.</p>' },
+      sheet: '<p>As componentes ordenam-se por λ. Variância explicada pela k-ésima: λₖ/Σλ.</p><p>Kaiser: fica com as de λ > 1. Ou: as primeiras até chegar à percentagem pedida.</p><p>Projeção como nos slides: <b>y = Uᵀx</b> (só as L primeiras: z = Wᵀx), sem subtrair a média; reconstrução x̂ = Σyᵢuᵢ.</p><p><b>Armadilha:</b> centrar (x − x̄) quando o enunciado não o pede; esquecer de normalizar os uᵢ.</p>' },
     { id: 'svm', t: 'svm', les: ['s-margin', 's-kernel'], label: 'SVM, margem e kernels',
       seen: ['Exame 2 2021/22'],
-      sheet: '<p>Margem = 2/‖w‖ (vetores de suporte com |wᵀx + b| = 1). Distância de x ao hiperplano: (wᵀx + b)/‖w‖.</p><p>Polinomial (xᵀy + c)ᵈ · gaussiano (RBF) exp(−‖x − y‖²/(2σ²)).</p><p>Separável com RBF? Sim, a não ser que haja dois pontos iguais com classes diferentes.</p>' },
+      sheet: '<p>Margem ρ = 2/‖w‖ (vetores de suporte x⁽ˢ⁾ com wᵀx⁽ˢ⁾ + b = ±1). Distância de x ao hiperplano: r = (wᵀx + b)/‖w‖.</p><p>w = Σ αᵢtᵢxᵢ; classificar: o = sgn(Σ αᵢtᵢ k(x, xᵢ) + b).</p><p>Polinomial k(x, xᵢ) = (xᵀxᵢ + 1)ᵖ · gaussiano (RBF) exp(−‖x − xᵢ‖²/(2σ²)).</p><p>Separável com RBF? Sim, a não ser que haja dois pontos iguais com classes diferentes.</p>' },
     { id: 'dl', t: 'deep', les: ['dl-why'], label: 'Gradiente que desaparece e redes profundas',
       seen: ['Exame 2 2021/22'],
       sheet: '<p>Cada camada multiplica δ por f′. Sigmoide: σ′ ≤ 0,25; com |net| grande satura e f′ ≈ 0.</p><p>Para responder: vê o limite de δ quando net → ±∞.</p><p>Remédios: ReLU, ligações residuais, batch normalization, boa inicialização.</p>' },
@@ -11066,7 +11066,8 @@ STUDY.lessons('ml', [
   <ol><li>Calcula H(Y) no nó.</li><li>Para cada atributo, parte os exemplos pelos valores e calcula a entropia de cada ramo.</li>
   <li>Faz a média ponderada → H(Y | A).</li><li>IG = H(Y) − H(Y | A). Escolhe o <b>maior</b> (equivale a escolher o menor H(Y | A)).</li></ol>
   <!--card--><p>Exemplo: 8 exemplos [4 sim, 4 não], H = 1. O atributo A parte em a₁ = [3 sim, 0 não] e a₂ = [1 sim, 4 não]. H(a₁) = 0; H(a₂) = H(1/5, 4/5) = 0,722. H(Y | A) = 3/8·0 + 5/8·0,722 = 0,451. <b>IG = 1 − 0,451 = 0,549</b>.</p>
-  <p>Atenção: o ganho favorece atributos com muitos valores (um ID único dá ramos todos puros). O C4.5 corrige com o <i>gain ratio</i>.</p>`,
+  <p>Atenção: o ganho favorece atributos com muitos valores (um ID único dá ramos todos puros). O C4.5 corrige com o <i>gain ratio</i>.</p>
+  <p><b>Nos slides</b> (aula 2) as mesmas contas têm outros nomes: a entropia do nó é I(C) = −Σ p(m<sub>i</sub>) log₂ p(m<sub>i</sub>), a média ponderada dos ramos é E(P) = Σ<sub>i</sub> (|C<sub>i</sub>| / |C|) · I(C<sub>i</sub>) e o ganho é <b>gain(P) = I(C) − E(P)</b>. Os exames escrevem H e IG.</p>`,
   key: 'IG = H(antes) − Σ (|Sᵥ|/|S|)·H(Sᵥ). Maior ganho na raiz. Ramos puros contam 0.' },
 { id: 'dt-more', t: 'dt', title: 'Atributos contínuos, CART, overfitting e bagging',
   html: `<p><b>Atributos contínuos</b>: ou se discretizam antes, ou a árvore escolhe um <b>limiar</b> binário (x ≤ θ vs x &gt; θ). Testam-se os pontos de corte candidatos (entre valores consecutivos ordenados) e fica o de maior ganho.</p>
@@ -11158,10 +11159,10 @@ STUDY.lessons('ml', [
 /* ---------------- kNN ---------------- */
 { id: 'k-dist', t: 'knn', title: 'Normas e distâncias',
   html: `<p>“Parecido” quer dizer “perto”, mas perto segundo que régua? Para x = (2, 8) e y = (6, 3):</p>
-  <ul><li><b>Euclidiana</b> (l₂): √((2−6)² + (8−3)²) = √41 ≈ 6,40.</li>
-  <li><b>Manhattan</b> (l₁, taxicab): |2−6| + |8−3| = <b>9</b>.</li>
-  <li><b>Máximo</b> (l<sub>∞</sub>, Chebyshev): max(|x<sub>i</sub> − y<sub>i</sub>|) = 5.</li>
-  <li>Minkowski l<sub>p</sub>: (Σ |x<sub>i</sub> − y<sub>i</sub>|<sup>p</sup>)<sup>1/p</sup>; p = 1 e p = 2 são os casos acima.</li>
+  <ul><li><b>Euclidiana</b> (l₂): d₂(x, y) = ‖x − y‖₂ = √((2−6)² + (8−3)²) = √41 ≈ 6,40.</li>
+  <li><b>Manhattan</b> (l₁, taxicab): d₁(x, y) = ‖x − y‖₁ = |2−6| + |8−3| = <b>9</b>.</li>
+  <li><b>Máximo</b> (l<sub>∞</sub>, Chebyshev): ‖x − y‖<sub>∞</sub> = max(|x<sub>i</sub> − y<sub>i</sub>|) = 5.</li>
+  <li>Minkowski: d<sub>p</sub>(x, y) = ‖x − y‖<sub>p</sub> = (Σ |x<sub>i</sub> − y<sub>i</sub>|<sup>p</sup>)<sup>1/p</sup>; p = 1 e p = 2 são os casos acima.</li>
   <li><b>Hamming</b> (binários/categóricos): número de posições diferentes. 1011101 vs 1001001 → 2.</li>
   <li><b>Semelhança do cosseno</b>: cos θ = x·y / (‖x‖‖y‖) = (12 + 24)/(√68·√45) ≈ 0,65. Não é uma distância (é maior quando são parecidos); ignora o comprimento dos vetores.</li></ul>
   <p>Só l₂ vem de um produto interno: há ângulos e ortogonalidade (espaço de Hilbert). Com vetores normalizados ao comprimento 1, a distância euclidiana e o cosseno ordenam os vizinhos da mesma maneira.</p>`,
@@ -11186,7 +11187,7 @@ STUDY.lessons('ml', [
   html: `<p>Traçar a reta que passa “o mais perto possível” de uma nuvem de pontos. O modelo é y(x, w) = w₀ + w₁x₁ + … + w<sub>D</sub>x<sub>D</sub> = wᵀx, com x₀ = 1 para o bias w₀.</p>
   <p>“O mais perto possível” = minimizar a <b>soma dos quadrados dos erros</b>: E(w) = ½ Σ<sub>k</sub> (t<sub>k</sub> − wᵀx<sub>k</sub>)² (o MSE é a mesma coisa a dividir por N).</p>
   <!--card--><p>Junta os exemplos numa <b>matriz de design</b> X (uma linha por exemplo, a primeira coluna toda a 1) e os alvos num vetor t. Igualando o gradiente a zero, obtém-se a solução fechada:</p>
-  <p style="text-align:center"><b>w = (XᵀX)⁻¹ Xᵀ t</b> &nbsp; = X⁺ t (pseudo-inversa de Moore-Penrose)</p>
+  <p style="text-align:center"><b>w = (XᵀX)⁻¹ Xᵀ t</b> &nbsp; = X<sup>†</sup> t (X<sup>†</sup>: pseudo-inversa de Moore-Penrose)</p>
   <p>Se XᵀX não tem inversa (atributos que são combinações lineares de outros, ou menos exemplos do que parâmetros), usa-se a pseudo-inversa ou regularização.</p>
   <!--card--><p>Exemplo: pontos (1, 1), (2, 3), (3, 4). X = [[1,1],[1,2],[1,3]]; XᵀX = [[3, 6],[6, 14]], Xᵀt = (8, 19). det = 42 − 36 = 6. w = (1/6)·[[14, −6],[−6, 3]]·(8, 19) = (−2/6, 9/6) → <b>y = −0,333 + 1,5x</b>.</p>
   <p>Medidas de erro no treino: MAE = (1/N) Σ |t − y|; MSE = (1/N) Σ (t − y)²; RMSE = √MSE.</p>`,
@@ -11202,11 +11203,11 @@ STUDY.lessons('ml', [
   key: 'Linha da matriz de design = [1, φ(x), φ(x)², …]. Linear nos pesos → a mesma fórmula fechada.' },
 { id: 'lr-reg', t: 'linreg', title: 'Regularização: ridge, lasso e a visão Bayesiana',
   html: `<p>Pesos enormes são o sintoma do overfitting. A regularização castiga-os, juntando um termo ao erro:</p>
-  <ul><li><b>Ridge</b> (l₂, Tikhonov): E(w) = ½ Σ (t − wᵀφ)² + (λ/2) ‖w‖². Solução fechada: <b>w = (λI + ΦᵀΦ)⁻¹ Φᵀ t</b>. Encolhe todos os pesos.</li>
-  <li><b>Lasso</b> (l₁): + λ Σ |w<sub>j</sub>|. Põe muitos pesos exatamente a 0 (soluções esparsas, seleção de atributos). Não tem solução fechada.</li></ul>
+  <ul><li><b>Ridge</b> (l₂, Tikhonov): E(w) = ½ Σ (t − wᵀφ)² + (λ/2) ‖w‖₂². Solução fechada: <b>w = (ΦᵀΦ + λI)⁻¹ Φᵀ t</b>. Encolhe todos os pesos.</li>
+  <li><b>Lasso</b> (l₁): E(w) = ½ Σ (t − wᵀφ)² + (λ/2) ‖w‖₁, com ‖w‖₁ = Σ |w<sub>j</sub>|. Põe muitos pesos exatamente a 0 (soluções esparsas, seleção de atributos). Não tem solução fechada.</li></ul>
   <!--card--><p>λ grande → modelo simples (underfitting); λ = 0 → mínimos quadrados normais. Escolhe-se λ por validação.</p>
-  <p><b>Visão Bayesiana</b>: se o ruído é gaussiano, maximizar a verosimilhança (ML) é o mesmo que minimizar a soma dos quadrados. Se, além disso, pusermos um <b>prior gaussiano</b> nos pesos (média 0), a solução <b>MAP</b> é exatamente a regressão ridge, com λ = (variância do ruído)/(variância do prior). O prior é a regularização.</p>`,
-  key: 'Ridge: w = (λI + ΦᵀΦ)⁻¹Φᵀt = MAP com prior gaussiano. Lasso (l₁) põe pesos a zero.' },
+  <p><b>Visão Bayesiana</b>: se o ruído é gaussiano, maximizar a verosimilhança (ML) é o mesmo que minimizar a soma dos quadrados. Se, além disso, pusermos um <b>prior gaussiano</b> nos pesos (média 0), a solução <b>MAP</b> é exatamente a regressão ridge, com λ = σ² / σ<sub>w</sub>² (variância do ruído sobre a variância do prior). O prior é a regularização. Com um prior laplaciano nos pesos, o MAP dá o lasso.</p>`,
+  key: 'Ridge: w = (ΦᵀΦ + λI)⁻¹Φᵀt = MAP com prior gaussiano. Lasso (l₁) põe pesos a zero.' },
 
 /* ---------------- PERCEPTRON ---------------- */
 { id: 'p-rosen', t: 'percep', title: 'O perceptrão de Rosenblatt',
@@ -11220,13 +11221,13 @@ STUDY.lessons('ml', [
   key: 'Rosenblatt: w ← w + η(t − o)x, só muda quando erra. Só separa o que é linearmente separável.' },
 { id: 'p-gd', t: 'percep', title: 'Descida do gradiente e a regra delta',
   html: `<p>Num nevoeiro na montanha, para descer dás um passo na direção em que o chão desce mais. É a <b>descida do gradiente</b>:</p>
-  <p style="text-align:center"><b>w ← w − η ∂E/∂w</b></p>
-  <p>Com uma unidade <b>linear</b> (o = net = wᵀx) e E = ½ Σ (t<sub>k</sub> − o<sub>k</sub>)²: ∂E/∂w<sub>j</sub> = −Σ (t<sub>k</sub> − o<sub>k</sub>) x<sub>kj</sub>. Regra delta / LMS / Widrow-Hoff (ADALINE):</p>
-  <p style="text-align:center"><b>Δw<sub>j</sub> = η Σ<sub>k</sub> (t<sub>k</sub> − o<sub>k</sub>) x<sub>kj</sub></b></p>
+  <p style="text-align:center"><b>w<sup>new</sup> = w<sup>old</sup> + Δw</b>, &nbsp; com &nbsp; <b>Δw = −η ∇E(w)</b></p>
+  <p>Com uma unidade <b>linear</b> (o<sub>k</sub> = net<sub>k</sub> = Σ<sub>j</sub> w<sub>j</sub> x<sub>k,j</sub>) e E(w) = ½ Σ<sub>k</sub> (t<sub>k</sub> − o<sub>k</sub>)²: ∂E/∂w<sub>j</sub> = −Σ (t<sub>k</sub> − o<sub>k</sub>) x<sub>k,j</sub>, onde x<sub>k,j</sub> é o atributo j do exemplo k. Regra delta / LMS / Widrow-Hoff (ADALINE):</p>
+  <p style="text-align:center"><b>Δw<sub>j</sub> = η Σ<sub>k</sub> (t<sub>k</sub> − o<sub>k</sub>) x<sub>k,j</sub></b></p>
   <ul><li><b>Batch</b>: soma os gradientes de todos os exemplos e só depois atualiza.</li>
   <li><b>Estocástico</b> (SGD): atualiza depois de cada exemplo. Mais barato por passo e com ruído que ajuda a sair de mínimos locais.</li>
   <li>η demasiado grande → oscila ou diverge; demasiado pequeno → muito lento.</li></ul>
-  <!--card--><p><b>Receita para uma ativação qualquer</b> o = f(net): pela regra da cadeia, ∂E/∂w<sub>j</sub> = −Σ (t − o) · f'(net) · x<sub>j</sub>. Logo Δw<sub>j</sub> = η Σ (t − o) f'(net) x<sub>j</sub>.</p>
+  <!--card--><p><b>Receita para uma ativação qualquer</b> o = f(net) (nos slides, φ(net)): pela regra da cadeia, ∂E/∂w<sub>j</sub> = −Σ (t − o) · f'(net) · x<sub>j</sub>. Logo Δw<sub>j</sub> = η Σ (t − o) f'(net) x<sub>j</sub>.</p>
   <p>Exemplo de exame: o = exp((wᵀx)² + 1). f'(net) = exp(net² + 1)·2·net → Δw<sub>j</sub> = η Σ (t − o) · exp((wᵀx)² + 1) · 2(wᵀx) · x<sub>j</sub>. Com sigmoide: f' = σ(1 − σ).</p>`,
   key: 'Δw = −η ∂E/∂w. Para o = f(net) e erro quadrático: Δwⱼ = η Σ (t − o) f′(net) xⱼ.' },
 
@@ -11234,7 +11235,8 @@ STUDY.lessons('ml', [
 { id: 'lg-sig', t: 'logreg', title: 'Regressão logística e entropia cruzada',
   html: `<p>Apesar do nome, é um <b>classificador</b>: um neurónio com ativação sigmoide σ(net) = 1/(1 + e<sup>−net</sup>), cuja saída é interpretada como p(C₁ | x). Decide-se pela classe 1 se σ(net) ≥ 0,5, ou seja se net ≥ 0: a fronteira continua a ser um hiperplano.</p>
   <p>Em vez do erro quadrático usa-se a <b>entropia cruzada</b> (cross-entropy), que vem da verosimilhança de Bernoulli:</p>
-  <p style="text-align:center">E(w) = −Σ<sub>k</sub> [t<sub>k</sub> ln o<sub>k</sub> + (1 − t<sub>k</sub>) ln(1 − o<sub>k</sub>)]</p>
+  <p style="text-align:center">E(w) = −log p(t | w) = −Σ<sub>k</sub> [t<sub>k</sub> log o<sub>k</sub> + (1 − t<sub>k</sub>) log(1 − o<sub>k</sub>)]</p>
+  <p>Aqui log é o logaritmo natural (ln), com o<sub>k</sub> = p(C₁ | x<sub>k</sub>) = σ(net<sub>k</sub>).</p>
   <!--card--><p>O gradiente fica limpíssimo (o σ' cancela-se): ∂E/∂w = −Σ (t<sub>k</sub> − o<sub>k</sub>) x<sub>k</sub>. A atualização (batch):</p>
   <p style="text-align:center"><b>w ← w + η Σ<sub>k</sub> (t<sub>k</sub> − σ(wᵀx<sub>k</sub>)) x<sub>k</sub></b></p>
   <p>Exemplo (Exame 1 2024/25): w = (1, 1, 1), η = 1, x₁ = (0, 0) t = 1; x₂ = (−1, −1) t = 0; x₃ = (1, 1) t = 0. Com o 1 do bias: net = 1, −1, 3 → σ = 0,731; 0,269; 0,953. w ← (1, 1, 1) + 0,269·(1, 0, 0) − 0,269·(1, −1, −1) − 0,953·(1, 1, 1) = <b>(0,047; 0,316; 0,316)</b>.</p>
@@ -11245,15 +11247,16 @@ STUDY.lessons('ml', [
   <p style="text-align:center"><b>o<sub>j</sub> = e<sup>net<sub>j</sub></sup> / Σ<sub>i</sub> e<sup>net<sub>i</sub></sup></b></p>
   <ul><li>Somar a mesma constante a todos os net não muda o resultado: na prática subtrai-se o máximo para evitar overflow (truque de estabilidade numérica).</li>
   <li>Alvo em <b>one-hot</b>: t = (0, 1, 0) para a classe 2.</li>
-  <li>Entropia cruzada: E = −Σ<sub>j</sub> t<sub>j</sub> ln o<sub>j</sub> = −ln o<sub>classe certa</sub>.</li></ul>
-  <!--card--><p>O gradiente em relação aos net é simplesmente <b>∂E/∂net<sub>j</sub> = o<sub>j</sub> − t<sub>j</sub></b> (o delta Kronecker da derivada da softmax cancela-se com o log). É o mesmo resultado da sigmoide com entropia cruzada.</p>
+  <li>Entropia cruzada: E = −Σ<sub>j</sub> t<sub>j</sub> log o<sub>j</sub> = −log o<sub>classe certa</sub> (log natural).</li>
+  <li>Nos slides: a softmax escreve-se σ(net)<sub>s</sub> = exp(net<sub>s</sub>) / Σ<sub>t</sub> exp(net<sub>t</sub>), o alvo do exemplo k na classe t é <b>y<sub>kt</sub></b> (t já é índice de classe) e E(w) = −Σ<sub>k</sub> Σ<sub>t</sub> y<sub>kt</sub> log o<sub>kt</sub>.</li></ul>
+  <!--card--><p>O gradiente em relação aos net é simplesmente <b>∂E/∂net<sub>j</sub> = o<sub>j</sub> − t<sub>j</sub></b> (a derivada da softmax é ∂o<sub>s</sub>/∂net<sub>t</sub> = o<sub>s</sub>(I<sub>st</sub> − o<sub>t</sub>), com o delta de Kronecker I<sub>st</sub> = 1 se s = t e 0 senão, e cancela-se com o log). É o mesmo resultado da sigmoide com entropia cruzada.</p>
   <p>Exemplo: net = (0, 0, 0) → o = (1/3, 1/3, 1/3); com t = (1, 0, 0): δ = o − t = (−2/3, 1/3, 1/3); E = −ln(1/3) = 1,099.</p>
   <p>Com K = 2, softmax é equivalente a uma sigmoide sobre a diferença dos net.</p>`,
   key: 'Softmax + entropia cruzada: δ = o − t. Loss = −ln(prob. da classe certa).' },
 
 /* ---------------- MLP ---------------- */
 { id: 'm-fwd', t: 'mlp', title: 'Redes multicamada: forward propagation',
-  html: `<p>Um perceptrão sozinho não faz o XOR. Empilhando camadas com ativações não lineares, a rede aprende fronteiras quaisquer. Notação das aulas (camada l, com x[0] = entrada):</p>
+  html: `<p>Um perceptrão sozinho não faz o XOR. Empilhando camadas com ativações não lineares, a rede aprende fronteiras quaisquer. Notação dos exames e das resoluções (camada l, com x[0] = entrada):</p>
   <p style="text-align:center"><b>z[l] = W[l] x[l−1] + b[l]</b>, &nbsp; <b>x[l] = f(z[l])</b></p>
   <ul><li>W[l] tem uma <b>linha por neurónio</b> da camada l e uma coluna por entrada.</li>
   <li>Ativações: sigmoide, tanh (em [−1, 1], tanh' = 1 − tanh²), ReLU = max(0, x), softmax na saída para classificação.</li>
@@ -11269,7 +11272,11 @@ STUDY.lessons('ml', [
   <li><b>Atualização</b>: W[l] ← W[l] − η δ[l] x[l−1]ᵀ; b[l] ← b[l] − η δ[l].</li></ol>
   <!--card--><p>Derivadas: σ' = σ(1 − σ); tanh' = 1 − tanh²; ReLU' = 1 se z &gt; 0, senão 0.</p>
   <p>Exemplo (rede da lição anterior, t = 0, erro quadrático, η = 1): δ[2] = (0,731 − 0)·0,731·0,269 = <b>0,144</b>. ∂E/∂W[2] = 0,144·(0,731; 0,269) = (0,105; 0,039) → W[2] = (0,895; 0,961), b[2] = −0,144. δ[1] = W[2]ᵀ·0,144 ⊙ σ'(z[1]) = 0,144·(0,197; 0,197) = (0,028; 0,028).</p>
-  <p>Atenção: os deltas das camadas escondidas usam os pesos <b>antigos</b> de W[l+1] (calcula todos os δ antes de atualizar).</p>`,
+  <p>Atenção: os deltas das camadas escondidas usam os pesos <b>antigos</b> de W[l+1] (calcula todos os δ antes de atualizar).</p>
+  <!--card--><p><b>Notação dos slides</b> (aula 9), para uma camada escondida: entrada x<sub>k,j</sub>, unidades escondidas V<sub>k,i</sub> = φ(Σ<sub>j</sub> W<sub>ij</sub> x<sub>k,j</sub>), saídas o<sub>kt</sub> = φ(Σ<sub>i</sub> w<sub>ti</sub> V<sub>k,i</sub>), alvos y<sub>kt</sub>. O delta tem o <b>sinal trocado</b> e soma-se na atualização:</p>
+  <ul><li>Saída (softmax + entropia cruzada): δ<sub>kt</sub> = y<sub>kt</sub> − o<sub>kt</sub>, e Δw<sub>ti</sub> = η Σ<sub>k</sub> δ<sub>kt</sub> V<sub>k,i</sub>.</li>
+  <li>Escondida: δ<sub>ki</sub> = φ'(net<sub>k,i</sub>) Σ<sub>t</sub> δ<sub>kt</sub> w<sub>t,i</sub>, e ΔW<sub>ij</sub> = η Σ<sub>k</sub> δ<sub>ki</sub> x<sub>k,j</sub>.</li></ul>
+  <p>É a mesma conta da notação dos exames: δ<sub>slides</sub> = −δ[l] e W ← W + ηδ<sub>slides</sub>xᵀ dá o mesmo que W ← W − ηδ[l]xᵀ. Usa a notação do enunciado e mantém o sinal coerente até ao fim.</p>`,
   key: 'δ[L] = x − t (softmax/sigmoide + CE). δ[l] = W[l+1]ᵀδ[l+1] ⊙ f′(z[l]). ∂E/∂W[l] = δ[l]x[l−1]ᵀ.' },
 { id: 'm-univ', t: 'mlp', title: 'MLPs como máquinas universais',
   html: `<p><b>Booleanas</b>: qualquer função booleana escreve-se em <b>forma normal disjuntiva</b> (DNF): um OU de ANDs. Cada AND (um mintermo) é um perceptrão com limiar adequado; o OU final é outro perceptrão. Logo um MLP com <b>uma única camada escondida</b> representa qualquer função booleana (mas pode precisar de um número exponencial de neurónios, por exemplo a paridade).</p>
@@ -11288,27 +11295,28 @@ STUDY.lessons('ml', [
   html: `<p>Sem professor (não supervisionado), queremos agrupar pontos parecidos. O k-means representa cada grupo por um <b>centróide</b> e alterna dois passos até nada mudar:</p>
   <ol><li><b>Atribuição</b>: cada ponto vai para o centróide mais próximo.</li>
   <li><b>Atualização</b>: cada centróide passa a ser a média dos pontos do seu grupo.</li></ol>
-  <!--card--><p>Minimiza a soma das distâncias quadráticas aos centróides, J = Σ<sub>k</sub> Σ<sub>x∈C<sub>k</sub></sub> ‖x − μ<sub>k</sub>‖². Cada passo nunca aumenta J, por isso <b>converge</b>, mas para um ótimo <b>local</b>: depende da inicialização (por isso corre-se várias vezes ou usa-se k-means++).</p>
+  <!--card--><p>Notação dos slides: centróides c₁, …, c<sub>K</sub> e clusters C₁, …, C<sub>K</sub>; cada centróide é c<sub>k</sub> = (1/|C<sub>k</sub>|) Σ<sub>x∈C<sub>k</sub></sub> x. O k-means minimiza a soma das distâncias quadráticas aos centróides, J = Σ<sub>k</sub> Σ<sub>x∈C<sub>k</sub></sub> ‖x − c<sub>k</sub>‖². Cada passo nunca aumenta J, por isso <b>converge</b>, mas para um ótimo <b>local</b>: depende da inicialização (por isso corre-se várias vezes ou usa-se k-means++).</p>
   <ul><li>k é escolhido por nós (método do cotovelo, índices de validação).</li>
   <li>Com distância Manhattan, o centro que minimiza a soma das distâncias é a <b>mediana</b> (k-medians), mas nos exames costuma pedir-se a média.</li>
-  <li><b>Sequencial</b> (online): para cada ponto novo, μ<sub>k</sub> ← μ<sub>k</sub> + η(x − μ<sub>k</sub>) só no centróide vencedor.</li></ul>
+  <li><b>Sequencial</b> (adaptativo): para cada ponto x<sub>η</sub>, só o centróide vencedor muda: c<sub>k</sub><sup>new</sup> = c<sub>k</sub><sup>old</sup> + (1/(|C<sub>k</sub><sup>old</sup>| + 1))·(x<sub>η</sub> − c<sub>k</sub><sup>old</sup>).</li></ul>
   <!--card--><p>Exemplo (Exame 1 2024/25): x₁ = (0, 1), x₂ = (1, 0), x₃ = (−1, −1), x₄ = (−2, −2); c₁ = (1, 1), c₂ = (−2, −2). x₁, x₂ ficam a 1 de c₁ (e √13 de c₂) → C₁. x₃ está a √2 de c₂ (2√2 de c₁), x₄ a 0 de c₂ → C₂. Novos centros: c₁ = (0,5; 0,5), c₂ = (−1,5; −1,5).</p>`,
   key: 'k-means: atribui ao centróide mais próximo, centróide = média do grupo, repete. Converge para um ótimo local.' },
 { id: 'c-em', t: 'clust', title: 'Misturas de gaussianas e o algoritmo EM',
   html: `<p>O k-means dá atribuições “duras”. Numa <b>mistura de gaussianas</b>, cada cluster k é uma gaussiana N(μ<sub>k</sub>, Σ<sub>k</sub>) com um peso π<sub>k</sub> (prior, Σπ<sub>k</sub> = 1), e cada ponto pertence a todos com alguma probabilidade.</p>
-  <p><b>Passo E</b> (expectation): a responsabilidade de k pelo ponto n, pela regra de Bayes:</p>
-  <p style="text-align:center"><b>γ<sub>nk</sub> = p(k | x<sub>n</sub>) = π<sub>k</sub> N(x<sub>n</sub> | μ<sub>k</sub>, Σ<sub>k</sub>) / Σ<sub>j</sub> π<sub>j</sub> N(x<sub>n</sub> | μ<sub>j</sub>, Σ<sub>j</sub>)</b></p>
-  <p><b>Passo M</b> (maximization), com N<sub>k</sub> = Σ<sub>n</sub> γ<sub>nk</sub>:</p>
-  <ul><li>μ<sub>k</sub> = (1/N<sub>k</sub>) Σ<sub>n</sub> γ<sub>nk</sub> x<sub>n</sub> (média pesada)</li>
-  <li>Σ<sub>k</sub> = (1/N<sub>k</sub>) Σ<sub>n</sub> γ<sub>nk</sub> (x<sub>n</sub> − μ<sub>k</sub>)(x<sub>n</sub> − μ<sub>k</sub>)ᵀ, já com a <b>nova</b> média</li>
-  <li><b>π<sub>k</sub> = N<sub>k</sub> / N</b></li></ul>
+  <p><b>Passo E</b> (expectation): a responsabilidade do cluster k pelo ponto n, pela regra de Bayes. Nos slides, c<sub>k</sub> = 1 quer dizer “pertence ao cluster k” e π<sub>k</sub> = p(c<sub>k</sub> = 1):</p>
+  <p style="text-align:center"><b>γ(c<sub>nk</sub>) = p(c<sub>k</sub> = 1 | x<sub>n</sub>) = π<sub>k</sub> N(x<sub>n</sub> | μ<sub>k</sub>, Σ<sub>k</sub>) / Σ<sub>j</sub> π<sub>j</sub> N(x<sub>n</sub> | μ<sub>j</sub>, Σ<sub>j</sub>)</b></p>
+  <p>Na prática: calcula p(c<sub>k</sub> = 1, x<sub>n</sub>) = π<sub>k</sub> N(x<sub>n</sub> | μ<sub>k</sub>, Σ<sub>k</sub>) para cada k, soma-os para obter p(x<sub>n</sub>) e divide.</p>
+  <p><b>Passo M</b> (maximization), com N<sub>k</sub> = Σ<sub>n</sub> γ(c<sub>nk</sub>):</p>
+  <ul><li>μ<sub>k</sub> = (1/N<sub>k</sub>) Σ<sub>n</sub> γ(c<sub>nk</sub>) x<sub>n</sub> (média pesada)</li>
+  <li>Σ<sub>k</sub> = (1/N<sub>k</sub>) Σ<sub>n</sub> γ(c<sub>nk</sub>) (x<sub>n</sub> − μ<sub>k</sub>)(x<sub>n</sub> − μ<sub>k</sub>)ᵀ, já com a <b>nova</b> média</li>
+  <li><b>π<sub>k</sub> = p(c<sub>k</sub> = 1) = N<sub>k</sub> / N</b></li></ul>
   <!--card--><p>Repete-se até a verosimilhança estabilizar. É o k-means “suave”: com covariâncias iguais e a tender para 0, o EM vira k-means. Problema: se uma gaussiana colapsa num único ponto, a variância vai a 0 e a verosimilhança explode (singularidade).</p>
-  <p>Exemplo: se p(x₁|1) = 0,03 e p(x₁|2) = 0,01 com π = (0,5; 0,5), γ₁₁ = 0,015/(0,015 + 0,005) = 0,75. Somando as responsabilidades de cada cluster obtêm-se os N<sub>k</sub> e os novos π<sub>k</sub> = N<sub>k</sub>/N.</p>`,
-  key: 'E: γₙₖ ∝ πₖ N(xₙ|μₖ,Σₖ). M: μₖ média pesada, Σₖ covariância pesada, πₖ = Nₖ/N.' },
+  <p>Exemplo: se p(x₁ | c₁ = 1) = 0,03 e p(x₁ | c₂ = 1) = 0,01 com π = (0,5; 0,5), γ(c₁₁) = 0,015/(0,015 + 0,005) = 0,75. Somando as responsabilidades de cada cluster obtêm-se os N<sub>k</sub> e os novos π<sub>k</sub> = N<sub>k</sub>/N.</p>`,
+  key: 'E: γ(cₙₖ) = p(cₖ = 1|xₙ) ∝ πₖ N(xₙ|μₖ,Σₖ). M: μₖ média pesada, Σₖ covariância pesada, πₖ = Nₖ/N.' },
 { id: 'c-valid', t: 'clust', title: 'Validar clusters: pureza, silhueta, Dunn, Davies-Bouldin',
   html: `<p><b>Critérios externos</b> (há etiquetas verdadeiras): <b>pureza</b> = (1/N) Σ<sub>k</sub> max<sub>c</sub> |C<sub>k</sub> ∩ classe c|. Cada cluster conta os pontos da sua classe maioritária. Exemplo: clusters {A, C} e {B, B} → (1 + 2)/4 = 0,75.</p>
   <p><b>Critérios internos</b> (só os dados):</p>
-  <ul><li><b>Silhueta</b> de um ponto x: a(x) = distância média aos pontos do <b>seu</b> cluster; b(x) = distância média aos pontos do cluster <b>vizinho mais próximo</b>. <b>s(x) = 1 − a/b</b> se a &lt; b (em geral s = (b − a)/max(a, b)). s ∈ [−1, 1]: perto de 1 = bem agrupado; negativo = provavelmente no cluster errado. A silhueta de um cluster é a média dos seus pontos.</li>
+  <ul><li><b>Silhueta</b> de um ponto i: a(i) = distância média aos outros pontos do <b>seu</b> cluster (divide por |C<sub>i</sub>| − 1); b(i) = a menor, entre os outros clusters, da distância média aos pontos desse cluster. <b>s(i) = 1 − a(i)/b(i)</b> se a(i) &lt; b(i), 0 se forem iguais, b(i)/a(i) − 1 se a(i) &gt; b(i) (o mesmo que (b − a)/max(a, b)). s ∈ [−1, 1]: perto de 1 = bem agrupado; negativo = provavelmente no cluster errado. A silhueta de um cluster é a média dos seus pontos.</li>
   <li><b>Dunn</b>: menor distância entre clusters ÷ maior diâmetro de um cluster. Maior é melhor.</li>
   <li><b>Davies-Bouldin</b>: média, por cluster, do pior rácio (dispersão<sub>i</sub> + dispersão<sub>j</sub>)/distância(centros). Menor é melhor.</li></ul>
   <!--card--><p>Exemplo: a = 4, b = 7 → s = 1 − 4/7 = 3/7 ≈ 0,43.</p>
@@ -11317,24 +11325,25 @@ STUDY.lessons('ml', [
 
 /* ---------------- PCA ---------------- */
 { id: 'pc-cov', t: 'pca', title: 'Matriz de covariância e valores próprios (2 × 2)',
-  html: `<p><b>Matriz de covariância</b> da amostra: c<sub>ij</sub> = (1/(n−1)) Σ<sub>k</sub> (x<sub>i</sub><sup>(k)</sup> − m<sub>i</sub>)(x<sub>j</sub><sup>(k)</sup> − m<sub>j</sub>). É simétrica; na diagonal estão as variâncias.</p>
+  html: `<p><b>Matriz de covariância</b> da amostra (nos slides, C ou Σ): c<sub>ij</sub> = Σ<sub>k=1</sub><sup>n</sup> (x<sub>k,i</sub> − x̄<sub>i</sub>)(x<sub>k,j</sub> − x̄<sub>j</sub>) / (n − 1), onde x<sub>k,i</sub> é o atributo i do exemplo k e x̄<sub>i</sub> a média do atributo i. É simétrica; na diagonal estão as variâncias.</p>
   <p><b>Receita</b> para uma matriz 2 × 2 C = [[a, b],[b, d]]:</p>
   <ol><li>Equação característica: det(C − λI) = 0 → λ² − (a + d)λ + (ad − b²) = 0.</li>
   <li>λ = [(a + d) ± √((a + d)² − 4(ad − b²))]/2. Soma dos λ = traço; produto = determinante.</li>
-  <li>Vetor próprio de cada λ: resolve (C − λI)u = 0; um vetor que serve é u = (b, λ − a).</li>
+  <li>Vetor próprio de cada λ<sub>i</sub>: resolve (λ<sub>i</sub>I − C)u<sub>i</sub> = 0, ou seja C u<sub>i</sub> = λ<sub>i</sub> u<sub>i</sub>; um vetor que serve é u = (b, λ − a). Tanto u<sub>i</sub> como −u<sub>i</sub> servem.</li>
   <li><b>Normaliza</b>: divide pelo comprimento, para ‖u‖ = 1.</li></ol>
-  <!--card--><p>Exemplo (Exame 1 2025/26): X = {(0, 0), (4, 0), (1, 1)}. m = (5/3, 1/3). c₁₁ = [(−5/3)² + (7/3)² + (−2/3)²]/2 = 4,333; c₂₂ = [(1/9)·(1 + 1 + 4)]/2 = 0,333; c₁₂ = [(−5/3)(−1/3) + (7/3)(−1/3) + (−2/3)(2/3)]/2 = −0,333.</p>
+  <!--card--><p>Exemplo (Exame 1 2025/26): X = {(0, 0), (4, 0), (1, 1)}. x̄ = (5/3, 1/3). c₁₁ = [(−5/3)² + (7/3)² + (−2/3)²]/2 = 4,333; c₂₂ = [(1/9)·(1 + 1 + 4)]/2 = 0,333; c₁₂ = [(−5/3)(−1/3) + (7/3)(−1/3) + (−2/3)(2/3)]/2 = −0,333.</p>
   <p>Traço = 4,667, det = 1,444 − 0,111 = 1,333 → λ₁ = <b>4,361</b>, λ₂ = <b>0,306</b>. u₁ ≈ (0,997; −0,083).</p>`,
-  key: 'λ² − traço·λ + det = 0. Vetor próprio (b, λ − a), normalizado. Covariância amostral divide por n−1.' },
+  key: 'λ² − traço·λ + det = 0. Vetor próprio (b, λ − a), normalizado (C uᵢ = λᵢ uᵢ). Covariância amostral divide por n−1.' },
 { id: 'pc-pca', t: 'pca', title: 'PCA: projeção, reconstrução e quantas componentes',
   html: `<p>A PCA (transformada de Karhunen-Loève) roda os eixos para que fiquem alinhados com as direções de maior variância. Os novos eixos são os <b>vetores próprios</b> da matriz de covariância, ordenados pelos <b>valores próprios</b> (= variância ao longo de cada eixo). Na nova base a covariância é diagonal: as novas variáveis não estão correlacionadas.</p>
-  <ul><li><b>Projeção</b> na componente k: y<sub>k</sub> = u<sub>k</sub>ᵀ(x − m) (com os dados centrados; as aulas por vezes projetam x diretamente, y = Uᵀx).</li>
-  <li><b>Reconstrução</b> com as primeiras L componentes: x̂ = m + Σ<sub>k≤L</sub> y<sub>k</sub> u<sub>k</sub>. O erro é a variância das componentes deitadas fora.</li>
+  <ul><li><b>Projeção</b> (como nos slides e nas resoluções oficiais): <b>y = Uᵀx</b>, com os vetores próprios normalizados nas colunas de U. Na componente k: y<sub>k</sub> = u<sub>k</sub>ᵀx. Para reduzir a L dimensões usa-se só as primeiras L colunas, W: <b>z = Wᵀx</b>. A média <b>não</b> se subtrai.</li>
+  <li><b>Reconstrução</b> com as primeiras L componentes: x̂ = W z = Σ<sub>k≤L</sub> y<sub>k</sub> u<sub>k</sub>. O erro é a parte ao longo das componentes deitadas fora.</li>
+  <li>Nos livros (e no scikit-learn) centra-se primeiro: y = u<sub>k</sub>ᵀ(x − x̄) e x̂ = x̄ + Σ y<sub>k</sub>u<sub>k</sub>. Só uses esta forma se o enunciado a pedir.</li>
   <li><b>Variância explicada</b> pelas primeiras L: Σ<sub>k≤L</sub> λ<sub>k</sub> / Σ λ.</li>
   <li><b>Critério de Kaiser</b>: fica com as componentes de λ &gt; 1 (pensado para dados normalizados) — ou com as de λ acima da média.</li></ul>
   <!--card--><p>Exemplo (Exame 1 2022/23): λ₁ = 2,6 e λ₂ = 0,32. Kaiser → só a 1.ª componente. 95% da variância? 2,6/2,92 = 89% &lt; 95% → são precisas as <b>duas</b>.</p>
-  <p>Exemplo: x = (1, 1), m = (5/3, 1/3), u₁ = (0,997; −0,083). y = 0,997·(−0,667) − 0,083·0,667 = <b>−0,720</b>. Reconstrução: m + y·u₁ = (0,95; 0,39).</p>`,
-  key: 'Componentes = vetores próprios por λ decrescente. Variância explicada = Σλ escolhidos / Σλ. Kaiser: λ > 1.' },
+  <p>Exemplo (Exame 1 2025/26): x = (1, 1), u₁ = (0,997; −0,083). y = u₁ᵀx = 0,997 − 0,083 = <b>0,914</b>. Reconstrução: y·u₁ = <b>(0,911; −0,076)</b>.</p>`,
+  key: 'Projeção y = Uᵀx (sem centrar, como nos slides); reconstrução x̂ = Σ yₖuₖ. Variância explicada = Σλ escolhidos / Σλ. Kaiser: λ > 1.' },
 { id: 'pc-ae', t: 'pca', title: 'SVD, autoencoders e tf-idf',
   html: `<p><b>SVD</b>: X = UΣVᵀ. As colunas de V (com dados centrados) são as componentes principais e os valores singulares ao quadrado/(n−1) são os valores próprios da covariância. É como se calcula a PCA na prática.</p>
   <p><b>Autoencoder</b>: rede treinada para reproduzir a entrada na saída, passando por uma camada estreita (o código). <b>Undercomplete</b>: código menor do que a entrada, obriga a comprimir. Com codificador e descodificador <b>lineares</b> e erro quadrático, aprende o mesmo subespaço que a PCA. Com ativações não lineares faz uma redução de dimensionalidade não linear.</p>
@@ -11361,22 +11370,22 @@ STUDY.lessons('ml', [
 /* ---------------- SVM ---------------- */
 { id: 's-margin', t: 'svm', title: 'SVM: a margem máxima',
   html: `<p>Entre todas as retas que separam duas classes, qual escolher? A SVM escolhe a que deixa a <b>maior margem</b>: a maior “estrada” vazia entre as classes. Intuitivamente, é a que generaliza melhor.</p>
-  <ul><li>Hiperplano: wᵀx + b = 0. A distância (com sinal) de x ao hiperplano é y(x)/‖w‖.</li>
-  <li>Escalando w para que os pontos mais próximos tenham t<sub>k</sub>(wᵀx<sub>k</sub> + b) = 1, a margem vale <b>2/‖w‖</b>.</li>
-  <li>Problema: minimizar ½‖w‖² sujeito a t<sub>k</sub>(wᵀx<sub>k</sub> + b) ≥ 1 para todos os k (otimização quadrática convexa: mínimo global).</li>
-  <li><b>Vetores de suporte</b>: os pontos que ficam em cima da margem. Só eles definem o hiperplano; os outros podiam ser removidos sem mudar nada.</li></ul>
-  <!--card--><p><b>Problema dual</b> (multiplicadores de Lagrange α<sub>k</sub> ≥ 0): w = Σ α<sub>k</sub> t<sub>k</sub> x<sub>k</sub>, e α<sub>k</sub> &gt; 0 só nos vetores de suporte. Os dados só aparecem em produtos internos x<sub>i</sub>ᵀx<sub>j</sub>, e isso abre a porta ao truque do kernel.</p>
-  <p><b>Soft margin</b> (dados não separáveis): variáveis de folga ξ<sub>k</sub> ≥ 0 e minimiza-se ½‖w‖² + C Σ ξ<sub>k</sub>. C grande = poucos erros no treino (margem estreita); C pequeno = margem larga, tolera erros.</p>`,
-  key: 'Margem = 2/‖w‖ → minimizar ½‖w‖². Só os vetores de suporte contam. C troca margem por erros.' },
+  <ul><li>Hiperplano: y(x) = wᵀx + b = 0 (nos slides também wᵀx + w₀). A distância (com sinal) de x ao hiperplano é r = y(x)/‖w‖.</li>
+  <li>Exemplos {x<sub>i</sub>, t<sub>i</sub>} com t<sub>i</sub> ∈ {−1, +1}. Escalando w para que os pontos mais próximos tenham t<sub>i</sub>(wᵀx<sub>i</sub> + b) = 1, a margem vale <b>ρ = 2/‖w‖</b>.</li>
+  <li>Problema: minimizar ½wᵀw sujeito a t<sub>i</sub>(wᵀx<sub>i</sub> + b) ≥ 1 para todos os i (otimização quadrática convexa: mínimo global).</li>
+  <li><b>Vetores de suporte</b> x<sup>(s)</sup>: os pontos que ficam em cima da margem, wᵀx<sup>(s)</sup> + b = ±1. Só eles definem o hiperplano; os outros podiam ser removidos sem mudar nada.</li></ul>
+  <!--card--><p><b>Problema dual</b> (multiplicadores de Lagrange α<sub>i</sub> ≥ 0): maximiza Q(α) = Σ α<sub>i</sub> − ½ Σ<sub>i</sub> Σ<sub>j</sub> α<sub>i</sub>α<sub>j</sub>t<sub>i</sub>t<sub>j</sub> x<sub>i</sub>ᵀx<sub>j</sub>. Depois w = Σ α<sub>i</sub> t<sub>i</sub> x<sub>i</sub>, com α<sub>i</sub> &gt; 0 só nos vetores de suporte, e b = 1 − wᵀx<sup>(s)</sup> para um vetor de suporte com t<sup>(s)</sup> = 1. Os dados só aparecem em produtos internos x<sub>i</sub>ᵀx<sub>j</sub>, e isso abre a porta ao truque do kernel.</p>
+  <p><b>Soft margin</b> (dados não separáveis): variáveis de folga ξ<sub>i</sub> ≥ 0, com t<sub>i</sub>(wᵀx<sub>i</sub> + b) ≥ 1 − ξ<sub>i</sub>, e minimiza-se Φ(ξ) = ½wᵀw + C Σ ξ<sub>i</sub>. C grande = poucos erros no treino (margem estreita); C pequeno = margem larga, tolera erros.</p>`,
+  key: 'Margem ρ = 2/‖w‖ → minimizar ½wᵀw. Só os vetores de suporte contam. C troca margem por erros.' },
 { id: 's-kernel', t: 'svm', title: 'O truque do kernel',
-  html: `<p>Dados que não se separam com uma reta podem separar-se num espaço de dimensão maior φ(x). Como o dual só usa produtos internos, basta saber calcular <b>K(x, y) = φ(x)ᵀφ(y)</b> sem nunca construir φ explicitamente.</p>
-  <ul><li><b>Polinomial</b>: K(x, y) = (xᵀy + 1)<sup>p</sup>. Com p = 2 em 2D corresponde a φ(x) = (1, √2x₁, √2x₂, x₁², x₂², √2x₁x₂): 6 dimensões.</li>
-  <li><b>Gaussiano / RBF</b>: K(x, y) = exp(−‖x − y‖²/(2σ²)). Corresponde a um espaço de dimensão infinita.</li>
-  <li><b>Teorema de Mercer</b>: K é um kernel válido se a matriz de Gram K(x<sub>i</sub>, x<sub>j</sub>) for sempre simétrica e semidefinida positiva.</li></ul>
-  <!--card--><p>Classificar um ponto novo: sinal de Σ α<sub>k</sub> t<sub>k</sub> K(x<sub>k</sub>, x) + b, somando só sobre os vetores de suporte.</p>
-  <p>Exemplo: x = (1, 2), y = (3, 1) com kernel polinomial de grau 2: xᵀy = 3 + 2 = 5 → K = (5 + 1)² = <b>36</b>.</p>
+  html: `<p>Dados que não se separam com uma reta podem separar-se num espaço de dimensão maior φ(x). Como o dual só usa produtos internos, basta saber calcular <b>k(x, x<sub>i</sub>) = Φ(x)ᵀΦ(x<sub>i</sub>)</b> sem nunca construir Φ explicitamente.</p>
+  <ul><li><b>Polinomial</b>: k(x, x<sub>i</sub>) = (xᵀx<sub>i</sub> + 1)<sup>p</sup>. Com p = 2 em 2D corresponde a Φ(x) = (1, x₁², √2x₁x₂, x₂², √2x₁, √2x₂): 6 dimensões.</li>
+  <li><b>Gaussiano / RBF</b>: k(x, x<sub>i</sub>) = exp(−‖x − x<sub>i</sub>‖²/(2σ²)). Corresponde a um espaço de dimensão infinita.</li>
+  <li><b>Teorema de Mercer</b>: k é um kernel válido se a matriz de Gram K, com K<sub>ij</sub> = k(x<sub>i</sub>, x<sub>j</sub>), for sempre simétrica e semidefinida positiva.</li></ul>
+  <!--card--><p>Classificar um ponto novo: <b>o = sgn(Σ<sub>i</sub> α<sub>i</sub> t<sub>i</sub> k(x, x<sub>i</sub>) + b)</b>, somando só sobre os vetores de suporte.</p>
+  <p>Exemplo: x = (1, 2), x<sub>i</sub> = (3, 1) com kernel polinomial de grau 2: xᵀx<sub>i</sub> = 3 + 2 = 5 → k = (5 + 1)² = <b>36</b>.</p>
   <p>Uma SVM com kernel gaussiano parece uma rede RBF, e com kernel sigmoide uma rede de duas camadas, mas o número de “neurónios” (vetores de suporte) é decidido pelo treino.</p>`,
-  key: 'K(x, y) = φ(x)ᵀφ(y) sem calcular φ. Polinomial (xᵀy + 1)ᵖ, gaussiano exp(−‖x−y‖²/2σ²).' },
+  key: 'k(x, xᵢ) = Φ(x)ᵀΦ(xᵢ) sem calcular Φ. Polinomial (xᵀxᵢ + 1)ᵖ, gaussiano exp(−‖x − xᵢ‖²/2σ²).' },
 
 /* ---------------- DEEP LEARNING ---------------- */
 { id: 'dl-why', t: 'deep', title: 'Redes profundas e o gradiente que desaparece',
@@ -11891,7 +11900,7 @@ STUDY.questions('ml', [
 { id: 'lr-03', t: 'linreg', l: 1, les: 'lr-ls', card: 2, ex: 'f',
   q: 'Qual é a solução fechada dos mínimos quadrados?',
   o: ['w = (XᵀX)⁻¹Xᵀt', 'w = (XXᵀ)⁻¹Xt', 'w = Xᵀ(XᵀX)t', 'w = X⁻¹tᵀ'], a: 0,
-  e: 'Igualando o gradiente a zero: XᵀXw = Xᵀt → **w = (XᵀX)⁻¹Xᵀt** = X⁺t (pseudo-inversa).' },
+  e: 'Igualando o gradiente a zero: XᵀXw = Xᵀt → **w = (XᵀX)⁻¹Xᵀt** = X†t (pseudo-inversa de Moore-Penrose).' },
 { id: 'lr-04', t: 'linreg', l: 1, les: 'lr-basis', card: 1,
   q: 'Considere h(x) = θ₀ + θ₁x + θ₂x² + θ₃x³. Que tipo de regressão é?', src: 'Exame 1 2025/26, 1.2',
   o: ['Regressão polinomial', 'Regressão logística', 'Regressão linear multivariada', 'Classificação por kNN'], a: 0,
@@ -12186,6 +12195,11 @@ STUDY.questions('ml', [
   q: 'Num backprop com softmax + entropia cruzada, saída x[2] = (0,74; 0,16; 0,10) e alvo (0, 1, 0). Qual é δ[2]?',
   o: ['(0,74; −0,84; 0,10)', '(−0,74; 0,84; −0,10)', '(0,74; 0,16; 0,10)', '(0; −0,84; 0)'], a: 0,
   e: 'δ[2] = x[2] − t = (0,74 − 0; 0,16 − 1; 0,10 − 0) = **(0,74; −0,84; 0,10)**. Com η = 1, b[2] ← b[2] − δ[2].' },
+{ id: 'mlp-19', t: 'mlp', l: 3, les: 'm-bp', card: 3, calc: true,
+  q: 'Na notação dos slides, uma saída softmax com entropia cruzada tem o = (0,7; 0,3) e alvo y = (1, 0). Qual é δ e como se atualizam os pesos w da saída?',
+  o: ['δ = (0,3; −0,3) e Δw = +η·δ·V', 'δ = (−0,3; 0,3) e Δw = +η·δ·V', 'δ = (0,3; −0,3) e Δw = −η·δ·V', 'δ = (0,7; 0,3) e Δw = +η·δ·V'], a: 0,
+  e: 'Nos slides δₖₜ = yₖₜ − oₖₜ = (1 − 0,7; 0 − 0,3) = **(0,3; −0,3)** e soma-se: Δwₜᵢ = η Σₖ δₖₜ Vₖ,ᵢ. Na notação dos exames δ[L] = x − t = (−0,3; 0,3) e subtrai-se: dá a mesma atualização.',
+  w: { 1: 'Esse é o δ[L] = x − t dos exames. Com esse delta subtrai-se, não se soma.', 2: 'Com δ = y − o a atualização soma: os dois sinais trocados levariam os pesos para o lado errado.' } },
 ]);
 
 /* --- courses/ml/questions/clust.js --- */
@@ -12306,7 +12320,7 @@ STUDY.questions('ml', [
 { id: 'pc-08', t: 'pca', l: 2, les: 'pc-cov', card: 1,
   q: 'Porque é que a matriz de covariância é sempre simétrica?',
   o: ['cov(xᵢ, xⱼ) = cov(xⱼ, xᵢ)', 'Os dados estão centrados', 'Tem sempre valores próprios iguais', 'Divide-se por n − 1'], a: 0,
-  e: 'cᵢⱼ = (1/(n−1))Σ(xᵢ − mᵢ)(xⱼ − mⱼ): trocar i e j não muda o produto. Simétrica → valores próprios reais e vetores próprios ortogonais.' },
+  e: 'cᵢⱼ = Σₖ(xₖ,ᵢ − x̄ᵢ)(xₖ,ⱼ − x̄ⱼ)/(n − 1): trocar i e j não muda o produto. Simétrica → valores próprios reais e vetores próprios ortogonais.' },
 { id: 'pc-09', t: 'pca', l: 3, les: 'pc-cov', card: 1, calc: true, ex: 'f',
   q: 'Quais são os valores próprios de C = [[2, 1], [1, 2]]?',
   o: ['3 e 1', '2 e 2', '4 e 0', '3 e −1'], a: 0,
@@ -12326,15 +12340,15 @@ STUDY.questions('ml', [
   e: 'm = (1, 2). c₁₁ = [(−1)² + 0 + 1²]/2 = **1**; a 2.ª coordenada é sempre 2, por isso c₂₂ = 0 e c₁₂ = 0.',
   w: { 1: '0,67 = 2/3 divide por n; a covariância amostral divide por n − 1 = 2.' } },
 { id: 'pc-13', t: 'pca', l: 3, les: 'pc-pca', card: 1, calc: true,
-  q: 'Média m = (1, 1), 1.ª componente u₁ = (0,6; 0,8). Qual é a projeção de x = (2, 3) em u₁ (com os dados centrados)?',
-  o: ['2,2', '3,6', '1,4', '5,0'], a: 0,
-  e: 'x − m = (1, 2). y = u₁ᵀ(x − m) = 0,6·1 + 0,8·2 = **2,2**.',
-  w: { 1: '3,6 = 0,6·2 + 0,8·3 projeta x sem subtrair a média.' } },
+  q: 'Média m = (1, 1), 1.ª componente u₁ = (0,6; 0,8). Seguindo os slides, qual é a projeção de x = (2, 3) em u₁?',
+  o: ['3,6', '2,2', '1,4', '5,0'], a: 0,
+  e: 'Nos slides y = u₁ᵀx, sem subtrair a média: 0,6·2 + 0,8·3 = **3,6**. A média não entra.',
+  w: { 1: '2,2 = u₁ᵀ(x − m) é a projeção centrada dos livros, não a dos slides.' } },
 { id: 'pc-14', t: 'pca', l: 3, les: 'pc-pca', card: 2, calc: true,
-  q: 'Média m = (1, 1), u₁ = (0,6; 0,8) e projeção y = 2,2. Qual é a reconstrução x̂ só com a 1.ª componente?',
-  o: ['(2,32; 2,76)', '(1,32; 1,76)', '(2; 3)', '(0,6; 0,8)'], a: 0,
-  e: 'x̂ = m + y·u₁ = (1, 1) + 2,2·(0,6; 0,8) = (1 + 1,32; 1 + 1,76) = **(2,32; 2,76)**. Perdeu-se a parte ao longo da 2.ª componente.',
-  w: { 1: 'Faltou somar a média de volta.' } },
+  q: 'u₁ = (0,6; 0,8) e projeção y = u₁ᵀx = 3,6, como nos slides. Qual é a reconstrução x̂ só com a 1.ª componente?',
+  o: ['(2,16; 2,88)', '(3,16; 3,88)', '(2; 3)', '(0,6; 0,8)'], a: 0,
+  e: 'x̂ = y·u₁ = 3,6·(0,6; 0,8) = **(2,16; 2,88)**. Perdeu-se a parte ao longo da 2.ª componente.',
+  w: { 1: 'Somaste uma média; com y = u₁ᵀx a reconstrução é só y·u₁.', 2: '(2; 3) seria a reconstrução perfeita, com as duas componentes.' } },
 { id: 'pc-15', t: 'pca', l: 3, les: 'pc-ae', card: 2, calc: true,
   q: 'Há 1000 documentos e o termo “kernel” aparece em 10. Num documento aparece 3 vezes. Qual é o tf-idf (log₁₀, tf bruto)?',
   o: ['6', '300', '2', '0,03'], a: 0,
@@ -12406,7 +12420,7 @@ STUDY.questions('ml', [
 { id: 'sv-03', t: 'svm', l: 1, les: 's-kernel', card: 1,
   q: 'O que permite o truque do kernel?',
   o: ['Usar um espaço maior sem calcular φ', 'Treinar a SVM sem resolver otimização nenhuma', 'Reduzir os dados a duas dimensões', 'Dispensar os vetores de suporte'], a: 0,
-  e: 'O dual só usa produtos internos; com K(x, y) = φ(x)ᵀφ(y) calcula-se o produto no espaço transformado **sem nunca construir φ** (que pode ter dimensão infinita).' },
+  e: 'O dual só usa produtos internos; com k(x, xᵢ) = Φ(x)ᵀΦ(xᵢ) calcula-se o produto no espaço transformado **sem nunca construir Φ** (que pode ter dimensão infinita).' },
 { id: 'sv-04', t: 'svm', l: 2, les: 's-margin', card: 2,
   q: 'Na SVM com soft margin, o que acontece com C muito grande?',
   o: ['Quase não tolera erros: margem estreita', 'Margem larga, com muitos erros de treino', 'Deixa de haver vetores de suporte', 'Passa a ser igual à regressão logística'], a: 0,
@@ -12414,7 +12428,7 @@ STUDY.questions('ml', [
 { id: 'sv-05', t: 'svm', l: 2, les: 's-kernel', card: 1,
   q: 'Que condição tem de cumprir uma função para ser um kernel válido (Mercer)?',
   o: ['Gram simétrica e semidefinida positiva', 'Ser sempre maior do que zero', 'Ser uma função polinomial', 'Ter derivada contínua em todo o domínio'], a: 0,
-  e: '**Mercer**: K é um produto interno nalgum espaço se a matriz K(xᵢ, xⱼ) for sempre simétrica e semidefinida positiva.' },
+  e: '**Mercer**: k é um produto interno nalgum espaço se a matriz de Gram K, com Kᵢⱼ = k(xᵢ, xⱼ), for sempre simétrica e semidefinida positiva.' },
 { id: 'sv-06', t: 'svm', l: 2, les: 's-margin', card: 1,
   q: 'Porque é que o treino da SVM encontra o ótimo global?',
   o: ['É uma otimização quadrática convexa', 'Testa todos os hiperplanos possíveis', 'Usa descida do gradiente com momentum', 'Só tem um peso para aprender'], a: 0,
@@ -12425,9 +12439,9 @@ STUDY.questions('ml', [
   e: 'Margem = 2/‖w‖ = 2/5 = **0,4**.',
   w: { 1: '0,2 = 1/‖w‖ é a distância de um lado; a margem toda é 2/‖w‖.', 2: '5 é ‖w‖.' } },
 { id: 'sv-08', t: 'svm', l: 3, les: 's-kernel', card: 2, calc: true,
-  q: 'Quanto vale o kernel polinomial K(x, y) = (xᵀy + 1)² para x = (1, 2) e y = (3, 1)?',
+  q: 'Quanto vale o kernel polinomial k(x, xᵢ) = (xᵀxᵢ + 1)² para x = (1, 2) e xᵢ = (3, 1)?',
   o: ['36', '25', '26', '6'], a: 0,
-  e: 'xᵀy = 3 + 2 = 5; (5 + 1)² = **36**.',
+  e: 'xᵀxᵢ = 3 + 2 = 5; (5 + 1)² = **36**.',
   w: { 1: '25 = 5² esquece o +1.' } },
 { id: 'sv-09', t: 'svm', l: 3, les: 's-kernel', card: 1, calc: true,
   q: 'Quanto vale o kernel gaussiano exp(−‖x − y‖²/(2σ²)) com σ = 1, x = (0, 0) e y = (1, 1)?',
@@ -12621,10 +12635,10 @@ STUDY.questions('ml', [
   e: 'traço = 4,667, det = 4,333·0,333 − 0,111 = 1,333. λ = [4,667 ± √(21,78 − 5,33)]/2 = (4,667 ± 4,055)/2 → **4,361** e **0,306**.',
   w: { 1: 'Essa é a diagonal: só seriam os valores próprios se c₁₂ fosse 0.' } },
 { id: 'x26-pca-3', t: 'exam', l: 4, les: 'pc-pca', card: 2, calc: true, ch: 'x26-pca', step: '3/3', src: 'Exame 1 2025/26, 6.c',
-  q: 'X = {(0, 0), (4, 0), (1, 1)}, média m = (5/3, 1/3), 1.ª componente u₁ = (0,997; −0,083). Qual é a projeção centrada de x = (1, 1) e a reconstrução?',
-  o: ['y ≈ −0,72; x̂ ≈ (0,95; 0,39)', 'y ≈ 0,91; x̂ ≈ (0,91; −0,08)', 'y ≈ −0,72; x̂ ≈ (−0,72; 0,06)', 'y ≈ 0,72; x̂ ≈ (2,38; 0,27)'], a: 0,
-  e: 'x − m = (−0,667; 0,667). y = 0,997·(−0,667) − 0,083·0,667 ≈ **−0,72**. x̂ = m + y·u₁ = (1,667 − 0,717; 0,333 + 0,060) ≈ **(0,95; 0,39)**.',
-  w: { 1: 'Projetaste x sem centrar (0,997 − 0,083).', 2: 'Faltou somar a média na reconstrução.' } },
+  q: 'X = {(0, 0), (4, 0), (1, 1)}, 1.ª componente u₁ = (0,997; −0,083). Com a projeção dos slides (y = Uᵀx), qual é a projeção de x = (1, 1) na 1.ª componente e a reconstrução?',
+  o: ['y ≈ 0,91; x̂ ≈ (0,91; −0,08)', 'y ≈ −0,72; x̂ ≈ (0,95; 0,39)', 'y ≈ 0,91; x̂ ≈ (2,58; 0,26)', 'y ≈ 0,72; x̂ ≈ (0,72; −0,06)'], a: 0,
+  e: 'y = u₁ᵀx = 0,997·1 − 0,083·1 ≈ **0,91**. x̂ = y·u₁ = 0,914·(0,997; −0,083) ≈ **(0,91; −0,08)**. (Com dados centrados, como nos livros, daria y ≈ −0,72 e x̂ ≈ (0,95; 0,39).)',
+  w: { 1: 'Isso é a projeção centrada, u₁ᵀ(x − x̄). Os slides e as resoluções projetam x diretamente.', 2: 'Somaste a média na reconstrução; com y = u₁ᵀx a reconstrução é só y·u₁.' } },
 
 /* ---------- Exame 1 2024/25: k-means e silhueta ---------- */
 { id: 'x24-km-1', t: 'exam', l: 3, les: 'c-kmeans', card: 3, calc: true, ch: 'x24-km', step: '1/2', src: 'Exame 1 2024/25, 5.a', d: X24_KM,
@@ -12965,8 +12979,8 @@ STUDY.questions('ml', [
   w: { 2: 'A diagonal dá a variância de cada atributo original, não das componentes.' } },
 { id: 'met-19', t: 'pca', l: 2, les: 'pc-pca', card: 1, kind: 'method',
   q: 'Pedem a projeção de x na 1.ª componente principal u₁. De que precisas?',
-  o: ['Da média m: y = u₁ᵀ(x − m)', 'Só de u₁: y = u₁ᵀx, sem mais', 'De λ₁: y = λ₁·x, ponto a ponto', 'Da covariância: y = C·x'], a: 0,
-  e: 'A PCA trabalha com dados **centrados**: y = u₁ᵀ(x − m). Sem subtrair a média, a projeção sai deslocada.' },
+  o: ['Só de u₁: y = u₁ᵀx, como nos slides', 'Da média m: y = u₁ᵀ(x − m), sempre', 'De λ₁: y = λ₁·x, ponto a ponto', 'Da covariância: y = C·x'], a: 0,
+  e: 'Nos slides e nas resoluções oficiais a projeção é **y = Uᵀx** (z = Wᵀx com as componentes escolhidas), sem subtrair a média. A versão centrada u₁ᵀ(x − x̄) é a dos livros: usa-a só se o enunciado a pedir.' },
 { id: 'met-20', t: 'svm', l: 3, les: 's-kernel', card: 1, kind: 'method',
   q: 'Pedem se um conjunto de dados é separável por uma SVM com kernel RBF. O que verificas?',
   o: ['Se há pontos iguais com classes diferentes', 'Se é linearmente separável no espaço original', 'Se há menos pontos do que dimensões', 'Se a covariância dos dados é invertível'], a: 0,
@@ -13482,12 +13496,12 @@ STUDY.problems('ml', [
     steps: [
       { name: 'm', c: 'pca-cov', les: 'pc-cov', ask: 'Quanto vale a **média** da amostra?', ans: [1.667, 0.333], hints: ['Média de cada coordenada, em 3 pontos.'], e: '(5/3; 1/3) = **(1,667; 0,333)**.' },
       { name: 'C (c₁₁; c₁₂; c₂₂)', c: 'pca-cov', les: 'pc-cov', ask: 'Quanto vale a **covariância**? Escreve c₁₁, c₁₂ e c₂₂.', ans: [4.333, -0.333, 0.333],
-        hints: ['cᵢⱼ = Σ(xᵢ − mᵢ)(xⱼ − mⱼ)/(n − 1).', 'Desvios: (−5/3; −1/3), (7/3; −1/3), (−2/3; 2/3).'], miss: [{ v: [2.889, -0.222, 0.222], m: 'Dividiste por n. A covariância de uma amostra divide por n − 1.' }], e: 'c₁₁ = (78/9)/2 = **4,333**; c₁₂ = (−6/9)/2 = **−0,333**; c₂₂ = (6/9)/2 = **0,333**.' },
+        hints: ['cᵢⱼ = Σₖ(xₖ,ᵢ − x̄ᵢ)(xₖ,ⱼ − x̄ⱼ)/(n − 1).', 'Desvios: (−5/3; −1/3), (7/3; −1/3), (−2/3; 2/3).'], miss: [{ v: [2.889, -0.222, 0.222], m: 'Dividiste por n. A covariância de uma amostra divide por n − 1.' }], e: 'c₁₁ = (78/9)/2 = **4,333**; c₁₂ = (−6/9)/2 = **−0,333**; c₂₂ = (6/9)/2 = **0,333**.' },
       { name: 'λ (λ₁; λ₂)', c: 'pca-eig', les: 'pc-cov', ask: 'Quanto valem os **valores próprios**, do maior para o menor?', ans: [4.361, 0.306], hints: ['λ² − (traço)λ + det = 0.', 'Traço = 4,667 e det = 1,333.'], miss: [{ v: [4.333, 0.333], m: 'Isso é a diagonal. Só seriam os valores próprios se c₁₂ fosse 0.' }], e: 'λ = (4,667 ± √(21,78 − 5,33))/2 = **4,361** e **0,306**.' },
       { name: 'u₁', c: 'pca-eig', les: 'pc-cov', ask: 'Quanto vale o **vetor próprio normalizado u₁**? (Escolhe o sinal com a 1.ª componente positiva.)', ans: [0.997, -0.083], hints: ['(C − λ₁I)u = 0.', 'Da 2.ª linha: −0,333·u₁ + (0,333 − 4,361)·u₂ = 0, logo u₂ ≈ −0,0827·u₁.', 'Normaliza: divide por √(1 + 0,0827²).'], e: 'u₂/u₁ = −0,0827, e normalizado dá **(0,997; −0,083)**.' },
       { name: 'u₂', c: 'pca-eig', les: 'pc-cov', ask: 'Quanto vale **u₂**? (Escolhe o sinal com a 2.ª componente positiva.)', ans: [0.083, 0.997], hints: ['Os vetores próprios de uma matriz simétrica são ortogonais a u₁.'], e: 'Ortogonal a u₁: **(0,083; 0,997)**.' },
-      { name: 'y', c: 'pca-proj', ask: 'Quanto vale a **projeção** de x = (1, 1) em u₁?', ans: [-0.719], tol: 0.015, hints: ['y = u₁ᵀ(x − m): subtrai primeiro a média.', 'x − m = (−0,667; 0,667).'], miss: [{ v: [0.914], m: 'Faltou subtrair a média: y = u₁ᵀ(x − m).' }], e: '0,997·(−0,667) − 0,083·0,667 = **−0,719**.' },
-      { name: 'x̂', c: 'pca-proj', ask: 'Quanto vale a **reconstrução** x̂?', ans: [0.95, 0.393], tol: 0.015, hints: ['x̂ = m + y·u₁.'], miss: [{ v: [-0.717, 0.06], m: 'Faltou somar a média: x̂ = m + y·u₁.' }], e: 'm + (−0,719)·u₁ = **(0,950; 0,393)**.' },
+      { name: 'y', c: 'pca-proj', ask: 'Quanto vale a **projeção** de x = (1, 1) em u₁?', ans: [0.914], tol: 0.015, hints: ['Como nos slides: y = u₁ᵀx, sem subtrair a média.', '0,997·1 + (−0,083)·1.'], miss: [{ v: [-0.719], m: 'Essa é a projeção centrada, u₁ᵀ(x − x̄). Os slides e as resoluções projetam x diretamente: y = u₁ᵀx.' }], e: '0,997·1 − 0,083·1 = **0,914**.' },
+      { name: 'x̂', c: 'pca-proj', ask: 'Quanto vale a **reconstrução** x̂?', ans: [0.911, -0.076], tol: 0.015, hints: ['x̂ = y·u₁.'], miss: [{ v: [2.578, 0.257], m: 'Somaste a média. Com y = u₁ᵀx a reconstrução é só y·u₁.' }, { v: [0.95, 0.393], m: 'Essa é a reconstrução centrada (x̄ + y·u₁ com y = −0,719). Segue os slides: x̂ = y·u₁ com y = 0,914.' }], e: '0,914·(0,997; −0,083) = **(0,911; −0,076)**.' },
     ] },
   { id: 'pca-full-2', kind: 'half', pts: 4, les: 'pc-pca',
     stmt: 'Amostra **X = {(4, 3), (1, 3), (1, 0), (2, 2)}**. Calcula a covariância, os valores próprios, u₁ normalizado, a variância explicada, e a projeção de **x = (4, 3)** com a reconstrução.',
@@ -13497,8 +13511,8 @@ STUDY.problems('ml', [
       { name: 'λ (λ₁; λ₂)', c: 'pca-eig', les: 'pc-cov', ask: 'Quanto valem os **valores próprios**, do maior para o menor?', ans: [3, 1], hints: ['Traço = 4 e det = 3.'], miss: [{ v: [2, 2], m: 'Isso é a diagonal. Só seriam os valores próprios se c₁₂ fosse 0.' }], e: 'λ² − 4λ + 3 = 0: **3** e **1**.' },
       { name: 'u₁', c: 'pca-eig', les: 'pc-cov', ask: 'Quanto vale **u₁ normalizado**? (Escolhe o sinal com a 1.ª componente positiva.)', ans: [0.707, 0.707], hints: ['(C − 3I)u = 0 dá u₁ = u₂.'], miss: [{ v: [1, 1], m: 'Falta normalizar, para ficar ‖u‖ = 1.' }], e: '(1; 1)/√2 = **(0,707; 0,707)**.' },
       { name: 'Variância explicada', c: 'pca-eig', ask: 'Que **fração** da variância explica a 1.ª componente? (Entre 0 e 1.)', ans: [0.75], hints: ['λ₁/(λ₁ + λ₂).'], miss: [{ v: [3], m: 'Divide pela soma dos valores próprios.' }], e: '3/4 = **0,75**.' },
-      { name: 'y', c: 'pca-proj', ask: 'Quanto vale a **projeção** de x = (4, 3) em u₁?', ans: [2.121], hints: ['y = u₁ᵀ(x − m).', 'x − m = (2; 1).'], miss: [{ v: [4.95], m: 'Faltou subtrair a média: y = u₁ᵀ(x − m).' }], e: '0,707·2 + 0,707·1 = **2,121**.' },
-      { name: 'x̂', c: 'pca-proj', ask: 'Quanto vale a **reconstrução** x̂?', ans: [3.5, 3.5], hints: ['x̂ = m + y·u₁.'], miss: [{ v: [1.5, 1.5], m: 'Faltou somar a média: x̂ = m + y·u₁.' }], e: '(2; 2) + 2,121·(0,707; 0,707) = **(3,5; 3,5)**.' },
+      { name: 'y', c: 'pca-proj', ask: 'Quanto vale a **projeção** de x = (4, 3) em u₁?', ans: [4.95], hints: ['y = u₁ᵀx, sem subtrair a média.'], miss: [{ v: [2.121], m: 'Essa é a projeção centrada, u₁ᵀ(x − x̄). Os slides projetam x diretamente: y = u₁ᵀx.' }], e: '0,707·4 + 0,707·3 = **4,95**.' },
+      { name: 'x̂', c: 'pca-proj', ask: 'Quanto vale a **reconstrução** x̂?', ans: [3.5, 3.5], hints: ['x̂ = y·u₁.'], miss: [{ v: [5.5, 5.5], m: 'Somaste a média. Com y = u₁ᵀx a reconstrução é só y·u₁.' }], e: '4,95·(0,707; 0,707) = **(3,5; 3,5)**.' },
     ] },
   { id: 'pca-full-3', kind: 'alone', alone: true, src: 'Exame 1 2024/25, 6', pts: 4,
     stmt: 'Amostra **D = {(0, 2), (1, 2), (2, 2)}**. Determina a matriz de covariância, os seus valores próprios e os vetores próprios normalizados.',
@@ -18698,7 +18712,8 @@ STUDY.ids("ml", ["data-01",
 "bay-19",
 "pe-16",
 "pe-17",
-"pc-19"]);
+"pc-19",
+"mlp-19"]);
 STUDY.ids("so", ["fs-01",
 "fs-02",
 "fs-03",

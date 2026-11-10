@@ -23,8 +23,6 @@ function pbStatus(p) {
   if (T.done) return { k: T.due <= now ? 'review' : 'done', label: T.due <= now ? 'Revisão: sem ajudas' : `Pronto · revisão ${pbLater(T.due)}`, due: T.due <= now, stage: pbOldest(p, T) };
   return { k: T.due <= now ? 'next' : 'wait', label: T.due <= now ? `A seguir: ${PB_KIND[p.stages[T.stage].kind]}` : `Volta ${pbLater(T.due)}`, due: T.due <= now, stage: T.stage };
 }
-// what "Continuar" offers: a problem already under way, or the first one once the student reached the calculation levels
-const pbNext = () => { const due = pbTypes().filter(p => pbStatus(p).due); return due.find(p => S.prob.t[p.id]) || (topLevel() >= 3 ? due[0] : undefined); };
 
 /* answers: a list is a vector, a list of lists is a matrix; "show" has the same shape and marks the cells already given */
 const pbIsMat = a => Array.isArray(a[0]);
@@ -40,14 +38,14 @@ function pbParse(t) {
   return /^-?(\d+\.?\d*|\.\d+)$/.test(s) ? Number(s) : null;
 }
 
-function pbStart(id) {
+function pbStart(id, planKey) {
   const p = pbType(id); if (!p) return; const st = pbStatus(p), si = st.stage, stage = p.stages[si];
   const review = st.k === 'review' || st.k === 'done', alone = !!stage.alone || review;
   const given = s => !alone && s.c && S.prob.con[s.c] === 1;
   const anyTodo = stage.steps.some(s => !given(s));
   const steps = stage.steps.map(s => ({ s, state: anyTodo && given(s) ? 'given' : 'todo', wrong: 0, hints: 0, msg: '', marks: null,
     vals: pbCells(s).map(c => c.shown ? pbNum(c.v) : '') }));
-  pb = { p, si, stage, alone, review, steps, i: steps.findIndex(x => x.state === 'todo'), showing: false, stmtOpen: true, result: null, focus: null, lastCell: null };
+  pb = { p, si, stage, alone, review, steps, i: steps.findIndex(x => x.state === 'todo'), showing: false, stmtOpen: true, result: null, focus: null, lastCell: null, planKey: planKey || null, startedAt: Date.now() };
   go('problem');
 }
 function pbAdvance() {
@@ -100,6 +98,7 @@ function pbFinish() {
   else if (clean) { T.stage = pb.si + 1; T.due = now + PB_DAY; next = 'Amanhã, o último: sem pistas, como no exame.'; }
   else if (pb.si === N - 1) { T.stage = Math.max(0, pb.si - 1); T.due = now + PB_DAY; next = 'Amanhã há outro com mais ajuda, e depois tentas sozinho outra vez.'; }
   else { T.stage = pb.si + 1; T.due = now + PB_DAY; next = heavy ? 'Amanhã há outro parecido, com mais ajuda onde precisaste.' : 'Amanhã há outro parecido, e já não repetes o que fizeste bem.'; }
+  planLog(pb.planKey || 'pb:' + pb.p.id, now - pb.startedAt, pb.steps.length, pbNominal(pb.p));
   S.rounds++; save();
   pb.result = { frac, marks, xp, clean, heavy, next, more: !T.done };
   go('problem');
@@ -162,7 +161,7 @@ function pbResults() {
     <p class="mono muted" style="margin-top:8px">+${r.xp} XP</p>
     ${hard.length ? `<div class="section-h" style="margin-top:14px"><h3>Onde precisaste de ajuda</h3></div><div class="pb-work">${hard.map(pbRow).join('')}</div>` : ''}
     <p style="margin-top:14px">${esc(r.next)}</p>
-    <div class="row" style="margin-top:14px"><button class="btn primary" data-act="pbDone" id="pbEnd">Voltar ao início →</button>${r.more ? `<button class="btn" data-act="pbGo" data-k="${esc(pb.p.id)}">Fazer já o próximo</button>` : ''}</div></div>`;
+    <div class="row" style="margin-top:14px">${planNextBtn(!!pb.planKey)}<button class="btn${pb.planKey ? '' : ' primary'}" data-act="pbDone" id="pbEnd">Voltar ao início</button>${r.more ? `<button class="btn" data-act="pbGo" data-k="${esc(pb.p.id)}">Fazer já o próximo</button>` : ''}</div></div>`;
 }
 function afterProblemRender() {
   if (!pb) return; const f = pb.focus; pb.focus = null;

@@ -8,6 +8,7 @@
     "engine/progress-key.js",
     "engine/app-core.js",
     "engine/app-problems.js",
+    "engine/app-plan.js",
     "engine/app-views.js"
   ],
   "courses": {

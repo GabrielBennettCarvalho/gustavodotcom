@@ -391,6 +391,23 @@ textarea.key{min-height:84px;word-break:break-all}
 .pb-score b{font-size:40px;font-weight:800;font-stretch:118%;color:var(--good)}
 @media (max-width:560px){.pb-type{flex-wrap:wrap}.pb-type .btn{width:100%}.pb-cell{width:60px}}
 
+/* Today's plan */
+.plan-card{background:var(--panel);border:1.5px solid var(--accent);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;margin-bottom:14px;box-shadow:var(--shadow)}
+.plan-card.done{border-color:var(--good)}
+.plan-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.plan-item{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);color:var(--ink);cursor:pointer;font:inherit}
+.plan-item:hover{border-color:var(--accent)}
+.pi-n{flex:none;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:12px;background:var(--panel);border:1px solid var(--line)}
+.pi-main{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.pi-main .muted{font-size:13px}
+.pi-t{flex:none;font-size:11.5px;color:var(--muted);padding-top:3px}
+.plan-pace{font-size:13.5px;color:var(--muted)}
+.plan-set{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.plan-set input[type=date]{font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
+.plan-note{font-size:12px;color:var(--muted);margin-top:-4px}
+.explore>summary{margin-top:6px}
+@media (max-width:560px){.plan-item{flex-wrap:wrap}.pi-t{margin-left:32px;padding-top:0}}
+
 /* Cores dos temas do AMS */
 :root{ --t-sys:#5452C9; --t-req:#8A55C2; --t-arch:#B88A0B; --t-bpm:#2479B8; --t-bpmn:#238A5E; --t-exam:#C2410C; }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --t-sys:#9C9BFF; --t-req:#C59BF0; --t-arch:#E9C04A; --t-bpm:#6DB8F0; --t-bpmn:#5ACF96; --t-exam:#FF9A62; }}
@@ -19188,7 +19205,7 @@ applyTheme();
 
 /* ---------- state ----------
    G holds everything; S points at the open course's slice (G.c[id]). */
-const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, skipped: {}, pins: {}, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '', calcMode: 'all', part: 'all' }, rounds: 0, sessions: [], route: {}, prob: { t: {}, con: {} } });
+const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, skipped: {}, pins: {}, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '', calcMode: 'all', part: 'all', minDay: 30 }, rounds: 0, sessions: [], route: {}, prob: { t: {}, con: {} }, today: { d: '', ms: 0, did: [] }, pace: { s: 45, n: 0, pb: 1, pbn: 0 }, seenL: {} });
 let G = ls.get(LS_KEY);
 if (!G || G.v !== 2) G = { v: 2, cur: null, c: {}, updatedAt: 0 };
 // Progress from the AMS-only version (same browser, same origin): merged once, even if this
@@ -19397,16 +19414,6 @@ const extraApi = () => ({ pool: trainPool(), pick, topLevel, peek, inTopics, LEV
 // Folded home sections remember being open, so a re-render (a toggle inside them) does not close them
 const folds = {};
 document.addEventListener('toggle', ev => { if (ev.target.id && ev.target.id.startsWith('fold-')) folds[ev.target.id] = ev.target.open; }, true);
-// "Continuar": the one obvious next step, so nobody has to scroll the whole home to start.
-// Mistakes due first, then climbing the levels, then the exam problem type that matters most.
-function nextStep(RS) {
-  const r = reviewPool().length, e = examReviewPool().length, tl = topLevel(), L = LEVELS.find(x => x.n === tl) || LEVELS[0];
-  if (r) return `data-act="startReview" data-k="review">Rever ${r} erro${r === 1 ? '' : 's'}`;
-  if (e) return `data-act="startReview" data-k="reviewExam">Rever ${e} erro${e === 1 ? '' : 's'} de exame`;
-  const pn = pbNext(); if (pn) return `data-act="pbGo" data-k="${esc(pn.id)}">Problema-chave: ${esc(pn.short || pn.title)}`;
-  if (RS && RS.next && (tl === LEVELS[LEVELS.length - 1].n || S.settings.unlockAll)) return `data-act="skill" data-k="${esc(RS.next.id)}">Treinar: ${esc(RS.next.label)}`;
-  return `data-act="level" data-n="${tl}">Nível ${tl} · ${esc(L.t)}`;
-}
 function Home() {
   const tl = topLevel(); const dl = daysLeft(); const rp = reviewPool().length + examReviewPool().length; const nSk = skippedPool().length;
   const nFresh = freshReserved().length; const pt = partTopics(); const inPart = q => pt.includes(q.t) && !isReserved(q) && shown(q);
@@ -19443,8 +19450,8 @@ function Home() {
   const readyCard = RS && RS.rows.length ? `<div class="ready-card">
       <div class="row"><h2>Prontidão para o exame</h2><span class="spacer"></span><span class="mono muted" style="font-size:12px">${RS.ready} de ${RS.rows.length} tipos prontos</span></div>
       <div class="ready-bar" aria-hidden="true">${RS.rows.map(x => `<i class="${x.r.state}" style="flex:${x.w}" title="${esc(x.s.label)}"></i>`).join('')}</div>
-      <p class="muted" style="font-size:13.5px">${Math.round(RS.pct * 100)}% pronto, a contar mais o que sai mais vezes.${RS.next ? ` A seguir: <b style="color:var(--ink)">${esc(RS.next.label)}</b>${(RS.next.seen || []).length ? ` (saiu em ${RS.next.seen.length} de ${pastList().length || PG.length} exames)` : ''}.` : ' Todos os tipos de problema prontos.'}</p>
-      <div class="row">${RS.next ? `<button class="btn primary" data-act="skill" data-k="${esc(RS.next.id)}">Treinar este tipo</button>` : ''}<button class="btn" data-act="mode" data-k="ready">Ver a checklist</button></div>
+      <p class="muted" style="font-size:13.5px">${Math.round(RS.pct * 100)}% pronto, a contar mais o que sai mais vezes.</p>
+      <div class="row"><button class="btn small" data-act="mode" data-k="ready">Ver a checklist</button></div>
     </div>` : '';
   const P = (C.parts || []);
   const partSwitch = P.length > 1 ? `<div class="seg" role="group" aria-label="Que parte da matéria">${P.map(p => `<button data-act="part" data-k="${esc(p.id)}" aria-pressed="${S.settings.part === p.id}" ${p.topics.length ? '' : 'disabled'} title="${esc(p.topics.length ? p.label : p.note || 'Ainda sem matéria')}">${esc(p.label)}${p.topics.length ? '' : ' · em breve'}</button>`).join('')}<button data-act="part" data-k="all" aria-pressed="${S.settings.part === 'all'}">Tudo</button></div>` : '';
@@ -19453,11 +19460,12 @@ function Home() {
   return `<section class="hero">
       <span class="eyebrow">${esc(C.name)} · IST</span>
       <h1>${esc(C.tagline || C.name)}</h1>
-      <p>${nTrain} perguntas${nSupp ? ' prioritárias' : ''} de escolha múltipla em ${LEVELS.length} níveis, com a teoria explicada sempre que falhas. ${dl !== null ? `<b>${dl > 0 ? `Faltam ${dl} dia${dl === 1 ? '' : 's'} para o teste.` : dl === 0 ? 'O teste é hoje. Força!' : 'O teste já passou.'}</b>` : ''}</p>
+      ${dl !== null ? `<p><b>${dl > 0 ? `Faltam ${dl} dia${dl === 1 ? '' : 's'} para o teste.` : dl === 0 ? 'O teste é hoje. Força!' : 'O teste já passou.'}</b></p>` : ''}
       ${partSwitch ? `<div class="row part-row"><span class="eyebrow">Matéria</span>${partSwitch}</div>` : ''}
-      <div class="row"><button class="btn primary" ${nextStep(RS)} →</button></div>
     </section>
+    ${PlanCard()}
     ${readyCard}
+    <details class="section fold explore" id="fold-explore" ${folds['fold-explore'] ? 'open' : ''}><summary class="section-h"><h2>Explorar</h2><span class="muted" style="font-size:13px">níveis, temas, modos, exames anteriores, definições</span></summary>
     <div class="flow-card">
       <div class="row"><h2>${esc(M.title || 'Mapa de níveis')}</h2><span class="spacer"></span><span class="muted" style="font-size:13px">Desbloqueias o seguinte com ${Math.round(UNLOCK * 100)}% do anterior.</span></div>
       <div class="flow ${M.link ? 'flow-' + M.link : ''}" role="group" aria-label="Níveis">${ends(M.start, '')}${link}${flow}${link}${ends(M.end, ' end')}</div>
@@ -19472,10 +19480,9 @@ function Home() {
     ${extras ? `<div class="section"><div class="section-h"><h2>Só de ${esc(C.code)}</h2></div><div class="modes">${extras}</div></div>` : ''}
     <details class="section fold" id="fold-mastery" ${folds['fold-mastery'] ? 'open' : ''}><summary class="section-h"><h2>Domínio</h2><span class="muted" style="font-size:13px">perguntas acertadas pelo menos uma vez</span></summary>${mt}</details>
     <details class="section fold" id="fold-settings" ${folds['fold-settings'] || view.confirmReset ? 'open' : ''}>
-      <summary class="section-h"><h2>Definições</h2><span class="muted" style="font-size:13px">dia do teste, notas, importar, recomeçar</span></summary>
+      <summary class="section-h"><h2>Definições</h2><span class="muted" style="font-size:13px">notas, importar, recomeçar</span></summary>
       <div class="row">
         <label class="toggle"><input type="checkbox" id="unlockAll" data-act="unlockAll" ${S.settings.unlockAll ? 'checked' : ''}> Desbloquear todos os níveis</label>
-        <label class="toggle" for="testDate">Dia do teste <input type="date" id="testDate" data-act="testDate" value="${esc(S.settings.testDate)}" style="width:auto;height:auto;font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)"></label>
       </div>
       <div class="row">
         <button class="btn" data-act="bank">${glyph('plus')} Banco de perguntas e importar</button>
@@ -19483,6 +19490,7 @@ function Home() {
         <span class="spacer"></span>
         ${view.confirmReset ? `<span class="muted" style="font-size:13px">Apagar o progresso de ${esc(C.code)}?</span><button class="btn small" data-act="resetYes" style="color:var(--bad)">Sim, apagar</button><button class="btn small" data-act="resetNo">Cancelar</button>` : `<button class="btn ghost small" data-act="reset">Recomeçar do zero</button>`}
       </div>
+    </details>
     </details>`;
 }
 // Tudo / Só teoria / Só contas: applies to every mode (levels, Aprender, Revisão, exame simulado, extras)
@@ -19594,9 +19602,9 @@ function start(mode, opts = {}) {
     items = g.qs.map(makeItem);
   }
   if (mode === 'learn') {
-    const t = opts.topic; title = `Aprender · ${TOPICS[t].short}`;
+    const t = opts.topic; title = opts.title || `Aprender · ${TOPICS[t].short}`;
     // in "Só contas" a lesson with no calculation questions is skipped: that theory was already done
-    LESSONS.filter(l => l.t === t).forEach(l => {
+    LESSONS.filter(l => l.t === t && (!opts.les || opts.les.includes(l.id))).forEach(l => {
       const qs = basePool().filter(q => q.les === l.id).sort((a, b) => a.l - b.l || (peek(a.id).c - peek(b.id).c)).slice(0, 2);
       if (!qs.length && calcMode() === 'math') return;
       items.push({ kind: 'lesson', id: l.id }); qs.forEach(q => items.push(makeItem(q))); });
@@ -19604,7 +19612,7 @@ function start(mode, opts = {}) {
   if (mode === 'route') { const x = (C.route.stops || []).find(s => s.id === opts.stop); if (!x) return; items = routeItems(x); title = `${x.part ? x.part + ' · ' : ''}${x.title}`; }
   if (mode === 'retry') { items = opts.ids.map(id => BYID[id]).filter(Boolean).map(makeItem); title = 'Repetir erros'; }
   if (!items.length) { toast('Não há perguntas para estes filtros.'); return; }
-  ses = { mode, title, items, i: 0, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, stop: opts.stop, nextWasOpen: !!opts.level && opts.level < LEVELS.length && unlocked(opts.level + 1), topic: opts.topic, skill: mode === 'skill' ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
+  ses = { mode, title, items, i: 0, planKey: opts.planKey || null, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, stop: opts.stop, nextWasOpen: !!opts.level && opts.level < LEVELS.length && unlocked(opts.level + 1), topic: opts.topic, skill: mode === 'skill' ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
   if (timeLimit) startTimer();
   go(viewOf(items[0]));
 }
@@ -19634,8 +19642,6 @@ function pbStatus(p) {
   if (T.done) return { k: T.due <= now ? 'review' : 'done', label: T.due <= now ? 'Revisão: sem ajudas' : `Pronto · revisão ${pbLater(T.due)}`, due: T.due <= now, stage: pbOldest(p, T) };
   return { k: T.due <= now ? 'next' : 'wait', label: T.due <= now ? `A seguir: ${PB_KIND[p.stages[T.stage].kind]}` : `Volta ${pbLater(T.due)}`, due: T.due <= now, stage: T.stage };
 }
-// what "Continuar" offers: a problem already under way, or the first one once the student reached the calculation levels
-const pbNext = () => { const due = pbTypes().filter(p => pbStatus(p).due); return due.find(p => S.prob.t[p.id]) || (topLevel() >= 3 ? due[0] : undefined); };
 
 /* answers: a list is a vector, a list of lists is a matrix; "show" has the same shape and marks the cells already given */
 const pbIsMat = a => Array.isArray(a[0]);
@@ -19651,14 +19657,14 @@ function pbParse(t) {
   return /^-?(\d+\.?\d*|\.\d+)$/.test(s) ? Number(s) : null;
 }
 
-function pbStart(id) {
+function pbStart(id, planKey) {
   const p = pbType(id); if (!p) return; const st = pbStatus(p), si = st.stage, stage = p.stages[si];
   const review = st.k === 'review' || st.k === 'done', alone = !!stage.alone || review;
   const given = s => !alone && s.c && S.prob.con[s.c] === 1;
   const anyTodo = stage.steps.some(s => !given(s));
   const steps = stage.steps.map(s => ({ s, state: anyTodo && given(s) ? 'given' : 'todo', wrong: 0, hints: 0, msg: '', marks: null,
     vals: pbCells(s).map(c => c.shown ? pbNum(c.v) : '') }));
-  pb = { p, si, stage, alone, review, steps, i: steps.findIndex(x => x.state === 'todo'), showing: false, stmtOpen: true, result: null, focus: null, lastCell: null };
+  pb = { p, si, stage, alone, review, steps, i: steps.findIndex(x => x.state === 'todo'), showing: false, stmtOpen: true, result: null, focus: null, lastCell: null, planKey: planKey || null, startedAt: Date.now() };
   go('problem');
 }
 function pbAdvance() {
@@ -19711,6 +19717,7 @@ function pbFinish() {
   else if (clean) { T.stage = pb.si + 1; T.due = now + PB_DAY; next = 'Amanhã, o último: sem pistas, como no exame.'; }
   else if (pb.si === N - 1) { T.stage = Math.max(0, pb.si - 1); T.due = now + PB_DAY; next = 'Amanhã há outro com mais ajuda, e depois tentas sozinho outra vez.'; }
   else { T.stage = pb.si + 1; T.due = now + PB_DAY; next = heavy ? 'Amanhã há outro parecido, com mais ajuda onde precisaste.' : 'Amanhã há outro parecido, e já não repetes o que fizeste bem.'; }
+  planLog(pb.planKey || 'pb:' + pb.p.id, now - pb.startedAt, pb.steps.length, pbNominal(pb.p));
   S.rounds++; save();
   pb.result = { frac, marks, xp, clean, heavy, next, more: !T.done };
   go('problem');
@@ -19773,7 +19780,7 @@ function pbResults() {
     <p class="mono muted" style="margin-top:8px">+${r.xp} XP</p>
     ${hard.length ? `<div class="section-h" style="margin-top:14px"><h3>Onde precisaste de ajuda</h3></div><div class="pb-work">${hard.map(pbRow).join('')}</div>` : ''}
     <p style="margin-top:14px">${esc(r.next)}</p>
-    <div class="row" style="margin-top:14px"><button class="btn primary" data-act="pbDone" id="pbEnd">Voltar ao início →</button>${r.more ? `<button class="btn" data-act="pbGo" data-k="${esc(pb.p.id)}">Fazer já o próximo</button>` : ''}</div></div>`;
+    <div class="row" style="margin-top:14px">${planNextBtn(!!pb.planKey)}<button class="btn${pb.planKey ? '' : ' primary'}" data-act="pbDone" id="pbEnd">Voltar ao início</button>${r.more ? `<button class="btn" data-act="pbGo" data-k="${esc(pb.p.id)}">Fazer já o próximo</button>` : ''}</div></div>`;
 }
 function afterProblemRender() {
   if (!pb) return; const f = pb.focus; pb.focus = null;
@@ -19796,6 +19803,123 @@ document.addEventListener('keydown', ev => {
   const cells = [...document.querySelectorAll('input.pb-cell')], i = cells.indexOf(t), next = cells.slice(i + 1).find(c => !c.value) || cells.find(c => !c.value);
   if (next) next.focus(); else pbCheck();
 });
+
+/* ---------- TODAY'S PLAN ("Hoje") ----------
+   One answer to "what do I do now?", for every course. The app lists the work left, in the order that is worth most
+   in the exam, and fills today with it:
+   1. mistakes waiting in review (fixed while fresh);
+   2. per exam problem type not ready yet, most frequent first: its theory if unseen, then its key problem or its questions;
+      a course without types (AMS) goes topic by topic, then level by level;
+   3. when everything is ready, the mock exam.
+   With the test date and the minutes per day, the work left is spread over the days left; what doesn't fit is cut from
+   the bottom (the types that came up least) and the student is told what was cut.
+   Times are ranges that start wide and narrow to the student's own pace, measured from their sessions:
+   S.pace = { s: seconds per unit (a question = 1, a lesson = 2), n: samples, pb: key-problem time / nominal, pbn }.
+   S.today = { d: 'YYYY-MM-DD', ms: time studied today, did: [plan keys done today] }. */
+const PLAN_UNIT = 45, PLAN_MIN = [15, 30, 45, 60], LEARN_MAX = 3;   // at most 3 lessons in one sitting
+const todayStr = () => new Date().toLocaleDateString('sv');
+const planToday = () => { if (!S.today || S.today.d !== todayStr()) S.today = { d: todayStr(), ms: 0, did: [] }; return S.today; };
+const paceS = () => (S.pace && S.pace.n ? S.pace.s : PLAN_UNIT);
+const paceSpread = () => (S.pace && S.pace.n >= 3 ? [0.8, 1.25] : [0.6, 1.6]);
+const pbNominal = p => { const m = String(p.time || '').match(/(\d+)\D+(\d+)/); return m ? (+m[1] + +m[2]) / 2 : 6; };
+const taskMin = t => t.min !== undefined ? t.min : t.units * paceS() / 60;
+function minRange(m) {
+  const [a, b] = paceSpread(), r = v => m > 20 ? Math.round(v / 5) * 5 : Math.round(v);
+  const lo = Math.max(1, r(m * a)), hi = Math.max(lo + 1, r(m * b));
+  return `${lo}–${hi} min`;
+}
+const hoursText = m => m < 90 ? `${Math.round(m / 5) * 5 || 5} min` : `${String(Math.round(m / 30) / 2).replace('.', ',')} h`;
+
+// Every task left, in order. full: the whole remaining work of each type (for the pace), not just today's piece.
+function planAll() {
+  const T = [], rv = reviewPool().length, re = examReviewPool().length, pt = partTopics();
+  if (rv) T.push({ key: 'review', kind: 'review', label: `Rever ${rv} erro${rv === 1 ? '' : 's'}`, why: 'Os erros vêm primeiro: corrigidos enquanto estão frescos, não voltam.', units: Math.min(rv, 12), full: rv });
+  if (re) T.push({ key: 'reviewExam', kind: 'reviewExam', label: `Rever ${re} erro${re === 1 ? '' : 's'} do exame simulado`, why: 'Erros em condições de exame: vale a pena acertá-los duas vezes seguidas.', units: Math.min(re, 12), full: re });
+  const unseen = ids => ids.filter(id => LBYID[id] && !(S.seenL || {})[id]);
+  if (SKILLS.length) {
+    const nExams = pastList().length || pastGroups().length;
+    readySummary().rows.filter(x => x.r.state !== 'ready').sort((a, b) => b.w - a.w || b.r.pct - a.r.pct).forEach(({ s, r, w }) => {
+      const why = (s.seen || []).length ? `Saiu em ${s.seen.length} de ${nExams} exames e ainda não está pronto.` : 'Matéria base que os exames usam.';
+      const L = unseen(s.les || []);
+      if (L.length) T.push({ key: 'learn:' + s.id, kind: 'learn', skill: s.id, w, t: s.t, les: L.slice(0, LEARN_MAX), label: `Aprender: ${s.label}`, why: `Primeiro a teoria: ${L.length === 1 ? 'há 1 lição' : `há ${L.length} lições`} que ainda não viste.`, units: Math.min(L.length, LEARN_MAX) * 4, full: L.length * 4 });
+      const p = (C.problems || []).find(x => x.skill === s.id), ps = p && pbStatus(p);
+      const left = r.total - r.ok;
+      if (p && ps.due) T.push({ key: 'pb:' + p.id, kind: 'pb', skill: s.id, w, id: p.id, label: `Problema-chave: ${p.short || p.title}`, why: `${why} Resolves um problema de exame com pistas.`, min: pbNominal(p) * ((S.pace && S.pace.pbn) ? S.pace.pb : 1), full: left });
+      else T.push({ key: 'skill:' + s.id, kind: 'skill', skill: s.id, w, label: `Treinar: ${s.label}`, why, units: Math.min(left, 8) + 2, full: left });
+    });
+    if (!T.length) T.push({ key: 'exam', kind: 'exam', label: 'Exame simulado', why: 'Todos os tipos de problema estão prontos: testa-te em condições de exame.', units: examCfg().n, full: 0 });
+  } else {
+    Object.keys(TOPICS).filter(k => pt.includes(k)).forEach(k => { const L = unseen(LESSONS.filter(l => l.t === k).map(l => l.id));
+      if (L.length) T.push({ key: 'learn:' + k, kind: 'learn', t: k, les: L.slice(0, LEARN_MAX), label: `Aprender: ${TOPICS[k].label || TOPICS[k].short}`, why: L.length > LEARN_MAX ? `Teoria que ainda não viste: as próximas ${LEARN_MAX} de ${L.length} lições, com perguntas a seguir.` : `Teoria que ainda não viste (${L.length} ${L.length === 1 ? 'lição' : 'lições'}), com perguntas a seguir.`, units: Math.min(L.length, LEARN_MAX) * 4, full: L.length * 4, w: 1 }); });
+    const tl = topLevel(), m = mastery(tl), left = m.total - m.done;
+    if (left) T.splice(Math.min(T.length, rv || re ? 2 : 1), 0, { key: 'level:' + tl, kind: 'level', level: tl, label: `Nível ${tl} · ${LEVELS[tl - 1].t}`, why: tl < LEVELS.length ? `O nível ${tl + 1} abre com ${Math.round(UNLOCK * 100)}% deste.` : 'O último nível: as armadilhas do exame.', units: 10, full: BANK.filter(q => !isReserved(q) && inTopics(q) && !peek(q.id).c).length, w: 1 });
+    if (!T.length) T.push({ key: 'exam', kind: 'exam', label: 'Exame simulado', why: 'Está tudo feito: testa-te em condições de exame.', units: examCfg().n, full: 0 });
+  }
+  return T;
+}
+// The pace: work left against days left. Returns what to cut (lowest-weight types first) when it doesn't fit.
+function planPace(T) {
+  const d = daysLeft(), per = S.settings.minDay || 30;
+  const work = t => t.kind === 'pb' ? taskMin(t) + t.full * paceS() / 60 : t.full * paceS() / 60;
+  const total = T.reduce((a, t) => a + work(t), 0);
+  if (d === null || d < 1) return { d, total, per, cut: [] };
+  const budget = d * per; let need = total; const cut = [];
+  const bySkill = {}; T.forEach(t => { if (t.skill) (bySkill[t.skill] = bySkill[t.skill] || { w: t.w, m: 0, label: SKBYID[t.skill].label, n: (SKBYID[t.skill].seen || []).length }).m += work(t); });
+  Object.entries(bySkill).sort((a, b) => a[1].w - b[1].w).forEach(([k, v]) => { if (need > budget) { need -= v.m; cut.push(Object.assign({ k }, v)); } });
+  return { d, total, per, cut, need: total / d };
+}
+function planFor(more) {
+  const all = planAll(), P = planPace(all), cut = new Set(P.cut.map(c => c.k)), td = planToday();
+  const left = more ? (S.settings.minDay || 30) : (S.settings.minDay || 30) - td.ms / 60000;
+  const pool = all.filter(t => !td.did.includes(t.key) && !cut.has(t.skill)), list = []; let m = 0;
+  for (const t of pool) { const x = taskMin(t); if (list.length && m + x > left) break; list.push(t); m += x; if (m >= left) break; }
+  return { all, P, list: left > 0 ? list : [], min: m, done: left <= 0, next: pool[0], spent: td.ms / 60000 };
+}
+function planRun(i, more) {
+  const t = planFor(more).list[i] || planFor(true).list[i]; if (!t) { toast('Nada no plano agora.'); return; }
+  const o = { planKey: t.key };
+  if (t.kind === 'review' || t.kind === 'reviewExam' || t.kind === 'exam') start(t.kind, o);
+  else if (t.kind === 'learn') start('learn', Object.assign(o, { topic: t.t, les: t.les, title: t.label }));
+  else if (t.kind === 'skill') start('skill', Object.assign(o, { k: t.skill }));
+  else if (t.kind === 'level') start('level', Object.assign(o, { level: t.level }));
+  else if (t.kind === 'pb') pbStart(t.id, t.key);
+}
+// After a session: time studied today, what was done, and the student's pace.
+// noPace: the mock exam is timed, so it counts as time studied but says nothing about the student's own pace
+function planLog(key, ms, units, nominal, noPace) {
+  const td = planToday(); if (!S.pace) S.pace = { s: PLAN_UNIT, n: 0, pb: 1, pbn: 0 };
+  const P = S.pace, t = Math.min(ms, Math.max(5, units || 5) * 240e3);   // an idle tab doesn't count beyond 4 min a unit
+  td.ms += t; if (key && !td.did.includes(key)) td.did.push(key);
+  if (noPace) return;
+  if (nominal) { const r = t / 60000 / nominal; if (r > 0.2 && r < 5) { P.pb = P.pbn ? P.pb * 0.7 + r * 0.3 : r; P.pbn++; } }
+  else if (units >= 3) { const x = t / 1000 / units; if (x > 5 && x < 300) { P.s = P.n ? P.s * 0.7 + x * 0.3 : x; P.n++; } }
+}
+function PlanCard() {
+  const p = planFor(!!view.planMore), P = p.P, per = S.settings.minDay || 30;
+  const seg = `<span class="seg" role="group" aria-label="Minutos por dia">${PLAN_MIN.map(m => `<button data-act="minDay" data-k="${m}" aria-pressed="${per === m}">${m}</button>`).join('')}</span>`;
+  const set = `<div class="plan-set"><label for="testDate">Teste</label><input type="date" id="testDate" data-act="testDate" value="${esc(S.settings.testDate)}">${seg}<span>min por dia</span></div>`;
+  let pace;
+  if (P.d === null) pace = 'Diz quando é o teste e a app reparte o que falta pelos dias que tens.';
+  else if (P.d < 1) pace = P.d === 0 ? 'O teste é hoje: revê os erros e as cábulas. Força!' : 'O teste já passou. Muda a data se houver outro.';
+  else if (P.cut.length) pace = `Faltam ${P.d} dia${P.d === 1 ? '' : 's'} e cerca de ${hoursText(P.total)} de trabalho: precisavas de ~${Math.round(P.need)} min por dia. Com ${per} min, fica de fora: ${P.cut.slice(0, 3).map(c => `${esc(c.label)}${c.n ? ` (saiu em ${c.n})` : ''}`).join('; ')}${P.cut.length > 3 ? ` e mais ${P.cut.length - 3}` : ''}. É o que sai menos.`;
+  else pace = `Faltam ${P.d} dia${P.d === 1 ? '' : 's'} e cerca de ${hoursText(P.total)} de trabalho: chegam ~${Math.max(5, Math.round(P.need / 5) * 5)} min por dia.${P.need < per * 0.6 ? ' Estás adiantado: sobra tempo para rever.' : ' Estás em dia.'}`;
+  const note = `<p class="plan-note">${S.pace && S.pace.n >= 3 ? 'Os tempos já usam o teu ritmo.' : 'Os tempos são intervalos e ajustam-se ao teu ritmo à medida que usas a app.'}</p>`;
+  if (p.done && !view.planMore) return `<section class="plan-card done"><div class="row"><h2>Hoje ✓</h2><span class="spacer"></span><span class="mono muted">${Math.round(p.spent)} min feitos</span></div>
+      <p>Plano de hoje feito.${p.next ? ` Amanhã começas por <b>${esc(p.next.label)}</b>.` : ''}</p>
+      <div class="row"><button class="btn" data-act="planMore">Fazer mais um pouco</button></div><p class="plan-pace">${pace}</p>${set}</section>`;
+  const items = p.list.map((t, i) => `<li><button class="plan-item" data-act="planGo" data-i="${i}"><span class="pi-n mono">${i + 1}</span><span class="pi-main"><b>${esc(t.label)}</b><span class="muted">${esc(t.why)}</span></span><span class="pi-t mono">${minRange(taskMin(t))}</span></button></li>`).join('');
+  return `<section class="plan-card"><div class="row"><h2>Hoje</h2><span class="spacer"></span><span class="mono muted">${minRange(p.min)}</span></div>
+    <ol class="plan-list">${items}</ol>
+    <div class="row"><button class="btn primary" data-act="planGo" data-i="0">Começar →</button>${p.spent >= 1 ? `<span class="muted" style="font-size:13px">${Math.round(p.spent)} min feitos hoje</span>` : ''}</div>
+    <p class="plan-pace">${pace}</p>${set}${note}</section>`;
+}
+// At the end of a session started from the plan: the next step, or "done for today".
+function planNextBtn(fromPlan) {
+  if (!fromPlan) return '';
+  const p = planFor(false);
+  if (p.done || !p.list.length) return `<button class="btn primary" data-act="home">Plano de hoje feito ✓</button>`;
+  return `<button class="btn primary" data-act="planGo" data-i="0">Seguinte no plano: ${esc(p.list[0].label)} →</button>`;
+}
 
 let tick = null;
 function startTimer() { clearInterval(tick); tick = setInterval(() => { if (!ses || ses.ended) { clearInterval(tick); return; } const left = ses.timeLimit - Math.floor((Date.now() - ses.startedAt) / 1000); const el = document.getElementById('timer'); if (el) { el.textContent = fmt(Math.max(0, left)); el.classList.toggle('hot', left <= 120); } if (left <= 0) finish(); }, 250); }
@@ -19892,12 +20016,15 @@ function finish() {
     ses.penalty = pen; ses.grade = Math.max(0, Math.round((ok - pen) / tot * 200) / 10); ses.rawGrade = Math.round(ok / tot * 200) / 10; const g = ses.results.filter(r => r.ok).reduce((a, r) => a + XP[BYID[r.id].l], 0); S.xp += g; ses.xp = g; }
   if (ses.mode === 'route' && ses.stop) { if (!S.route) S.route = {}; S.route[ses.stop] = Date.now(); }
   S.rounds++; S.sessions.push({ m: ses.mode, d: Date.now(), n: ses.results.length, ok: ses.results.filter(r => r.ok).length }); if (S.sessions.length > 400) S.sessions = S.sessions.slice(-400);
+  { const nl = ses.items.slice(0, ses.i + 1).filter(x => x.kind === 'lesson').length, key = ses.planKey || (ses.mode === 'skill' ? 'skill:' + ses.skill : ses.mode === 'level' ? 'level:' + ses.level : ses.mode === 'route' ? 'route:' + ses.stop : ses.mode);
+    planLog(key, Date.now() - ses.startedAt, ses.results.length + 2 * nl, 0, ses.mode === 'exam'); }
   save(); go('results');
 }
 
 /* ---------- LESSON (inside learn session) ---------- */
 function LessonScreen() {
   const L = LBYID[curItem().id]; const T = TOPICS[L.t];
+  if (!S.seenL) S.seenL = {}; if (!S.seenL[L.id]) { S.seenL[L.id] = Date.now(); save(); }   // the plan stops asking for theory already seen
   const lessonsTotal = ses.items.filter(x => x.kind === 'lesson').length; const li = ses.items.slice(0, ses.i + 1).filter(x => x.kind === 'lesson').length;
   return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="mono muted">lição ${li}/${lessonsTotal}</span></div>
     <article class="card"><span class="eyebrow">Teoria</span><h2 style="margin:6px 0 12px">${esc(L.title)}</h2><div class="lesson">${lessonBody(L)}</div>
@@ -19920,7 +20047,7 @@ function Results() {
       <div class="result-grid"><div class="kpi"><b>+${ses.xp}</b><span>XP ganho</span></div><div class="kpi"><b>${wrong.length}</b><span>para rever</span></div>${ses.mode === 'exam' ? (ses.items.length - tot ? `<div class="kpi"><b>${ses.items.length - tot}</b><span>em branco</span></div>` : '') : skipped.length ? `<div class="kpi"><b>${skipped.length}</b><span>saltadas</span></div>` : ''}<div class="kpi"><b>${topLevel()}</b><span>nível mais alto aberto</span></div></div>
       ${nowUnlocked ? `<p class="key" style="margin:0">Nível ${lvl + 1} desbloqueado. O token avançou.</p>` : ''}
       ${ses.skill && SKBYID[ses.skill] ? (r_ => `<p class="muted" style="margin:0">${esc(SKBYID[ses.skill].label)}: <b style="color:var(--ink)">${STATE[r_.state] ? STATE[r_.state][1] : ''}</b> · ${r_.ok}/${r_.total} perguntas${r_.pend ? `, ${r_.pend} por rever` : ''}.</p>`)(readiness(ses.skill)) : ''}
-      <div class="row">${wrong.length ? `<button class="btn primary" data-act="retryWrong">${wrong.length === 1 ? 'Repetir a errada' : `Repetir as ${wrong.length} erradas`}</button>` : ''}${skipped.length ? `<button class="btn${wrong.length ? '' : ' primary'}" data-act="retrySkipped">${skipped.length === 1 ? `Tentar a ${ses.mode === 'exam' ? 'que ficou em branco' : 'saltada'} agora` : `Tentar as ${skipped.length} ${ses.mode === 'exam' ? 'em branco' : 'saltadas'} agora`}</button>` : ''}${ses.mode === 'route' ? routeNextBtn() : ''}${lvl ? `<button class="btn" data-act="level" data-n="${nowUnlocked ? lvl + 1 : lvl}">${nowUnlocked ? `Ir para o nível ${lvl + 1}` : `Outra ronda do nível ${lvl}`}</button>` : ''}${ses.skill ? `<button class="btn" data-act="skill" data-k="${esc(ses.skill)}">Outra ronda deste tipo</button><button class="btn" data-act="mode" data-k="ready">Checklist</button>` : ''}<button class="btn" data-act="home">Início</button></div>
+      <div class="row">${planNextBtn(!!ses.planKey)}${wrong.length ? `<button class="btn${ses.planKey ? '' : ' primary'}" data-act="retryWrong">${wrong.length === 1 ? 'Repetir a errada' : `Repetir as ${wrong.length} erradas`}</button>` : ''}${skipped.length ? `<button class="btn${wrong.length || ses.planKey ? '' : ' primary'}" data-act="retrySkipped">${skipped.length === 1 ? `Tentar a ${ses.mode === 'exam' ? 'que ficou em branco' : 'saltada'} agora` : `Tentar as ${skipped.length} ${ses.mode === 'exam' ? 'em branco' : 'saltadas'} agora`}</button>` : ''}${ses.mode === 'route' ? routeNextBtn() : ''}${lvl ? `<button class="btn" data-act="level" data-n="${nowUnlocked ? lvl + 1 : lvl}">${nowUnlocked ? `Ir para o nível ${lvl + 1}` : `Outra ronda do nível ${lvl}`}</button>` : ''}${ses.skill ? `<button class="btn" data-act="skill" data-k="${esc(ses.skill)}">Outra ronda deste tipo</button><button class="btn" data-act="mode" data-k="ready">Checklist</button>` : ''}<button class="btn" data-act="home">Início</button></div>
     </article>
     ${wrong.length ? `<div class="section"><h2>O que falhaste, explicado</h2>${list}</div>` : `<div class="section"><p class="muted">Sem erros nesta ronda.</p></div>`}`;
 }
@@ -20146,6 +20273,9 @@ document.addEventListener('click', async ev => {
     case 'read': go('reader', { id: b.dataset.id }); break;
     case 'practice': { const ids = BANK.filter(q => q.les === b.dataset.id).sort((x, y) => x.l - y.l).map(q => q.id); start('retry', { ids }); if (ses) ses.title = 'Praticar lição'; break; }
     case 'pbGo': pbStart(b.dataset.k); break;
+    case 'planGo': planRun(+b.dataset.i, !!view.planMore); break;
+    case 'planMore': view.planMore = true; renderView(); break;
+    case 'minDay': S.settings.minDay = +b.dataset.k; save(); renderView(); break;
     case 'pbCheck': pbCheck(); break;
     case 'pbHint': pbHint(); break;
     case 'pbSign': pbSign(); break;

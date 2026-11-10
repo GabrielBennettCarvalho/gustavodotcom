@@ -95,6 +95,18 @@ New file? Add it to the course's list in `manifest.json`. Lessons work the same 
   in the exam's order. Works in every course; a `src` naming two exams is left out.
 - **Cábula**: the `sheet` of each type you got wrong at least once (or pinned), with your notes. It can be printed.
 
+## Today's plan (Hoje)
+
+The top of every course's home (`src/engine/app-plan.js`). It answers "what do I do now?": mistakes in review first, then each
+exam problem type not ready yet, most frequent first (its theory if unseen, at most 3 lessons at a time, then its key problem or
+its questions). Courses without `skills` go topic by topic and level by level. With everything ready, it offers the mock exam.
+
+- **Pace:** with the test date and the minutes per day (15, 30, 45 or 60), the work left is spread over the days left.
+  When it doesn't fit, the types that came up least are cut, and the card says which.
+- **Times:** shown as ranges. They start wide and narrow to the student's own pace, measured from their sessions (`S.pace`).
+- **Today:** time studied and tasks done today are in `S.today`; lessons seen are in `S.seenL`. None of it is in the progress key.
+- **Explorar:** everything else on the home (levels, topics, modes, past exams, settings) is folded under it.
+
 ## Key problems (Problemas-chave)
 
 The big exam problems, solved by typing the key values (`src/engine/app-problems.js`; content in `STUDY.problems`, see

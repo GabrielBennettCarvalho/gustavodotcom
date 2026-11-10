@@ -35,7 +35,7 @@ applyTheme();
 
 /* ---------- state ----------
    G holds everything; S points at the open course's slice (G.c[id]). */
-const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, skipped: {}, pins: {}, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '', calcMode: 'all', part: 'all' }, rounds: 0, sessions: [], route: {}, prob: { t: {}, con: {} } });
+const blank = (topics = {}) => ({ stats: {}, notes: {}, xp: 0, skipped: {}, pins: {}, settings: { topics: Object.keys(topics), known: Object.keys(topics), unlockAll: false, testDate: '', calcMode: 'all', part: 'all', minDay: 30 }, rounds: 0, sessions: [], route: {}, prob: { t: {}, con: {} }, today: { d: '', ms: 0, did: [] }, pace: { s: 45, n: 0, pb: 1, pbn: 0 }, seenL: {} });
 let G = ls.get(LS_KEY);
 if (!G || G.v !== 2) G = { v: 2, cur: null, c: {}, updatedAt: 0 };
 // Progress from the AMS-only version (same browser, same origin): merged once, even if this
@@ -244,16 +244,6 @@ const extraApi = () => ({ pool: trainPool(), pick, topLevel, peek, inTopics, LEV
 // Folded home sections remember being open, so a re-render (a toggle inside them) does not close them
 const folds = {};
 document.addEventListener('toggle', ev => { if (ev.target.id && ev.target.id.startsWith('fold-')) folds[ev.target.id] = ev.target.open; }, true);
-// "Continuar": the one obvious next step, so nobody has to scroll the whole home to start.
-// Mistakes due first, then climbing the levels, then the exam problem type that matters most.
-function nextStep(RS) {
-  const r = reviewPool().length, e = examReviewPool().length, tl = topLevel(), L = LEVELS.find(x => x.n === tl) || LEVELS[0];
-  if (r) return `data-act="startReview" data-k="review">Rever ${r} erro${r === 1 ? '' : 's'}`;
-  if (e) return `data-act="startReview" data-k="reviewExam">Rever ${e} erro${e === 1 ? '' : 's'} de exame`;
-  const pn = pbNext(); if (pn) return `data-act="pbGo" data-k="${esc(pn.id)}">Problema-chave: ${esc(pn.short || pn.title)}`;
-  if (RS && RS.next && (tl === LEVELS[LEVELS.length - 1].n || S.settings.unlockAll)) return `data-act="skill" data-k="${esc(RS.next.id)}">Treinar: ${esc(RS.next.label)}`;
-  return `data-act="level" data-n="${tl}">Nível ${tl} · ${esc(L.t)}`;
-}
 function Home() {
   const tl = topLevel(); const dl = daysLeft(); const rp = reviewPool().length + examReviewPool().length; const nSk = skippedPool().length;
   const nFresh = freshReserved().length; const pt = partTopics(); const inPart = q => pt.includes(q.t) && !isReserved(q) && shown(q);
@@ -290,8 +280,8 @@ function Home() {
   const readyCard = RS && RS.rows.length ? `<div class="ready-card">
       <div class="row"><h2>Prontidão para o exame</h2><span class="spacer"></span><span class="mono muted" style="font-size:12px">${RS.ready} de ${RS.rows.length} tipos prontos</span></div>
       <div class="ready-bar" aria-hidden="true">${RS.rows.map(x => `<i class="${x.r.state}" style="flex:${x.w}" title="${esc(x.s.label)}"></i>`).join('')}</div>
-      <p class="muted" style="font-size:13.5px">${Math.round(RS.pct * 100)}% pronto, a contar mais o que sai mais vezes.${RS.next ? ` A seguir: <b style="color:var(--ink)">${esc(RS.next.label)}</b>${(RS.next.seen || []).length ? ` (saiu em ${RS.next.seen.length} de ${pastList().length || PG.length} exames)` : ''}.` : ' Todos os tipos de problema prontos.'}</p>
-      <div class="row">${RS.next ? `<button class="btn primary" data-act="skill" data-k="${esc(RS.next.id)}">Treinar este tipo</button>` : ''}<button class="btn" data-act="mode" data-k="ready">Ver a checklist</button></div>
+      <p class="muted" style="font-size:13.5px">${Math.round(RS.pct * 100)}% pronto, a contar mais o que sai mais vezes.</p>
+      <div class="row"><button class="btn small" data-act="mode" data-k="ready">Ver a checklist</button></div>
     </div>` : '';
   const P = (C.parts || []);
   const partSwitch = P.length > 1 ? `<div class="seg" role="group" aria-label="Que parte da matéria">${P.map(p => `<button data-act="part" data-k="${esc(p.id)}" aria-pressed="${S.settings.part === p.id}" ${p.topics.length ? '' : 'disabled'} title="${esc(p.topics.length ? p.label : p.note || 'Ainda sem matéria')}">${esc(p.label)}${p.topics.length ? '' : ' · em breve'}</button>`).join('')}<button data-act="part" data-k="all" aria-pressed="${S.settings.part === 'all'}">Tudo</button></div>` : '';
@@ -300,11 +290,12 @@ function Home() {
   return `<section class="hero">
       <span class="eyebrow">${esc(C.name)} · IST</span>
       <h1>${esc(C.tagline || C.name)}</h1>
-      <p>${nTrain} perguntas${nSupp ? ' prioritárias' : ''} de escolha múltipla em ${LEVELS.length} níveis, com a teoria explicada sempre que falhas. ${dl !== null ? `<b>${dl > 0 ? `Faltam ${dl} dia${dl === 1 ? '' : 's'} para o teste.` : dl === 0 ? 'O teste é hoje. Força!' : 'O teste já passou.'}</b>` : ''}</p>
+      ${dl !== null ? `<p><b>${dl > 0 ? `Faltam ${dl} dia${dl === 1 ? '' : 's'} para o teste.` : dl === 0 ? 'O teste é hoje. Força!' : 'O teste já passou.'}</b></p>` : ''}
       ${partSwitch ? `<div class="row part-row"><span class="eyebrow">Matéria</span>${partSwitch}</div>` : ''}
-      <div class="row"><button class="btn primary" ${nextStep(RS)} →</button></div>
     </section>
+    ${PlanCard()}
     ${readyCard}
+    <details class="section fold explore" id="fold-explore" ${folds['fold-explore'] ? 'open' : ''}><summary class="section-h"><h2>Explorar</h2><span class="muted" style="font-size:13px">níveis, temas, modos, exames anteriores, definições</span></summary>
     <div class="flow-card">
       <div class="row"><h2>${esc(M.title || 'Mapa de níveis')}</h2><span class="spacer"></span><span class="muted" style="font-size:13px">Desbloqueias o seguinte com ${Math.round(UNLOCK * 100)}% do anterior.</span></div>
       <div class="flow ${M.link ? 'flow-' + M.link : ''}" role="group" aria-label="Níveis">${ends(M.start, '')}${link}${flow}${link}${ends(M.end, ' end')}</div>
@@ -319,10 +310,9 @@ function Home() {
     ${extras ? `<div class="section"><div class="section-h"><h2>Só de ${esc(C.code)}</h2></div><div class="modes">${extras}</div></div>` : ''}
     <details class="section fold" id="fold-mastery" ${folds['fold-mastery'] ? 'open' : ''}><summary class="section-h"><h2>Domínio</h2><span class="muted" style="font-size:13px">perguntas acertadas pelo menos uma vez</span></summary>${mt}</details>
     <details class="section fold" id="fold-settings" ${folds['fold-settings'] || view.confirmReset ? 'open' : ''}>
-      <summary class="section-h"><h2>Definições</h2><span class="muted" style="font-size:13px">dia do teste, notas, importar, recomeçar</span></summary>
+      <summary class="section-h"><h2>Definições</h2><span class="muted" style="font-size:13px">notas, importar, recomeçar</span></summary>
       <div class="row">
         <label class="toggle"><input type="checkbox" id="unlockAll" data-act="unlockAll" ${S.settings.unlockAll ? 'checked' : ''}> Desbloquear todos os níveis</label>
-        <label class="toggle" for="testDate">Dia do teste <input type="date" id="testDate" data-act="testDate" value="${esc(S.settings.testDate)}" style="width:auto;height:auto;font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)"></label>
       </div>
       <div class="row">
         <button class="btn" data-act="bank">${glyph('plus')} Banco de perguntas e importar</button>
@@ -330,6 +320,7 @@ function Home() {
         <span class="spacer"></span>
         ${view.confirmReset ? `<span class="muted" style="font-size:13px">Apagar o progresso de ${esc(C.code)}?</span><button class="btn small" data-act="resetYes" style="color:var(--bad)">Sim, apagar</button><button class="btn small" data-act="resetNo">Cancelar</button>` : `<button class="btn ghost small" data-act="reset">Recomeçar do zero</button>`}
       </div>
+    </details>
     </details>`;
 }
 // Tudo / Só teoria / Só contas: applies to every mode (levels, Aprender, Revisão, exame simulado, extras)
@@ -441,9 +432,9 @@ function start(mode, opts = {}) {
     items = g.qs.map(makeItem);
   }
   if (mode === 'learn') {
-    const t = opts.topic; title = `Aprender · ${TOPICS[t].short}`;
+    const t = opts.topic; title = opts.title || `Aprender · ${TOPICS[t].short}`;
     // in "Só contas" a lesson with no calculation questions is skipped: that theory was already done
-    LESSONS.filter(l => l.t === t).forEach(l => {
+    LESSONS.filter(l => l.t === t && (!opts.les || opts.les.includes(l.id))).forEach(l => {
       const qs = basePool().filter(q => q.les === l.id).sort((a, b) => a.l - b.l || (peek(a.id).c - peek(b.id).c)).slice(0, 2);
       if (!qs.length && calcMode() === 'math') return;
       items.push({ kind: 'lesson', id: l.id }); qs.forEach(q => items.push(makeItem(q))); });
@@ -451,7 +442,7 @@ function start(mode, opts = {}) {
   if (mode === 'route') { const x = (C.route.stops || []).find(s => s.id === opts.stop); if (!x) return; items = routeItems(x); title = `${x.part ? x.part + ' · ' : ''}${x.title}`; }
   if (mode === 'retry') { items = opts.ids.map(id => BYID[id]).filter(Boolean).map(makeItem); title = 'Repetir erros'; }
   if (!items.length) { toast('Não há perguntas para estes filtros.'); return; }
-  ses = { mode, title, items, i: 0, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, stop: opts.stop, nextWasOpen: !!opts.level && opts.level < LEVELS.length && unlocked(opts.level + 1), topic: opts.topic, skill: mode === 'skill' ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
+  ses = { mode, title, items, i: 0, planKey: opts.planKey || null, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, stop: opts.stop, nextWasOpen: !!opts.level && opts.level < LEVELS.length && unlocked(opts.level + 1), topic: opts.topic, skill: mode === 'skill' ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
   if (timeLimit) startTimer();
   go(viewOf(items[0]));
 }

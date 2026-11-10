@@ -93,12 +93,15 @@ function finish() {
     ses.penalty = pen; ses.grade = Math.max(0, Math.round((ok - pen) / tot * 200) / 10); ses.rawGrade = Math.round(ok / tot * 200) / 10; const g = ses.results.filter(r => r.ok).reduce((a, r) => a + XP[BYID[r.id].l], 0); S.xp += g; ses.xp = g; }
   if (ses.mode === 'route' && ses.stop) { if (!S.route) S.route = {}; S.route[ses.stop] = Date.now(); }
   S.rounds++; S.sessions.push({ m: ses.mode, d: Date.now(), n: ses.results.length, ok: ses.results.filter(r => r.ok).length }); if (S.sessions.length > 400) S.sessions = S.sessions.slice(-400);
+  { const nl = ses.items.slice(0, ses.i + 1).filter(x => x.kind === 'lesson').length, key = ses.planKey || (ses.mode === 'skill' ? 'skill:' + ses.skill : ses.mode === 'level' ? 'level:' + ses.level : ses.mode === 'route' ? 'route:' + ses.stop : ses.mode);
+    planLog(key, Date.now() - ses.startedAt, ses.results.length + 2 * nl, 0, ses.mode === 'exam'); }
   save(); go('results');
 }
 
 /* ---------- LESSON (inside learn session) ---------- */
 function LessonScreen() {
   const L = LBYID[curItem().id]; const T = TOPICS[L.t];
+  if (!S.seenL) S.seenL = {}; if (!S.seenL[L.id]) { S.seenL[L.id] = Date.now(); save(); }   // the plan stops asking for theory already seen
   const lessonsTotal = ses.items.filter(x => x.kind === 'lesson').length; const li = ses.items.slice(0, ses.i + 1).filter(x => x.kind === 'lesson').length;
   return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="mono muted">lição ${li}/${lessonsTotal}</span></div>
     <article class="card"><span class="eyebrow">Teoria</span><h2 style="margin:6px 0 12px">${esc(L.title)}</h2><div class="lesson">${lessonBody(L)}</div>
@@ -121,7 +124,7 @@ function Results() {
       <div class="result-grid"><div class="kpi"><b>+${ses.xp}</b><span>XP ganho</span></div><div class="kpi"><b>${wrong.length}</b><span>para rever</span></div>${ses.mode === 'exam' ? (ses.items.length - tot ? `<div class="kpi"><b>${ses.items.length - tot}</b><span>em branco</span></div>` : '') : skipped.length ? `<div class="kpi"><b>${skipped.length}</b><span>saltadas</span></div>` : ''}<div class="kpi"><b>${topLevel()}</b><span>nível mais alto aberto</span></div></div>
       ${nowUnlocked ? `<p class="key" style="margin:0">Nível ${lvl + 1} desbloqueado. O token avançou.</p>` : ''}
       ${ses.skill && SKBYID[ses.skill] ? (r_ => `<p class="muted" style="margin:0">${esc(SKBYID[ses.skill].label)}: <b style="color:var(--ink)">${STATE[r_.state] ? STATE[r_.state][1] : ''}</b> · ${r_.ok}/${r_.total} perguntas${r_.pend ? `, ${r_.pend} por rever` : ''}.</p>`)(readiness(ses.skill)) : ''}
-      <div class="row">${wrong.length ? `<button class="btn primary" data-act="retryWrong">${wrong.length === 1 ? 'Repetir a errada' : `Repetir as ${wrong.length} erradas`}</button>` : ''}${skipped.length ? `<button class="btn${wrong.length ? '' : ' primary'}" data-act="retrySkipped">${skipped.length === 1 ? `Tentar a ${ses.mode === 'exam' ? 'que ficou em branco' : 'saltada'} agora` : `Tentar as ${skipped.length} ${ses.mode === 'exam' ? 'em branco' : 'saltadas'} agora`}</button>` : ''}${ses.mode === 'route' ? routeNextBtn() : ''}${lvl ? `<button class="btn" data-act="level" data-n="${nowUnlocked ? lvl + 1 : lvl}">${nowUnlocked ? `Ir para o nível ${lvl + 1}` : `Outra ronda do nível ${lvl}`}</button>` : ''}${ses.skill ? `<button class="btn" data-act="skill" data-k="${esc(ses.skill)}">Outra ronda deste tipo</button><button class="btn" data-act="mode" data-k="ready">Checklist</button>` : ''}<button class="btn" data-act="home">Início</button></div>
+      <div class="row">${planNextBtn(!!ses.planKey)}${wrong.length ? `<button class="btn${ses.planKey ? '' : ' primary'}" data-act="retryWrong">${wrong.length === 1 ? 'Repetir a errada' : `Repetir as ${wrong.length} erradas`}</button>` : ''}${skipped.length ? `<button class="btn${wrong.length || ses.planKey ? '' : ' primary'}" data-act="retrySkipped">${skipped.length === 1 ? `Tentar a ${ses.mode === 'exam' ? 'que ficou em branco' : 'saltada'} agora` : `Tentar as ${skipped.length} ${ses.mode === 'exam' ? 'em branco' : 'saltadas'} agora`}</button>` : ''}${ses.mode === 'route' ? routeNextBtn() : ''}${lvl ? `<button class="btn" data-act="level" data-n="${nowUnlocked ? lvl + 1 : lvl}">${nowUnlocked ? `Ir para o nível ${lvl + 1}` : `Outra ronda do nível ${lvl}`}</button>` : ''}${ses.skill ? `<button class="btn" data-act="skill" data-k="${esc(ses.skill)}">Outra ronda deste tipo</button><button class="btn" data-act="mode" data-k="ready">Checklist</button>` : ''}<button class="btn" data-act="home">Início</button></div>
     </article>
     ${wrong.length ? `<div class="section"><h2>O que falhaste, explicado</h2>${list}</div>` : `<div class="section"><p class="muted">Sem erros nesta ronda.</p></div>`}`;
 }
@@ -347,6 +350,9 @@ document.addEventListener('click', async ev => {
     case 'read': go('reader', { id: b.dataset.id }); break;
     case 'practice': { const ids = BANK.filter(q => q.les === b.dataset.id).sort((x, y) => x.l - y.l).map(q => q.id); start('retry', { ids }); if (ses) ses.title = 'Praticar lição'; break; }
     case 'pbGo': pbStart(b.dataset.k); break;
+    case 'planGo': planRun(+b.dataset.i, !!view.planMore); break;
+    case 'planMore': view.planMore = true; renderView(); break;
+    case 'minDay': S.settings.minDay = +b.dataset.k; save(); renderView(); break;
     case 'pbCheck': pbCheck(); break;
     case 'pbHint': pbHint(); break;
     case 'pbSign': pbSign(); break;

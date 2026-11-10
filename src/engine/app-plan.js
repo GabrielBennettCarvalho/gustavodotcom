@@ -16,6 +16,9 @@ const planToday = () => { if (!S.today || S.today.d !== todayStr()) S.today = { 
 const paceS = () => (S.pace && S.pace.n ? S.pace.s : PLAN_UNIT);
 const paceSpread = () => (S.pace && S.pace.n >= 3 ? [0.8, 1.25] : [0.6, 1.6]);
 const pbNominal = p => { const m = String(p.time || '').match(/(\d+)\D+(\d+)/); return m ? (+m[1] + +m[2]) / 2 : 6; };
+const lesUnits = ids => ids.reduce((a, id) => a + learnUnits(LBYID[id]), 0);
+// one sitting of theory: up to LEARN_MAX lessons, fewer when they are long (about 12 minutes of work)
+const learnBatch = ids => { const out = []; let u = 0; for (const id of ids) { const x = learnUnits(LBYID[id]); if (out.length && (out.length >= LEARN_MAX || u + x > 16)) break; out.push(id); u += x; } return out; };
 const taskMin = t => t.min !== undefined ? t.min : t.units * paceS() / 60;
 function minRange(m) {
   const [a, b] = paceSpread(), r = v => m > 20 ? Math.round(v / 5) * 5 : Math.round(v);
@@ -30,21 +33,27 @@ function planAll() {
   if (rv) T.push({ key: 'review', kind: 'review', label: `Rever ${rv} erro${rv === 1 ? '' : 's'}`, why: 'Os erros vêm primeiro: corrigidos enquanto estão frescos, não voltam.', units: Math.min(rv, 12), full: rv });
   if (re) T.push({ key: 'reviewExam', kind: 'reviewExam', label: `Rever ${re} erro${re === 1 ? '' : 's'} do exame simulado`, why: 'Erros em condições de exame: vale a pena acertá-los duas vezes seguidas.', units: Math.min(re, 12), full: re });
   const unseen = ids => ids.filter(id => LBYID[id] && !(S.seenL || {})[id]);
+  // a key problem left half done comes right after the mistakes: finishing it costs less than starting anything else
+  const half = (C.problems || []).find(p => pbSaved(p) && partTopics().includes(p.t));
+  if (half) { const K = pbSaved(half), left = K.st.filter(x => x[0] === 'todo').length / K.st.length;
+    T.push({ key: 'pb:' + half.id, kind: 'pb', skill: half.skill, w: 1e9, id: half.id, label: `Acabar o problema: ${half.short || half.title}`, why: 'Ficou a meio: continuas no passo onde paraste.', min: Math.max(2, pbNominal(half) * left * ((S.pace && S.pace.pbn) ? S.pace.pb : 1)), full: 0 }); }
   if (SKILLS.length) {
     const nExams = pastList().length || pastGroups().length;
     readySummary().rows.filter(x => x.r.state !== 'ready').sort((a, b) => b.w - a.w || b.r.pct - a.r.pct).forEach(({ s, r, w }) => {
       const why = (s.seen || []).length ? `Saiu em ${s.seen.length} de ${nExams} exames e ainda não está pronto.` : 'Matéria base que os exames usam.';
       const L = unseen(s.les || []);
-      if (L.length) T.push({ key: 'learn:' + s.id, kind: 'learn', skill: s.id, w, t: s.t, les: L.slice(0, LEARN_MAX), label: `Aprender: ${s.label}`, why: `Primeiro a teoria: ${L.length === 1 ? 'há 1 lição' : `há ${L.length} lições`} que ainda não viste.`, units: Math.min(L.length, LEARN_MAX) * 4, full: L.length * 4 });
+      const B = learnBatch(L);
+      if (L.length) T.push({ key: 'learn:' + s.id, kind: 'learn', skill: s.id, w, t: s.t, les: B, label: `Aprender: ${s.label}`, why: `Primeiro a teoria: ${L.length === 1 ? 'há 1 lição' : `há ${L.length} lições`} que ainda não viste.`, units: lesUnits(B), full: lesUnits(L) });
       const p = (C.problems || []).find(x => x.skill === s.id), ps = p && pbStatus(p);
       const left = r.total - r.ok;
+      if (half && p && p.id === half.id) return;   // already first in the plan
       if (p && ps.due) T.push({ key: 'pb:' + p.id, kind: 'pb', skill: s.id, w, id: p.id, label: `Problema-chave: ${p.short || p.title}`, why: `${why} Resolves um problema de exame com pistas.`, min: pbNominal(p) * ((S.pace && S.pace.pbn) ? S.pace.pb : 1), full: left });
       else T.push({ key: 'skill:' + s.id, kind: 'skill', skill: s.id, w, label: `Treinar: ${s.label}`, why, units: Math.min(left, 8) + 2, full: left });
     });
     if (!T.length) T.push({ key: 'exam', kind: 'exam', label: 'Exame simulado', why: 'Todos os tipos de problema estão prontos: testa-te em condições de exame.', units: examCfg().n, full: 0 });
   } else {
-    Object.keys(TOPICS).filter(k => pt.includes(k)).forEach(k => { const L = unseen(LESSONS.filter(l => l.t === k).map(l => l.id));
-      if (L.length) T.push({ key: 'learn:' + k, kind: 'learn', t: k, les: L.slice(0, LEARN_MAX), label: `Aprender: ${TOPICS[k].label || TOPICS[k].short}`, why: L.length > LEARN_MAX ? `Teoria que ainda não viste: as próximas ${LEARN_MAX} de ${L.length} lições, com perguntas a seguir.` : `Teoria que ainda não viste (${L.length} ${L.length === 1 ? 'lição' : 'lições'}), com perguntas a seguir.`, units: Math.min(L.length, LEARN_MAX) * 4, full: L.length * 4, w: 1 }); });
+    Object.keys(TOPICS).filter(k => pt.includes(k)).forEach(k => { const L = unseen(LESSONS.filter(l => l.t === k).map(l => l.id)), B = learnBatch(L);
+      if (L.length) T.push({ key: 'learn:' + k, kind: 'learn', t: k, les: B, label: `Aprender: ${TOPICS[k].label || TOPICS[k].short}`, why: L.length > B.length ? `Teoria que ainda não viste: ${B.length === 1 ? 'a próxima' : `as próximas ${B.length}`} de ${L.length} lições, com perguntas a seguir.` : `Teoria que ainda não viste (${L.length} ${L.length === 1 ? 'lição' : 'lições'}), com perguntas a seguir.`, units: lesUnits(B), full: lesUnits(L), w: 1 }); });
     const tl = topLevel(), m = mastery(tl), left = m.total - m.done;
     if (left) T.splice(Math.min(T.length, rv || re ? 2 : 1), 0, { key: 'level:' + tl, kind: 'level', level: tl, label: `Nível ${tl} · ${LEVELS[tl - 1].t}`, why: tl < LEVELS.length ? `O nível ${tl + 1} abre com ${Math.round(UNLOCK * 100)}% deste.` : 'O último nível: as armadilhas do exame.', units: 10, full: BANK.filter(q => !isReserved(q) && inTopics(q) && !peek(q.id).c).length, w: 1 });
     if (!T.length) T.push({ key: 'exam', kind: 'exam', label: 'Exame simulado', why: 'Está tudo feito: testa-te em condições de exame.', units: examCfg().n, full: 0 });

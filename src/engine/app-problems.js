@@ -6,7 +6,8 @@
    - a concept (step.c) done cleanly last time is filled in next time, so nobody repeats arithmetic they have shown they can do;
    - a clean first problem finishes the type; otherwise the next stage comes the next day;
    - a finished type comes back once, alone, as a review.
-   Progress lives in S.prob = { t: { typeId: { stage, done, due, last: { stageId: ms } } }, con: { concept: 1 | 0 } }. */
+   Progress lives in S.prob = { t: { typeId: { stage, done, due, last: { stageId: ms } } }, con: { concept: 1 | 0 } }.
+   A problem left half done (back button, closed tab, refresh) is kept in S.pbCur and picks up where it stopped. */
 const PB_DAY = 864e5, PB_REVIEW = 7 * PB_DAY, PB_TOL = 0.011;
 const PB_KIND = { guided: 'Guiado', half: 'Com mais ajuda', alone: 'Sozinho' };
 let pb = null;   // the problem being solved
@@ -46,7 +47,20 @@ function pbStart(id, planKey) {
   const steps = stage.steps.map(s => ({ s, state: anyTodo && given(s) ? 'given' : 'todo', wrong: 0, hints: 0, msg: '', marks: null,
     vals: pbCells(s).map(c => c.shown ? pbNum(c.v) : '') }));
   pb = { p, si, stage, alone, review, steps, i: steps.findIndex(x => x.state === 'todo'), showing: false, stmtOpen: true, result: null, focus: null, lastCell: null, planKey: planKey || null, startedAt: Date.now() };
+  // the same problem, left half done in the last 3 days: carry on from there, with the time already spent
+  const K = pbSaved(p);
+  if (K && K.si === si && K.st.length === steps.length) {
+    K.st.forEach(([state, wrong, hints, vals], j) => Object.assign(steps[j], { state, wrong, hints, vals }));
+    pb.i = Math.min(K.i, steps.length - 1); pb.planKey = planKey || K.key || null; pb.startedAt = Date.now() - Math.max(0, K.at - K.t0);
+    if (pb.steps[pb.i].state !== 'todo') { const n = steps.findIndex(x => x.state === 'todo'); if (n < 0) { pbFinish(); return; } pb.i = n; }
+  }
   go('problem');
+}
+const pbSaved = p => { const K = S.pbCur; return K && K.id === p.id && Date.now() - K.at < 3 * PB_DAY ? K : null; };
+function pbKeep() {
+  if (!pb || pb.result) return;
+  S.pbCur = { id: pb.p.id, si: pb.si, i: pb.i, key: pb.planKey, t0: pb.startedAt, at: Date.now(), st: pb.steps.map(x => [x.state, x.wrong, x.hints, x.vals]) };
+  save();
 }
 function pbAdvance() {
   const n = pb.steps.findIndex(x => x.state === 'todo');
@@ -99,7 +113,7 @@ function pbFinish() {
   else if (pb.si === N - 1) { T.stage = Math.max(0, pb.si - 1); T.due = now + PB_DAY; next = 'Amanhã há outro com mais ajuda, e depois tentas sozinho outra vez.'; }
   else { T.stage = pb.si + 1; T.due = now + PB_DAY; next = heavy ? 'Amanhã há outro parecido, com mais ajuda onde precisaste.' : 'Amanhã há outro parecido, e já não repetes o que fizeste bem.'; }
   planLog(pb.planKey || 'pb:' + pb.p.id, now - pb.startedAt, pb.steps.length, pbNominal(pb.p));
-  S.rounds++; save();
+  S.pbCur = null; S.rounds++; save();
   pb.result = { frac, marks, xp, clean, heavy, next, more: !T.done };
   go('problem');
 }
@@ -108,8 +122,9 @@ function pbFinish() {
 function ProblemPick() {
   const list = pbTypes().map(p => { const st = pbStatus(p), T = S.prob.t[p.id];
     const dots = p.stages.map((s, i) => `<i class="${T && T.last[s.id] ? 'ok' : !T ? (i ? '' : 'cur') : !T.done && i === T.stage ? 'cur' : ''}" title="${esc(PB_KIND[s.kind])}"></i>`).join('');
-    const go_ = st.k === 'new' ? 'Começar' : st.k === 'wait' ? 'Fazer já' : st.k === 'done' ? 'Refazer' : 'Continuar';
-    return `<div class="pb-type" style="--c:${TOPICS[p.t].c}"><div class="pb-type-main"><h3>${esc(p.title)}</h3><p class="muted">${esc(p.sub || '')}</p><span class="meta"><span class="pb-dots" aria-hidden="true">${dots}</span>${esc(st.label)} · ${esc(p.time || '5 a 8 min')}</span></div>
+    const half = pbSaved(p) && pbSaved(p).si === st.stage;
+    const go_ = half ? 'Continuar' : st.k === 'new' ? 'Começar' : st.k === 'wait' ? 'Fazer já' : st.k === 'done' ? 'Refazer' : 'Continuar';
+    return `<div class="pb-type" style="--c:${TOPICS[p.t].c}"><div class="pb-type-main"><h3>${esc(p.title)}</h3><p class="muted">${esc(p.sub || '')}</p><span class="meta"><span class="pb-dots" aria-hidden="true">${dots}</span>${half ? `A meio, no passo ${pbSaved(p).i + 1} de ${pbSaved(p).st.length}` : esc(st.label)} · ${esc(p.time || '5 a 8 min')}</span></div>
       <button class="btn ${st.due ? 'primary' : ''}" data-act="pbGo" data-k="${esc(p.id)}">${go_} →</button></div>`; }).join('');
   return `<div class="qhead">${BACK}<span class="eyebrow">Problemas-chave</span></div>
     <p class="muted" style="font-size:13.5px;margin-bottom:12px">Os grandes problemas do exame, feitos por ti. Escreves só os valores que importam, pedes pistas quando encravares, e o que já mostraste que sabes passa a vir feito. Se resolveres à primeira, fica pronto.</p>
@@ -164,7 +179,7 @@ function pbResults() {
     <div class="row" style="margin-top:14px">${planNextBtn(!!pb.planKey)}<button class="btn${pb.planKey ? '' : ' primary'}" data-act="pbDone" id="pbEnd">Voltar ao início</button>${r.more ? `<button class="btn" data-act="pbGo" data-k="${esc(pb.p.id)}">Fazer já o próximo</button>` : ''}</div></div>`;
 }
 function afterProblemRender() {
-  if (!pb) return; const f = pb.focus; pb.focus = null;
+  if (!pb) return; pbKeep(); const f = pb.focus; pb.focus = null;
   if (pb.result) { const e = document.getElementById('pbEnd'); if (e) e.focus({ preventScroll: true }); return; }
   if (!f) return;
   const card = document.getElementById('pbStep'), cont = document.getElementById('pbCont'), cells = [...document.querySelectorAll('input.pb-cell')];
@@ -173,7 +188,8 @@ function afterProblemRender() {
   if (t && f !== 'cont') { t.focus({ preventScroll: true }); if (f === 'bad') t.select(); }
   if (card) (f === 'cont' ? (cont || card) : card).scrollIntoView({ block: f === 'cont' ? 'nearest' : 'start' });
 }
-document.addEventListener('input', ev => { const t = ev.target; if (pb && t.dataset && t.dataset.act === 'pval') { const x = pb.steps[pb.i]; x.vals[+t.dataset.c] = t.value; t.classList.remove('bad', 'good'); } });
+let pbKeepT = null;
+document.addEventListener('input', ev => { const t = ev.target; if (pb && t.dataset && t.dataset.act === 'pval') { const x = pb.steps[pb.i]; x.vals[+t.dataset.c] = t.value; t.classList.remove('bad', 'good'); clearTimeout(pbKeepT); pbKeepT = setTimeout(pbKeep, 800); } });
 document.addEventListener('focusin', ev => { const t = ev.target; if (pb && t.dataset && t.dataset.act === 'pval') pb.lastCell = +t.dataset.c; });
 document.addEventListener('toggle', ev => { if (pb && ev.target.id === 'pb-stmt') pb.stmtOpen = ev.target.open; }, true);
 // the ± button must not take the focus away from the box it changes

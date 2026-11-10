@@ -61,9 +61,19 @@ option (or a list) · `e` explanation. Optional: `w` note per wrong option, `les
 shown above the question, `d` diagram, `src` source, `fixed` don't shuffle options, `reserved: 'exam'` only in
 the mock exam, `calc: true` the question needs calculations (hidden by "Só teoria", the only ones in "Só contas", tagged "Contas"), `step: '2/3'`
 step of a guided calculation, `code` a code listing shown above the options, `k` the exam problem type (when it is not the
-one of its lesson; `k: ''` for none), `kind: 'method' | 'check' | 'bug'` (Que método? / Verificação / Onde está o erro?).
+one of its lesson; `k: ''` for none), `kind: 'method' | 'check' | 'bug'` (Que método? / Verificação / Onde está o erro?),
+`card: n` the card of its lesson it is about (see below).
 
 New file? Add it to the course's list in `manifest.json`. Lessons work the same way with `STUDY.lessons`.
+
+### Lessons in cards (Aprender)
+
+A lesson's `html` can be split into cards with `<!--card-->` markers, one idea per card (2 or 3 cards of about 300–600
+characters; a short lesson stays whole). Each question of the lesson names its card with `card: n`. Aprender then shows
+card 1, one question on it, card 2, one question on it, and so on, and ends the lesson with two questions on the earlier
+cards, asked after other cards so they need recall ("Revisão rápida · cartões anteriores"). The theory shown after an answer is only that question's card.
+A lesson with no markers works as before: the whole text, then its two easiest questions. The build checks that every
+`card` exists and warns about a card with no question of its own. All APRE lessons are in cards; the other courses aren't yet.
 
 ## Adding a course
 
@@ -98,13 +108,14 @@ New file? Add it to the course's list in `manifest.json`. Lessons work the same 
 ## Today's plan (Hoje)
 
 The top of every course's home (`src/engine/app-plan.js`). It answers "what do I do now?": mistakes in review first, then each
-exam problem type not ready yet, most frequent first (its theory if unseen, at most 3 lessons at a time, then its key problem or
-its questions). Courses without `skills` go topic by topic and level by level. With everything ready, it offers the mock exam.
+exam problem type not ready yet, most frequent first (its theory if unseen, up to 3 lessons or about 12 minutes at a time, then
+its key problem or its questions). A key problem left half done comes right after the mistakes. Courses without `skills` go
+topic by topic and level by level. With everything ready, it offers the mock exam.
 
 - **Pace:** with the test date and the minutes per day (15, 30, 45 or 60), the work left is spread over the days left.
   When it doesn't fit, the types that came up least are cut, and the card says which.
 - **Times:** shown as ranges. They start wide and narrow to the student's own pace, measured from their sessions (`S.pace`).
-- **Today:** time studied and tasks done today are in `S.today`; lessons seen are in `S.seenL`. None of it is in the progress key.
+- **Today:** time studied and tasks done today are in `S.today`; lessons seen are in `S.seenL`. Both travel in the progress key.
 - **Explorar:** everything else on the home (levels, topics, modes, past exams, settings) is folded under it.
 
 ## Key problems (Problemas-chave)
@@ -118,7 +129,8 @@ The big exam problems, solved by typing the key values (`src/engine/app-problems
 - A concept (`c`) done cleanly comes filled in next time, except in `alone` stages and reviews.
 - A clean first problem finishes the type. Otherwise the next stage is due the next day ("Fazer já" skips the wait).
 - A finished type comes back once, with no hints, a week later.
-- Progress is in `S.prob`. It is not in the "other device" key yet. Never change a published problem or stage id.
+- A problem left half done (back button, closed tab, refresh) is kept in `S.pbCur` for 3 days and picks up at the same step.
+- Progress is in `S.prob` and travels in the progress key. Never change a published problem or stage id.
 
 ## Skip, Tudo / Só teoria / Só contas, and theme
 
@@ -136,7 +148,8 @@ The big exam problems, solved by typing the key values (`src/engine/app-problems
 
 Progress lives in the browser (`localStorage`). The **Outro dispositivo** screen packs it into a key
 (link + QR on the site, text in the local file) that another device merges in; nothing is ever overwritten.
-Format details are at the top of `src/engine/progress-key.js`.
+Besides the answers, notes, XP and test date, it carries the lessons seen, the key problems, the pace and today's plan,
+in a block at the end that older copies of the app skip. Format details are at the top of `src/engine/progress-key.js`.
 
 ## Rules that must not be broken
 

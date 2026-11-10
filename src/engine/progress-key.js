@@ -7,7 +7,7 @@
 
    Text format:  "E1" + base64url(bytes)
    bytes:        [flags] + payload + [checksum hi, lo]
-     flags       bit0 compressed · bit1 includes notes
+     flags       bit0 compressed · bit1 includes notes · bit2 extras block at the end
      payload     deflate-compressed when the browser supports it
      checksum    Fletcher-16 over flags + payload, catches truncated or mistyped keys
    payload (varint = unsigned LEB128, str = varint length + UTF-8):
@@ -20,6 +20,11 @@
        n × byte  box<<5 | eb<<3 | ew   (box ≤ 7, eb ≤ 3, ew ≤ 7)
        n × varint lastDay − baseDay
        if notes: varint m, m × (varint index, str text)
+     if extras (bit2), after every course:
+       varint m, m × (str id, str json)   the newer state: lessons seen, key problems, pace and today's plan
+       json = { sl: { lessonId: day }, pt: { typeId: [stage, done, dueDay, { stageId: day }] }, pc: { concept: 0|1 },
+                pa: [s, n, pb, pbn], td: [date, minutes, [plan keys]], md: minutes per day }
+       It sits at the end so that an older copy of the app, which stops reading before it, still reads the rest.
    Columns (not rows) because similar bytes side by side compress much better. */
 window.PROGRESS_KEY = (() => {
   const PREFIX = 'E1';
@@ -79,11 +84,36 @@ window.PROGRESS_KEY = (() => {
         w.varint(ns.length); ns.forEach(([q, t]) => { w.varint(pos.get(q)); w.str(t); });
       }
     }
-    let payload = w.out(), flags = opts.notes ? 2 : 0;
+    const ext = list.map(id => [id, extOut(G.c[id])]).filter(x => x[1]);
+    w.varint(ext.length); ext.forEach(([id, j]) => { w.str(id); w.str(j); });
+    let payload = w.out(), flags = (opts.notes ? 2 : 0) | 4;
     if (canZip) { const z = await pipe(payload, CompressionStream); if (z.length < payload.length) { payload = z; flags |= 1; } }
     const body = new Uint8Array(payload.length + 1); body[0] = flags; body.set(payload, 1);
     const all = new Uint8Array(body.length + 2); all.set(body); all.set(fletcher(body), body.length);
     return PREFIX + b64(all);
+  }
+
+  /* --- extras: the newer per-course state, as compact JSON (times in days) --- */
+  function extOut(S) {
+    const o = {}, days = m => Object.fromEntries(Object.entries(m || {}).map(([k, v]) => [k, toDay(v)]));
+    if (S.seenL && Object.keys(S.seenL).length) o.sl = days(S.seenL);
+    const T = (S.prob && S.prob.t) || {};
+    if (Object.keys(T).length) o.pt = Object.fromEntries(Object.entries(T).map(([k, t]) => [k, [t.stage | 0, t.done ? 1 : 0, t.due ? toDay(t.due) + 1 : 0, days(t.last)]]));
+    if (S.prob && S.prob.con && Object.keys(S.prob.con).length) o.pc = S.prob.con;
+    if (S.pace && (S.pace.n || S.pace.pbn)) o.pa = [Math.round(S.pace.s), S.pace.n, Math.round(S.pace.pb * 100) / 100, S.pace.pbn];
+    if (S.today && S.today.d) o.td = [S.today.d, Math.round(S.today.ms / 60000), S.today.did || []];
+    if (S.settings && S.settings.minDay && S.settings.minDay !== 30) o.md = S.settings.minDay;
+    return Object.keys(o).length ? JSON.stringify(o) : '';
+  }
+  function extIn(j) {
+    const o = JSON.parse(j), days = m => Object.fromEntries(Object.entries(m || {}).map(([k, d]) => [k, fromDay(d)])), x = {};
+    if (o.sl) x.seenL = days(o.sl);
+    if (o.pt) x.probT = Object.fromEntries(Object.entries(o.pt).map(([k, [stage, done, due, last]]) => [k, { stage, done: !!done, due: due ? fromDay(due - 1) : 0, last: days(last) }]));
+    if (o.pc) x.probCon = o.pc;
+    if (o.pa) x.pace = { s: o.pa[0], n: o.pa[1], pb: o.pa[2], pbn: o.pa[3] };
+    if (o.td) x.today = { d: o.td[0], ms: o.td[1] * 60000, did: o.td[2] || [] };
+    if (o.md) x.minDay = o.md;
+    return x;
   }
 
   /* --- find the key inside whatever was pasted: a link, the key itself, text around it --- */
@@ -124,6 +154,7 @@ window.PROGRESS_KEY = (() => {
         if (flags & 2) { const m = r.varint(); for (let j = 0; j < m; j++) { const i = r.varint(), t = r.str(); if (ids[i]) C.notes[ids[i]] = t; } }
         if (courses[id]) out.courses[id] = C; else out.unknown += n;
       }
+      if (flags & 4) { const m = r.varint(); for (let j = 0; j < m; j++) { const id = r.str(), t = r.str(); if (out.courses[id]) out.courses[id].ext = extIn(t); } }
     } catch { throw bad(); }
     if (!Object.keys(out.courses).length) throw new Error('Esta chave não tem progresso de nenhuma cadeira deste site.');
     return out;
@@ -151,8 +182,21 @@ window.PROGRESS_KEY = (() => {
       L.xp = Math.max(L.xp || 0, R.xp); L.rounds = Math.max(L.rounds || 0, R.rounds);
       if (!L.settings.testDate && R.testDate) L.settings.testDate = R.testDate;
       if (R.unlockAll) L.settings.unlockAll = true;
+      if (R.ext) mergeExt(L, R.ext, report);
     }
     return report;
+  }
+
+  // lessons seen: the earliest date wins; a key problem: the side that worked on it last wins; pace: the side with more samples
+  function mergeExt(L, X, report) {
+    if (X.seenL) { L.seenL = L.seenL || {}; for (const [k, v] of Object.entries(X.seenL)) if (!L.seenL[k] || v < L.seenL[k]) { if (!L.seenL[k]) report.lessons = (report.lessons || 0) + 1; L.seenL[k] = v; } }
+    if (X.probT || X.probCon) { L.prob = L.prob || { t: {}, con: {} }; L.prob.t = L.prob.t || {}; L.prob.con = L.prob.con || {}; }
+    const latest = t => Math.max(0, ...Object.values((t && t.last) || {}));
+    for (const [k, t] of Object.entries(X.probT || {})) if (!L.prob.t[k] || latest(t) > latest(L.prob.t[k]) + 864e5 / 2) { L.prob.t[k] = t; report.problems = (report.problems || 0) + 1; }
+    for (const [k, v] of Object.entries(X.probCon || {})) if (!(k in L.prob.con)) L.prob.con[k] = v;
+    if (X.pace && (!L.pace || X.pace.n + X.pace.pbn > (L.pace.n || 0) + (L.pace.pbn || 0))) L.pace = X.pace;
+    if (X.today) { const t = L.today; if (!t || t.d < X.today.d) L.today = X.today; else if (t.d === X.today.d) { t.ms = Math.max(t.ms, X.today.ms); X.today.did.forEach(k => { if (!t.did.includes(k)) t.did.push(k); }); } }
+    if (X.minDay && (!L.settings.minDay || L.settings.minDay === 30)) L.settings.minDay = X.minDay;
   }
 
   /* --- what a key contains, for the confirmation screen --- */

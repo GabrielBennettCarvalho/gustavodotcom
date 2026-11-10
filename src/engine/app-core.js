@@ -405,6 +405,30 @@ function buildExam() {
   return shuffle(qs);
 }
 const viewOf = it => it.kind === 'lesson' ? 'lesson' : it.kind === 'brief' ? 'brief' : 'quiz';
+/* Aprender. A lesson whose html has <!--card--> markers is split into cards, one idea each. A question names its card
+   with card: n. The flow: card 1, one question on it, card 2, one question on it, …, then two questions on the
+   earlier cards ("Revisão rápida"), asked after other cards, which makes the student recall instead of recognise.
+   A lesson with no markers stays as before: the whole text, then its two easiest questions. */
+const CARD_CUT = /<!--\s*card\s*-->/;
+const lessonCards = L => (L.html || '').split(CARD_CUT);
+function learnItems(L) {
+  const easy = (a, b) => a.l - b.l || peek(a.id).c - peek(b.id).c;
+  const qs = basePool().filter(q => q.les === L.id && !q.ch).sort(easy), n = lessonCards(L).length;
+  if (n < 2) return [{ kind: 'lesson', id: L.id }, ...basePool().filter(q => q.les === L.id).sort(easy).slice(0, 2).map(makeItem)];
+  const items = [], used = new Set();
+  for (let k = 1; k <= n; k++) {
+    items.push({ kind: 'lesson', id: L.id, card: k, cards: n });
+    const q = qs.find(x => x.card === k && shown(x)); if (q) { used.add(q.id); items.push(makeItem(q)); }
+  }
+  // recall: earlier cards first, one question per card, never the one just asked
+  const left = qs.filter(x => x.card && x.card < n && !used.has(x.id) && shown(x)), rec = [];
+  for (let k = 1; k < n && rec.length < 2; k++) { const q = left.find(x => x.card === k); if (q) rec.push(q); }
+  left.forEach(x => { if (rec.length < 2 && !rec.includes(x)) rec.push(x); });
+  rec.forEach(q => items.push(Object.assign(makeItem(q), { recall: true })));
+  return items;
+}
+// work units of a lesson in Aprender (a question = 1, reading the lesson = 2), for the times in the plan
+const learnUnits = L => 2 + learnItems(L).filter(x => x.kind === 'q').length;
 function start(mode, opts = {}) {
   let items = [], title = '', timeLimit = 0;
   const pool = trainPool();
@@ -435,9 +459,9 @@ function start(mode, opts = {}) {
     const t = opts.topic; title = opts.title || `Aprender · ${TOPICS[t].short}`;
     // in "Só contas" a lesson with no calculation questions is skipped: that theory was already done
     LESSONS.filter(l => l.t === t && (!opts.les || opts.les.includes(l.id))).forEach(l => {
-      const qs = basePool().filter(q => q.les === l.id).sort((a, b) => a.l - b.l || (peek(a.id).c - peek(b.id).c)).slice(0, 2);
-      if (!qs.length && calcMode() === 'math') return;
-      items.push({ kind: 'lesson', id: l.id }); qs.forEach(q => items.push(makeItem(q))); });
+      const li = learnItems(l);
+      if (calcMode() === 'math' && !li.some(x => x.kind === 'q')) return;
+      items.push(...li); });
   }
   if (mode === 'route') { const x = (C.route.stops || []).find(s => s.id === opts.stop); if (!x) return; items = routeItems(x); title = `${x.part ? x.part + ' · ' : ''}${x.title}`; }
   if (mode === 'retry') { items = opts.ids.map(id => BYID[id]).filter(Boolean).map(makeItem); title = 'Repetir erros'; }

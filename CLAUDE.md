@@ -36,6 +36,8 @@ Full field reference and layout are in README.md. Read it only when you need a d
 - Exam questions carry `src` starting with an exam name ("Exame 1 2024/25, 6.b"): it drives Exames anteriores and priority.
   In courses with `skills` (ML), a question with no exam type (by lesson or `k`) is supplementary.
 - Long exam problems are split into steps with `ch` (problem id) and `step: 'k/n'`, each step self-contained.
+- APRE lessons are split into cards with `<!--card-->`, and each question says which with `card: n`. A new question on such
+  a lesson needs its `card`; a new card needs at least one question (the build warns).
 - Lessons are trusted HTML. Question text only supports `**bold**`, `` `code` `` and line breaks, so write
   math with Unicode (Σ, σ, ∂, ŷ, ², ₁).
 

@@ -448,6 +448,9 @@ textarea.key{min-height:84px;word-break:break-all}
 .calc-fab{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--accent);box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer;transition:transform .1s ease}
 .calc-fab:hover{transform:translateY(-1px)}
 .calc-fab[hidden]{display:none}
+/* above a bar stuck to the bottom of the screen (key problems; the quiz's next bar on a phone), not on its buttons */
+body:has(.pb-actions) .calc-fab{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+@media (max-width:560px){body:has(.qfoot.next-bar) .calc-fab{bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
 .calc-panel{position:fixed;right:16px;bottom:16px;z-index:45;width:min(372px,calc(100vw - 32px));max-height:calc(100vh - 32px);display:flex;flex-direction:column;gap:8px;padding:8px 12px 10px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.22)}
 .calc-h{display:flex;align-items:center;gap:4px;margin-right:-6px}
 .calc-hist{list-style:none;margin:0;padding:0;overflow-y:auto;max-height:200px;display:flex;flex-direction:column;border-bottom:1px solid var(--line)}
@@ -462,15 +465,17 @@ textarea.key{min-height:84px;word-break:break-all}
 .calc-alt{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
 .calc-disp{position:relative;border:1.5px solid var(--line);border-radius:10px;background:var(--panel-2);padding:10px 12px 8px;cursor:text;min-height:86px;display:flex;flex-direction:column;justify-content:space-between;gap:4px}
 .calc-disp.focus{border-color:var(--accent)}
-.calc-expr{font-size:24px;min-height:36px;overflow-x:auto;overflow-y:hidden;padding:4px 0;display:flex;align-items:center;flex-wrap:nowrap}
+/* a block, not flex: flex items ignore vertical-align, which raises exponents and lowers indices */
+.calc-expr{font-size:24px;min-height:44px;overflow-x:auto;overflow-y:hidden;padding:6px 0 2px;line-height:1.7;white-space:nowrap}
 .calc-ph{color:var(--muted);font-size:15px;font-family:var(--f-body);opacity:.8}
 .calc-prev{display:flex;align-items:baseline;justify-content:flex-end;gap:10px;min-height:22px;text-align:right;color:var(--muted)}
 .calc-prev .cl{font-size:18px}
-.calc-prev.err{color:var(--bad);font-size:13px;justify-content:flex-start;text-align:left}
+.calc-prev.err{display:block;color:var(--bad);font-size:13.5px;line-height:1.45;text-align:left;white-space:normal;overflow-wrap:anywhere}
+.calc-prev.err .cl{font-size:16px;color:var(--ink)}
 .calc-in{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;border:0;padding:0;pointer-events:none;caret-color:transparent}
 .calc-keys{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
 .calc-keys.pad{display:none}
-.calc-k{height:36px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);cursor:pointer;font:600 15px var(--f-body);display:grid;place-items:center;padding:0;touch-action:manipulation;white-space:nowrap}
+.calc-k{height:36px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);cursor:pointer;font:600 15px var(--f-body);display:flex;align-items:center;justify-content:center;padding:0;touch-action:manipulation;white-space:nowrap}
 .calc-k:hover{background:var(--line)}
 .calc-k:active{transform:translateY(1px)}
 .calc-k.eq{grid-column:span 2;background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
@@ -504,7 +509,7 @@ textarea.key{min-height:84px;word-break:break-all}
 .cl-fd{border-top:1.5px solid currentColor;padding:.06em .12em 0}
 .cl-frac.sm{font-size:11px;line-height:1;font-family:var(--f-body)}
 .cl-sup{font-size:.68em;vertical-align:.75em;display:inline-block;line-height:1}
-.cl-sub{font-size:.65em;vertical-align:-.35em;display:inline-block;line-height:1}
+.cl-sub{font-size:.65em;vertical-align:-.4em;display:inline-block;line-height:1}
 .cl-x{margin-left:.1em}
 .cl-x sup{font-size:.7em}
 .cl-sqrt{display:inline-flex;align-items:stretch;vertical-align:middle;margin:0 .06em;position:relative}
@@ -19729,7 +19734,7 @@ function run(tree, env = {}) {
       if (tok.v === 'pi') return F(Math.PI); if (tok.v === 'e') return F(Math.E);
       if (!env.ans) throw E('Ainda não há resultado anterior (ans)'); return env.ans;
     }
-    const k = varName(tok); if (!vars[k]) throw E(`${k} não tem valor: define-a com ${k} = …`); return vars[k];
+    const k = varName(tok); if (!vars[k]) throw Object.assign(E(`${k} ainda não tem valor. Guarda-o antes, por exemplo ${k} = 2`), { unset: k }); return vars[k];
   }
   function ev(n) {
     switch (n.t) {
@@ -19759,7 +19764,7 @@ function run(tree, env = {}) {
     if (tree.empty) return { ok: false, err: '' };
     if (tree.t === 'set') { if (tree.v.sub && !tree.v.sub.text) throw E(INCOMPLETE); const v = ev(tree.a); return { ok: true, v, name: varName(tree.v) }; }
     return { ok: true, v: ev(tree) };
-  } catch (e) { return { ok: false, err: e.calc ? e.message : 'Não consegui calcular isto', incomplete: e.message === INCOMPLETE }; }
+  } catch (e) { return { ok: false, err: e.calc ? e.message : 'Não consegui calcular isto', incomplete: e.message === INCOMPLETE, unset: e.unset }; }   // unset: the variable with no value
 }
 
 /* ---------- rendering (HTML, natural display) ---------- */
@@ -20780,7 +20785,7 @@ function rcNext(rate) {
    History, variables and ans stay on this device (LS_CALC). */
 const LS_CALC = 'estudo-ist-calc', CX = window.CALC;
 const calcMem = Object.assign({ hist: [], vars: {}, ans: null }, ls.get(LS_CALC) || {});
-let calcIsOpen = false, calcHi = -1, calcDraft = '', calcErr = '';   // calcErr: why Enter could not calculate, until the next edit   // calcHi: history entry recalled with ↑ (−1: what was being typed)
+let calcIsOpen = false, calcHi = -1, calcDraft = '', calcErr = '';   // calcErr: why Enter could not calculate (HTML), until the next edit   // calcHi: history entry recalled with ↑ (−1: what was being typed)
 const calcWanted = () => !!(C && S && !['courses', 'sync'].includes(view.name) && (S.settings.calc ?? hasCalc()));
 const calcEnv = () => { const vars = {}; for (const k in calcMem.vars) { const v = CX.de(calcMem.vars[k]); if (v) vars[k] = v; } return { vars, ans: CX.de(calcMem.ans) }; };
 const calcEl = id => document.getElementById(id);
@@ -20854,7 +20859,7 @@ function calcDraw() {
   if (a !== b) ex.querySelectorAll('[data-s]').forEach(l => { if (+l.dataset.s >= a && +l.dataset.e <= b && +l.dataset.e > +l.dataset.s) l.classList.add('sel'); });
   else calcCaret(ex, inp.selectionDirection === 'backward' ? a : b);
   pv.classList.toggle('err', !!calcErr);
-  if (calcErr) { pv.textContent = calcErr; return; }
+  if (calcErr) { pv.innerHTML = calcErr; return; }
   if (tree.empty) { pv.innerHTML = ''; return; }
   const r = CX.run(tree, calcEnv());
   pv.innerHTML = r.ok ? (r.name ? `<span class="cl">${CX.render(CX.parse(r.name))}</span> ` : '') + calcResultH(r.v, 'calc-live') : '';
@@ -20899,7 +20904,11 @@ function calcBack() {
 function calcEnter() {
   const inp = calcEl('calc-in'), src = inp.value; if (!src.trim()) return;
   const r = CX.run(CX.parse(src), calcEnv()), pv = calcEl('calc-prev');
-  if (!r.ok) { calcErr = r.err; calcDraw(); return; }
+  if (!r.ok) {   // a variable with no value: its name drawn as in the expression, and how to give it one
+    const nm = r.unset && `<span class="cl">${CX.render(CX.parse(r.unset))}</span>`;
+    calcErr = nm ? `${nm} ainda não tem valor. Guarda-o antes, por exemplo <span class="cl">${CX.render(CX.parse(r.unset + ' = 2'))}</span>` : esc(r.err);
+    calcDraw(); return;
+  }
   if (r.name) calcMem.vars[r.name] = CX.ser(r.v);
   calcMem.ans = CX.ser(r.v); calcMem.hist.push({ x: src, v: CX.ser(r.v) }); if (calcMem.hist.length > 40) calcMem.hist.shift();
   ls.set(LS_CALC, calcMem); inp.value = ''; calcHi = -1; calcHist(); calcDraw();

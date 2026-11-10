@@ -442,6 +442,9 @@ textarea.key{min-height:84px;word-break:break-all}
 .calc-fab{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--accent);box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer;transition:transform .1s ease}
 .calc-fab:hover{transform:translateY(-1px)}
 .calc-fab[hidden]{display:none}
+/* above a bar stuck to the bottom of the screen (key problems; the quiz's next bar on a phone), not on its buttons */
+body:has(.pb-actions) .calc-fab{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+@media (max-width:560px){body:has(.qfoot.next-bar) .calc-fab{bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
 .calc-panel{position:fixed;right:16px;bottom:16px;z-index:45;width:min(372px,calc(100vw - 32px));max-height:calc(100vh - 32px);display:flex;flex-direction:column;gap:8px;padding:8px 12px 10px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.22)}
 .calc-h{display:flex;align-items:center;gap:4px;margin-right:-6px}
 .calc-hist{list-style:none;margin:0;padding:0;overflow-y:auto;max-height:200px;display:flex;flex-direction:column;border-bottom:1px solid var(--line)}
@@ -456,15 +459,17 @@ textarea.key{min-height:84px;word-break:break-all}
 .calc-alt{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
 .calc-disp{position:relative;border:1.5px solid var(--line);border-radius:10px;background:var(--panel-2);padding:10px 12px 8px;cursor:text;min-height:86px;display:flex;flex-direction:column;justify-content:space-between;gap:4px}
 .calc-disp.focus{border-color:var(--accent)}
-.calc-expr{font-size:24px;min-height:36px;overflow-x:auto;overflow-y:hidden;padding:4px 0;display:flex;align-items:center;flex-wrap:nowrap}
+/* a block, not flex: flex items ignore vertical-align, which raises exponents and lowers indices */
+.calc-expr{font-size:24px;min-height:44px;overflow-x:auto;overflow-y:hidden;padding:6px 0 2px;line-height:1.7;white-space:nowrap}
 .calc-ph{color:var(--muted);font-size:15px;font-family:var(--f-body);opacity:.8}
 .calc-prev{display:flex;align-items:baseline;justify-content:flex-end;gap:10px;min-height:22px;text-align:right;color:var(--muted)}
 .calc-prev .cl{font-size:18px}
-.calc-prev.err{color:var(--bad);font-size:13px;justify-content:flex-start;text-align:left}
+.calc-prev.err{display:block;color:var(--bad);font-size:13.5px;line-height:1.45;text-align:left;white-space:normal;overflow-wrap:anywhere}
+.calc-prev.err .cl{font-size:16px;color:var(--ink)}
 .calc-in{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;border:0;padding:0;pointer-events:none;caret-color:transparent}
 .calc-keys{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
 .calc-keys.pad{display:none}
-.calc-k{height:36px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);cursor:pointer;font:600 15px var(--f-body);display:grid;place-items:center;padding:0;touch-action:manipulation;white-space:nowrap}
+.calc-k{height:36px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);cursor:pointer;font:600 15px var(--f-body);display:flex;align-items:center;justify-content:center;padding:0;touch-action:manipulation;white-space:nowrap}
 .calc-k:hover{background:var(--line)}
 .calc-k:active{transform:translateY(1px)}
 .calc-k.eq{grid-column:span 2;background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
@@ -498,7 +503,7 @@ textarea.key{min-height:84px;word-break:break-all}
 .cl-fd{border-top:1.5px solid currentColor;padding:.06em .12em 0}
 .cl-frac.sm{font-size:11px;line-height:1;font-family:var(--f-body)}
 .cl-sup{font-size:.68em;vertical-align:.75em;display:inline-block;line-height:1}
-.cl-sub{font-size:.65em;vertical-align:-.35em;display:inline-block;line-height:1}
+.cl-sub{font-size:.65em;vertical-align:-.4em;display:inline-block;line-height:1}
 .cl-x{margin-left:.1em}
 .cl-x sup{font-size:.7em}
 .cl-sqrt{display:inline-flex;align-items:stretch;vertical-align:middle;margin:0 .06em;position:relative}

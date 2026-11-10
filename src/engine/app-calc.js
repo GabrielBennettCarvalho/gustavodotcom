@@ -6,7 +6,7 @@
    History, variables and ans stay on this device (LS_CALC). */
 const LS_CALC = 'estudo-ist-calc', CX = window.CALC;
 const calcMem = Object.assign({ hist: [], vars: {}, ans: null }, ls.get(LS_CALC) || {});
-let calcIsOpen = false, calcHi = -1, calcDraft = '', calcErr = '';   // calcErr: why Enter could not calculate, until the next edit   // calcHi: history entry recalled with ↑ (−1: what was being typed)
+let calcIsOpen = false, calcHi = -1, calcDraft = '', calcErr = '';   // calcErr: why Enter could not calculate (HTML), until the next edit   // calcHi: history entry recalled with ↑ (−1: what was being typed)
 const calcWanted = () => !!(C && S && !['courses', 'sync'].includes(view.name) && (S.settings.calc ?? hasCalc()));
 const calcEnv = () => { const vars = {}; for (const k in calcMem.vars) { const v = CX.de(calcMem.vars[k]); if (v) vars[k] = v; } return { vars, ans: CX.de(calcMem.ans) }; };
 const calcEl = id => document.getElementById(id);
@@ -80,7 +80,7 @@ function calcDraw() {
   if (a !== b) ex.querySelectorAll('[data-s]').forEach(l => { if (+l.dataset.s >= a && +l.dataset.e <= b && +l.dataset.e > +l.dataset.s) l.classList.add('sel'); });
   else calcCaret(ex, inp.selectionDirection === 'backward' ? a : b);
   pv.classList.toggle('err', !!calcErr);
-  if (calcErr) { pv.textContent = calcErr; return; }
+  if (calcErr) { pv.innerHTML = calcErr; return; }
   if (tree.empty) { pv.innerHTML = ''; return; }
   const r = CX.run(tree, calcEnv());
   pv.innerHTML = r.ok ? (r.name ? `<span class="cl">${CX.render(CX.parse(r.name))}</span> ` : '') + calcResultH(r.v, 'calc-live') : '';
@@ -125,7 +125,11 @@ function calcBack() {
 function calcEnter() {
   const inp = calcEl('calc-in'), src = inp.value; if (!src.trim()) return;
   const r = CX.run(CX.parse(src), calcEnv()), pv = calcEl('calc-prev');
-  if (!r.ok) { calcErr = r.err; calcDraw(); return; }
+  if (!r.ok) {   // a variable with no value: its name drawn as in the expression, and how to give it one
+    const nm = r.unset && `<span class="cl">${CX.render(CX.parse(r.unset))}</span>`;
+    calcErr = nm ? `${nm} ainda não tem valor. Guarda-o antes, por exemplo <span class="cl">${CX.render(CX.parse(r.unset + ' = 2'))}</span>` : esc(r.err);
+    calcDraw(); return;
+  }
   if (r.name) calcMem.vars[r.name] = CX.ser(r.v);
   calcMem.ans = CX.ser(r.v); calcMem.hist.push({ x: src, v: CX.ser(r.v) }); if (calcMem.hist.length > 40) calcMem.hist.shift();
   ls.set(LS_CALC, calcMem); inp.value = ''; calcHi = -1; calcHist(); calcDraw();

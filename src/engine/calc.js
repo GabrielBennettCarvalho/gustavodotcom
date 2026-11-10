@@ -209,7 +209,7 @@ function run(tree, env = {}) {
       if (tok.v === 'pi') return F(Math.PI); if (tok.v === 'e') return F(Math.E);
       if (!env.ans) throw E('Ainda não há resultado anterior (ans)'); return env.ans;
     }
-    const k = varName(tok); if (!vars[k]) throw E(`${k} não tem valor: define-a com ${k} = …`); return vars[k];
+    const k = varName(tok); if (!vars[k]) throw Object.assign(E(`${k} ainda não tem valor. Guarda-o antes, por exemplo ${k} = 2`), { unset: k }); return vars[k];
   }
   function ev(n) {
     switch (n.t) {
@@ -239,7 +239,7 @@ function run(tree, env = {}) {
     if (tree.empty) return { ok: false, err: '' };
     if (tree.t === 'set') { if (tree.v.sub && !tree.v.sub.text) throw E(INCOMPLETE); const v = ev(tree.a); return { ok: true, v, name: varName(tree.v) }; }
     return { ok: true, v: ev(tree) };
-  } catch (e) { return { ok: false, err: e.calc ? e.message : 'Não consegui calcular isto', incomplete: e.message === INCOMPLETE }; }
+  } catch (e) { return { ok: false, err: e.calc ? e.message : 'Não consegui calcular isto', incomplete: e.message === INCOMPLETE, unset: e.unset }; }   // unset: the variable with no value
 }
 
 /* ---------- rendering (HTML, natural display) ---------- */

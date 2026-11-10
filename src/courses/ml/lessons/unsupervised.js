@@ -5,7 +5,7 @@ STUDY.lessons('ml', [
   html: `<p>Sem professor (não supervisionado), queremos agrupar pontos parecidos. O k-means representa cada grupo por um <b>centróide</b> e alterna dois passos até nada mudar:</p>
   <ol><li><b>Atribuição</b>: cada ponto vai para o centróide mais próximo.</li>
   <li><b>Atualização</b>: cada centróide passa a ser a média dos pontos do seu grupo.</li></ol>
-  <!--card--><p>Notação dos slides: centróides c₁, …, c<sub>K</sub> e clusters C₁, …, C<sub>K</sub>; cada centróide é c<sub>k</sub> = (1/|C<sub>k</sub>|) Σ<sub>x∈C<sub>k</sub></sub> x. O k-means minimiza a soma das distâncias quadráticas aos centróides, J = Σ<sub>k</sub> Σ<sub>x∈C<sub>k</sub></sub> ‖x − c<sub>k</sub>‖². Cada passo nunca aumenta J, por isso <b>converge</b>, mas para um ótimo <b>local</b>: depende da inicialização (por isso corre-se várias vezes ou usa-se k-means++).</p>
+  <!--card--><p>Notação dos slides: centróides c₁, …, c<sub>K</sub> e clusters C₁, …, C<sub>K</sub>; cada centróide é {f:kmc|c<sub>k</sub> = (1/|C<sub>k</sub>|) Σ<sub>x∈C<sub>k</sub></sub> x}. O k-means minimiza a soma das distâncias quadráticas aos centróides, {f:kmj|J = Σ<sub>k</sub> Σ<sub>x∈C<sub>k</sub></sub> ‖x − c<sub>k</sub>‖²}. Cada passo nunca aumenta J, por isso <b>converge</b>, mas para um ótimo <b>local</b>: depende da inicialização (por isso corre-se várias vezes ou usa-se k-means++).</p>
   <ul><li>k é escolhido por nós (método do cotovelo, índices de validação).</li>
   <li>Com distância Manhattan, o centro que minimiza a soma das distâncias é a <b>mediana</b> (k-medians), mas nos exames costuma pedir-se a média.</li>
   <li><b>Sequencial</b> (adaptativo): para cada ponto x<sub>η</sub>, só o centróide vencedor muda: c<sub>k</sub><sup>new</sup> = c<sub>k</sub><sup>old</sup> + (1/(|C<sub>k</sub><sup>old</sup>| + 1))·(x<sub>η</sub> − c<sub>k</sub><sup>old</sup>).</li></ul>
@@ -22,11 +22,11 @@ STUDY.lessons('ml', [
   <li><b>π<sub>k</sub> = p(c<sub>k</sub> = 1) = N<sub>k</sub> / N</b></li></ul>
   <!--card--><p>Repete-se até a verosimilhança estabilizar. É o k-means “suave”: com covariâncias iguais e a tender para 0, o EM vira k-means. Problema: se uma gaussiana colapsa num único ponto, a variância vai a 0 e a verosimilhança explode (singularidade).</p>
   <p>Exemplo: se p(x₁ | c₁ = 1) = 0,03 e p(x₁ | c₂ = 1) = 0,01 com π = (0,5; 0,5), γ(c₁₁) = 0,015/(0,015 + 0,005) = 0,75. Somando as responsabilidades de cada cluster obtêm-se os N<sub>k</sub> e os novos π<sub>k</sub> = N<sub>k</sub>/N.</p>`,
-  key: 'E: γ(cₙₖ) = p(cₖ = 1|xₙ) ∝ πₖ N(xₙ|μₖ,Σₖ). M: μₖ média pesada, Σₖ covariância pesada, πₖ = Nₖ/N.' },
+  key: 'E: {f:eme|γ(cₙₖ) = p(cₖ = 1|xₙ) ∝ πₖ N(xₙ|μₖ,Σₖ)}. M: μₖ média pesada, Σₖ covariância pesada, πₖ = Nₖ/N.' },
 { id: 'c-valid', t: 'clust', title: 'Validar clusters: pureza, silhueta, Dunn, Davies-Bouldin',
   html: `<p><b>Critérios externos</b> (há etiquetas verdadeiras): <b>pureza</b> = (1/N) Σ<sub>k</sub> max<sub>c</sub> |C<sub>k</sub> ∩ classe c|. Cada cluster conta os pontos da sua classe maioritária. Exemplo: clusters {A, C} e {B, B} → (1 + 2)/4 = 0,75.</p>
   <p><b>Critérios internos</b> (só os dados):</p>
-  <ul><li><b>Silhueta</b> de um ponto i: a(i) = distância média aos outros pontos do <b>seu</b> cluster (divide por |C<sub>i</sub>| − 1); b(i) = a menor, entre os outros clusters, da distância média aos pontos desse cluster. <b>s(i) = 1 − a(i)/b(i)</b> se a(i) &lt; b(i), 0 se forem iguais, b(i)/a(i) − 1 se a(i) &gt; b(i) (o mesmo que (b − a)/max(a, b)). s ∈ [−1, 1]: perto de 1 = bem agrupado; negativo = provavelmente no cluster errado. A silhueta de um cluster é a média dos seus pontos.</li>
+  <ul><li><b>Silhueta</b> de um ponto i: a(i) = distância média aos outros pontos do <b>seu</b> cluster (divide por |C<sub>i</sub>| − 1); b(i) = a menor, entre os outros clusters, da distância média aos pontos desse cluster. <b>{f:sil|s(i) = 1 − a(i)/b(i)}</b> se a(i) &lt; b(i), 0 se forem iguais, b(i)/a(i) − 1 se a(i) &gt; b(i) (o mesmo que (b − a)/max(a, b)). s ∈ [−1, 1]: perto de 1 = bem agrupado; negativo = provavelmente no cluster errado. A silhueta de um cluster é a média dos seus pontos.</li>
   <li><b>Dunn</b>: menor distância entre clusters ÷ maior diâmetro de um cluster. Maior é melhor.</li>
   <li><b>Davies-Bouldin</b>: média, por cluster, do pior rácio (dispersão<sub>i</sub> + dispersão<sub>j</sub>)/distância(centros). Menor é melhor.</li></ul>
   <!--card--><p>Exemplo: a = 4, b = 7 → s = 1 − 4/7 = 3/7 ≈ 0,43.</p>
@@ -46,7 +46,7 @@ STUDY.lessons('ml', [
   key: 'λ² − traço·λ + det = 0. Vetor próprio (b, λ − a), normalizado (C uᵢ = λᵢ uᵢ). Covariância amostral divide por n−1.' },
 { id: 'pc-pca', t: 'pca', title: 'PCA: projeção, reconstrução e quantas componentes',
   html: `<p>A PCA (transformada de Karhunen-Loève) roda os eixos para que fiquem alinhados com as direções de maior variância. Os novos eixos são os <b>vetores próprios</b> da matriz de covariância, ordenados pelos <b>valores próprios</b> (= variância ao longo de cada eixo). Na nova base a covariância é diagonal: as novas variáveis não estão correlacionadas.</p>
-  <ul><li><b>Projeção</b> (como nos slides e nas resoluções oficiais): <b>y = Uᵀx</b>, com os vetores próprios normalizados nas colunas de U. Na componente k: y<sub>k</sub> = u<sub>k</sub>ᵀx. Para reduzir a L dimensões usa-se só as primeiras L colunas, W: <b>z = Wᵀx</b>. A média <b>não</b> se subtrai.</li>
+  <ul><li><b>Projeção</b> (como nos slides e nas resoluções oficiais): <b>{f:proj|y = Uᵀx}</b>, com os vetores próprios normalizados nas colunas de U. Na componente k: y<sub>k</sub> = u<sub>k</sub>ᵀx. Para reduzir a L dimensões usa-se só as primeiras L colunas, W: <b>{f:proj|z = Wᵀx}</b>. A média <b>não</b> se subtrai.</li>
   <li><b>Reconstrução</b> com as primeiras L componentes: x̂ = W z = Σ<sub>k≤L</sub> y<sub>k</sub> u<sub>k</sub>. O erro é a parte ao longo das componentes deitadas fora.</li>
   <li>Nos livros (e no scikit-learn) centra-se primeiro: y = u<sub>k</sub>ᵀ(x − x̄) e x̂ = x̄ + Σ y<sub>k</sub>u<sub>k</sub>. Só uses esta forma se o enunciado a pedir.</li>
   <li><b>Variância explicada</b> pelas primeiras L: Σ<sub>k≤L</sub> λ<sub>k</sub> / Σ λ.</li>
@@ -81,7 +81,7 @@ STUDY.lessons('ml', [
 { id: 's-margin', t: 'svm', title: 'SVM: a margem máxima',
   html: `<p>Entre todas as retas que separam duas classes, qual escolher? A SVM escolhe a que deixa a <b>maior margem</b>: a maior “estrada” vazia entre as classes. Intuitivamente, é a que generaliza melhor.</p>
   <ul><li>Hiperplano: y(x) = wᵀx + b = 0 (nos slides também wᵀx + w₀). A distância (com sinal) de x ao hiperplano é r = y(x)/‖w‖.</li>
-  <li>Exemplos {x<sub>i</sub>, t<sub>i</sub>} com t<sub>i</sub> ∈ {−1, +1}. Escalando w para que os pontos mais próximos tenham t<sub>i</sub>(wᵀx<sub>i</sub> + b) = 1, a margem vale <b>ρ = 2/‖w‖</b>.</li>
+  <li>Exemplos {x<sub>i</sub>, t<sub>i</sub>} com t<sub>i</sub> ∈ {−1, +1}. Escalando w para que os pontos mais próximos tenham t<sub>i</sub>(wᵀx<sub>i</sub> + b) = 1, a margem vale <b>{f:margin}</b>.</li>
   <li>Problema: minimizar ½wᵀw sujeito a t<sub>i</sub>(wᵀx<sub>i</sub> + b) ≥ 1 para todos os i (otimização quadrática convexa: mínimo global).</li>
   <li><b>Vetores de suporte</b> x<sup>(s)</sup>: os pontos que ficam em cima da margem, wᵀx<sup>(s)</sup> + b = ±1. Só eles definem o hiperplano; os outros podiam ser removidos sem mudar nada.</li></ul>
   <!--card--><p><b>Problema dual</b> (multiplicadores de Lagrange α<sub>i</sub> ≥ 0): maximiza Q(α) = Σ α<sub>i</sub> − ½ Σ<sub>i</sub> Σ<sub>j</sub> α<sub>i</sub>α<sub>j</sub>t<sub>i</sub>t<sub>j</sub> x<sub>i</sub>ᵀx<sub>j</sub>. Depois w = Σ α<sub>i</sub> t<sub>i</sub> x<sub>i</sub>, com α<sub>i</sub> &gt; 0 só nos vetores de suporte, e b = 1 − wᵀx<sup>(s)</sup> para um vetor de suporte com t<sup>(s)</sup> = 1. Os dados só aparecem em produtos internos x<sub>i</sub>ᵀx<sub>j</sub>, e isso abre a porta ao truque do kernel.</p>

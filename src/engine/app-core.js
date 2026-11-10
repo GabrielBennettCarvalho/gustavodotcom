@@ -21,8 +21,17 @@ const LEGACY = { state: 'ams-treino-v1', packs: 'ams-treino-packs-v1', course: '
 
 const $app = document.getElementById('app');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-// light markup for text fields: **bold**, `code`, line breaks
-const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code class="mono">$1</code>').replace(/\n/g, '<br>');
+/* Formulas with a legend. A course lists them in C.formulas: { id: { t, name, f, legend: [[symbol, meaning], …] } }.
+   Text (and lesson or cheat-sheet HTML) writes {f:id}: it shows the formula, and a tap opens a card that says what each
+   symbol means (fxOpen, in app-views.js). */
+// {f:id|text} shows the text as written there (a variant, or the formula with that problem's indices) with the same card
+const fxTag = (id, txt) => { const F = C && C.formulas && C.formulas[id];
+  return F ? `<button type="button" class="fx" data-fx="${esc(id)}" aria-haspopup="dialog" title="O que quer dizer cada símbolo">${txt !== undefined ? txt : esc(F.f)}</button>` : txt !== undefined ? txt : `{f:${esc(id)}}`; };
+const fxify = h => String(h ?? '').replace(/\{f:([a-z0-9-]+)(?:\|([^}]*))?\}/g, (_, id, txt) => fxTag(id, txt));
+let fxBtn = null;   // the formula whose card is open
+function fxClose() { const c = document.getElementById('fxcard'); if (c) c.remove(); if (fxBtn) fxBtn.setAttribute('aria-expanded', 'false'); fxBtn = null; }
+// light markup for text fields: **bold**, `code`, line breaks, {f:id} formulas
+const md = s => fxify(esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code class="mono">$1</code>').replace(/\n/g, '<br>'));
 const shuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 const ls = { get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
@@ -203,8 +212,9 @@ let view = { name: 'home' };
 let ses = null; // active session
 function go(name, extra = {}) { view = Object.assign({ name }, extra); renderView(); window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' }); }
 function renderView() {
+  fxClose();
   const v = C || view.name === 'sync' ? view.name : 'courses';
-  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'routepick' ? RoutePick() : v === 'brief' ? BriefScreen() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : v === 'prob' ? ProblemPick() : v === 'problem' ? Problem() : Home();
+  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'routepick' ? RoutePick() : v === 'brief' ? BriefScreen() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : v === 'formulas' ? Formulas() : v === 'prob' ? ProblemPick() : v === 'problem' ? Problem() : Home();
   document.documentElement.dataset.course = C && v !== 'courses' && v !== 'sync' ? C.id : '';
   $app.innerHTML = Top() + html;
   document.title = C && v !== 'courses' ? `${C.code} · Estudo IST` : 'Estudo IST';
@@ -279,6 +289,7 @@ function Home() {
     RS && RS.rows.length ? ['ready', 'Prontidão', 'A checklist dos tipos de problema que saem nos exames, com o teu estado em cada um.', `${RS.ready}/${RS.rows.length} tipos prontos`, glyph('flag')] : null,
     PG.length ? ['past', 'Exames anteriores', 'Cada exame, pela ordem original, com as perguntas reescritas aqui. Os problemas grandes vêm por partes.', `${PG.length} exame${PG.length === 1 ? '' : 's'}`, glyph('clock')] : null,
     RS && RS.rows.length ? ['sheet', 'Cábula', 'A folha para levar para o exame: fórmulas, passos e armadilhas dos tipos onde falhaste, mais as tuas notas.', `${partSkills().filter(s => sheetMine(s)).length} na tua cábula`, glyph('pen')] : null,
+    C.formulas && Object.keys(C.formulas).length ? ['formulas', 'Formulário', 'Todas as fórmulas da cadeira, com o que quer dizer cada símbolo. Nas lições e nos problemas, toca numa fórmula para ver o mesmo.', `${Object.keys(C.formulas).length} fórmulas`, glyph('pen')] : null,
     nSupp ? ['supp', 'Suplementares', 'Perguntas sobre matéria que ainda não saiu nos exames. Para ir mais fundo, depois do resto.', `${nSupp} perguntas`, glyph('plus')] : null,
   ].filter(Boolean);
   const readyCard = RS && RS.rows.length ? `<div class="ready-card">

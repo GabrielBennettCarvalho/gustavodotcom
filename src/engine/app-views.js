@@ -53,21 +53,21 @@ const pickOne = a => a[Math.floor(Math.random() * a.length)];
 const codeBlock = c => `<pre class="codeblk">${esc(c)}</pre>`;
 // k: only card k of the lesson (the diagram and the key line belong to the last card)
 function lessonBody(L, k) { const cs = lessonCards(L), one = k && cs.length > 1 && cs[k - 1] !== undefined, last = !one || k === cs.length;
-  const h = one ? cs[k - 1] : (L.html || ''), body = L.trusted ? h : md(h);
-  return `${body}${L.d && last ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key && last ? `<p class="key">${L.trusted ? L.key : md(L.key)}</p>` : ''}`; }
+  const h = one ? cs[k - 1] : (L.html || ''), body = L.trusted ? fxify(h) : md(h);
+  return `${body}${L.d && last ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key && last ? `<p class="key">${L.trusted ? fxify(L.key) : md(L.key)}</p>` : ''}`; }
 /* The cheat sheet while solving (open-book courses only). Opening it is free, as in the exam: it never counts as a hint.
    Not in Aprender, which is for learning, and not after answering, when the theory is already there. */
 const sheetNotes = s => BANK.filter(q => skillOf(q) === s.id && S.notes[q.id]).map(q => `<li>${md(S.notes[q.id])}</li>`).join('');
 let cabOpen = '';   // the peek that is open (a question id or 'pb:<problem>'), so it stays open across re-renders
 function cabPeek(sid, key) { const s = SKBYID[sid]; if (!openBook() || !s || !s.sheet) return ''; const n = sheetNotes(s);
-  return `<details class="lesson-peek cab-peek" data-k="${esc(key)}" ${cabOpen === key ? 'open' : ''}><summary>Cábula: ${esc(s.label)}</summary><div class="lbody lesson">${s.sheet}${n ? `<ul class="sheet-notes">${n}</ul>` : ''}<p class="cab-tip">Consultar é livre, como no exame: não conta como pista.</p></div></details>`; }
+  return `<details class="lesson-peek cab-peek" data-k="${esc(key)}" ${cabOpen === key ? 'open' : ''}><summary>Cábula: ${esc(s.label)}</summary><div class="lbody lesson">${fxify(s.sheet)}${n ? `<ul class="sheet-notes">${n}</ul>` : ''}<p class="cab-tip">Consultar é livre, como no exame: não conta como pista.</p></div></details>`; }
 // Every type's entry, by topic. tools: the pin buttons and exam chips of the Cábula screen.
 function sheetItems(sk, tools) {
   return Object.entries(TOPICS).map(([t, T]) => { const rows = sk.filter(s => s.t === t); if (!rows.length) return '';
     return `<h2 class="sheet-topic">${esc(T.label)}</h2>${rows.map(s => { const mine = sheetMine(s), notes = sheetNotes(s);
       return `<div class="sheet-item" style="--c:${T.c}"><div class="row"><b>${esc(s.label)}</b>${tools ? `<span class="spacer"></span><span class="no-print">${seenChips(s)}</span>
         <button class="btn ghost small no-print" data-act="pin" data-k="${esc(s.id)}" data-v="${mine ? 0 : 1}">${mine ? 'Tirar' : 'Pôr na cábula'}</button>` : ''}</div>
-        <div class="lesson">${s.sheet || '<p class="muted">Sem resumo ainda.</p>'}</div>${notes ? `<ul class="sheet-notes">${notes}</ul>` : ''}</div>`; }).join('')}`; }).join('');
+        <div class="lesson">${s.sheet ? fxify(s.sheet) : '<p class="muted">Sem resumo ainda.</p>'}</div>${notes ? `<ul class="sheet-notes">${notes}</ul>` : ''}</div>`; }).join('')}`; }).join('');
 }
 // The mock exam's sheet: the student's own, or every type while they have none yet
 function cabExam() { const mine = partSkills().filter(sheetMine), sk = mine.length ? mine : partSkills();
@@ -212,6 +212,52 @@ function Sheet() {
     ${items || `<p class="muted">${all ? 'Esta cadeira ainda não tem resumos.' : 'Ainda não falhaste nenhum tipo de problema. Quando falhares, ele aparece aqui; ou vê “Todos os tipos” e põe à mão os que quiseres.'}</p>`}
     ${loose.length ? `<h2 class="sheet-topic">Outras notas</h2><ul class="sheet-notes">${loose.map(noteOf).join('')}</ul>` : ''}`;
 }
+
+/* ---------- FORMULAS: every formula of the course with what each symbol means ---------- */
+const fxLegend = F => `<dl class="fx-legend">${(F.legend || []).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${md(v)}</dd>`).join('')}</dl>`;
+function Formulas() {
+  const all = Object.entries(C.formulas || {}), pt = partTopics();
+  const groups = Object.entries(TOPICS).filter(([t]) => pt.includes(t)).map(([t, T]) => { const fs = all.filter(([, F]) => F.t === t); if (!fs.length) return '';
+    return `<h2 class="sheet-topic">${esc(T.label)}</h2>${fs.map(([id, F]) => `<div class="sheet-item fx-item" id="fx-${esc(id)}" style="--c:${T.c}"><b>${esc(F.name)}</b><p class="fx-f">${esc(F.f)}</p>${fxLegend(F)}${F.note ? `<p class="muted fx-note">${md(F.note)}</p>` : ''}</div>`).join('')}`; }).join('');
+  return `<div class="qhead no-print">${BACK}<span class="eyebrow">Formulário</span><span class="spacer"></span><button class="btn small" data-act="print">Imprimir</button></div>
+    <p class="muted no-print" style="font-size:13.5px;margin-bottom:12px">Cada fórmula com o que quer dizer cada símbolo, na notação das aulas. Nas lições, na cábula e nos problemas, as fórmulas sublinhadas abrem este mesmo cartão.</p>
+    ${groups || '<p class="muted">Esta cadeira ainda não tem formulário.</p>'}`;
+}
+// The card beside a formula: to the right of the content when there is room, under the formula otherwise, and as a
+// sheet at the bottom of a phone screen.
+function fxOpen(b) {
+  const id = b.dataset.fx, F = C && C.formulas && C.formulas[id]; if (!F) return;
+  if (fxBtn === b) { fxClose(); return; }
+  fxClose(); fxBtn = b; b.setAttribute('aria-expanded', 'true');
+  const c = document.createElement('div'); c.id = 'fxcard'; c.className = 'fx-card'; c.setAttribute('role', 'dialog'); c.setAttribute('aria-label', F.name);
+  c.innerHTML = `<div class="row"><span class="eyebrow">${esc(F.name)}</span><span class="spacer"></span><button type="button" class="btn ghost small" data-fxx aria-label="Fechar">✕</button></div>
+    <p class="fx-f">${esc(F.f)}</p>${fxLegend(F)}${F.note ? `<p class="muted fx-note">${md(F.note)}</p>` : ''}${view.name !== 'formulas' ? `<button type="button" class="btn ghost small" data-fxall="${esc(id)}">Ver no formulário →</button>` : ''}`;
+  document.body.appendChild(c); fxPlace(); c.querySelector('[data-fxx]').focus({ preventScroll: true });
+}
+function fxPlace() {
+  const c = document.getElementById('fxcard'); if (!c || !fxBtn) return; if (!fxBtn.isConnected) { fxClose(); return; }
+  if (innerWidth < 700) { c.classList.add('sheet'); c.style.left = c.style.top = c.style.width = ''; return; }
+  c.classList.remove('sheet');
+  const r = fxBtn.getBoundingClientRect(), col = (fxBtn.closest('.card, .sheet-item, .lesson, .review-item') || fxBtn).getBoundingClientRect(), room = innerWidth - col.right - 28;
+  c.style.width = room >= 260 ? Math.min(340, room) + 'px' : '';   // beside the content when 260 px or more are free
+  const w = c.offsetWidth, h = c.offsetHeight;
+  let left, top;
+  if (room >= 260) { left = col.right + 16; top = Math.min(Math.max(8, r.top - 10), innerHeight - h - 8); }
+  else { left = Math.min(Math.max(8, r.left), innerWidth - w - 8); top = r.bottom + 6 + h > innerHeight - 8 ? Math.max(8, r.top - h - 6) : r.bottom + 6; }
+  c.style.left = left + 'px'; c.style.top = top + 'px';
+}
+// capture phase: a tap on a formula must not also count as a tap on what holds it
+document.addEventListener('click', ev => {
+  const t = ev.target, b = t.closest && t.closest('.fx');
+  if (b) { ev.preventDefault(); ev.stopPropagation(); fxOpen(b); return; }
+  const c = document.getElementById('fxcard'); if (!c) return;
+  const all = t.closest && t.closest('[data-fxall]');
+  if (all) { ev.stopPropagation(); const id = all.dataset.fxall; fxClose(); go('formulas'); const e = document.getElementById('fx-' + id); if (e) { e.scrollIntoView({ block: 'center' }); e.classList.add('flash'); } return; }
+  const x = t.closest && t.closest('[data-fxx]');
+  if (x || !c.contains(t)) { const back = fxBtn; fxClose(); if (x && back) back.focus(); }
+}, true);
+window.addEventListener('scroll', fxPlace, { passive: true }); window.addEventListener('resize', fxPlace);
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && fxBtn) { const b = fxBtn; fxClose(); b.focus(); } });
 
 /* ---------- NOTES ---------- */
 function Notes() {
@@ -366,7 +412,7 @@ document.addEventListener('click', async ev => {
     case 'cabExam': if (ses) { ses.cab = !ses.cab; renderView(); if (ses.cab) { const c = document.querySelector('.cab-exam'); if (c) c.scrollIntoView({ block: 'start' }); } } break;
     case 'level': { const n = +b.dataset.n; if (!unlocked(n)) { toast(`Bloqueado: precisas de ${Math.round(UNLOCK * 100)}% do nível ${n - 1} (ou ativa “Desbloquear todos”).`); return; } start('level', { level: n }); break; }
     case 'routeStop': start('route', { stop: b.dataset.k }); break;
-    case 'mode': { const k = b.dataset.k; if (k === 'route') { ses = null; go('routepick'); } else if (k === 'learn') go('learnpick'); else if (k === 'library') go('library'); else if (k === 'review') go('reviewpick'); else if (['ready', 'past', 'sheet', 'prob'].includes(k)) go(k); else start(k); break; }
+    case 'mode': { const k = b.dataset.k; if (k === 'route') { ses = null; go('routepick'); } else if (k === 'learn') go('learnpick'); else if (k === 'library') go('library'); else if (k === 'review') go('reviewpick'); else if (['ready', 'past', 'sheet', 'prob', 'formulas'].includes(k)) go(k); else start(k); break; }
     case 'learn': start('learn', { topic: b.dataset.k }); break;
     case 'library': go('library'); break;
     case 'read': go('reader', { id: b.dataset.id }); break;

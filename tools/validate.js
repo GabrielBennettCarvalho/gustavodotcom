@@ -67,6 +67,26 @@ for (const id of REG.order) {
       }
     }
   }
+  // formulas with a legend: {f:id} or {f:id|text} must name a formula of the course. Not in options, step names or
+  // "also": those are shown as plain text or are buttons themselves.
+  const FX = c.formulas || {};
+  for (const [k, F] of Object.entries(FX)) {
+    if (!/^[a-z0-9-]+$/.test(k)) err(`${id}: formula id "${k}" must be lowercase letters, digits or -`);
+    if (!F.f || !F.name || !Array.isArray(F.legend) || !F.legend.length) err(`${id}: formula ${k} needs f, name and a legend`);
+    if (F.t && !c.topics[F.t]) err(`${id}: formula ${k} has unknown topic "${F.t}"`);
+    (F.legend || []).forEach(r => { if (!Array.isArray(r) || r.length !== 2 || !r[0] || !r[1]) err(`${id}: formula ${k}: each legend row is [symbol, meaning]`); });
+  }
+  const fxRefs = (where, txt) => { const s = String(txt ?? ''), all = (s.match(/\{f:/g) || []).length, ok = [...s.matchAll(/\{f:([a-z0-9-]+)(?:\|[^}]*)?\}/g)];
+    if (all !== ok.length) err(`${where}: a formula tag is malformed (write {f:id} or {f:id|text})`);
+    ok.forEach(m => { if (!FX[m[1]]) err(`${where}: formula "${m[1]}" does not exist`); }); };
+  const noFx = (where, txt) => { if (/\{f:/.test(String(txt ?? ''))) err(`${where}: no formula tags here ({f:…}): this text is shown as plain text`); };
+  for (const l of c.lessons) { fxRefs(`${id}/${l.id}`, l.html); fxRefs(`${id}/${l.id} key`, l.key); }
+  for (const s of c.skills || []) fxRefs(`${id}: skill ${s.id} sheet`, s.sheet);
+  for (const q of c.questions) { const tag = `${id}/${q.id}`; fxRefs(tag, q.q); fxRefs(tag, q.e); Object.values(q.w || {}).forEach(w => fxRefs(tag, w)); (q.o || []).forEach(o => noFx(`${tag} option`, o)); }
+  for (const p of c.problems || []) for (const st of p.stages || []) {
+    const stag = `${id}/${st.id}`; fxRefs(stag, st.stmt); if (st.sol) fxRefs(`${stag} sol`, st.sol.t);
+    for (const s of st.steps || []) { const t = `${stag}/${s.name}`; [s.ask, s.e, ...(s.hints || []), ...(s.miss || []).map(m => m.m)].forEach(x => fxRefs(t, x)); noFx(`${t} name`, s.name); noFx(`${t} also`, s.also); }
+  }
   // Warn when the right answer gives itself away by being clearly the longest option.
   const tell = c.questions.filter(q => { if (Array.isArray(q.a) || !Array.isArray(q.o)) return false;
     const L = q.o.map(o => String(o).length), r = L[q.a], others = L.filter((_, i) => i !== q.a);

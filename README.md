@@ -124,6 +124,16 @@ topic by topic and level by level. With everything ready, it offers the mock exa
 - **Today:** time studied and tasks done today are in `S.today`; lessons seen are in `S.seenL`. Both travel in the progress key.
 - **Explorar:** everything else on the home (levels, topics, modes, past exams, settings) is folded under it.
 
+## Formulas with a legend (Formulário)
+
+A course lists its formulas in `course.js`: `formulas: { id: { t, name, f, legend: [[symbol, meaning], …], note } }`.
+Any text (questions, explanations, lessons, cheat sheets, key problems) writes `{f:id}` to show the formula, or
+`{f:id|text}` to show its own wording (a variant, or the formula with that problem's indices) with the same legend.
+The formula is underlined; a tap opens a card with what each symbol means: beside the content on a wide screen, under
+the formula otherwise, at the bottom on a phone. "Para o exame" → Formulário lists them all, by topic.
+The build fails on an unknown id, and on tags in options, step names or `also` (shown as plain text).
+Write the legend in the notation of the lectures, and say in `note` when the slides write it differently.
+
 ## Key problems (Problemas-chave)
 
 The big exam problems, solved by typing the key values (`src/engine/app-problems.js`; content in `STUDY.problems`, see

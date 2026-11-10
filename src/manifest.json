@@ -6,9 +6,11 @@
   "engine": [
     "engine/registry.js",
     "engine/progress-key.js",
+    "engine/calc.js",
     "engine/app-core.js",
     "engine/app-problems.js",
     "engine/app-plan.js",
+    "engine/app-calc.js",
     "engine/app-views.js"
   ],
   "courses": {

@@ -22,6 +22,7 @@ Full field reference and layout are in README.md. Read it only when you need a d
 - `src/engine/app-views.js`: quiz, feedback, results, library, bank/import, sync screen, all event handlers.
 - `src/engine/app-plan.js`: Hoje, the plan at the top of every course home (README explains how it picks tasks).
 - `src/engine/app-problems.js`: Problemas-chave, typed exam problems (README has the fields). Content: `src/courses/<id>/problems.js`.
+- `src/engine/calc.js` + `app-calc.js`: the calculator (maths and natural display; the panel). README, Calculator.
 - `src/engine/progress-key.js`: the cross-device progress key. Its format is versioned: change it with care.
 - `src/courses/<id>/course.js`: topics, levels, map, exam rules, extras. `render.js` draws that course's `d` diagrams.
 - `src/courses/<id>/questions/<topic>.js` and `lessons/*.js`. New files must be added to `src/manifest.json`.

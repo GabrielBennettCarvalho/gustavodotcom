@@ -25,7 +25,9 @@ src/
   engine/                shared by every course
     registry.js          STUDY.course / .lessons / .questions / .ids
     progress-key.js      the "other device" key: encode, decode, merge
+    calc.js              calculator maths: parser, exact fractions, natural-display HTML (window.CALC)
     app-core.js          state, course menu, course home, sessions, mock exam
+    app-calc.js          the calculator panel and its corner button
     app-views.js         quiz, results, library, question bank, other device, events
     style.css
   courses/
@@ -163,6 +165,25 @@ The end screen also folds out the whole worked solution, every step with its lin
   and a level with nothing shown in the current mode doesn't block the next one. The old `noCalc: true` setting
   becomes "Só teoria".
 - The top bar cycles the colour theme (auto / claro / escuro), saved per device. Total XP is the sum of all courses.
+
+## Calculator
+
+A round button in the corner of every course screen opens a calculator panel (a bottom sheet on a phone).
+Definições → Calculadora turns the button on or off per course (`settings.calc`; by default on where the course has
+`calc: true` questions, so off in AMS). The setting does not travel in the progress key.
+
+- Typing goes to a hidden input; above it `calc.js` draws the expression as on paper while it is typed: `/` stacks a
+  fraction, `^` raises an exponent, `_` lowers an index (`w_1`, `log_2`), `sqrt` draws a radical. A missing operand is
+  an empty box and an unclosed bracket a faint one; Enter closes brackets by itself.
+- Numbers stay exact fractions while they can (BigInt): `0.1 + 0.2 = 3/10`, `sqrt(9/4) = 3/2`, `log_2(8) = 3`.
+  Roots, logs and trig fall back to floats, which snap back to a fraction when within a few ulps (`sin(pi/6) = 1/2`).
+- Products without a sign bind like `×`, left to right: `3/4 log_2(3/4)` is ¾·log₂(¾), as in an entropy sum.
+- `x = 2` stores a variable, `ans` is the last result (an operator on an empty line starts from it), ↑ ↓ recall
+  earlier expressions, tapping a result inserts it. Functions: sqrt cbrt ln log log_b exp sin cos tan asin acos atan
+  sinh cosh tanh abs floor ceil round min max mean sigmoid nCr nPr, and `!`. Greek names (`eta`, `sigma`…) show as
+  letters. Angles in radians.
+- On a touch screen a keypad replaces the system keyboard (`abc` brings it back for variable names).
+- History, variables and ans are saved per device in `localStorage` key `estudo-ist-calc`.
 
 ## Progress and the "other device" key
 

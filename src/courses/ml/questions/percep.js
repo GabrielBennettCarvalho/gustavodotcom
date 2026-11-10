@@ -63,4 +63,12 @@ STUDY.questions('ml', [
   q: 'Que nome tem a regra Δw = η(t − wᵀx)x da unidade linear (ADALINE)?',
   o: ['Regra delta (LMS, Widrow-Hoff)', 'Regra de Hebb (aprendizagem associativa)', 'Regra de Rosenblatt', 'Backpropagation through time'], a: 0,
   e: 'É a **regra delta** ou LMS (least mean squares), de Widrow e Hoff, usada no ADALINE: descida do gradiente estocástica sobre o erro quadrático de uma unidade linear.' },
+{ id: 'pe-16', t: 'percep', l: 3, les: 'p-rosen', card: 1, k: 'pe-update', calc: true,
+  q: 'Perceptrão com w = (0, 0, 0) (bias primeiro), η = 1 e o = sinal(wᵀx), com sinal(0) = +1. O primeiro exemplo é x = (1, 0, 0) (já com o bias) e t = −1. Quais são os novos pesos?',
+  o: ['(−2, 0, 0)', '(0, 0, 0)', '(−1, 0, 0)', '(2, 0, 0)'], a: 0,
+  e: 'wᵀx = 0 e sinal(0) = **+1**: está errado, porque t = −1. w ← w + η(t − o)x = (0, 0, 0) + 1·(−1 − 1)·(1, 0, 0) = **(−2, 0, 0)**. Pesos a zero não querem dizer “não decide”: o sinal de 0 já é uma decisão.' },
+{ id: 'pe-17', t: 'percep', l: 2, les: 'p-rosen', card: 1, k: 'pe-update', calc: true,
+  q: 'Um perceptrão convergiu para w = (−1, 1, 1) (bias primeiro). Qual é a fronteira de decisão no plano (x₁, x₂)?',
+  o: ['x₂ = −x₁ + 1', 'x₂ = x₁ − 1', 'x₂ = −x₁ − 1', 'x₂ = x₁ + 1'], a: 0,
+  e: 'A fronteira é wᵀx = 0: −1 + x₁ + x₂ = 0, ou seja **x₂ = −x₁ + 1**. Os pontos acima da reta dão +1 e os de baixo −1.' },
 ]);

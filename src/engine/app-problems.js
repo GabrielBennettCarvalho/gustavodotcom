@@ -19,6 +19,11 @@ const pbType = id => (C.problems || []).find(p => p.id === id);
 const pbLater = ms => { const d = Math.ceil((ms - Date.now()) / PB_DAY); return d <= 1 ? 'amanhã' : `daqui a ${d} dias`; };
 // a finished type is reviewed with the problem seen longest ago
 const pbOldest = (p, T) => p.stages.map((s, i) => [T.last[s.id] || 0, i]).sort((a, b) => a[0] - b[0])[0][1];
+// a type can have several "alone" stages: the next one is the alone stage seen longest ago, so a retry gets new data
+const pbAfter = (p, T, si) => { const n = si + 1; if (!p.stages[n] || !p.stages[n].alone) return Math.min(n, p.stages.length - 1);
+  return p.stages.map((s, i) => [s.alone ? T.last[s.id] || 0 : Infinity, i]).sort((a, b) => a[0] - b[0] || a[1] - b[1])[0][1]; };
+// after a failed alone stage, back to the last stage that still has help
+const pbHelp = (p, si) => { for (let i = si - 1; i >= 0; i--) if (!p.stages[i].alone) return i; return 0; };
 function pbStatus(p) {
   const T = S.prob.t[p.id], now = Date.now();
   if (!T) return { k: 'new', label: 'Por começar', due: true, stage: 0 };
@@ -110,9 +115,9 @@ function pbFinish() {
     if (clean) { T.done = true; T.due = now + 3 * PB_REVIEW; next = 'Continua a saber. Só volta daqui a 3 semanas.'; }
     else { T.done = false; T.stage = Math.min(1, N - 1); T.due = now + PB_DAY; next = 'Vale a pena mais uma volta: amanhã há um problema com mais ajuda.'; }
   } else if (clean && (pb.si === 0 || pb.stage.alone || pb.si === N - 1)) { T.done = true; T.due = now + PB_REVIEW; next = 'Este tipo está pronto. Volta uma vez daqui a uma semana, sem ajudas.'; }
-  else if (clean) { T.stage = pb.si + 1; T.due = now + PB_DAY; next = 'Amanhã, o último: sem pistas, como no exame.'; }
-  else if (pb.si === N - 1) { T.stage = Math.max(0, pb.si - 1); T.due = now + PB_DAY; next = 'Amanhã há outro com mais ajuda, e depois tentas sozinho outra vez.'; }
-  else { T.stage = pb.si + 1; T.due = now + PB_DAY; next = heavy ? 'Amanhã há outro parecido, com mais ajuda onde precisaste.' : 'Amanhã há outro parecido, e já não repetes o que fizeste bem.'; }
+  else if (clean) { T.stage = pbAfter(pb.p, T, pb.si); T.due = now + PB_DAY; next = 'Amanhã, o último: sem pistas, como no exame.'; }
+  else if (pb.stage.alone || pb.si === N - 1) { T.stage = pbHelp(pb.p, pb.si); T.due = now + PB_DAY; next = 'Amanhã há outro com mais ajuda, e depois tentas sozinho outra vez.'; }
+  else { T.stage = pbAfter(pb.p, T, pb.si); T.due = now + PB_DAY; next = heavy ? 'Amanhã há outro parecido, com mais ajuda onde precisaste.' : 'Amanhã há outro parecido, e já não repetes o que fizeste bem.'; }
   planLog(pb.planKey || 'pb:' + pb.p.id, now - pb.startedAt, pb.steps.length, pbNominal(pb.p));
   S.pbCur = null; S.rounds++; save();
   pb.result = { frac, marks, xp, clean, heavy, next, more: !T.done };

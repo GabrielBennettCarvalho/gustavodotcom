@@ -136,6 +136,8 @@ The end screen also folds out the whole worked solution, every step with its lin
 - A step never blocks: hints, then the answer. `miss` names a known mistake (`{ v: wrong value, m: what went wrong }`).
 - A concept (`c`) done cleanly comes filled in next time, except in `alone` stages and reviews.
 - A clean first problem finishes the type. Otherwise the next stage is due the next day ("Fazer já" skips the wait).
+- A type can have several `alone` stages (extra full-length practice). A failed `alone` stage goes back to the last stage
+  with help, and the next `alone` one is the one seen longest ago, so a retry gets new data.
 - A finished type comes back once, with no hints, a week later.
 - A problem left half done (back button, closed tab, refresh) is kept in `S.pbCur` for 3 days and picks up at the same step.
 - Progress is in `S.prob` and travels in the progress key. Never change a published problem or stage id.

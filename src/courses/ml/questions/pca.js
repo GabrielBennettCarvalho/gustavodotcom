@@ -77,4 +77,8 @@ STUDY.questions('ml', [
   q: 'Atributos em escalas muito diferentes (metros e quilómetros). O que se deve fazer antes da PCA?',
   o: ['Normalizar (por exemplo z-score)', 'Nada: a PCA não depende da escala', 'Ordenar os atributos pela média', 'Ficar com o atributo de maior gama'], a: 0,
   e: 'A PCA procura direções de **variância**: o atributo com números maiores domina a 1.ª componente só por causa da unidade. Normalizar (equivalente a usar a matriz de correlação) resolve.' },
+{ id: 'pc-19', t: 'pca', l: 4, les: 'pc-pca', card: 2, k: 'pca-use', calc: true,
+  q: 'Os 7 maiores valores próprios de uma PCA são 20, 10, 5, 4, 3, 2 e 1, e explicam 90% da variância. O que se pode dizer do número de atributos dos dados?',
+  o: ['Tem pelo menos 12 atributos', 'Tem exatamente 7 atributos', 'Tem exatamente 8 atributos', 'Tem no máximo 10 atributos'], a: 0,
+  e: 'A soma é 45 = 90%, logo a variância total é 50 e faltam 5. Os outros valores próprios são ≤ 1 (vêm ordenados), por isso são precisos **pelo menos 5** a mais: 7 + 5 = **12 ou mais** atributos.' },
 ]);

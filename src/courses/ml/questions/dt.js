@@ -87,4 +87,8 @@ STUDY.questions('ml', [
   q: 'Com n exemplos e m atributos discretos, qual é o custo no pior caso de construir a árvore com o ID3?',
   o: ['O(n·m²)', 'O(n²·m)', 'O(m!)', 'O(n·log n)'], a: 0,
   e: 'Em cada nível da árvore avaliam-se os atributos que restam sobre os exemplos (O(n·m) no nível todo) e há no máximo m níveis: **O(n·m²)**. O(m!) seria a procura exaustiva de todas as ordens.' },
+{ id: 'dt-21', t: 'dt', l: 2, les: 'dt-id3', card: 1, k: 'dt-build',
+  q: 'Com x₁, x₂ ∈ {−1, +1}, uma árvore de decisão consegue representar o XOR?',
+  o: ['Sim: testa x₁ na raiz e x₂ em cada ramo', 'Não: o XOR não é linearmente separável', 'Só com um atributo novo, o produto x₁·x₂', 'Só se a árvore tiver uma única folha'], a: 0,
+  e: 'Uma árvore não precisa de fronteiras lineares: testa x₁ e, em cada ramo, x₂, e cada uma das 4 folhas tem a sua classe. Quem não aprende o XOR é o **perceptrão**, porque a sua fronteira é uma reta.' },
 ]);

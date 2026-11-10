@@ -79,4 +79,8 @@ STUDY.questions('ml', [
   q: 'Um teste muito preciso dá positivo, mas a doença é raríssima. Porque é que p(doente | +) pode continuar baixa?',
   o: ['O prior baixo domina: há muitos mais falsos positivos', 'Porque o teste mede o posterior, não a verosimilhança', 'Porque p(+) é sempre maior do que 0,5', 'Porque o Naive Bayes assume independência'], a: 0,
   e: 'Com um prior minúsculo, mesmo uma pequena taxa de falsos positivos aplicada aos muitos saudáveis gera mais positivos do que os poucos doentes reais.' },
+{ id: 'bay-19', t: 'bayes', l: 3, les: 'b-naive', card: 1, k: 'bay',
+  q: 'Num Naive Bayes com 5 atributos, chega x = (1, ?, 1, ?, 1): faltam os valores de x₂ e de x₄. Como se classifica?',
+  o: ['Compara-se p(c)·p(x₁|c)·p(x₃|c)·p(x₅|c)', 'Não se pode classificar sem os 5 valores', 'Põe-se x₂ = x₄ = 0 e faz-se o produto', 'Ignora-se x e escolhe-se pelo prior p(c)'], a: 0,
+  e: 'Como os atributos são independentes dado c, somar sobre os valores possíveis de x₂ dá Σ p(x₂|c) = 1, e o mesmo para x₄: os termos em falta **simplesmente saem** do produto. Os que se conhecem continuam a contar.' },
 ]);

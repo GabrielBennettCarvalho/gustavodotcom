@@ -88,4 +88,8 @@ STUDY.questions('ml', [
   q: 'Num rastreio de cancro é muito grave deixar escapar um doente. Que métrica se deve privilegiar?',
   o: ['Recall (sensibilidade)', 'Precision (valor preditivo)', 'Especificidade (taxa de TN)', 'Accuracy (taxa de acerto)'], a: 0,
   e: 'Deixar escapar um doente é um **falso negativo**; o recall = TP/(TP + FN) castiga exatamente os FN. A precision castiga os falsos positivos (alarmes falsos).' },
+{ id: 'ev-21', t: 'eval', l: 3, les: 'ev-cv', card: 2, k: 'ev-fit',
+  q: 'Uma árvore com 4 níveis tem accuracy de treino 0,936; podada a 2 níveis, tem 0,874. Não há dados de teste. O que se pode concluir sobre overfitting?',
+  o: ['Nada: falta o erro de teste', 'A árvore de 4 níveis está em overfitting', 'A árvore podada está em underfitting', 'A de 4 níveis generaliza melhor'], a: 0,
+  e: 'Mais profundidade **sobe sempre** a accuracy de treino, por isso 0,936 contra 0,874 é o esperado. Overfitting é o erro de **teste** piorar enquanto o de treino melhora: sem teste (ou validação), não há evidência nem a favor nem contra.' },
 ]);

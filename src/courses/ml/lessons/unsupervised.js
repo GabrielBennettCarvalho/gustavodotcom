@@ -5,27 +5,28 @@ STUDY.lessons('ml', [
   html: `<p>Sem professor (não supervisionado), queremos agrupar pontos parecidos. O k-means representa cada grupo por um <b>centróide</b> e alterna dois passos até nada mudar:</p>
   <ol><li><b>Atribuição</b>: cada ponto vai para o centróide mais próximo.</li>
   <li><b>Atualização</b>: cada centróide passa a ser a média dos pontos do seu grupo.</li></ol>
-  <!--card--><p>Minimiza a soma das distâncias quadráticas aos centróides, J = Σ<sub>k</sub> Σ<sub>x∈C<sub>k</sub></sub> ‖x − μ<sub>k</sub>‖². Cada passo nunca aumenta J, por isso <b>converge</b>, mas para um ótimo <b>local</b>: depende da inicialização (por isso corre-se várias vezes ou usa-se k-means++).</p>
+  <!--card--><p>Notação dos slides: centróides c₁, …, c<sub>K</sub> e clusters C₁, …, C<sub>K</sub>; cada centróide é c<sub>k</sub> = (1/|C<sub>k</sub>|) Σ<sub>x∈C<sub>k</sub></sub> x. O k-means minimiza a soma das distâncias quadráticas aos centróides, J = Σ<sub>k</sub> Σ<sub>x∈C<sub>k</sub></sub> ‖x − c<sub>k</sub>‖². Cada passo nunca aumenta J, por isso <b>converge</b>, mas para um ótimo <b>local</b>: depende da inicialização (por isso corre-se várias vezes ou usa-se k-means++).</p>
   <ul><li>k é escolhido por nós (método do cotovelo, índices de validação).</li>
   <li>Com distância Manhattan, o centro que minimiza a soma das distâncias é a <b>mediana</b> (k-medians), mas nos exames costuma pedir-se a média.</li>
-  <li><b>Sequencial</b> (online): para cada ponto novo, μ<sub>k</sub> ← μ<sub>k</sub> + η(x − μ<sub>k</sub>) só no centróide vencedor.</li></ul>
+  <li><b>Sequencial</b> (adaptativo): para cada ponto x<sub>η</sub>, só o centróide vencedor muda: c<sub>k</sub><sup>new</sup> = c<sub>k</sub><sup>old</sup> + (1/(|C<sub>k</sub><sup>old</sup>| + 1))·(x<sub>η</sub> − c<sub>k</sub><sup>old</sup>).</li></ul>
   <!--card--><p>Exemplo (Exame 1 2024/25): x₁ = (0, 1), x₂ = (1, 0), x₃ = (−1, −1), x₄ = (−2, −2); c₁ = (1, 1), c₂ = (−2, −2). x₁, x₂ ficam a 1 de c₁ (e √13 de c₂) → C₁. x₃ está a √2 de c₂ (2√2 de c₁), x₄ a 0 de c₂ → C₂. Novos centros: c₁ = (0,5; 0,5), c₂ = (−1,5; −1,5).</p>`,
   key: 'k-means: atribui ao centróide mais próximo, centróide = média do grupo, repete. Converge para um ótimo local.' },
 { id: 'c-em', t: 'clust', title: 'Misturas de gaussianas e o algoritmo EM',
   html: `<p>O k-means dá atribuições “duras”. Numa <b>mistura de gaussianas</b>, cada cluster k é uma gaussiana N(μ<sub>k</sub>, Σ<sub>k</sub>) com um peso π<sub>k</sub> (prior, Σπ<sub>k</sub> = 1), e cada ponto pertence a todos com alguma probabilidade.</p>
-  <p><b>Passo E</b> (expectation): a responsabilidade de k pelo ponto n, pela regra de Bayes:</p>
-  <p style="text-align:center"><b>γ<sub>nk</sub> = p(k | x<sub>n</sub>) = π<sub>k</sub> N(x<sub>n</sub> | μ<sub>k</sub>, Σ<sub>k</sub>) / Σ<sub>j</sub> π<sub>j</sub> N(x<sub>n</sub> | μ<sub>j</sub>, Σ<sub>j</sub>)</b></p>
-  <p><b>Passo M</b> (maximization), com N<sub>k</sub> = Σ<sub>n</sub> γ<sub>nk</sub>:</p>
-  <ul><li>μ<sub>k</sub> = (1/N<sub>k</sub>) Σ<sub>n</sub> γ<sub>nk</sub> x<sub>n</sub> (média pesada)</li>
-  <li>Σ<sub>k</sub> = (1/N<sub>k</sub>) Σ<sub>n</sub> γ<sub>nk</sub> (x<sub>n</sub> − μ<sub>k</sub>)(x<sub>n</sub> − μ<sub>k</sub>)ᵀ, já com a <b>nova</b> média</li>
-  <li><b>π<sub>k</sub> = N<sub>k</sub> / N</b></li></ul>
+  <p><b>Passo E</b> (expectation): a responsabilidade do cluster k pelo ponto n, pela regra de Bayes. Nos slides, c<sub>k</sub> = 1 quer dizer “pertence ao cluster k” e π<sub>k</sub> = p(c<sub>k</sub> = 1):</p>
+  <p style="text-align:center"><b>γ(c<sub>nk</sub>) = p(c<sub>k</sub> = 1 | x<sub>n</sub>) = π<sub>k</sub> N(x<sub>n</sub> | μ<sub>k</sub>, Σ<sub>k</sub>) / Σ<sub>j</sub> π<sub>j</sub> N(x<sub>n</sub> | μ<sub>j</sub>, Σ<sub>j</sub>)</b></p>
+  <p>Na prática: calcula p(c<sub>k</sub> = 1, x<sub>n</sub>) = π<sub>k</sub> N(x<sub>n</sub> | μ<sub>k</sub>, Σ<sub>k</sub>) para cada k, soma-os para obter p(x<sub>n</sub>) e divide.</p>
+  <p><b>Passo M</b> (maximization), com N<sub>k</sub> = Σ<sub>n</sub> γ(c<sub>nk</sub>):</p>
+  <ul><li>μ<sub>k</sub> = (1/N<sub>k</sub>) Σ<sub>n</sub> γ(c<sub>nk</sub>) x<sub>n</sub> (média pesada)</li>
+  <li>Σ<sub>k</sub> = (1/N<sub>k</sub>) Σ<sub>n</sub> γ(c<sub>nk</sub>) (x<sub>n</sub> − μ<sub>k</sub>)(x<sub>n</sub> − μ<sub>k</sub>)ᵀ, já com a <b>nova</b> média</li>
+  <li><b>π<sub>k</sub> = p(c<sub>k</sub> = 1) = N<sub>k</sub> / N</b></li></ul>
   <!--card--><p>Repete-se até a verosimilhança estabilizar. É o k-means “suave”: com covariâncias iguais e a tender para 0, o EM vira k-means. Problema: se uma gaussiana colapsa num único ponto, a variância vai a 0 e a verosimilhança explode (singularidade).</p>
-  <p>Exemplo: se p(x₁|1) = 0,03 e p(x₁|2) = 0,01 com π = (0,5; 0,5), γ₁₁ = 0,015/(0,015 + 0,005) = 0,75. Somando as responsabilidades de cada cluster obtêm-se os N<sub>k</sub> e os novos π<sub>k</sub> = N<sub>k</sub>/N.</p>`,
-  key: 'E: γₙₖ ∝ πₖ N(xₙ|μₖ,Σₖ). M: μₖ média pesada, Σₖ covariância pesada, πₖ = Nₖ/N.' },
+  <p>Exemplo: se p(x₁ | c₁ = 1) = 0,03 e p(x₁ | c₂ = 1) = 0,01 com π = (0,5; 0,5), γ(c₁₁) = 0,015/(0,015 + 0,005) = 0,75. Somando as responsabilidades de cada cluster obtêm-se os N<sub>k</sub> e os novos π<sub>k</sub> = N<sub>k</sub>/N.</p>`,
+  key: 'E: γ(cₙₖ) = p(cₖ = 1|xₙ) ∝ πₖ N(xₙ|μₖ,Σₖ). M: μₖ média pesada, Σₖ covariância pesada, πₖ = Nₖ/N.' },
 { id: 'c-valid', t: 'clust', title: 'Validar clusters: pureza, silhueta, Dunn, Davies-Bouldin',
   html: `<p><b>Critérios externos</b> (há etiquetas verdadeiras): <b>pureza</b> = (1/N) Σ<sub>k</sub> max<sub>c</sub> |C<sub>k</sub> ∩ classe c|. Cada cluster conta os pontos da sua classe maioritária. Exemplo: clusters {A, C} e {B, B} → (1 + 2)/4 = 0,75.</p>
   <p><b>Critérios internos</b> (só os dados):</p>
-  <ul><li><b>Silhueta</b> de um ponto x: a(x) = distância média aos pontos do <b>seu</b> cluster; b(x) = distância média aos pontos do cluster <b>vizinho mais próximo</b>. <b>s(x) = 1 − a/b</b> se a &lt; b (em geral s = (b − a)/max(a, b)). s ∈ [−1, 1]: perto de 1 = bem agrupado; negativo = provavelmente no cluster errado. A silhueta de um cluster é a média dos seus pontos.</li>
+  <ul><li><b>Silhueta</b> de um ponto i: a(i) = distância média aos outros pontos do <b>seu</b> cluster (divide por |C<sub>i</sub>| − 1); b(i) = a menor, entre os outros clusters, da distância média aos pontos desse cluster. <b>s(i) = 1 − a(i)/b(i)</b> se a(i) &lt; b(i), 0 se forem iguais, b(i)/a(i) − 1 se a(i) &gt; b(i) (o mesmo que (b − a)/max(a, b)). s ∈ [−1, 1]: perto de 1 = bem agrupado; negativo = provavelmente no cluster errado. A silhueta de um cluster é a média dos seus pontos.</li>
   <li><b>Dunn</b>: menor distância entre clusters ÷ maior diâmetro de um cluster. Maior é melhor.</li>
   <li><b>Davies-Bouldin</b>: média, por cluster, do pior rácio (dispersão<sub>i</sub> + dispersão<sub>j</sub>)/distância(centros). Menor é melhor.</li></ul>
   <!--card--><p>Exemplo: a = 4, b = 7 → s = 1 − 4/7 = 3/7 ≈ 0,43.</p>
@@ -34,24 +35,25 @@ STUDY.lessons('ml', [
 
 /* ---------------- PCA ---------------- */
 { id: 'pc-cov', t: 'pca', title: 'Matriz de covariância e valores próprios (2 × 2)',
-  html: `<p><b>Matriz de covariância</b> da amostra: c<sub>ij</sub> = (1/(n−1)) Σ<sub>k</sub> (x<sub>i</sub><sup>(k)</sup> − m<sub>i</sub>)(x<sub>j</sub><sup>(k)</sup> − m<sub>j</sub>). É simétrica; na diagonal estão as variâncias.</p>
+  html: `<p><b>Matriz de covariância</b> da amostra (nos slides, C ou Σ): c<sub>ij</sub> = Σ<sub>k=1</sub><sup>n</sup> (x<sub>k,i</sub> − x̄<sub>i</sub>)(x<sub>k,j</sub> − x̄<sub>j</sub>) / (n − 1), onde x<sub>k,i</sub> é o atributo i do exemplo k e x̄<sub>i</sub> a média do atributo i. É simétrica; na diagonal estão as variâncias.</p>
   <p><b>Receita</b> para uma matriz 2 × 2 C = [[a, b],[b, d]]:</p>
   <ol><li>Equação característica: det(C − λI) = 0 → λ² − (a + d)λ + (ad − b²) = 0.</li>
   <li>λ = [(a + d) ± √((a + d)² − 4(ad − b²))]/2. Soma dos λ = traço; produto = determinante.</li>
-  <li>Vetor próprio de cada λ: resolve (C − λI)u = 0; um vetor que serve é u = (b, λ − a).</li>
+  <li>Vetor próprio de cada λ<sub>i</sub>: resolve (λ<sub>i</sub>I − C)u<sub>i</sub> = 0, ou seja C u<sub>i</sub> = λ<sub>i</sub> u<sub>i</sub>; um vetor que serve é u = (b, λ − a). Tanto u<sub>i</sub> como −u<sub>i</sub> servem.</li>
   <li><b>Normaliza</b>: divide pelo comprimento, para ‖u‖ = 1.</li></ol>
-  <!--card--><p>Exemplo (Exame 1 2025/26): X = {(0, 0), (4, 0), (1, 1)}. m = (5/3, 1/3). c₁₁ = [(−5/3)² + (7/3)² + (−2/3)²]/2 = 4,333; c₂₂ = [(1/9)·(1 + 1 + 4)]/2 = 0,333; c₁₂ = [(−5/3)(−1/3) + (7/3)(−1/3) + (−2/3)(2/3)]/2 = −0,333.</p>
+  <!--card--><p>Exemplo (Exame 1 2025/26): X = {(0, 0), (4, 0), (1, 1)}. x̄ = (5/3, 1/3). c₁₁ = [(−5/3)² + (7/3)² + (−2/3)²]/2 = 4,333; c₂₂ = [(1/9)·(1 + 1 + 4)]/2 = 0,333; c₁₂ = [(−5/3)(−1/3) + (7/3)(−1/3) + (−2/3)(2/3)]/2 = −0,333.</p>
   <p>Traço = 4,667, det = 1,444 − 0,111 = 1,333 → λ₁ = <b>4,361</b>, λ₂ = <b>0,306</b>. u₁ ≈ (0,997; −0,083).</p>`,
-  key: 'λ² − traço·λ + det = 0. Vetor próprio (b, λ − a), normalizado. Covariância amostral divide por n−1.' },
+  key: 'λ² − traço·λ + det = 0. Vetor próprio (b, λ − a), normalizado (C uᵢ = λᵢ uᵢ). Covariância amostral divide por n−1.' },
 { id: 'pc-pca', t: 'pca', title: 'PCA: projeção, reconstrução e quantas componentes',
   html: `<p>A PCA (transformada de Karhunen-Loève) roda os eixos para que fiquem alinhados com as direções de maior variância. Os novos eixos são os <b>vetores próprios</b> da matriz de covariância, ordenados pelos <b>valores próprios</b> (= variância ao longo de cada eixo). Na nova base a covariância é diagonal: as novas variáveis não estão correlacionadas.</p>
-  <ul><li><b>Projeção</b> na componente k: y<sub>k</sub> = u<sub>k</sub>ᵀ(x − m) (com os dados centrados; as aulas por vezes projetam x diretamente, y = Uᵀx).</li>
-  <li><b>Reconstrução</b> com as primeiras L componentes: x̂ = m + Σ<sub>k≤L</sub> y<sub>k</sub> u<sub>k</sub>. O erro é a variância das componentes deitadas fora.</li>
+  <ul><li><b>Projeção</b> (como nos slides e nas resoluções oficiais): <b>y = Uᵀx</b>, com os vetores próprios normalizados nas colunas de U. Na componente k: y<sub>k</sub> = u<sub>k</sub>ᵀx. Para reduzir a L dimensões usa-se só as primeiras L colunas, W: <b>z = Wᵀx</b>. A média <b>não</b> se subtrai.</li>
+  <li><b>Reconstrução</b> com as primeiras L componentes: x̂ = W z = Σ<sub>k≤L</sub> y<sub>k</sub> u<sub>k</sub>. O erro é a parte ao longo das componentes deitadas fora.</li>
+  <li>Nos livros (e no scikit-learn) centra-se primeiro: y = u<sub>k</sub>ᵀ(x − x̄) e x̂ = x̄ + Σ y<sub>k</sub>u<sub>k</sub>. Só uses esta forma se o enunciado a pedir.</li>
   <li><b>Variância explicada</b> pelas primeiras L: Σ<sub>k≤L</sub> λ<sub>k</sub> / Σ λ.</li>
   <li><b>Critério de Kaiser</b>: fica com as componentes de λ &gt; 1 (pensado para dados normalizados) — ou com as de λ acima da média.</li></ul>
   <!--card--><p>Exemplo (Exame 1 2022/23): λ₁ = 2,6 e λ₂ = 0,32. Kaiser → só a 1.ª componente. 95% da variância? 2,6/2,92 = 89% &lt; 95% → são precisas as <b>duas</b>.</p>
-  <p>Exemplo: x = (1, 1), m = (5/3, 1/3), u₁ = (0,997; −0,083). y = 0,997·(−0,667) − 0,083·0,667 = <b>−0,720</b>. Reconstrução: m + y·u₁ = (0,95; 0,39).</p>`,
-  key: 'Componentes = vetores próprios por λ decrescente. Variância explicada = Σλ escolhidos / Σλ. Kaiser: λ > 1.' },
+  <p>Exemplo (Exame 1 2025/26): x = (1, 1), u₁ = (0,997; −0,083). y = u₁ᵀx = 0,997 − 0,083 = <b>0,914</b>. Reconstrução: y·u₁ = <b>(0,911; −0,076)</b>.</p>`,
+  key: 'Projeção y = Uᵀx (sem centrar, como nos slides); reconstrução x̂ = Σ yₖuₖ. Variância explicada = Σλ escolhidos / Σλ. Kaiser: λ > 1.' },
 { id: 'pc-ae', t: 'pca', title: 'SVD, autoencoders e tf-idf',
   html: `<p><b>SVD</b>: X = UΣVᵀ. As colunas de V (com dados centrados) são as componentes principais e os valores singulares ao quadrado/(n−1) são os valores próprios da covariância. É como se calcula a PCA na prática.</p>
   <p><b>Autoencoder</b>: rede treinada para reproduzir a entrada na saída, passando por uma camada estreita (o código). <b>Undercomplete</b>: código menor do que a entrada, obriga a comprimir. Com codificador e descodificador <b>lineares</b> e erro quadrático, aprende o mesmo subespaço que a PCA. Com ativações não lineares faz uma redução de dimensionalidade não linear.</p>
@@ -78,22 +80,22 @@ STUDY.lessons('ml', [
 /* ---------------- SVM ---------------- */
 { id: 's-margin', t: 'svm', title: 'SVM: a margem máxima',
   html: `<p>Entre todas as retas que separam duas classes, qual escolher? A SVM escolhe a que deixa a <b>maior margem</b>: a maior “estrada” vazia entre as classes. Intuitivamente, é a que generaliza melhor.</p>
-  <ul><li>Hiperplano: wᵀx + b = 0. A distância (com sinal) de x ao hiperplano é y(x)/‖w‖.</li>
-  <li>Escalando w para que os pontos mais próximos tenham t<sub>k</sub>(wᵀx<sub>k</sub> + b) = 1, a margem vale <b>2/‖w‖</b>.</li>
-  <li>Problema: minimizar ½‖w‖² sujeito a t<sub>k</sub>(wᵀx<sub>k</sub> + b) ≥ 1 para todos os k (otimização quadrática convexa: mínimo global).</li>
-  <li><b>Vetores de suporte</b>: os pontos que ficam em cima da margem. Só eles definem o hiperplano; os outros podiam ser removidos sem mudar nada.</li></ul>
-  <!--card--><p><b>Problema dual</b> (multiplicadores de Lagrange α<sub>k</sub> ≥ 0): w = Σ α<sub>k</sub> t<sub>k</sub> x<sub>k</sub>, e α<sub>k</sub> &gt; 0 só nos vetores de suporte. Os dados só aparecem em produtos internos x<sub>i</sub>ᵀx<sub>j</sub>, e isso abre a porta ao truque do kernel.</p>
-  <p><b>Soft margin</b> (dados não separáveis): variáveis de folga ξ<sub>k</sub> ≥ 0 e minimiza-se ½‖w‖² + C Σ ξ<sub>k</sub>. C grande = poucos erros no treino (margem estreita); C pequeno = margem larga, tolera erros.</p>`,
-  key: 'Margem = 2/‖w‖ → minimizar ½‖w‖². Só os vetores de suporte contam. C troca margem por erros.' },
+  <ul><li>Hiperplano: y(x) = wᵀx + b = 0 (nos slides também wᵀx + w₀). A distância (com sinal) de x ao hiperplano é r = y(x)/‖w‖.</li>
+  <li>Exemplos {x<sub>i</sub>, t<sub>i</sub>} com t<sub>i</sub> ∈ {−1, +1}. Escalando w para que os pontos mais próximos tenham t<sub>i</sub>(wᵀx<sub>i</sub> + b) = 1, a margem vale <b>ρ = 2/‖w‖</b>.</li>
+  <li>Problema: minimizar ½wᵀw sujeito a t<sub>i</sub>(wᵀx<sub>i</sub> + b) ≥ 1 para todos os i (otimização quadrática convexa: mínimo global).</li>
+  <li><b>Vetores de suporte</b> x<sup>(s)</sup>: os pontos que ficam em cima da margem, wᵀx<sup>(s)</sup> + b = ±1. Só eles definem o hiperplano; os outros podiam ser removidos sem mudar nada.</li></ul>
+  <!--card--><p><b>Problema dual</b> (multiplicadores de Lagrange α<sub>i</sub> ≥ 0): maximiza Q(α) = Σ α<sub>i</sub> − ½ Σ<sub>i</sub> Σ<sub>j</sub> α<sub>i</sub>α<sub>j</sub>t<sub>i</sub>t<sub>j</sub> x<sub>i</sub>ᵀx<sub>j</sub>. Depois w = Σ α<sub>i</sub> t<sub>i</sub> x<sub>i</sub>, com α<sub>i</sub> &gt; 0 só nos vetores de suporte, e b = 1 − wᵀx<sup>(s)</sup> para um vetor de suporte com t<sup>(s)</sup> = 1. Os dados só aparecem em produtos internos x<sub>i</sub>ᵀx<sub>j</sub>, e isso abre a porta ao truque do kernel.</p>
+  <p><b>Soft margin</b> (dados não separáveis): variáveis de folga ξ<sub>i</sub> ≥ 0, com t<sub>i</sub>(wᵀx<sub>i</sub> + b) ≥ 1 − ξ<sub>i</sub>, e minimiza-se Φ(ξ) = ½wᵀw + C Σ ξ<sub>i</sub>. C grande = poucos erros no treino (margem estreita); C pequeno = margem larga, tolera erros.</p>`,
+  key: 'Margem ρ = 2/‖w‖ → minimizar ½wᵀw. Só os vetores de suporte contam. C troca margem por erros.' },
 { id: 's-kernel', t: 'svm', title: 'O truque do kernel',
-  html: `<p>Dados que não se separam com uma reta podem separar-se num espaço de dimensão maior φ(x). Como o dual só usa produtos internos, basta saber calcular <b>K(x, y) = φ(x)ᵀφ(y)</b> sem nunca construir φ explicitamente.</p>
-  <ul><li><b>Polinomial</b>: K(x, y) = (xᵀy + 1)<sup>p</sup>. Com p = 2 em 2D corresponde a φ(x) = (1, √2x₁, √2x₂, x₁², x₂², √2x₁x₂): 6 dimensões.</li>
-  <li><b>Gaussiano / RBF</b>: K(x, y) = exp(−‖x − y‖²/(2σ²)). Corresponde a um espaço de dimensão infinita.</li>
-  <li><b>Teorema de Mercer</b>: K é um kernel válido se a matriz de Gram K(x<sub>i</sub>, x<sub>j</sub>) for sempre simétrica e semidefinida positiva.</li></ul>
-  <!--card--><p>Classificar um ponto novo: sinal de Σ α<sub>k</sub> t<sub>k</sub> K(x<sub>k</sub>, x) + b, somando só sobre os vetores de suporte.</p>
-  <p>Exemplo: x = (1, 2), y = (3, 1) com kernel polinomial de grau 2: xᵀy = 3 + 2 = 5 → K = (5 + 1)² = <b>36</b>.</p>
+  html: `<p>Dados que não se separam com uma reta podem separar-se num espaço de dimensão maior φ(x). Como o dual só usa produtos internos, basta saber calcular <b>k(x, x<sub>i</sub>) = Φ(x)ᵀΦ(x<sub>i</sub>)</b> sem nunca construir Φ explicitamente.</p>
+  <ul><li><b>Polinomial</b>: k(x, x<sub>i</sub>) = (xᵀx<sub>i</sub> + 1)<sup>p</sup>. Com p = 2 em 2D corresponde a Φ(x) = (1, x₁², √2x₁x₂, x₂², √2x₁, √2x₂): 6 dimensões.</li>
+  <li><b>Gaussiano / RBF</b>: k(x, x<sub>i</sub>) = exp(−‖x − x<sub>i</sub>‖²/(2σ²)). Corresponde a um espaço de dimensão infinita.</li>
+  <li><b>Teorema de Mercer</b>: k é um kernel válido se a matriz de Gram K, com K<sub>ij</sub> = k(x<sub>i</sub>, x<sub>j</sub>), for sempre simétrica e semidefinida positiva.</li></ul>
+  <!--card--><p>Classificar um ponto novo: <b>o = sgn(Σ<sub>i</sub> α<sub>i</sub> t<sub>i</sub> k(x, x<sub>i</sub>) + b)</b>, somando só sobre os vetores de suporte.</p>
+  <p>Exemplo: x = (1, 2), x<sub>i</sub> = (3, 1) com kernel polinomial de grau 2: xᵀx<sub>i</sub> = 3 + 2 = 5 → k = (5 + 1)² = <b>36</b>.</p>
   <p>Uma SVM com kernel gaussiano parece uma rede RBF, e com kernel sigmoide uma rede de duas camadas, mas o número de “neurónios” (vetores de suporte) é decidido pelo treino.</p>`,
-  key: 'K(x, y) = φ(x)ᵀφ(y) sem calcular φ. Polinomial (xᵀy + 1)ᵖ, gaussiano exp(−‖x−y‖²/2σ²).' },
+  key: 'k(x, xᵢ) = Φ(x)ᵀΦ(xᵢ) sem calcular Φ. Polinomial (xᵀxᵢ + 1)ᵖ, gaussiano exp(−‖x − xᵢ‖²/2σ²).' },
 
 /* ---------------- DEEP LEARNING ---------------- */
 { id: 'dl-why', t: 'deep', title: 'Redes profundas e o gradiente que desaparece',

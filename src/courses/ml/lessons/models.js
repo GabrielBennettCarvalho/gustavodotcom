@@ -5,7 +5,7 @@ STUDY.lessons('ml', [
   html: `<p>Traçar a reta que passa “o mais perto possível” de uma nuvem de pontos. O modelo é y(x, w) = w₀ + w₁x₁ + … + w<sub>D</sub>x<sub>D</sub> = wᵀx, com x₀ = 1 para o bias w₀.</p>
   <p>“O mais perto possível” = minimizar a <b>soma dos quadrados dos erros</b>: E(w) = ½ Σ<sub>k</sub> (t<sub>k</sub> − wᵀx<sub>k</sub>)² (o MSE é a mesma coisa a dividir por N).</p>
   <!--card--><p>Junta os exemplos numa <b>matriz de design</b> X (uma linha por exemplo, a primeira coluna toda a 1) e os alvos num vetor t. Igualando o gradiente a zero, obtém-se a solução fechada:</p>
-  <p style="text-align:center"><b>w = (XᵀX)⁻¹ Xᵀ t</b> &nbsp; = X⁺ t (pseudo-inversa de Moore-Penrose)</p>
+  <p style="text-align:center"><b>w = (XᵀX)⁻¹ Xᵀ t</b> &nbsp; = X<sup>†</sup> t (X<sup>†</sup>: pseudo-inversa de Moore-Penrose)</p>
   <p>Se XᵀX não tem inversa (atributos que são combinações lineares de outros, ou menos exemplos do que parâmetros), usa-se a pseudo-inversa ou regularização.</p>
   <!--card--><p>Exemplo: pontos (1, 1), (2, 3), (3, 4). X = [[1,1],[1,2],[1,3]]; XᵀX = [[3, 6],[6, 14]], Xᵀt = (8, 19). det = 42 − 36 = 6. w = (1/6)·[[14, −6],[−6, 3]]·(8, 19) = (−2/6, 9/6) → <b>y = −0,333 + 1,5x</b>.</p>
   <p>Medidas de erro no treino: MAE = (1/N) Σ |t − y|; MSE = (1/N) Σ (t − y)²; RMSE = √MSE.</p>`,
@@ -21,11 +21,11 @@ STUDY.lessons('ml', [
   key: 'Linha da matriz de design = [1, φ(x), φ(x)², …]. Linear nos pesos → a mesma fórmula fechada.' },
 { id: 'lr-reg', t: 'linreg', title: 'Regularização: ridge, lasso e a visão Bayesiana',
   html: `<p>Pesos enormes são o sintoma do overfitting. A regularização castiga-os, juntando um termo ao erro:</p>
-  <ul><li><b>Ridge</b> (l₂, Tikhonov): E(w) = ½ Σ (t − wᵀφ)² + (λ/2) ‖w‖². Solução fechada: <b>w = (λI + ΦᵀΦ)⁻¹ Φᵀ t</b>. Encolhe todos os pesos.</li>
-  <li><b>Lasso</b> (l₁): + λ Σ |w<sub>j</sub>|. Põe muitos pesos exatamente a 0 (soluções esparsas, seleção de atributos). Não tem solução fechada.</li></ul>
+  <ul><li><b>Ridge</b> (l₂, Tikhonov): E(w) = ½ Σ (t − wᵀφ)² + (λ/2) ‖w‖₂². Solução fechada: <b>w = (ΦᵀΦ + λI)⁻¹ Φᵀ t</b>. Encolhe todos os pesos.</li>
+  <li><b>Lasso</b> (l₁): E(w) = ½ Σ (t − wᵀφ)² + (λ/2) ‖w‖₁, com ‖w‖₁ = Σ |w<sub>j</sub>|. Põe muitos pesos exatamente a 0 (soluções esparsas, seleção de atributos). Não tem solução fechada.</li></ul>
   <!--card--><p>λ grande → modelo simples (underfitting); λ = 0 → mínimos quadrados normais. Escolhe-se λ por validação.</p>
-  <p><b>Visão Bayesiana</b>: se o ruído é gaussiano, maximizar a verosimilhança (ML) é o mesmo que minimizar a soma dos quadrados. Se, além disso, pusermos um <b>prior gaussiano</b> nos pesos (média 0), a solução <b>MAP</b> é exatamente a regressão ridge, com λ = (variância do ruído)/(variância do prior). O prior é a regularização.</p>`,
-  key: 'Ridge: w = (λI + ΦᵀΦ)⁻¹Φᵀt = MAP com prior gaussiano. Lasso (l₁) põe pesos a zero.' },
+  <p><b>Visão Bayesiana</b>: se o ruído é gaussiano, maximizar a verosimilhança (ML) é o mesmo que minimizar a soma dos quadrados. Se, além disso, pusermos um <b>prior gaussiano</b> nos pesos (média 0), a solução <b>MAP</b> é exatamente a regressão ridge, com λ = σ² / σ<sub>w</sub>² (variância do ruído sobre a variância do prior). O prior é a regularização. Com um prior laplaciano nos pesos, o MAP dá o lasso.</p>`,
+  key: 'Ridge: w = (ΦᵀΦ + λI)⁻¹Φᵀt = MAP com prior gaussiano. Lasso (l₁) põe pesos a zero.' },
 
 /* ---------------- PERCEPTRON ---------------- */
 { id: 'p-rosen', t: 'percep', title: 'O perceptrão de Rosenblatt',
@@ -39,13 +39,13 @@ STUDY.lessons('ml', [
   key: 'Rosenblatt: w ← w + η(t − o)x, só muda quando erra. Só separa o que é linearmente separável.' },
 { id: 'p-gd', t: 'percep', title: 'Descida do gradiente e a regra delta',
   html: `<p>Num nevoeiro na montanha, para descer dás um passo na direção em que o chão desce mais. É a <b>descida do gradiente</b>:</p>
-  <p style="text-align:center"><b>w ← w − η ∂E/∂w</b></p>
-  <p>Com uma unidade <b>linear</b> (o = net = wᵀx) e E = ½ Σ (t<sub>k</sub> − o<sub>k</sub>)²: ∂E/∂w<sub>j</sub> = −Σ (t<sub>k</sub> − o<sub>k</sub>) x<sub>kj</sub>. Regra delta / LMS / Widrow-Hoff (ADALINE):</p>
-  <p style="text-align:center"><b>Δw<sub>j</sub> = η Σ<sub>k</sub> (t<sub>k</sub> − o<sub>k</sub>) x<sub>kj</sub></b></p>
+  <p style="text-align:center"><b>w<sup>new</sup> = w<sup>old</sup> + Δw</b>, &nbsp; com &nbsp; <b>Δw = −η ∇E(w)</b></p>
+  <p>Com uma unidade <b>linear</b> (o<sub>k</sub> = net<sub>k</sub> = Σ<sub>j</sub> w<sub>j</sub> x<sub>k,j</sub>) e E(w) = ½ Σ<sub>k</sub> (t<sub>k</sub> − o<sub>k</sub>)²: ∂E/∂w<sub>j</sub> = −Σ (t<sub>k</sub> − o<sub>k</sub>) x<sub>k,j</sub>, onde x<sub>k,j</sub> é o atributo j do exemplo k. Regra delta / LMS / Widrow-Hoff (ADALINE):</p>
+  <p style="text-align:center"><b>Δw<sub>j</sub> = η Σ<sub>k</sub> (t<sub>k</sub> − o<sub>k</sub>) x<sub>k,j</sub></b></p>
   <ul><li><b>Batch</b>: soma os gradientes de todos os exemplos e só depois atualiza.</li>
   <li><b>Estocástico</b> (SGD): atualiza depois de cada exemplo. Mais barato por passo e com ruído que ajuda a sair de mínimos locais.</li>
   <li>η demasiado grande → oscila ou diverge; demasiado pequeno → muito lento.</li></ul>
-  <!--card--><p><b>Receita para uma ativação qualquer</b> o = f(net): pela regra da cadeia, ∂E/∂w<sub>j</sub> = −Σ (t − o) · f'(net) · x<sub>j</sub>. Logo Δw<sub>j</sub> = η Σ (t − o) f'(net) x<sub>j</sub>.</p>
+  <!--card--><p><b>Receita para uma ativação qualquer</b> o = f(net) (nos slides, φ(net)): pela regra da cadeia, ∂E/∂w<sub>j</sub> = −Σ (t − o) · f'(net) · x<sub>j</sub>. Logo Δw<sub>j</sub> = η Σ (t − o) f'(net) x<sub>j</sub>.</p>
   <p>Exemplo de exame: o = exp((wᵀx)² + 1). f'(net) = exp(net² + 1)·2·net → Δw<sub>j</sub> = η Σ (t − o) · exp((wᵀx)² + 1) · 2(wᵀx) · x<sub>j</sub>. Com sigmoide: f' = σ(1 − σ).</p>`,
   key: 'Δw = −η ∂E/∂w. Para o = f(net) e erro quadrático: Δwⱼ = η Σ (t − o) f′(net) xⱼ.' },
 
@@ -53,7 +53,8 @@ STUDY.lessons('ml', [
 { id: 'lg-sig', t: 'logreg', title: 'Regressão logística e entropia cruzada',
   html: `<p>Apesar do nome, é um <b>classificador</b>: um neurónio com ativação sigmoide σ(net) = 1/(1 + e<sup>−net</sup>), cuja saída é interpretada como p(C₁ | x). Decide-se pela classe 1 se σ(net) ≥ 0,5, ou seja se net ≥ 0: a fronteira continua a ser um hiperplano.</p>
   <p>Em vez do erro quadrático usa-se a <b>entropia cruzada</b> (cross-entropy), que vem da verosimilhança de Bernoulli:</p>
-  <p style="text-align:center">E(w) = −Σ<sub>k</sub> [t<sub>k</sub> ln o<sub>k</sub> + (1 − t<sub>k</sub>) ln(1 − o<sub>k</sub>)]</p>
+  <p style="text-align:center">E(w) = −log p(t | w) = −Σ<sub>k</sub> [t<sub>k</sub> log o<sub>k</sub> + (1 − t<sub>k</sub>) log(1 − o<sub>k</sub>)]</p>
+  <p>Aqui log é o logaritmo natural (ln), com o<sub>k</sub> = p(C₁ | x<sub>k</sub>) = σ(net<sub>k</sub>).</p>
   <!--card--><p>O gradiente fica limpíssimo (o σ' cancela-se): ∂E/∂w = −Σ (t<sub>k</sub> − o<sub>k</sub>) x<sub>k</sub>. A atualização (batch):</p>
   <p style="text-align:center"><b>w ← w + η Σ<sub>k</sub> (t<sub>k</sub> − σ(wᵀx<sub>k</sub>)) x<sub>k</sub></b></p>
   <p>Exemplo (Exame 1 2024/25): w = (1, 1, 1), η = 1, x₁ = (0, 0) t = 1; x₂ = (−1, −1) t = 0; x₃ = (1, 1) t = 0. Com o 1 do bias: net = 1, −1, 3 → σ = 0,731; 0,269; 0,953. w ← (1, 1, 1) + 0,269·(1, 0, 0) − 0,269·(1, −1, −1) − 0,953·(1, 1, 1) = <b>(0,047; 0,316; 0,316)</b>.</p>
@@ -64,15 +65,16 @@ STUDY.lessons('ml', [
   <p style="text-align:center"><b>o<sub>j</sub> = e<sup>net<sub>j</sub></sup> / Σ<sub>i</sub> e<sup>net<sub>i</sub></sup></b></p>
   <ul><li>Somar a mesma constante a todos os net não muda o resultado: na prática subtrai-se o máximo para evitar overflow (truque de estabilidade numérica).</li>
   <li>Alvo em <b>one-hot</b>: t = (0, 1, 0) para a classe 2.</li>
-  <li>Entropia cruzada: E = −Σ<sub>j</sub> t<sub>j</sub> ln o<sub>j</sub> = −ln o<sub>classe certa</sub>.</li></ul>
-  <!--card--><p>O gradiente em relação aos net é simplesmente <b>∂E/∂net<sub>j</sub> = o<sub>j</sub> − t<sub>j</sub></b> (o delta Kronecker da derivada da softmax cancela-se com o log). É o mesmo resultado da sigmoide com entropia cruzada.</p>
+  <li>Entropia cruzada: E = −Σ<sub>j</sub> t<sub>j</sub> log o<sub>j</sub> = −log o<sub>classe certa</sub> (log natural).</li>
+  <li>Nos slides: a softmax escreve-se σ(net)<sub>s</sub> = exp(net<sub>s</sub>) / Σ<sub>t</sub> exp(net<sub>t</sub>), o alvo do exemplo k na classe t é <b>y<sub>kt</sub></b> (t já é índice de classe) e E(w) = −Σ<sub>k</sub> Σ<sub>t</sub> y<sub>kt</sub> log o<sub>kt</sub>.</li></ul>
+  <!--card--><p>O gradiente em relação aos net é simplesmente <b>∂E/∂net<sub>j</sub> = o<sub>j</sub> − t<sub>j</sub></b> (a derivada da softmax é ∂o<sub>s</sub>/∂net<sub>t</sub> = o<sub>s</sub>(I<sub>st</sub> − o<sub>t</sub>), com o delta de Kronecker I<sub>st</sub> = 1 se s = t e 0 senão, e cancela-se com o log). É o mesmo resultado da sigmoide com entropia cruzada.</p>
   <p>Exemplo: net = (0, 0, 0) → o = (1/3, 1/3, 1/3); com t = (1, 0, 0): δ = o − t = (−2/3, 1/3, 1/3); E = −ln(1/3) = 1,099.</p>
   <p>Com K = 2, softmax é equivalente a uma sigmoide sobre a diferença dos net.</p>`,
   key: 'Softmax + entropia cruzada: δ = o − t. Loss = −ln(prob. da classe certa).' },
 
 /* ---------------- MLP ---------------- */
 { id: 'm-fwd', t: 'mlp', title: 'Redes multicamada: forward propagation',
-  html: `<p>Um perceptrão sozinho não faz o XOR. Empilhando camadas com ativações não lineares, a rede aprende fronteiras quaisquer. Notação das aulas (camada l, com x[0] = entrada):</p>
+  html: `<p>Um perceptrão sozinho não faz o XOR. Empilhando camadas com ativações não lineares, a rede aprende fronteiras quaisquer. Notação dos exames e das resoluções (camada l, com x[0] = entrada):</p>
   <p style="text-align:center"><b>z[l] = W[l] x[l−1] + b[l]</b>, &nbsp; <b>x[l] = f(z[l])</b></p>
   <ul><li>W[l] tem uma <b>linha por neurónio</b> da camada l e uma coluna por entrada.</li>
   <li>Ativações: sigmoide, tanh (em [−1, 1], tanh' = 1 − tanh²), ReLU = max(0, x), softmax na saída para classificação.</li>
@@ -88,7 +90,11 @@ STUDY.lessons('ml', [
   <li><b>Atualização</b>: W[l] ← W[l] − η δ[l] x[l−1]ᵀ; b[l] ← b[l] − η δ[l].</li></ol>
   <!--card--><p>Derivadas: σ' = σ(1 − σ); tanh' = 1 − tanh²; ReLU' = 1 se z &gt; 0, senão 0.</p>
   <p>Exemplo (rede da lição anterior, t = 0, erro quadrático, η = 1): δ[2] = (0,731 − 0)·0,731·0,269 = <b>0,144</b>. ∂E/∂W[2] = 0,144·(0,731; 0,269) = (0,105; 0,039) → W[2] = (0,895; 0,961), b[2] = −0,144. δ[1] = W[2]ᵀ·0,144 ⊙ σ'(z[1]) = 0,144·(0,197; 0,197) = (0,028; 0,028).</p>
-  <p>Atenção: os deltas das camadas escondidas usam os pesos <b>antigos</b> de W[l+1] (calcula todos os δ antes de atualizar).</p>`,
+  <p>Atenção: os deltas das camadas escondidas usam os pesos <b>antigos</b> de W[l+1] (calcula todos os δ antes de atualizar).</p>
+  <!--card--><p><b>Notação dos slides</b> (aula 9), para uma camada escondida: entrada x<sub>k,j</sub>, unidades escondidas V<sub>k,i</sub> = φ(Σ<sub>j</sub> W<sub>ij</sub> x<sub>k,j</sub>), saídas o<sub>kt</sub> = φ(Σ<sub>i</sub> w<sub>ti</sub> V<sub>k,i</sub>), alvos y<sub>kt</sub>. O delta tem o <b>sinal trocado</b> e soma-se na atualização:</p>
+  <ul><li>Saída (softmax + entropia cruzada): δ<sub>kt</sub> = y<sub>kt</sub> − o<sub>kt</sub>, e Δw<sub>ti</sub> = η Σ<sub>k</sub> δ<sub>kt</sub> V<sub>k,i</sub>.</li>
+  <li>Escondida: δ<sub>ki</sub> = φ'(net<sub>k,i</sub>) Σ<sub>t</sub> δ<sub>kt</sub> w<sub>t,i</sub>, e ΔW<sub>ij</sub> = η Σ<sub>k</sub> δ<sub>ki</sub> x<sub>k,j</sub>.</li></ul>
+  <p>É a mesma conta da notação dos exames: δ<sub>slides</sub> = −δ[l] e W ← W + ηδ<sub>slides</sub>xᵀ dá o mesmo que W ← W − ηδ[l]xᵀ. Usa a notação do enunciado e mantém o sinal coerente até ao fim.</p>`,
   key: 'δ[L] = x − t (softmax/sigmoide + CE). δ[l] = W[l+1]ᵀδ[l+1] ⊙ f′(z[l]). ∂E/∂W[l] = δ[l]x[l−1]ᵀ.' },
 { id: 'm-univ', t: 'mlp', title: 'MLPs como máquinas universais',
   html: `<p><b>Booleanas</b>: qualquer função booleana escreve-se em <b>forma normal disjuntiva</b> (DNF): um OU de ANDs. Cada AND (um mintermo) é um perceptrão com limiar adequado; o OU final é outro perceptrão. Logo um MLP com <b>uma única camada escondida</b> representa qualquer função booleana (mas pode precisar de um número exponencial de neurónios, por exemplo a paridade).</p>

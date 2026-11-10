@@ -11,7 +11,7 @@ STUDY.questions('ml', [
 { id: 'lr-03', t: 'linreg', l: 1, les: 'lr-ls', card: 2, ex: 'f',
   q: 'Qual é a solução fechada dos mínimos quadrados?',
   o: ['w = (XᵀX)⁻¹Xᵀt', 'w = (XXᵀ)⁻¹Xt', 'w = Xᵀ(XᵀX)t', 'w = X⁻¹tᵀ'], a: 0,
-  e: 'Igualando o gradiente a zero: XᵀXw = Xᵀt → **w = (XᵀX)⁻¹Xᵀt** = X⁺t (pseudo-inversa).' },
+  e: 'Igualando o gradiente a zero: XᵀXw = Xᵀt → **w = (XᵀX)⁻¹Xᵀt** = X†t (pseudo-inversa de Moore-Penrose).' },
 { id: 'lr-04', t: 'linreg', l: 1, les: 'lr-basis', card: 1,
   q: 'Considere h(x) = θ₀ + θ₁x + θ₂x² + θ₃x³. Que tipo de regressão é?', src: 'Exame 1 2025/26, 1.2',
   o: ['Regressão polinomial', 'Regressão logística', 'Regressão linear multivariada', 'Classificação por kNN'], a: 0,

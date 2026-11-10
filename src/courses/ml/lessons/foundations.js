@@ -65,7 +65,8 @@ STUDY.lessons('ml', [
   <ol><li>Calcula H(Y) no nó.</li><li>Para cada atributo, parte os exemplos pelos valores e calcula a entropia de cada ramo.</li>
   <li>Faz a média ponderada → H(Y | A).</li><li>IG = H(Y) − H(Y | A). Escolhe o <b>maior</b> (equivale a escolher o menor H(Y | A)).</li></ol>
   <!--card--><p>Exemplo: 8 exemplos [4 sim, 4 não], H = 1. O atributo A parte em a₁ = [3 sim, 0 não] e a₂ = [1 sim, 4 não]. H(a₁) = 0; H(a₂) = H(1/5, 4/5) = 0,722. H(Y | A) = 3/8·0 + 5/8·0,722 = 0,451. <b>IG = 1 − 0,451 = 0,549</b>.</p>
-  <p>Atenção: o ganho favorece atributos com muitos valores (um ID único dá ramos todos puros). O C4.5 corrige com o <i>gain ratio</i>.</p>`,
+  <p>Atenção: o ganho favorece atributos com muitos valores (um ID único dá ramos todos puros). O C4.5 corrige com o <i>gain ratio</i>.</p>
+  <p><b>Nos slides</b> (aula 2) as mesmas contas têm outros nomes: a entropia do nó é I(C) = −Σ p(m<sub>i</sub>) log₂ p(m<sub>i</sub>), a média ponderada dos ramos é E(P) = Σ<sub>i</sub> (|C<sub>i</sub>| / |C|) · I(C<sub>i</sub>) e o ganho é <b>gain(P) = I(C) − E(P)</b>. Os exames escrevem H e IG.</p>`,
   key: 'IG = H(antes) − Σ (|Sᵥ|/|S|)·H(Sᵥ). Maior ganho na raiz. Ramos puros contam 0.' },
 { id: 'dt-more', t: 'dt', title: 'Atributos contínuos, CART, overfitting e bagging',
   html: `<p><b>Atributos contínuos</b>: ou se discretizam antes, ou a árvore escolhe um <b>limiar</b> binário (x ≤ θ vs x &gt; θ). Testam-se os pontos de corte candidatos (entre valores consecutivos ordenados) e fica o de maior ganho.</p>
@@ -157,10 +158,10 @@ STUDY.lessons('ml', [
 /* ---------------- kNN ---------------- */
 { id: 'k-dist', t: 'knn', title: 'Normas e distâncias',
   html: `<p>“Parecido” quer dizer “perto”, mas perto segundo que régua? Para x = (2, 8) e y = (6, 3):</p>
-  <ul><li><b>Euclidiana</b> (l₂): √((2−6)² + (8−3)²) = √41 ≈ 6,40.</li>
-  <li><b>Manhattan</b> (l₁, taxicab): |2−6| + |8−3| = <b>9</b>.</li>
-  <li><b>Máximo</b> (l<sub>∞</sub>, Chebyshev): max(|x<sub>i</sub> − y<sub>i</sub>|) = 5.</li>
-  <li>Minkowski l<sub>p</sub>: (Σ |x<sub>i</sub> − y<sub>i</sub>|<sup>p</sup>)<sup>1/p</sup>; p = 1 e p = 2 são os casos acima.</li>
+  <ul><li><b>Euclidiana</b> (l₂): d₂(x, y) = ‖x − y‖₂ = √((2−6)² + (8−3)²) = √41 ≈ 6,40.</li>
+  <li><b>Manhattan</b> (l₁, taxicab): d₁(x, y) = ‖x − y‖₁ = |2−6| + |8−3| = <b>9</b>.</li>
+  <li><b>Máximo</b> (l<sub>∞</sub>, Chebyshev): ‖x − y‖<sub>∞</sub> = max(|x<sub>i</sub> − y<sub>i</sub>|) = 5.</li>
+  <li>Minkowski: d<sub>p</sub>(x, y) = ‖x − y‖<sub>p</sub> = (Σ |x<sub>i</sub> − y<sub>i</sub>|<sup>p</sup>)<sup>1/p</sup>; p = 1 e p = 2 são os casos acima.</li>
   <li><b>Hamming</b> (binários/categóricos): número de posições diferentes. 1011101 vs 1001001 → 2.</li>
   <li><b>Semelhança do cosseno</b>: cos θ = x·y / (‖x‖‖y‖) = (12 + 24)/(√68·√45) ≈ 0,65. Não é uma distância (é maior quando são parecidos); ignora o comprimento dos vetores.</li></ul>
   <p>Só l₂ vem de um produto interno: há ângulos e ortogonalidade (espaço de Hilbert). Com vetores normalizados ao comprimento 1, a distância euclidiana e o cosseno ordenam os vizinhos da mesma maneira.</p>`,

@@ -76,10 +76,10 @@ STUDY.questions('ml', [
   e: 'traço = 4,667, det = 4,333·0,333 − 0,111 = 1,333. λ = [4,667 ± √(21,78 − 5,33)]/2 = (4,667 ± 4,055)/2 → **4,361** e **0,306**.',
   w: { 1: 'Essa é a diagonal: só seriam os valores próprios se c₁₂ fosse 0.' } },
 { id: 'x26-pca-3', t: 'exam', l: 4, les: 'pc-pca', card: 2, calc: true, ch: 'x26-pca', step: '3/3', src: 'Exame 1 2025/26, 6.c',
-  q: 'X = {(0, 0), (4, 0), (1, 1)}, média m = (5/3, 1/3), 1.ª componente u₁ = (0,997; −0,083). Qual é a projeção centrada de x = (1, 1) e a reconstrução?',
-  o: ['y ≈ −0,72; x̂ ≈ (0,95; 0,39)', 'y ≈ 0,91; x̂ ≈ (0,91; −0,08)', 'y ≈ −0,72; x̂ ≈ (−0,72; 0,06)', 'y ≈ 0,72; x̂ ≈ (2,38; 0,27)'], a: 0,
-  e: 'x − m = (−0,667; 0,667). y = 0,997·(−0,667) − 0,083·0,667 ≈ **−0,72**. x̂ = m + y·u₁ = (1,667 − 0,717; 0,333 + 0,060) ≈ **(0,95; 0,39)**.',
-  w: { 1: 'Projetaste x sem centrar (0,997 − 0,083).', 2: 'Faltou somar a média na reconstrução.' } },
+  q: 'X = {(0, 0), (4, 0), (1, 1)}, 1.ª componente u₁ = (0,997; −0,083). Com a projeção dos slides (y = Uᵀx), qual é a projeção de x = (1, 1) na 1.ª componente e a reconstrução?',
+  o: ['y ≈ 0,91; x̂ ≈ (0,91; −0,08)', 'y ≈ −0,72; x̂ ≈ (0,95; 0,39)', 'y ≈ 0,91; x̂ ≈ (2,58; 0,26)', 'y ≈ 0,72; x̂ ≈ (0,72; −0,06)'], a: 0,
+  e: 'y = u₁ᵀx = 0,997·1 − 0,083·1 ≈ **0,91**. x̂ = y·u₁ = 0,914·(0,997; −0,083) ≈ **(0,91; −0,08)**. (Com dados centrados, como nos livros, daria y ≈ −0,72 e x̂ ≈ (0,95; 0,39).)',
+  w: { 1: 'Isso é a projeção centrada, u₁ᵀ(x − x̄). Os slides e as resoluções projetam x diretamente.', 2: 'Somaste a média na reconstrução; com y = u₁ᵀx a reconstrução é só y·u₁.' } },
 
 /* ---------- Exame 1 2024/25: k-means e silhueta ---------- */
 { id: 'x24-km-1', t: 'exam', l: 3, les: 'c-kmeans', card: 3, calc: true, ch: 'x24-km', step: '1/2', src: 'Exame 1 2024/25, 5.a', d: X24_KM,

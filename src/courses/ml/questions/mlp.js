@@ -80,4 +80,9 @@ STUDY.questions('ml', [
   q: 'Num backprop com softmax + entropia cruzada, saída x[2] = (0,74; 0,16; 0,10) e alvo (0, 1, 0). Qual é δ[2]?',
   o: ['(0,74; −0,84; 0,10)', '(−0,74; 0,84; −0,10)', '(0,74; 0,16; 0,10)', '(0; −0,84; 0)'], a: 0,
   e: 'δ[2] = x[2] − t = (0,74 − 0; 0,16 − 1; 0,10 − 0) = **(0,74; −0,84; 0,10)**. Com η = 1, b[2] ← b[2] − δ[2].' },
+{ id: 'mlp-19', t: 'mlp', l: 3, les: 'm-bp', card: 3, calc: true,
+  q: 'Na notação dos slides, uma saída softmax com entropia cruzada tem o = (0,7; 0,3) e alvo y = (1, 0). Qual é δ e como se atualizam os pesos w da saída?',
+  o: ['δ = (0,3; −0,3) e Δw = +η·δ·V', 'δ = (−0,3; 0,3) e Δw = +η·δ·V', 'δ = (0,3; −0,3) e Δw = −η·δ·V', 'δ = (0,7; 0,3) e Δw = +η·δ·V'], a: 0,
+  e: 'Nos slides δₖₜ = yₖₜ − oₖₜ = (1 − 0,7; 0 − 0,3) = **(0,3; −0,3)** e soma-se: Δwₜᵢ = η Σₖ δₖₜ Vₖ,ᵢ. Na notação dos exames δ[L] = x − t = (−0,3; 0,3) e subtrai-se: dá a mesma atualização.',
+  w: { 1: 'Esse é o δ[L] = x − t dos exames. Com esse delta subtrai-se, não se soma.', 2: 'Com δ = y − o a atualização soma: os dois sinais trocados levariam os pesos para o lado errado.' } },
 ]);

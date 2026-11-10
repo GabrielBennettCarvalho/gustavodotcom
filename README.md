@@ -98,7 +98,7 @@ A lesson with no markers works as before: the whole text, then its two easiest q
 
 - **Prontidão**: a checklist of the course's `skills` (exam problem types). A type is *pronto* when every one of its
   questions was answered right and none is waiting in review. The course home shows the summary and the type to train next
-  (the most frequent one not ready yet).
+  (the first one not ready yet, in course order).
 - **Priority / supplementary**: in a course with `skills`, levels, mastery and the mock exam use only priority questions:
   those whose type has `seen` exams, or whose `src` names an exam. The rest go to "Suplementares". Aprender and Revisão use all.
 - **Exames anteriores**: questions grouped by the exam in their `src` ("Exame 1 2024/25, 6.b" → "Exame 1 2024/25"),
@@ -108,7 +108,7 @@ A lesson with no markers works as before: the whole text, then its two easiest q
 ## Today's plan (Hoje)
 
 The top of every course's home (`src/engine/app-plan.js`). It answers "what do I do now?": mistakes in review first, then each
-exam problem type not ready yet, most frequent first (its theory if unseen, up to 3 lessons or about 12 minutes at a time, then
+exam problem type not ready yet, in the order the course teaches them (topic order, then the order of `skills`; its theory if unseen, up to 3 lessons or about 12 minutes at a time, then
 its key problem or its questions). A key problem left half done comes right after the mistakes. Courses without `skills` go
 topic by topic and level by level. With everything ready, it offers the mock exam.
 

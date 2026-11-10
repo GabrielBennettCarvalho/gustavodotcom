@@ -1,8 +1,9 @@
 /* ---------- TODAY'S PLAN ("Hoje") ----------
-   One answer to "what do I do now?", for every course. The app lists the work left, in the order that is worth most
-   in the exam, and fills today with it:
+   One answer to "what do I do now?", for every course. The app lists the work left, in the order the course teaches it,
+   and fills today with it:
    1. mistakes waiting in review (fixed while fresh);
-   2. per exam problem type not ready yet, most frequent first: its theory if unseen, then its key problem or its questions;
+   2. per exam problem type not ready yet, in course order (topic order, then C.skills order): its theory if unseen,
+      then its key problem or its questions;
       a course without types (AMS) goes topic by topic, then level by level;
    3. when everything is ready, the mock exam.
    With the test date and the minutes per day, the work left is spread over the days left; what doesn't fit is cut from
@@ -39,7 +40,7 @@ function planAll() {
     T.push({ key: 'pb:' + half.id, kind: 'pb', skill: half.skill, w: 1e9, id: half.id, label: `Acabar o problema: ${half.short || half.title}`, why: 'Ficou a meio: continuas no passo onde paraste.', min: Math.max(2, pbNominal(half) * left * ((S.pace && S.pace.pbn) ? S.pace.pb : 1)), full: 0 }); }
   if (SKILLS.length) {
     const nExams = pastList().length || pastGroups().length;
-    readySummary().rows.filter(x => x.r.state !== 'ready').sort((a, b) => b.w - a.w || b.r.pct - a.r.pct).forEach(({ s, r, w }) => {
+    readySummary().rows.filter(x => x.r.state !== 'ready').sort((a, b) => skillAt(a.s) - skillAt(b.s)).forEach(({ s, r, w }) => {
       const why = (s.seen || []).length ? `Saiu em ${s.seen.length} de ${nExams} exames e ainda não está pronto.` : 'Matéria base que os exames usam.';
       const L = unseen(s.les || []);
       const B = learnBatch(L);

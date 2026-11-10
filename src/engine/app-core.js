@@ -148,10 +148,12 @@ function readiness(k) {
   return { total: qs.length, ok, pend, state, pct: qs.length ? ok / qs.length : 0 };
 }
 // Readiness of the part, weighted by how often each type came up; and the type to train next
+// Course order of a problem type: its topic's place in the course, then its place in C.skills
+const skillAt = s => Object.keys(TOPICS).indexOf(s.t) * 1000 + SKILLS.indexOf(s);
 function readySummary() {
   const rows = partSkills().map(s => ({ s, r: readiness(s.id), w: Math.max(1, (s.seen || []).length) })).filter(x => x.r.total);
   const W = rows.reduce((a, x) => a + x.w, 0);
-  const next = rows.filter(x => x.r.state !== 'ready').sort((a, b) => b.w - a.w || b.r.pct - a.r.pct)[0];
+  const next = rows.filter(x => x.r.state !== 'ready').sort((a, b) => skillAt(a.s) - skillAt(b.s))[0];
   return { rows, ready: rows.filter(x => x.r.state === 'ready').length, pct: W ? rows.reduce((a, x) => a + x.w * x.r.pct, 0) / W : 0, next: next && next.s };
 }
 // Past exams: questions grouped by their source, in the exam's order (steps of a problem stay together)

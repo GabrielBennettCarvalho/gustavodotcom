@@ -20,6 +20,7 @@ Full field reference and layout are in README.md. Read it only when you need a d
 
 - `src/engine/app-core.js`: state, settings, filters (`shown`, `trainPool`, `mastery`, `unlocked`), Home screen, sessions.
 - `src/engine/app-views.js`: quiz, feedback, results, library, bank/import, sync screen, all event handlers.
+- `src/engine/app-plan.js`: Hoje, the plan at the top of every course home (README explains how it picks tasks).
 - `src/engine/app-problems.js`: Problemas-chave, typed exam problems (README has the fields). Content: `src/courses/<id>/problems.js`.
 - `src/engine/progress-key.js`: the cross-device progress key. Its format is versioned: change it with care.
 - `src/courses/<id>/course.js`: topics, levels, map, exam rules, extras. `render.js` draws that course's `d` diagrams.
@@ -35,6 +36,8 @@ Full field reference and layout are in README.md. Read it only when you need a d
 - Exam questions carry `src` starting with an exam name ("Exame 1 2024/25, 6.b"): it drives Exames anteriores and priority.
   In courses with `skills` (ML), a question with no exam type (by lesson or `k`) is supplementary.
 - Long exam problems are split into steps with `ch` (problem id) and `step: 'k/n'`, each step self-contained.
+- APRE lessons are split into cards with `<!--card-->`, and each question says which with `card: n`. A new question on such
+  a lesson needs its `card`; a new card needs at least one question (the build warns).
 - Lessons are trusted HTML. Question text only supports `**bold**`, `` `code` `` and line breaks, so write
   math with Unicode (Σ, σ, ∂, ŷ, ², ₁).
 

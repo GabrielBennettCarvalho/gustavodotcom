@@ -16,11 +16,11 @@ function Quiz() {
     return `<button class="opt ${cls}" data-act="opt" data-oi="${oi}" ${ses.answered ? 'disabled' : ''}><span class="k">${multi ? (chosen ? '✓' : pos + 1) : pos + 1}</span><span class="txt">${md(q.o[oi])}</span></button>`; }).join('');
   let fb = '';
   if (ses.answered && !isExam) fb = Feedback(q, it);
-  const foot = ses.answered ? (isExam ? '' : `<div class="qfoot"><button class="btn primary" data-act="next" id="nextBtn">${ses.i >= ses.items.length - 1 ? 'Ver resultado' : 'Seguinte'} →</button><span class="kbd">Enter</span><span class="spacer"></span><button class="btn ghost small" data-act="quit">Terminar ronda</button></div>`)
+  const foot = ses.answered ? (isExam ? '' : `<div class="qfoot next-bar"><button class="btn primary" data-act="next" id="nextBtn">${ses.i >= ses.items.length - 1 ? 'Ver resultado' : 'Seguinte'} →</button><span class="kbd">Enter</span><span class="spacer"></span><button class="btn ghost small" data-act="quit">Terminar ronda</button></div>`)
     : `<div class="qfoot">${multi ? `<button class="btn primary" data-act="confirm" ${ses.picked.size ? '' : 'disabled'}>Confirmar</button>` : ''}${skipBtn}<span class="muted keys" style="font-size:12.5px">Teclas <span class="kbd">1</span>–<span class="kbd">${q.o.length}</span>${multi ? ' marcam, <span class="kbd">Enter</span> confirma' : ''} · <span class="kbd">S</span> ${isExam ? 'branco' : 'salta'}</span><span class="spacer"></span>${isExam ? `<button class="btn ghost small" data-act="finish">Entregar exame</button>` : `<button class="btn ghost small" data-act="quit">Terminar ronda</button>`}</div>`;
   return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="badge">N${q.l}</span>${KINDS[q.kind] ? `<span class="badge kind">${KINDS[q.kind]}</span>` : ''}${q.calc ? `<span class="badge calc" title="Pergunta com contas">Contas${q.step && !isExam ? ` · ${esc(q.step)}` : ''}</span>` : ''}${prog}${(isExam) ? `<span class="timer" id="timer">${fmt(ses.timeLimit - Math.floor((Date.now() - ses.startedAt) / 1000))}</span>` : ''}<span class="mono muted">${qIndex()}/${qCount()}</span></div>
     <article class="card" id="qcard">
-      <span class="eyebrow">${esc(ses.title)}</span>
+      <span class="eyebrow">${it.recall ? 'Revisão rápida · cartões anteriores' : esc(ses.title)}</span>
       <p class="qtext" style="margin-top:6px">${md(q.q)}</p>
       ${multi ? '<div class="multi-note">Seleciona todas as corretas</div>' : ''}
       ${q.ctx && LBYID[q.ctx] ? `<details class="lesson-peek" style="margin-top:12px"><summary>Ler o caso: ${esc(LBYID[q.ctx].title)}</summary><div class="lbody lesson">${lessonBody(LBYID[q.ctx])}</div></details>` : ''}
@@ -39,7 +39,7 @@ function Feedback(q, it) {
     <div class="verdict">${C.verdict ? `<span class="vtag">${esc(ok ? C.verdict.ok : C.verdict.ko)}</span>` : ''}${ok ? pickOne(['Certo.', 'Exatamente.', 'Na mouche.', 'Isso mesmo.']) : pickOne(['Ainda não.', 'Quase, mas não.', 'Falhou. Bora perceber porquê.'])}</div>
     <p class="explain">${md(q.e)}</p>
     ${wrongNotes}
-    ${L ? `<details class="lesson-peek" ${ok ? '' : 'open'}><summary>Teoria: ${esc(L.title)}</summary><div class="lbody lesson">${lessonBody(L)}</div></details>` : ''}
+    ${L ? `<details class="lesson-peek" ${ok ? '' : 'open'}><summary>Teoria: ${esc(L.title)}</summary><div class="lbody lesson">${lessonBody(L, q.card)}</div></details>` : ''}
     <div class="note-box"><label class="eyebrow" for="note-${esc(q.id)}">A minha nota sobre esta pergunta</label><textarea id="note-${esc(q.id)}" data-act="note" data-id="${esc(q.id)}" placeholder="Escreve aqui o truque para não voltares a errar…">${esc(S.notes[q.id] || '')}</textarea></div>
     ${SKBYID[skillOf(q)] ? `<span class="src">Tipo de problema: ${esc(SKBYID[skillOf(q)].label)}</span>` : ''}
     ${q.src ? `<span class="src">Fonte: ${esc(q.src)}</span>` : ''}
@@ -49,7 +49,10 @@ function Feedback(q, it) {
 const KINDS = { method: 'Que método?', check: 'Verificação', bug: 'Onde está o erro?' };
 const pickOne = a => a[Math.floor(Math.random() * a.length)];
 const codeBlock = c => `<pre class="codeblk">${esc(c)}</pre>`;
-function lessonBody(L) { const body = L.trusted ? L.html : md(L.html || ''); return `${body}${L.d ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key ? `<p class="key">${L.trusted ? L.key : md(L.key)}</p>` : ''}`; }
+// k: only card k of the lesson (the diagram and the key line belong to the last card)
+function lessonBody(L, k) { const cs = lessonCards(L), one = k && cs.length > 1 && cs[k - 1] !== undefined, last = !one || k === cs.length;
+  const h = one ? cs[k - 1] : (L.html || ''), body = L.trusted ? h : md(h);
+  return `${body}${L.d && last ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key && last ? `<p class="key">${L.trusted ? L.key : md(L.key)}</p>` : ''}`; }
 function afterQuizRender() { const n = document.getElementById('nextBtn'); if (n) n.focus({ preventScroll: true }); }
 
 function choose(oi) {
@@ -93,16 +96,21 @@ function finish() {
     ses.penalty = pen; ses.grade = Math.max(0, Math.round((ok - pen) / tot * 200) / 10); ses.rawGrade = Math.round(ok / tot * 200) / 10; const g = ses.results.filter(r => r.ok).reduce((a, r) => a + XP[BYID[r.id].l], 0); S.xp += g; ses.xp = g; }
   if (ses.mode === 'route' && ses.stop) { if (!S.route) S.route = {}; S.route[ses.stop] = Date.now(); }
   S.rounds++; S.sessions.push({ m: ses.mode, d: Date.now(), n: ses.results.length, ok: ses.results.filter(r => r.ok).length }); if (S.sessions.length > 400) S.sessions = S.sessions.slice(-400);
+  { const nl = new Set(ses.items.slice(0, ses.i + 1).filter(x => x.kind === 'lesson').map(x => x.id)).size, key = ses.planKey || (ses.mode === 'skill' ? 'skill:' + ses.skill : ses.mode === 'level' ? 'level:' + ses.level : ses.mode === 'route' ? 'route:' + ses.stop : ses.mode);
+    planLog(key, Date.now() - ses.startedAt, ses.results.length + 2 * nl, 0, ses.mode === 'exam'); }
   save(); go('results');
 }
 
 /* ---------- LESSON (inside learn session) ---------- */
 function LessonScreen() {
-  const L = LBYID[curItem().id]; const T = TOPICS[L.t];
-  const lessonsTotal = ses.items.filter(x => x.kind === 'lesson').length; const li = ses.items.slice(0, ses.i + 1).filter(x => x.kind === 'lesson').length;
-  return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="mono muted">lição ${li}/${lessonsTotal}</span></div>
-    <article class="card"><span class="eyebrow">Teoria</span><h2 style="margin:6px 0 12px">${esc(L.title)}</h2><div class="lesson">${lessonBody(L)}</div>
-    <div class="qfoot"><button class="btn primary" data-act="next" id="nextBtn">${ses.items[ses.i + 1] && ses.items[ses.i + 1].kind === 'q' ? 'Testar-me →' : 'Continuar →'}</button><span class="kbd">Enter</span><span class="spacer"></span><button class="btn ghost small" data-act="quit">Terminar</button></div></article>`;
+  const it = curItem(), L = LBYID[it.id]; const T = TOPICS[L.t], k = it.card || 0, n = it.cards || 1;
+  // the plan stops asking for theory already seen: a lesson in cards counts once its last card is reached
+  if (!S.seenL) S.seenL = {}; if (!S.seenL[L.id] && (!k || k === n)) { S.seenL[L.id] = Date.now(); save(); }
+  const ids = [...new Set(ses.items.filter(x => x.kind === 'lesson').map(x => x.id))], li = ids.indexOf(L.id) + 1;
+  const dots = n > 1 ? `<div class="progress cards" aria-hidden="true">${Array.from({ length: n }, (_, j) => `<i class="${j + 1 < k ? 'ok' : j + 1 === k ? 'cur' : ''}"></i>`).join('')}</div>` : '';
+  return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span>${dots}<span class="mono muted">${ids.length > 1 ? `lição ${li}/${ids.length}` : ''}${n > 1 ? `${ids.length > 1 ? ' · ' : ''}cartão ${k}/${n}` : ''}</span></div>
+    <article class="card"><span class="eyebrow">${n > 1 ? `Teoria · cartão ${k} de ${n}` : 'Teoria'}</span><h2 style="margin:6px 0 12px">${esc(L.title)}</h2><div class="lesson">${lessonBody(L, k)}</div>
+    <div class="qfoot next-bar"><button class="btn primary" data-act="next" id="nextBtn">${ses.items[ses.i + 1] && ses.items[ses.i + 1].kind === 'q' ? 'Testar-me →' : 'Continuar →'}</button><span class="kbd">Enter</span><span class="spacer"></span><button class="btn ghost small" data-act="quit">Terminar</button></div></article>`;
 }
 
 /* ---------- RESULTS ---------- */
@@ -121,7 +129,7 @@ function Results() {
       <div class="result-grid"><div class="kpi"><b>+${ses.xp}</b><span>XP ganho</span></div><div class="kpi"><b>${wrong.length}</b><span>para rever</span></div>${ses.mode === 'exam' ? (ses.items.length - tot ? `<div class="kpi"><b>${ses.items.length - tot}</b><span>em branco</span></div>` : '') : skipped.length ? `<div class="kpi"><b>${skipped.length}</b><span>saltadas</span></div>` : ''}<div class="kpi"><b>${topLevel()}</b><span>nível mais alto aberto</span></div></div>
       ${nowUnlocked ? `<p class="key" style="margin:0">Nível ${lvl + 1} desbloqueado. O token avançou.</p>` : ''}
       ${ses.skill && SKBYID[ses.skill] ? (r_ => `<p class="muted" style="margin:0">${esc(SKBYID[ses.skill].label)}: <b style="color:var(--ink)">${STATE[r_.state] ? STATE[r_.state][1] : ''}</b> · ${r_.ok}/${r_.total} perguntas${r_.pend ? `, ${r_.pend} por rever` : ''}.</p>`)(readiness(ses.skill)) : ''}
-      <div class="row">${wrong.length ? `<button class="btn primary" data-act="retryWrong">${wrong.length === 1 ? 'Repetir a errada' : `Repetir as ${wrong.length} erradas`}</button>` : ''}${skipped.length ? `<button class="btn${wrong.length ? '' : ' primary'}" data-act="retrySkipped">${skipped.length === 1 ? `Tentar a ${ses.mode === 'exam' ? 'que ficou em branco' : 'saltada'} agora` : `Tentar as ${skipped.length} ${ses.mode === 'exam' ? 'em branco' : 'saltadas'} agora`}</button>` : ''}${ses.mode === 'route' ? routeNextBtn() : ''}${lvl ? `<button class="btn" data-act="level" data-n="${nowUnlocked ? lvl + 1 : lvl}">${nowUnlocked ? `Ir para o nível ${lvl + 1}` : `Outra ronda do nível ${lvl}`}</button>` : ''}${ses.skill ? `<button class="btn" data-act="skill" data-k="${esc(ses.skill)}">Outra ronda deste tipo</button><button class="btn" data-act="mode" data-k="ready">Checklist</button>` : ''}<button class="btn" data-act="home">Início</button></div>
+      <div class="row">${planNextBtn(!!ses.planKey)}${wrong.length ? `<button class="btn${ses.planKey ? '' : ' primary'}" data-act="retryWrong">${wrong.length === 1 ? 'Repetir a errada' : `Repetir as ${wrong.length} erradas`}</button>` : ''}${skipped.length ? `<button class="btn${wrong.length || ses.planKey ? '' : ' primary'}" data-act="retrySkipped">${skipped.length === 1 ? `Tentar a ${ses.mode === 'exam' ? 'que ficou em branco' : 'saltada'} agora` : `Tentar as ${skipped.length} ${ses.mode === 'exam' ? 'em branco' : 'saltadas'} agora`}</button>` : ''}${ses.mode === 'route' ? routeNextBtn() : ''}${lvl ? `<button class="btn" data-act="level" data-n="${nowUnlocked ? lvl + 1 : lvl}">${nowUnlocked ? `Ir para o nível ${lvl + 1}` : `Outra ronda do nível ${lvl}`}</button>` : ''}${ses.skill ? `<button class="btn" data-act="skill" data-k="${esc(ses.skill)}">Outra ronda deste tipo</button><button class="btn" data-act="mode" data-k="ready">Checklist</button>` : ''}<button class="btn" data-act="home">Início</button></div>
     </article>
     ${wrong.length ? `<div class="section"><h2>O que falhaste, explicado</h2>${list}</div>` : `<div class="section"><p class="muted">Sem erros nesta ronda.</p></div>`}`;
 }
@@ -132,7 +140,7 @@ function routeNextBtn() { const st_ = C.route.stops; const i = st_.findIndex(x =
 /* ---------- LIBRARY / READER ---------- */
 function LearnPick() {
   return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="eyebrow">Aprender</span></div>
-  <h2 style="margin-bottom:6px">Escolhe um tema</h2><p class="muted" style="margin-bottom:14px">Cada lição curta é seguida de duas perguntas sobre ela.</p>
+  <h2 style="margin-bottom:6px">Escolhe um tema</h2><p class="muted" style="margin-bottom:14px">A teoria vem em partes curtas, cada uma com uma pergunta a seguir.</p>
   <div class="lesson-list">${Object.entries(TOPICS).filter(([k]) => partTopics().includes(k)).map(([k, t]) => { const n = LESSONS.filter(l => l.t === k).length; return n ? `<button class="lesson-item" style="--c:${t.c}" data-act="learn" data-k="${k}"><span class="sw"></span><span class="lt">${t.label}</span><span class="lc">${n} lições</span></button>` : ''; }).join('')}</div>`;
 }
 function Library() {
@@ -306,7 +314,7 @@ function mergeKey() {
   const rep = KEY.merge(G, view.incoming, id => blank(REG.courses[id].topics));
   if (C) openCourse(C.id); else { const first = Object.keys(view.incoming.courses)[0]; if (first) openCourse(first); }
   save();
-  toast(`Feito: ${rep.added} pergunta(s) novas, ${rep.updated} atualizadas${rep.notes ? `, ${rep.notes} nota(s)` : ''}.`);
+  toast(`Feito: ${rep.added} pergunta(s) novas, ${rep.updated} atualizadas${rep.notes ? `, ${rep.notes} nota(s)` : ''}${rep.lessons ? `, ${rep.lessons} lição(ões) vistas` : ''}${rep.problems ? `, ${rep.problems} problema(s)-chave` : ''}.`);
   go(C ? 'home' : 'courses');
 }
 
@@ -347,6 +355,9 @@ document.addEventListener('click', async ev => {
     case 'read': go('reader', { id: b.dataset.id }); break;
     case 'practice': { const ids = BANK.filter(q => q.les === b.dataset.id).sort((x, y) => x.l - y.l).map(q => q.id); start('retry', { ids }); if (ses) ses.title = 'Praticar lição'; break; }
     case 'pbGo': pbStart(b.dataset.k); break;
+    case 'planGo': planRun(+b.dataset.i, !!view.planMore); break;
+    case 'planMore': view.planMore = true; renderView(); break;
+    case 'minDay': S.settings.minDay = +b.dataset.k; save(); renderView(); break;
     case 'pbCheck': pbCheck(); break;
     case 'pbHint': pbHint(); break;
     case 'pbSign': pbSign(); break;

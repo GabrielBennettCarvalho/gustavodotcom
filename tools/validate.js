@@ -19,6 +19,8 @@ for (const id of REG.order) {
     (s.les || []).forEach(l => { if (!L.has(l)) err(`${id}: skill ${s.id} lists missing lesson "${l}"`); if (lesSk[l]) err(`${id}: lesson ${l} is in skills ${lesSk[l]} and ${s.id}`); lesSk[l] = s.id; });
     if (c.past) (s.seen || []).forEach(k => { if (!c.past.includes(k)) err(`${id}: skill ${s.id} seen in "${k}", which is not in past`); });
   }
+  // lessons split into cards (<!--card-->): every card should have at least one question for Aprender
+  const cardsOf = lid => { const l = c.lessons.find(x => x.id === lid); return l ? (l.html || '').split(/<!--\s*card\s*-->/).length : 0; };
   for (const q of c.questions) {
     const tag = `${id}/${q.id}`;
     if (seen.has(q.id)) err(`${tag}: duplicate id`); seen.add(q.id);
@@ -28,6 +30,7 @@ for (const id of REG.order) {
     const a = Array.isArray(q.a) ? q.a : [q.a]; if (!a.length || a.some(i => !(i >= 0 && i < (q.o || []).length))) err(`${tag}: answer out of range`);
     if (!q.e) err(`${tag}: missing explanation`);
     if (q.les && !L.has(q.les)) err(`${tag}: lesson "${q.les}" does not exist`);
+    if (q.card !== undefined) { const n = cardsOf(q.les); if (!Number.isInteger(q.card) || n < 2 || q.card < 1 || q.card > n) err(`${tag}: card ${q.card} does not exist in lesson "${q.les}" (${n < 2 ? 'it has no <!--card--> markers' : `it has ${n} cards`})`); }
     if (q.ctx && !L.has(q.ctx)) err(`${tag}: case "${q.ctx}" does not exist`);
     if (q.reserved && q.reserved !== 'exam') err(`${tag}: "reserved" can only be 'exam'`);
     if (q.calc !== undefined && typeof q.calc !== 'boolean') err(`${tag}: "calc" must be true/false`);
@@ -70,6 +73,8 @@ for (const id of REG.order) {
     return r > Math.max(...others) && r > 1.3 * others.reduce((x, y) => x + y, 0) / others.length; });
   // every question is shown on its own (shuffled, mock exam): it must not lean on the previous one
   const leans = c.questions.filter(q => /^(E |Mesm[oa] (problema|cenário|cache|sistema|caso|código|rede|tabela|sessão|captura|resposta|ligação)|No mesmo |Na mesma |No caso anterior|Nesse caso|Depois do padding|Com o mesmo )/i.test(q.q));
+  const bare = c.lessons.filter(l => cardsOf(l.id) > 1).flatMap(l => Array.from({ length: cardsOf(l.id) }, (_, k) => k + 1).filter(k => !c.questions.some(q => q.les === l.id && q.card === k && !q.ch && q.reserved !== 'exam')).map(k => `${l.id}#${k}`));
+  if (bare.length) console.log(`WARN ${id}: ${bare.length} lesson card(s) have no question of their own: ${bare.join(', ')}`);
   if (leans.length) console.log(`WARN ${id}: ${leans.length} question(s) refer to a previous question; give each one its own data: ${leans.map(q => q.id).join(', ')}`);
   if (tell.length) console.log(`WARN ${id}: in ${tell.length} question(s) the right answer is clearly the longest option: ${tell.map(q => q.id).join(', ')}`);
   const idsFile = path.join(coursesDir, id, 'ids.json');

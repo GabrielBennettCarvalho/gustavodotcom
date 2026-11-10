@@ -167,6 +167,7 @@ function pbStep(x, k, n) {
     ${hints && !pb.showing ? `<ol class="pb-hints">${hints}</ol>` : ''}
     ${fb}
     ${L && !pb.alone ? `<details class="lesson-peek" style="margin-top:12px"><summary>Teoria: ${esc(L.title)}</summary><div class="lbody lesson">${lessonBody(L)}</div></details>` : ''}
+    ${pb.showing ? '' : cabPeek(LES2SK[s.les || pb.stage.les] || pb.p.skill, 'pb:' + pb.p.id)}
     <div class="pb-actions">${actions}</div></article>`;
 }
 function pbResults() {

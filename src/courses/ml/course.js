@@ -39,7 +39,7 @@ STUDY.course({
     legend: ['● o ponto marca onde estás na curva', 'cada nível são mais épocas: a loss desce até ao exame'],
   },
   // The real exam is written (2 h, 20 points). The mock exam has no penalty, like the real grading.
-  exam: { n: 16, min: 60, desc: 'O exame real é escrito: 2 horas, 20 valores, problemas com todas as contas. Aqui: 16 perguntas em 60 minutos, sem desconto por errada. Usa primeiro as perguntas dos exames de 2021/22 a 2025/26, que não aparecem nos outros modos.' },
+  exam: { n: 16, min: 60, book: true, desc: 'O exame real é escrito e com consulta: 2 horas, 20 valores, problemas com todas as contas. Aqui, com a tua cábula aberta ao lado: 16 perguntas em 60 minutos, sem desconto por errada. Usa primeiro as perguntas dos exames de 2021/22 a 2025/26, que não aparecem nos outros modos.' },
   verdict: { ok: 'LOSS ↓', ko: 'LOSS ↑' },
 
   // Past exams this course has questions from (newest first): the "src" of exam questions starts with one of these.

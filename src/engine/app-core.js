@@ -148,6 +148,8 @@ function readiness(k) {
   return { total: qs.length, ok, pend, state, pct: qs.length ? ok / qs.length : 0 };
 }
 // Readiness of the part, weighted by how often each type came up; and the type to train next
+// Open-book exam (C.exam.book): the cheat sheet opens while practising and in the mock exam, as the real sheet would
+const openBook = () => !!(C.exam && C.exam.book);
 // Course order of a problem type: its topic's place in the course, then its place in C.skills
 const skillAt = s => Object.keys(TOPICS).indexOf(s.t) * 1000 + SKILLS.indexOf(s);
 function readySummary() {

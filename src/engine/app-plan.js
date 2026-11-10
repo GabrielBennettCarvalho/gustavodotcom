@@ -40,6 +40,9 @@ function planAll() {
   const half = (C.problems || []).find(p => pbSaved(p) && partTopics().includes(p.t));
   if (half) { const K = pbSaved(half), left = K.st.filter(x => x[0] === 'todo').length / K.st.length;
     T.push({ key: 'pb:' + half.id, kind: 'pb', skill: half.skill, w: 1e9, id: half.id, label: `Acabar o problema: ${half.short || half.title}`, why: 'Ficou a meio: continuas no passo onde paraste.', min: Math.max(2, pbNominal(half) * left * ((S.pace && S.pace.pbn) ? S.pace.pb : 1)), full: 0 }); }
+  // the last days before an open-book exam: the sheet they take is worth a look and a print
+  const dl = daysLeft();
+  if (openBook() && SKILLS.length && dl !== null && dl >= 0 && dl <= 3) T.push({ key: 'sheet', kind: 'sheet', label: 'Rever e imprimir a tua cábula', why: `O exame é ${dl === 0 ? 'hoje e é ' : ''}com consulta: vê se cada tipo tem o que precisas e junta as tuas notas.`, min: 10, full: 0 });
   if (SKILLS.length) {
     const nExams = pastList().length || pastGroups().length;
     const steps = readySummary().rows.filter(x => x.r.state !== 'ready').map(x => ({ at: skillAt(x.s), x })), TK = Object.keys(TOPICS);
@@ -96,6 +99,7 @@ function planRun(i, more) {
   else if (t.kind === 'skill') start('skill', Object.assign(o, { k: t.skill }));
   else if (t.kind === 'level') start('level', Object.assign(o, { level: t.level }));
   else if (t.kind === 'pb') pbStart(t.id, t.key);
+  else if (t.kind === 'sheet') { planLog(t.key, 0, 0, 0, true); save(); go('sheet'); }
 }
 // After a session: time studied today, what was done, and the student's pace.
 // noPace: the mock exam is timed, so it counts as time studied but says nothing about the student's own pace

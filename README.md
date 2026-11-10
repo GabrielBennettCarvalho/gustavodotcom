@@ -81,7 +81,7 @@ A lesson with no markers works as before: the whole text, then its two easiest q
 2. Optional: `render` (draws the `d` field) and `extras` (sections only this course has; see AMS).
    Also optional (see OC): `levels` (with `tag`/`sub` shown on the level map), `map` (level map title, `link: 'bus'`,
    `start`/`end` icons, legend), `exam: { n, min, penalty: 'options' }` (mock exam size, minutes and real grading where a
-   wrong answer costs 1/number of options), `verdict: { ok, ko }` (tags such as HIT/MISS), `logo` (SVG for the top bar).
+   wrong answer costs 1/number of options; `book: true` for an open-book exam, see Cábula), `verdict: { ok, ko }` (tags such as HIT/MISS), `logo` (SVG for the top bar).
    Course-only CSS can be scoped with `:root[data-course="<id>"]`.
    Also optional (see SO): `route`, the **exam route** mode. It follows the parts of the exam in order:
    `route: { title, desc, heading, intro, stops: [{ id, part, title, pts, sum, brief, drillIntro, lessons: [ids], topics: [t], drill }] }`.
@@ -104,6 +104,12 @@ A lesson with no markers works as before: the whole text, then its two easiest q
 - **Exames anteriores**: questions grouped by the exam in their `src` ("Exame 1 2024/25, 6.b" → "Exame 1 2024/25"),
   in the exam's order. Works in every course; a `src` naming two exams is left out.
 - **Cábula**: the `sheet` of each type you got wrong at least once (or pinned), with your notes. It can be printed.
+  In an open-book course (`exam.book`, APRE today) it is also used while solving, as the real sheet would be:
+  - practice questions (not Aprender) and each step of a key problem have a "Cábula" fold with that type's entry
+    (the step's own lesson decides the type); opening it is free and never counts as a hint;
+  - the mock exam has a "Cábula" button: the student's own sheet (or every type while they have none), with the timer running;
+  - after a wrong answer the note box asks "o que te faltou?", and the note lands in that type's entry;
+  - in the last 3 days before the test the plan adds "Rever e imprimir a tua cábula".
 
 ## Today's plan (Hoje)
 

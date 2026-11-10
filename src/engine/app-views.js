@@ -18,7 +18,8 @@ function Quiz() {
   if (ses.answered && !isExam) fb = Feedback(q, it);
   const foot = ses.answered ? (isExam ? '' : `<div class="qfoot next-bar"><button class="btn primary" data-act="next" id="nextBtn">${ses.i >= ses.items.length - 1 ? 'Ver resultado' : 'Seguinte'} →</button><span class="kbd">Enter</span><span class="spacer"></span><button class="btn ghost small" data-act="quit">Terminar ronda</button></div>`)
     : `<div class="qfoot">${multi ? `<button class="btn primary" data-act="confirm" ${ses.picked.size ? '' : 'disabled'}>Confirmar</button>` : ''}${skipBtn}<span class="muted keys" style="font-size:12.5px">Teclas <span class="kbd">1</span>–<span class="kbd">${q.o.length}</span>${multi ? ' marcam, <span class="kbd">Enter</span> confirma' : ''} · <span class="kbd">S</span> ${isExam ? 'branco' : 'salta'}</span><span class="spacer"></span>${isExam ? `<button class="btn ghost small" data-act="finish">Entregar exame</button>` : `<button class="btn ghost small" data-act="quit">Terminar ronda</button>`}</div>`;
-  return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="badge">N${q.l}</span>${KINDS[q.kind] ? `<span class="badge kind">${KINDS[q.kind]}</span>` : ''}${q.calc ? `<span class="badge calc" title="Pergunta com contas">Contas${q.step && !isExam ? ` · ${esc(q.step)}` : ''}</span>` : ''}${prog}${(isExam) ? `<span class="timer" id="timer">${fmt(ses.timeLimit - Math.floor((Date.now() - ses.startedAt) / 1000))}</span>` : ''}<span class="mono muted">${qIndex()}/${qCount()}</span></div>
+  const cabBtn = isExam && openBook() ? `<button class="btn small cab-btn" data-act="cabExam" aria-pressed="${!!ses.cab}">Cábula</button>` : '';
+  return `${cabBtn ? `<div class="cab-bar">${cabBtn}<span class="muted">Exame com consulta: abre a tua cábula quando precisares. O tempo continua a contar.</span></div>` : ''}<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="badge">N${q.l}</span>${KINDS[q.kind] ? `<span class="badge kind">${KINDS[q.kind]}</span>` : ''}${q.calc ? `<span class="badge calc" title="Pergunta com contas">Contas${q.step && !isExam ? ` · ${esc(q.step)}` : ''}</span>` : ''}${prog}${(isExam) ? `<span class="timer" id="timer">${fmt(ses.timeLimit - Math.floor((Date.now() - ses.startedAt) / 1000))}</span>` : ''}<span class="mono muted">${qIndex()}/${qCount()}</span></div>
     <article class="card" id="qcard">
       <span class="eyebrow">${it.recall ? 'Revisão rápida · cartões anteriores' : esc(ses.title)}</span>
       <p class="qtext" style="margin-top:6px">${md(q.q)}</p>
@@ -26,21 +27,22 @@ function Quiz() {
       ${q.ctx && LBYID[q.ctx] ? `<details class="lesson-peek" style="margin-top:12px"><summary>Ler o caso: ${esc(LBYID[q.ctx].title)}</summary><div class="lbody lesson">${lessonBody(LBYID[q.ctx])}</div></details>` : ''}
       ${q.code ? codeBlock(q.code) : ''}
       ${q.d ? `<div class="diagram">${renderD(q.d)}</div>` : ''}
+      ${!isExam && !ses.answered && ses.mode !== 'learn' ? cabPeek(skillOf(q), q.id) : ''}
       <div class="opts" role="group" aria-label="Opções">${opts}</div>
       ${fb}
       ${foot}
-    </article>`;
+    </article>${isExam && ses.cab ? cabExam() : ''}`;
 }
 function Feedback(q, it) {
   const r = ses.results.find(rr => rr.item === it); const ok = r && r.ok;
   const wrongNotes = [...ses.picked].filter(oi => (Array.isArray(q.a) ? !q.a.includes(oi) : q.a !== oi) && q.w && q.w[oi]).map(oi => `<p class="why-wrong"><b>Porque não “${md(q.o[oi])}”:</b> ${md(q.w[oi])}</p>`).join('');
-  const L = q.les && LBYID[q.les];
+  const L = q.les && LBYID[q.les], toSheet = openBook() && !ok && SKBYID[skillOf(q)];
   return `<div class="feedback ${ok ? 'ok' : 'ko'}" aria-live="polite">
     <div class="verdict">${C.verdict ? `<span class="vtag">${esc(ok ? C.verdict.ok : C.verdict.ko)}</span>` : ''}${ok ? pickOne(['Certo.', 'Exatamente.', 'Na mouche.', 'Isso mesmo.']) : pickOne(['Ainda não.', 'Quase, mas não.', 'Falhou. Bora perceber porquê.'])}</div>
     <p class="explain">${md(q.e)}</p>
     ${wrongNotes}
     ${L ? `<details class="lesson-peek" ${ok ? '' : 'open'}><summary>Teoria: ${esc(L.title)}</summary><div class="lbody lesson">${lessonBody(L, q.card)}</div></details>` : ''}
-    <div class="note-box"><label class="eyebrow" for="note-${esc(q.id)}">A minha nota sobre esta pergunta</label><textarea id="note-${esc(q.id)}" data-act="note" data-id="${esc(q.id)}" placeholder="Escreve aqui o truque para não voltares a errar…">${esc(S.notes[q.id] || '')}</textarea></div>
+    <div class="note-box"><label class="eyebrow" for="note-${esc(q.id)}">${toSheet ? 'Para a tua cábula: o que te faltou?' : 'A minha nota sobre esta pergunta'}</label><textarea id="note-${esc(q.id)}" data-act="note" data-id="${esc(q.id)}" placeholder="${toSheet ? 'A fórmula, o passo ou a armadilha que te escapou…' : 'Escreve aqui o truque para não voltares a errar…'}">${esc(S.notes[q.id] || '')}</textarea>${toSheet ? `<span class="cab-tip">Fica na tua cábula, em “${esc(SKBYID[skillOf(q)].label)}”, para levares para o exame.</span>` : ''}</div>
     ${SKBYID[skillOf(q)] ? `<span class="src">Tipo de problema: ${esc(SKBYID[skillOf(q)].label)}</span>` : ''}
     ${q.src ? `<span class="src">Fonte: ${esc(q.src)}</span>` : ''}
   </div>`;
@@ -53,6 +55,24 @@ const codeBlock = c => `<pre class="codeblk">${esc(c)}</pre>`;
 function lessonBody(L, k) { const cs = lessonCards(L), one = k && cs.length > 1 && cs[k - 1] !== undefined, last = !one || k === cs.length;
   const h = one ? cs[k - 1] : (L.html || ''), body = L.trusted ? h : md(h);
   return `${body}${L.d && last ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key && last ? `<p class="key">${L.trusted ? L.key : md(L.key)}</p>` : ''}`; }
+/* The cheat sheet while solving (open-book courses only). Opening it is free, as in the exam: it never counts as a hint.
+   Not in Aprender, which is for learning, and not after answering, when the theory is already there. */
+const sheetNotes = s => BANK.filter(q => skillOf(q) === s.id && S.notes[q.id]).map(q => `<li>${md(S.notes[q.id])}</li>`).join('');
+let cabOpen = '';   // the peek that is open (a question id or 'pb:<problem>'), so it stays open across re-renders
+function cabPeek(sid, key) { const s = SKBYID[sid]; if (!openBook() || !s || !s.sheet) return ''; const n = sheetNotes(s);
+  return `<details class="lesson-peek cab-peek" data-k="${esc(key)}" ${cabOpen === key ? 'open' : ''}><summary>Cábula: ${esc(s.label)}</summary><div class="lbody lesson">${s.sheet}${n ? `<ul class="sheet-notes">${n}</ul>` : ''}<p class="cab-tip">Consultar é livre, como no exame: não conta como pista.</p></div></details>`; }
+// Every type's entry, by topic. tools: the pin buttons and exam chips of the Cábula screen.
+function sheetItems(sk, tools) {
+  return Object.entries(TOPICS).map(([t, T]) => { const rows = sk.filter(s => s.t === t); if (!rows.length) return '';
+    return `<h2 class="sheet-topic">${esc(T.label)}</h2>${rows.map(s => { const mine = sheetMine(s), notes = sheetNotes(s);
+      return `<div class="sheet-item" style="--c:${T.c}"><div class="row"><b>${esc(s.label)}</b>${tools ? `<span class="spacer"></span><span class="no-print">${seenChips(s)}</span>
+        <button class="btn ghost small no-print" data-act="pin" data-k="${esc(s.id)}" data-v="${mine ? 0 : 1}">${mine ? 'Tirar' : 'Pôr na cábula'}</button>` : ''}</div>
+        <div class="lesson">${s.sheet || '<p class="muted">Sem resumo ainda.</p>'}</div>${notes ? `<ul class="sheet-notes">${notes}</ul>` : ''}</div>`; }).join('')}`; }).join('');
+}
+// The mock exam's sheet: the student's own, or every type while they have none yet
+function cabExam() { const mine = partSkills().filter(sheetMine), sk = mine.length ? mine : partSkills();
+  return `<section class="card cab-exam" aria-label="A tua cábula"><div class="row"><span class="eyebrow">${mine.length ? 'A tua cábula' : 'Cábula: todos os tipos'}</span><span class="spacer"></span><button class="btn ghost small" data-act="cabExam">Fechar</button></div>
+    ${mine.length ? '' : '<p class="cab-tip">Ainda não tens cábula tua (junta os tipos onde falhas). Por agora vês os resumos de todos.</p>'}${sheetItems(sk, false)}</section>`; }
 function afterQuizRender() { const n = document.getElementById('nextBtn'); if (n) n.focus({ preventScroll: true }); }
 
 function choose(oi) {
@@ -184,15 +204,11 @@ function Past() {
 function Sheet() {
   const all = !!view.all; const sk = partSkills().filter(s => all || sheetMine(s));
   const noteOf = id => S.notes[id] ? `<li>${md(S.notes[id])}</li>` : '';
-  const items = Object.entries(TOPICS).map(([t, T]) => { const rows = sk.filter(s => s.t === t); if (!rows.length) return '';
-    return `<h2 class="sheet-topic">${esc(T.label)}</h2>${rows.map(s => { const mine = sheetMine(s); const notes = BANK.filter(q => skillOf(q) === s.id).map(q => noteOf(q.id)).join('');
-      return `<div class="sheet-item" style="--c:${T.c}"><div class="row"><b>${esc(s.label)}</b><span class="spacer"></span><span class="no-print">${seenChips(s)}</span>
-        <button class="btn ghost small no-print" data-act="pin" data-k="${esc(s.id)}" data-v="${mine ? 0 : 1}">${mine ? 'Tirar' : 'Pôr na cábula'}</button></div>
-        <div class="lesson">${s.sheet || '<p class="muted">Sem resumo ainda.</p>'}</div>${notes ? `<ul class="sheet-notes">${notes}</ul>` : ''}</div>`; }).join('')}`; }).join('');
+  const items = sheetItems(sk, true);
   const loose = Object.keys(S.notes).filter(id => S.notes[id] && BYID[id] && !skillOf(BYID[id]));
   return `<div class="qhead no-print">${BACK}<span class="eyebrow">Cábula</span><span class="spacer"></span><button class="btn small" data-act="print">Imprimir</button></div>
     <div class="no-print" style="margin-bottom:12px"><div class="seg" role="group" aria-label="Que tipos mostrar"><button data-act="sheetAll" data-k="mine" aria-pressed="${!all}">A minha cábula</button><button data-act="sheetAll" data-k="all" aria-pressed="${all}">Todos os tipos</button></div>
-    <p class="muted" style="font-size:13.5px;margin-top:8px">O exame é com consulta. A tua cábula junta os tipos de problema onde já falhaste (e os que puseres à mão), com as tuas notas por baixo. Imprime-a ou copia-a para a tua folha.</p></div>
+    <p class="muted" style="font-size:13.5px;margin-top:8px">${openBook() ? 'O exame é com consulta. ' : ''}A tua cábula junta os tipos de problema onde já falhaste (e os que puseres à mão), com as tuas notas por baixo. ${openBook() ? 'Imprime-a ou copia-a para a tua folha. Também a abres enquanto treinas e no exame simulado.' : 'Serve para rever antes do exame.'}</p></div>
     ${items || `<p class="muted">${all ? 'Esta cadeira ainda não tem resumos.' : 'Ainda não falhaste nenhum tipo de problema. Quando falhares, ele aparece aqui; ou vê “Todos os tipos” e põe à mão os que quiseres.'}</p>`}
     ${loose.length ? `<h2 class="sheet-topic">Outras notas</h2><ul class="sheet-notes">${loose.map(noteOf).join('')}</ul>` : ''}`;
 }
@@ -347,6 +363,7 @@ document.addEventListener('click', async ev => {
     case 'pin': S.pins[b.dataset.k] = +b.dataset.v; save(); renderView(); break;
     case 'sheetAll': view.all = b.dataset.k === 'all'; renderView(); break;
     case 'print': window.print(); break;
+    case 'cabExam': if (ses) { ses.cab = !ses.cab; renderView(); if (ses.cab) { const c = document.querySelector('.cab-exam'); if (c) c.scrollIntoView({ block: 'start' }); } } break;
     case 'level': { const n = +b.dataset.n; if (!unlocked(n)) { toast(`Bloqueado: precisas de ${Math.round(UNLOCK * 100)}% do nível ${n - 1} (ou ativa “Desbloquear todos”).`); return; } start('level', { level: n }); break; }
     case 'routeStop': start('route', { stop: b.dataset.k }); break;
     case 'mode': { const k = b.dataset.k; if (k === 'route') { ses = null; go('routepick'); } else if (k === 'learn') go('learnpick'); else if (k === 'library') go('library'); else if (k === 'review') go('reviewpick'); else if (['ready', 'past', 'sheet', 'prob'].includes(k)) go(k); else start(k); break; }
@@ -392,6 +409,7 @@ document.addEventListener('change', ev => {
 });
 let noteTimer = null;
 document.addEventListener('input', ev => { const t = ev.target; if (t.dataset && t.dataset.act === 'note') { S.notes[t.dataset.id] = t.value; clearTimeout(noteTimer); noteTimer = setTimeout(save, 700); } });
+document.addEventListener('toggle', ev => { const d = ev.target; if (d.classList && d.classList.contains('cab-peek')) cabOpen = d.open ? d.dataset.k : (cabOpen === d.dataset.k ? '' : cabOpen); }, true);
 document.addEventListener('keydown', ev => {
   if (ev.target.matches('textarea, input')) return;
   if (view.name === 'quiz' && ses) {

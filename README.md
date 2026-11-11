@@ -147,13 +147,16 @@ Write the legend in the notation of the lectures, and say in `note` when the sli
 
 The big exam problems, solved by typing the key values (`src/engine/app-problems.js`; content in `STUDY.problems`, see
 `src/courses/ml/problems.js`). A type has stages: `guided`, `half`, `alone` (`alone: true`: no hints). Each stage is a whole problem:
-`{ id, kind, src, pts, stmt, d, sol, les, steps }`, and each step `{ name, ask, ans, show, c, hints, miss, also, e, les }`.
+`{ id, kind, src, pts, stmt, d, sol, les, steps }`, and each step `{ name, ask, ans, show, c, qs, hints, miss, also, e, les }`.
 `sol` is the stage's final result, `{ t, d }` (text and a diagram such as the finished tree), shown on the end screen.
 The end screen also folds out the whole worked solution, every step with its line.
 `ans` is a list (vector) or a list of lists (matrix); `show` has the same shape and marks cells already given.
 
 - A step never blocks: hints, then the answer. `miss` names a known mistake (`{ v: wrong value, m: what went wrong }`).
 - A concept (`c`) done cleanly comes filled in next time, except in `alone` stages and reviews.
+- `qs` lists the multiple-choice questions that ask for the same value (the same exam's questions). When the student
+  already got them right, the step comes filled in ("já fizeste"), except in `alone` stages and reviews. If that would
+  fill every step, the last one stays to do.
 - A clean first problem finishes the type. Otherwise the next stage is due the next day ("Fazer já" skips the wait).
 - A type can have several `alone` stages (extra full-length practice). A failed `alone` stage goes back to the last stage
   with help, and the next `alone` one is the one seen longest ago, so a retry gets new data.

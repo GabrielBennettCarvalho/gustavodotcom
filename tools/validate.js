@@ -63,6 +63,7 @@ for (const id of REG.order) {
         if (s.show && flat(s.show).every(Boolean)) err(`${t}: nothing left to type`);
         if (!st.alone && !(s.hints || []).length) err(`${t}: needs hints`);
         if (s.les && !L.has(s.les)) err(`${t}: lesson "${s.les}" does not exist`);
+        (s.qs || []).forEach(qid => { if (!seen.has(qid)) err(`${t}: qs names question "${qid}", which does not exist`); });
         for (const m of s.miss || []) { if (flat(m.v).length !== n) err(`${t}: a known mistake has a different shape`); if (!m.m) err(`${t}: a known mistake needs a message`); if (flat(m.v).every((v, i) => Math.abs(v - flat(s.ans)[i]) < 0.011)) err(`${t}: a known mistake equals the answer`); }
       }
     }

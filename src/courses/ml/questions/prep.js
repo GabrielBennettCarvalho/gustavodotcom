@@ -160,10 +160,6 @@ STUDY.questions('ml', [
   w: { 2: '25 é o quadrado da distância: falta a raiz.' } },
 
 /* ----- Onde está o erro? ----- */
-{ id: 'bug-01', t: 'dt', l: 3, les: 'dt-entropy', kind: 'bug', calc: true, fixed: true,
-  q: 'Entropia de um nó com 6 exemplos positivos e 2 negativos. Qual é o primeiro passo errado?\n1) p₊ = 6/8 = 0,75 e p₋ = 2/8 = 0,25\n2) H = −0,75·log₂0,75 − 0,25·log₂0,25\n3) H = 0,75·0,288 + 0,25·1,386\n4) H = 0,216 + 0,347 = 0,563 bits',
-  o: ['Passo 1', 'Passo 2', 'Passo 3', 'Passo 4'], a: 2,
-  e: 'No passo 3 usou-se ln em vez de log₂: −log₂0,75 = 0,415 e −log₂0,25 = 2. H = 0,311 + 0,5 = **0,811 bits**.' },
 { id: 'bug-02', t: 'dt', l: 3, les: 'dt-gain', card: 2, kind: 'bug', calc: true, fixed: true,
   q: 'Nó [5+, 5−] dividido pelo atributo A em a₁ = [4+, 1−] e a₂ = [1+, 4−]. Qual é o primeiro passo errado?\n1) H(S) = 1\n2) H(a₁) = H(a₂) = 0,722\n3) H(S|A) = 0,722 + 0,722 = 1,444\n4) IG(A) = 1 − 1,444 = −0,444',
   o: ['Passo 1', 'Passo 2', 'Passo 3', 'Passo 4'], a: 2,

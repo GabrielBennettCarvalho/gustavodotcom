@@ -45,13 +45,18 @@ function pbParse(t) {
   return /^-?(\d+\.?\d*|\.\d+)$/.test(s) ? Number(s) : null;
 }
 
+// answered right at least once, and not waiting in the mistakes lists
+const pbQDone = id => { const s = peek(id); return BYID[id] && s.c > 0 && !(s.w && s.box < TRAIN_CLEAR) && !(s.ew && s.eb < EXAM_CLEAR); };
 function pbStart(id, planKey) {
   const p = pbType(id); if (!p) return; const st = pbStatus(p), si = st.stage, stage = p.stages[si];
   const review = st.k === 'review' || st.k === 'done', alone = !!stage.alone || review;
   const given = s => !alone && s.c && S.prob.con[s.c] === 1;
   const anyTodo = stage.steps.some(s => !given(s));
-  const steps = stage.steps.map(s => ({ s, state: anyTodo && given(s) ? 'given' : 'todo', wrong: 0, hints: 0, msg: '', marks: null,
+  // a step whose value the student already found in the multiple-choice questions of the same exam (step.qs) comes filled in
+  const byQ = s => !alone && (s.qs || []).length > 0 && s.qs.every(pbQDone);
+  const steps = stage.steps.map(s => ({ s, state: byQ(s) || (anyTodo && given(s)) ? 'given' : 'todo', byQ: byQ(s), wrong: 0, hints: 0, msg: '', marks: null,
     vals: pbCells(s).map(c => c.shown ? pbNum(c.v) : '') }));
+  if (steps.every(x => x.state === 'given')) Object.assign(steps[steps.length - 1], { state: 'todo', byQ: false });   // always something to do
   pb = { p, si, stage, alone, review, steps, i: steps.findIndex(x => x.state === 'todo'), showing: false, stmtOpen: true, result: null, focus: null, lastCell: null, planKey: planKey || null, startedAt: Date.now() };
   // the same problem, left half done in the last 3 days: carry on from there, with the time already spent
   const K = pbSaved(p);
@@ -148,7 +153,7 @@ function Problem() {
   return `${head}${stmt}${rows ? `<div class="pb-work" aria-label="Contas feitas">${rows}</div>` : ''}${pbStep(x, k, typed.length)}`;
 }
 function pbRow(y) {
-  const tag = { clean: ['ok', 'à primeira'], helped: ['help', y.hints ? `com ${y.hints} pista${y.hints > 1 ? 's' : ''}` : 'corrigido'], revealed: ['rev', 'vista'], given: ['giv', 'já sabes'] }[y.state];
+  const tag = { clean: ['ok', 'à primeira'], helped: ['help', y.hints ? `com ${y.hints} pista${y.hints > 1 ? 's' : ''}` : 'corrigido'], revealed: ['rev', 'vista'], given: ['giv', y.byQ ? 'já fizeste' : 'já sabes'] }[y.state];
   return `<details class="pb-row ${tag[0]}"><summary><span class="pb-name mono">${esc(y.s.name)}</span><span class="pb-val mono">${esc(pbText(y.s.ans))}</span>${y.s.also ? `<span class="mono pb-also">${esc(y.s.also)}</span>` : ''}<span class="pb-tag">${tag[1]}</span></summary><p class="explain">${md(y.s.e)}</p></details>`;
 }
 function pbGrid(x) {

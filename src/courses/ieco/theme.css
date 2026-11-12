@@ -1,0 +1,24 @@
+/* IEco: topic colours (global, used by chips) */
+:root{ --t-mkt:#2F6FDB; --t-sd:#0F7A5A; --t-surp:#B4235A; --t-tax:#8A5A12; --t-pub:#5B5FD6; --t-info:#0E7C8C; --t-pow:#A0522D; --t-ext:#C2410C; --t-env:#2E8B57; --t-iex:#C2392F; }
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --t-mkt:#7EA8FF; --t-sd:#4FD1A0; --t-surp:#FF7AAE; --t-tax:#E3B25F; --t-pub:#A3A6FF; --t-info:#5CD4E3; --t-pow:#E0A07A; --t-ext:#FF8F5C; --t-env:#6FE0A0; --t-iex:#FF7468; }}
+:root[data-theme="dark"]{ --t-mkt:#7EA8FF; --t-sd:#4FD1A0; --t-surp:#FF7AAE; --t-tax:#E3B25F; --t-pub:#A3A6FF; --t-info:#5CD4E3; --t-pow:#E0A07A; --t-ext:#FF8F5C; --t-env:#6FE0A0; --t-iex:#FF7468; }
+
+/* IEco look: green token (a euro coin finding its equilibrium) */
+:root[data-course="ieco"]{ --token:#0F8A5F; }
+@media (prefers-color-scheme: dark){:root[data-course="ieco"]:not([data-theme="light"]){ --token:#4FD1A0; }}
+:root[data-course="ieco"][data-theme="dark"]{ --token:#4FD1A0; }
+:root[data-course="ieco"] .lvl .tok{ border-radius:50%; }
+
+/* IEco diagrams (the sheet stays light in both themes, so fixed colours are fine) */
+.dg.ec .mono{font-family:var(--f-mono)}
+.dg.ec .sub{opacity:.72;font-family:var(--f-mono)}
+.dg.ec .guide{opacity:.55}
+.dg.ec .cv.k-d{stroke:#2453C7} .dg.ec .lab.k-d{fill:#2453C7}
+.dg.ec .cv.k-s{stroke:#C2410C} .dg.ec .lab.k-s{fill:#C2410C}
+.dg.ec .cv.k-m{stroke:#7A3FC2} .dg.ec .lab.k-m{fill:#7A3FC2}
+.dg.ec .cv.k-g{stroke:#0F7A5A} .dg.ec .lab.k-g{fill:#0F7A5A}
+.dg.ec .ar{stroke:none}
+.dg.ec .ar.cs{fill:#F6B8D0} .dg.ec .ar.ps{fill:#CDB8F2} .dg.ec .ar.gov{fill:#B9E4C4}
+.dg.ec .ar.dwl{fill:#FFE08A} .dg.ec .ar.ext{fill:#D9D9D9}
+.dg.ec.sd{display:block;margin:0 auto;width:100%;height:auto}
+.tbl-wrap td.num,.tbl-wrap th.num{text-align:right;font-family:var(--f-mono)}

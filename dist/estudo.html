@@ -256,6 +256,12 @@ textarea.code{width:100%;min-height:180px;font:12.5px/1.5 var(--f-mono);border:1
 
 /* course menu and review picker */
 .mode.course-card h3{font-size:22px}
+.course-group{margin-top:34px;padding-top:18px;border-top:1px dashed var(--line)}
+.course-group-head{display:grid;gap:4px;margin-bottom:12px}
+.course-group-head h2{font-size:20px;margin:0}
+.course-group-head p{color:var(--muted);max-width:62ch;margin:0;font-size:14px}
+.course-group .modes{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.course-group .course-card h3{font-size:19px}
 .mode.course-card .code{font-family:var(--f-display);font-weight:800;font-stretch:120%;letter-spacing:-.01em}
 .lvl-bar{display:block;height:5px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:6px}
 .lvl-bar span{display:block;height:100%;background:var(--good)}
@@ -650,6 +656,31 @@ body:has(.pb-actions) .calc-fab{bottom:calc(84px + env(safe-area-inset-bottom,0p
 .lesson .ana b:first-child{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:2px;color:var(--muted)}
 .lesson pre{margin:10px 0;padding:10px 12px;border-radius:8px;background:var(--panel-2);border:1px solid var(--line);font:13px/1.5 var(--f-mono);overflow-x:auto;white-space:pre}
 .lesson .trap{margin:10px 0;padding:10px 12px;border-left:3px solid var(--bad);background:color-mix(in srgb,var(--bad) 7%,var(--panel));border-radius:0 8px 8px 0;font-size:15.5px}
+
+/* IEco: topic colours (global, used by chips) */
+:root{ --t-mkt:#2F6FDB; --t-sd:#0F7A5A; --t-surp:#B4235A; --t-tax:#8A5A12; --t-pub:#5B5FD6; --t-info:#0E7C8C; --t-pow:#A0522D; --t-ext:#C2410C; --t-env:#2E8B57; --t-iex:#C2392F; }
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --t-mkt:#7EA8FF; --t-sd:#4FD1A0; --t-surp:#FF7AAE; --t-tax:#E3B25F; --t-pub:#A3A6FF; --t-info:#5CD4E3; --t-pow:#E0A07A; --t-ext:#FF8F5C; --t-env:#6FE0A0; --t-iex:#FF7468; }}
+:root[data-theme="dark"]{ --t-mkt:#7EA8FF; --t-sd:#4FD1A0; --t-surp:#FF7AAE; --t-tax:#E3B25F; --t-pub:#A3A6FF; --t-info:#5CD4E3; --t-pow:#E0A07A; --t-ext:#FF8F5C; --t-env:#6FE0A0; --t-iex:#FF7468; }
+
+/* IEco look: green token (a euro coin finding its equilibrium) */
+:root[data-course="ieco"]{ --token:#0F8A5F; }
+@media (prefers-color-scheme: dark){:root[data-course="ieco"]:not([data-theme="light"]){ --token:#4FD1A0; }}
+:root[data-course="ieco"][data-theme="dark"]{ --token:#4FD1A0; }
+:root[data-course="ieco"] .lvl .tok{ border-radius:50%; }
+
+/* IEco diagrams (the sheet stays light in both themes, so fixed colours are fine) */
+.dg.ec .mono{font-family:var(--f-mono)}
+.dg.ec .sub{opacity:.72;font-family:var(--f-mono)}
+.dg.ec .guide{opacity:.55}
+.dg.ec .cv.k-d{stroke:#2453C7} .dg.ec .lab.k-d{fill:#2453C7}
+.dg.ec .cv.k-s{stroke:#C2410C} .dg.ec .lab.k-s{fill:#C2410C}
+.dg.ec .cv.k-m{stroke:#7A3FC2} .dg.ec .lab.k-m{fill:#7A3FC2}
+.dg.ec .cv.k-g{stroke:#0F7A5A} .dg.ec .lab.k-g{fill:#0F7A5A}
+.dg.ec .ar{stroke:none}
+.dg.ec .ar.cs{fill:#F6B8D0} .dg.ec .ar.ps{fill:#CDB8F2} .dg.ec .ar.gov{fill:#B9E4C4}
+.dg.ec .ar.dwl{fill:#FFE08A} .dg.ec .ar.ext{fill:#D9D9D9}
+.dg.ec.sd{display:block;margin:0 auto;width:100%;height:auto}
+.tbl-wrap td.num,.tbl-wrap th.num{text-align:right;font-family:var(--f-mono)}
 
 </style></head><body>
 <main class="wrap" id="app"><p style="padding:40px 0">A carregar…</p></main>
@@ -17363,6 +17394,1047 @@ Novas tramas: a partir do endereço 0x8800.
 ]);
 
 })();
+/* ===== course: ieco ===== */
+(() => {
+/* --- courses/ieco/render.js --- */
+/* ===== IEco diagrams: supply and demand plots, drawn as SVG =====
+   d = { sd: {
+     r:  [qmax, pmax]                      axis ranges (both start at 0)
+     ax: ['Q', 'P']                        axis names (default Q and P)
+     ln: [{ n: 'D', p: [[q, p], [q, p]], c: 'd' | 's' | 'x', dash: true }]
+                                           straight lines (polyline if more points); c picks the colour:
+                                           d demand (blue), s supply (orange), m purple, g green, x other (ink)
+     a:  [{ p: [[q, p], ...], c: 'cs' | 'ps' | 'gov' | 'dwl' | 'ext', l: 'EC' }]
+                                           shaded areas: consumer surplus, producer surplus, tax revenue, deadweight loss,
+                                           external cost (grey)
+     g:  [[q, p], ...]                     guide points: dashed lines to both axes, values written on the axes
+     pt: [{ q, p, l }]                     marked points with a label
+   } } */
+const ECD = (() => {
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const num = v => typeof v === 'number' ? String(Math.round(v * 100) / 100).replace('.', ',') : String(v);
+
+  function sd(d) {
+    const P = d.sd, [qm, pm] = P.r, [aq, ap] = P.ax || ['Q', 'P'];
+    const W = 320, H = 240, L = 42, R = 26, T = 18, B = 30;
+    const sx = q => L + q / qm * (W - L - R), sy = p => H - B - p / pm * (H - T - B);
+    const pts = a => a.map(([q, p]) => `${sx(q).toFixed(1)},${sy(p).toFixed(1)}`).join(' ');
+    let out = '';
+    (P.a || []).forEach(a => {
+      out += `<polygon points="${pts(a.p)}" class="ar ${a.c}"/>`;
+      if (a.l) { const cq = a.p.reduce((s, x) => s + x[0], 0) / a.p.length, cp = a.p.reduce((s, x) => s + x[1], 0) / a.p.length;
+        out += `<text x="${sx(cq)}" y="${sy(cp)}" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" class="tx lbl mono">${esc(a.l)}</text>`; }
+    });
+    // axes
+    out += `<path d="M${sx(0)} ${sy(pm) - 8}V${sy(0)}H${sx(qm) + 10}" class="s" stroke-width="1.5"/>`;
+    out += `<path d="M${sx(0) - 4} ${sy(pm) - 3}l4 -6 4 6M${sx(qm) + 5} ${sy(0) - 4}l6 4 -6 4" class="s" stroke-width="1.5"/>`;
+    out += `<text x="${sx(qm) + 4}" y="${sy(0) + 20}" font-size="12" class="tx sub">${esc(aq)}</text><text x="${sx(0) - 8}" y="${sy(pm) - 8}" text-anchor="end" font-size="12" class="tx sub">${esc(ap)}</text>`;
+    out += `<text x="${sx(0) - 5}" y="${sy(0) + 14}" text-anchor="end" font-size="11" class="tx sub">0</text>`;
+    // guides
+    const qs = new Set(), ps = new Set();
+    (P.g || []).forEach(([q, p]) => {
+      out += `<path d="M${sx(0)} ${sy(p)}H${sx(q)}V${sy(0)}" class="s dash guide" stroke-width="1"/>`;
+      if (!ps.has(p)) { ps.add(p); out += `<text x="${sx(0) - 5}" y="${sy(p)}" text-anchor="end" dominant-baseline="central" font-size="11" class="tx mono">${esc(num(p))}</text>`; }
+      if (!qs.has(q)) { qs.add(q); out += `<text x="${sx(q)}" y="${sy(0) + 14}" text-anchor="middle" font-size="11" class="tx mono">${esc(num(q))}</text>`; }
+    });
+    // lines
+    (P.ln || []).forEach(l => {
+      out += `<polyline points="${pts(l.p)}" class="s cv k-${l.c || 'x'}${l.dash ? ' dash' : ''}" stroke-width="2.4"/>`;
+      // label a little before the line's end, so it never sits on the Q axis
+      if (l.n) { const [q0, p0] = l.p[l.p.length - 2], [q1, p1] = l.p[l.p.length - 1], q = q0 + (q1 - q0) * .9, p = p0 + (p1 - p0) * .9;
+        out += `<text x="${sx(q) + 6}" y="${sy(p) - 6}" font-size="12" font-weight="700" class="tx lbl lab k-${l.c || 'x'}">${esc(l.n)}</text>`; }
+    });
+    (P.pt || []).forEach(p => {
+      out += `<circle cx="${sx(p.q)}" cy="${sy(p.p)}" r="4" class="fi"/>`;
+      if (p.l) out += `<text x="${sx(p.q) + 7}" y="${sy(p.p) - 7}" font-size="12" font-weight="700" class="tx lbl mono">${esc(p.l)}</text>`;
+    });
+    return `<svg class="dg ec sd" viewBox="0 0 ${W} ${H}" style="max-width:${W * 1.35}px" role="img" aria-label="Gráfico de oferta e procura">${out}</svg>`;
+  }
+
+  return { render: d => d.sd ? sd(d) : '' };
+})();
+
+/* --- courses/ieco/course.js --- */
+/* ===== IEco — Introdução à Economia (HACS) ===== */
+STUDY.course({
+  id: 'ieco',
+  code: 'IEco',
+  name: 'Introdução à Economia',
+  when: '1.º sem. · P2',
+  // Not part of the main LEIC plan: shown in its own section of the course menu.
+  group: { id: 'hacs', title: 'HACS', eyebrow: 'Fora do plano principal',
+    desc: 'Humanidades, Artes e Ciências Sociais: fora da engenharia, mas também para estudar a sério.' },
+  tagline: 'Da procura ao planeta.',
+  // Topics by chapter of the programme (1. Mercados e o Papel do Governo, 2. Falhas de Mercado & Ambiente).
+  // Later chapters are added here, before exam, as they arrive.
+  topics: {
+    mkt:  { label: 'Economias de mercado', short: 'Mercado', c: 'var(--t-mkt)' },
+    sd:   { label: 'Procura, oferta e equilíbrio', short: 'Procura e oferta', c: 'var(--t-sd)' },
+    surp: { label: 'Excedentes, custo marginal e lucro', short: 'Excedentes', c: 'var(--t-surp)' },
+    tax:  { label: 'Impostos e bem-estar', short: 'Impostos', c: 'var(--t-tax)' },
+    // 2. Falhas de Mercado & Ambiente
+    pub:  { label: 'Bens públicos, comuns e de clube', short: 'Tipos de bens', c: 'var(--t-pub)' },
+    info: { label: 'Informação assimétrica', short: 'Informação', c: 'var(--t-info)' },
+    pow:  { label: 'Poder de mercado', short: 'Poder de mercado', c: 'var(--t-pow)' },
+    ext:  { label: 'Externalidades e como corrigi-las', short: 'Externalidades', c: 'var(--t-ext)' },
+    env:  { label: 'Ambiente e alterações climáticas', short: 'Ambiente', c: 'var(--t-env)' },
+    exam: { label: 'Estilo do exame (caderno de exercícios)', short: 'Exame', c: 'var(--t-iex)' },
+  },
+  // Nota final = 0,5 projeto + 0,5 exame (mínimo 8 no exame). The study app covers the exam.
+  // Real exam: 1h15 for 20 multiple choice + 2 open questions; the mock has only the multiple choice.
+  exam: { n: 20, min: 50 },
+  // Sample exams from Fénix, as written at the start of "src".
+  past: ['Exame Tipo 1', 'Exame Tipo 2'],
+  render: d => ECD.render(d),
+  // The formulas, with what each symbol means. Text writes {f:id}; a tap on the formula opens its card (README).
+  formulas: {
+    eq: { t: 'sd', name: 'Equilíbrio de mercado', f: 'Procura(Q*) = Oferta(Q*) → P*',
+      legend: [['Q*', 'a quantidade de equilíbrio: a oferecida é igual à procurada'], ['P*', 'o preço de equilíbrio (market-clearing price)']],
+      note: 'Com retas P = a − bQ e P = c + dQ: a − bQ = c + dQ, logo Q* = (a − c)/(b + d). Põe Q* numa das curvas para ter P*.' },
+    cs: { t: 'surp', name: 'Excedente do consumidor', f: 'EC = Q* × (Pmáx − P*) / 2',
+      legend: [['EC', 'excedente do consumidor, em €'], ['Pmáx', 'onde a procura corta o eixo do preço (Q = 0)'], ['P*', 'o preço pago'], ['Q*', 'a quantidade comprada']],
+      note: 'É a área do triângulo entre a procura e o preço (rosa nos slides). Só vale assim com uma procura em linha reta.' },
+    ps: { t: 'surp', name: 'Excedente do produtor', f: 'EP = Q* × (P* − Pmín) / 2',
+      legend: [['EP', 'excedente do produtor, em €'], ['Pmín', 'onde a oferta corta o eixo do preço (Q = 0)'], ['P*', 'o preço recebido'], ['Q*', 'a quantidade vendida']],
+      note: 'É a área entre o preço e a oferta (roxo nos slides). Lucro = EP − custos fixos.' },
+    profit: { t: 'surp', name: 'Lucro com custo unitário constante', f: 'Lucro = (P − c) × Q',
+      legend: [['P', 'o preço a que se vende essa quantidade (lido da procura)'], ['c', 'o custo de produzir cada unidade'], ['Q', 'a quantidade vendida']],
+      note: 'Calcula para cada linha da tabela e escolhe a maior. Com P = c o lucro é zero, não negativo.' },
+    rev: { t: 'tax', name: 'Receita do imposto', f: 'Receita = t × Q_t',
+      legend: [['t', 'o imposto por unidade'], ['Q_t', 'a quantidade transacionada COM o imposto (não a de antes)']],
+      note: 'É o retângulo entre o preço pago pelos consumidores e o recebido pelos produtores (verde nos slides).' },
+    dwl: { t: 'tax', name: 'Carga excedente (DWL)', f: 'DWL = (Q* − Q_t) × t / 2',
+      legend: [['Q*', 'a quantidade de equilíbrio sem imposto'], ['Q_t', 'a quantidade com o imposto'], ['t', 'o imposto por unidade: a altura do triângulo']],
+      note: 'Verificação: EC + EP antes = EC + EP depois + receita + DWL.' },
+    cms: { t: 'ext', name: 'Custo marginal social', f: 'CMS = CMP + CME',
+      legend: [['CMP', 'custo marginal privado: o que custa ao decisor produzir mais uma unidade'], ['CME', 'custo marginal externo: o que essa unidade custa a terceiros (os pescadores, os vizinhos)'], ['CMS', 'custo marginal social: o custo total para a sociedade']],
+      note: 'O mercado produz onde P = CMP; o ótimo social (Pareto-eficiente) é onde P = CMS. Com efeito externo negativo, CMS > CMP e produz-se demais.' },
+    pigou: { t: 'ext', name: 'Imposto pigouviano', f: 't = CME no ótimo social',
+      legend: [['t', 'o imposto por unidade produzida'], ['CME', 'o custo marginal externo, medido na quantidade socialmente ótima']],
+      note: 'Com o imposto, a empresa produz onde CMP = P − t, que é a quantidade ótima. Com efeito externo positivo usa-se um subsídio.' },
+    cap: { t: 'env', name: 'Equilíbrio cap and trade', f: 'CMgR_A = CMgR_B = preço da licença',
+      legend: [['CMgR', 'custo marginal de redução (abatimento) de cada empresa (MPCA nos slides)'], ['A, B', 'as empresas que trocam licenças entre si']],
+      note: 'A redução total é fixada pelo cap. Quem reduz mais barato reduz mais e vende licenças a quem reduz caro, até os custos marginais se igualarem.' },
+    pv: { t: 'env', name: 'Valor presente (desconto)', f: 'VP = B / (1 + r)ᵗ',
+      legend: [['B', 'o custo ou benefício que acontece daqui a t anos'], ['r', 'a taxa de desconto por ano'], ['t', 'quantos anos faltam']],
+      note: 'Com r alto, danos climáticos daqui a 100 anos quase não contam hoje: é o dilema do desconto intertemporal.' },
+  },
+  importHelp: {
+    notes: 'Usa os termos das aulas (procura, oferta, excedente do consumidor, carga excedente…) em português de Portugal.',
+    example: { name: 'Pacote extra IEco', questions: [{ id: 'x-ieco-001', t: 'sd', l: 1, q: 'A um preço acima do preço de equilíbrio, o que acontece?', o: ['Excesso de oferta', 'Excesso de procura', 'O mercado está em equilíbrio', 'A curva da procura desloca-se'], a: 0, e: 'Acima de P* as empresas querem vender mais do que os consumidores querem comprar: há **excesso de oferta**, e o preço tende a descer.' }] },
+  },
+});
+
+/* --- courses/ieco/lessons/markets.js --- */
+/* ===== Lessons: chapter 1, Mercados e o Papel do Governo ===== */
+(() => {
+// Worked example used across the lessons: D: P = 10 − 0,5Q and S: P = 2 + 0,5Q → Q* = 8, P* = 6.
+const D = [[0, 10], [20, 0]], S = [[0, 2], [18, 11]];
+STUDY.lessons('ieco', [
+/* ---------------- ECONOMIAS DE MERCADO ---------------- */
+{ id: 'm-econ', t: 'mkt', title: 'O que é a Economia e o fluxo circular',
+  html: `<p>Definição usada na cadeira (CORE, <i>The Economy</i>): <b>a Economia é o estudo de como as pessoas interagem umas com as outras e com o seu ambiente, na produção dos seus meios de subsistência</b>.</p>
+  <p>Um <b>sistema económico</b> é a forma de organizar a economia: quem produz, como e para quem. Não confundir com o <b>sistema político</b> (democracia, ditadura…): são coisas diferentes.</p>
+  <p>O <b>fluxo circular</b> liga os quatro agentes:</p>
+  <div class="tbl-wrap"><table><tr><th>De</th><th>Para</th><th>O quê</th></tr>
+  <tr><td>Famílias</td><td>Empresas</td><td>Gastos com consumo</td></tr>
+  <tr><td>Empresas</td><td>Famílias</td><td>Salários, lucros, rendas (rendimento)</td></tr>
+  <tr><td>Famílias e empresas</td><td>Governo</td><td>Impostos</td></tr>
+  <tr><td>Governo</td><td>Famílias e empresas</td><td>Gastos públicos (bens, serviços, transferências)</td></tr>
+  <tr><td>Resto do mundo</td><td>Empresas</td><td>Pagamentos por <b>exportações</b></td></tr>
+  <tr><td>Empresas</td><td>Resto do mundo</td><td>Pagamentos por <b>importações</b></td></tr></table></div>`,
+  key: 'O dinheiro das exportações entra na economia vindo do resto do mundo; o das importações sai para o resto do mundo.' },
+{ id: 'm-market', t: 'mkt', title: 'Economia de mercado e conceitos-chave',
+  html: `<p>Uma <b>economia de mercado</b> (capitalista) é um sistema económico em que:</p>
+  <ul><li>a principal forma de organização económica é a <b>empresa</b>;</li>
+  <li>os proprietários privados de <b>bens de capital</b> contratam <b>mão-de-obra</b> para produzir bens e serviços que <b>vendem nos mercados</b> com o objetivo de obter <b>lucro</b>.</li></ul>
+  <p>As três instituições principais: <b>propriedade privada</b>, <b>mercados</b> e <b>empresas</b>.</p>
+  <div class="tbl-wrap"><table><tr><th>Conceito</th><th>Definição</th></tr>
+  <tr><td>Propriedade privada</td><td>O detentor tem o direito de <b>excluir</b> outros da utilização do bem <b>e de o trocar</b>.</td></tr>
+  <tr><td>Mercado</td><td>Troca de bens e serviços por <b>transferências diretamente recíprocas</b>, para <b>benefício mútuo</b>. Ao contrário do roubo (não é recíproco nem voluntário) ou da tributação (não é diretamente recíproca).</td></tr>
+  <tr><td>Bens de capital</td><td>Recursos para produzir outros bens que <b>não são mão-de-obra</b>, são <b>duráveis</b> e têm <b>custo</b>: equipamentos, edifícios, máquinas.</td></tr></table></div>`,
+  key: 'Mercado = troca voluntária e recíproca. Imposto não é troca de mercado: pagas, mas não recebes em troca um bem específico.' },
+{ id: 'm-firms', t: 'mkt', title: 'Empresas e o que não é empresa',
+  html: `<p>Numa economia de mercado coexistem com as empresas outras formas de organização que <b>não são empresas</b>. O truque é ver qual dos traços da empresa lhes falta (contratar mão-de-obra, capital privado, vender no mercado, lucro):</p>
+  <div class="tbl-wrap"><table><tr><th>Organização</th><th>Porque não é empresa</th></tr>
+  <tr><td>Produção familiar ou individual</td><td><b>Não contrata</b> terceiros.</td></tr>
+  <tr><td>Organização sem fins lucrativos</td><td>O objetivo <b>não é o lucro</b> nem vender o que produz no mercado.</td></tr>
+  <tr><td>Cooperativa</td><td>A mão-de-obra <b>não é contratada</b>: o trabalho é feito pelos próprios membros.</td></tr>
+  <tr><td>Órgãos governamentais</td><td>Não visam lucro e os bens de capital são <b>propriedade pública</b>.</td></tr></table></div>`,
+  key: 'Cooperativa: os membros trabalham, não são contratados. Governo: capital público, sem lucro.' },
+{ id: 'm-limits', t: 'mkt', title: 'Limitações da economia de mercado',
+  html: `<p>A economia de mercado é eficaz a coordenar a produção, mas tem limitações conhecidas:</p>
+  <ul><li><b>Desigualdade</b> na distribuição do rendimento;</li>
+  <li><b>(In)sustentabilidade ambiental</b>;</li>
+  <li><b>Falhas de mercado</b>: ineficiências económicas, por exemplo <b>externalidades</b> (efeitos sobre terceiros que não passam pelo preço, como a poluição).</li></ul>
+  <p>São estas limitações que justificam o <b>papel do Governo</b>: impostos, regulação, bens públicos (o capítulo 2 aprofunda as falhas de mercado).</p>`,
+  key: 'Três limitações: desigualdade, ambiente, falhas de mercado (ex.: externalidades).' },
+
+/* ---------------- PROCURA E OFERTA ---------------- */
+{ id: 's-demand', t: 'sd', title: 'Curva da procura',
+  html: `<p><b>Curva da procura</b> (<i>demand curve</i>): a <b>quantidade total que os consumidores desejam comprar a cada preço</b>. Representa a <b>disposição a pagar</b> (DAP) dos consumidores.</p>
+  <ul><li>É <b>decrescente</b>: quanto mais barato, mais se quer comprar.</li>
+  <li>Lida ao contrário: para a quantidade Q, a altura da curva é o preço máximo que o consumidor “marginal” (o Q-ésimo) estaria disposto a pagar.</li>
+  <li>Ler um gráfico: dado P, vai à horizontal até à curva e desce para ler Q; dado Q, sobe até à curva e lê P.</li></ul>`,
+  d: { sd: { r: [20, 12], ln: [{ n: 'D', p: D, c: 'd' }], g: [[8, 6], [4, 8]], pt: [] } },
+  key: 'A curva da procura = disposição a pagar. Ao preço 8 compram-se 4 unidades; ao preço 6, 8 unidades.' },
+{ id: 's-supply', t: 'sd', title: 'Curva da oferta',
+  html: `<p><b>Curva da oferta</b> (<i>supply curve</i>): a <b>quantidade total que as empresas estão dispostas a produzir a cada preço</b>. Representa a <b>disposição a aceitar</b> dos vendedores (o preço mínimo que aceitam, ligado ao seu <b>custo marginal</b>).</p>
+  <ul><li>É <b>crescente</b>: a preços mais altos compensa produzir mais (e entram produtores com custos mais altos).</li>
+  <li>A altura da curva para a quantidade Q é o preço mínimo que o vendedor da Q-ésima unidade aceita.</li></ul>`,
+  d: { sd: { r: [20, 12], ln: [{ n: 'S', p: S, c: 's' }], g: [[8, 6], [12, 8]] } },
+  key: 'A curva da oferta = disposição a aceitar (custo marginal). Sobe com a quantidade.' },
+{ id: 's-eq', t: 'sd', title: 'Preço de equilíbrio, excesso e escassez',
+  html: `<p>Ao <b>preço de equilíbrio</b> P* (<i>market-clearing price</i>) a <b>quantidade oferecida é igual à procurada</b>: o mercado “limpa”, ninguém fica com vontade de trocar sem conseguir.</p>
+  <ul><li><b>Preço acima de P*</b>: quantidade oferecida &gt; procurada → <b>excesso de oferta</b>. Os vendedores têm incentivo a <b>baixar</b> o preço.</li>
+  <li><b>Preço abaixo de P*</b>: procurada &gt; oferecida → <b>escassez de oferta</b> (excesso de procura). O preço tende a <b>subir</b>.</li>
+  <li>Em equilíbrio, nenhum vendedor ganha em mudar o preço: se subir, perde os clientes para quem vende a P*.</li>
+  <li>Quantidade transacionada fora do equilíbrio = a <b>menor</b> das duas (ninguém compra o que não quer, ninguém vende o que não quer).</li></ul>
+  <p>Exemplo do gráfico: D: P = 10 − 0,5Q e S: P = 2 + 0,5Q. Igualando: 10 − 0,5Q = 2 + 0,5Q → <b>Q* = 8, P* = 6</b>. A P = 8: procura 4, oferta 12 → excesso de oferta de 8.</p>`,
+  d: { sd: { r: [20, 12], ln: [{ n: 'D', p: D, c: 'd' }, { n: 'S', p: S, c: 's' }], g: [[8, 6]], pt: [{ q: 8, p: 6, l: 'E' }] } },
+  key: '{f:eq|Procura = Oferta} dá o equilíbrio. Acima de P*: excesso de oferta; abaixo: escassez.' },
+{ id: 's-shift', t: 'sd', title: 'Deslocações das curvas e movimentos ao longo delas',
+  html: `<p>Uma mudança do <b>próprio preço</b> do bem faz um <b>movimento ao longo</b> da curva. Qualquer outro fator faz <b>deslocar a curva</b> inteira (choques exógenos: progresso tecnológico, pandemia, preços de outros bens, rendimento, gostos, políticas).</p>
+  <div class="tbl-wrap"><table><tr><th>Choque</th><th>Curva que se desloca</th><th>Efeito em P* e Q*</th></tr>
+  <tr><td>Melhor tecnologia, matérias-primas mais baratas, entrada de empresas</td><td>Oferta para a <b>direita</b> (expansão)</td><td>P ↓, Q ↑</td></tr>
+  <tr><td>Escassez de matéria-prima, custos mais altos, saída de empresas</td><td>Oferta para a <b>esquerda</b> (contração)</td><td>P ↑, Q ↓</td></tr>
+  <tr><td>Substituto fica mais caro, complemento mais barato, mais rendimento (bem normal)</td><td>Procura para a <b>direita</b></td><td>P ↑, Q ↑</td></tr>
+  <tr><td>Substituto fica mais barato, complemento mais caro</td><td>Procura para a <b>esquerda</b></td><td>P ↓, Q ↓</td></tr></table></div>
+  <p>Exemplo das aulas (pão): melhor tecnologia → 1) a oferta aumenta a cada preço (o preço mínimo exigido por cada quantidade é menor), 2) ao preço antigo há excesso de oferta, 3) o preço desce até ao novo equilíbrio, num <b>movimento ao longo da curva da procura</b>.</p>
+  <p><b>Entrada de empresas</b>: se as empresas existentes têm <b>rendas económicas</b> (lucro acima do normal) e os custos de entrada não são altos, outras entram e a oferta desloca-se para a direita.</p>
+  <p><b>Cuidado:</b> um custo de produção (escassez de semicondutores, regulação que encarece produzir) mexe na <b>oferta</b>, não na procura. Um preço baixo só diz “a oferta subiu <i>ou</i> a procura desceu”: sem mais dados não se sabe qual.</p>`,
+  d: { sd: { r: [20, 12], ln: [{ n: 'D', p: D, c: 'd' }, { n: 'S', p: S, c: 's' }, { n: 'S′', p: [[0, 0], [20, 10]], c: 's', dash: true }], g: [[8, 6], [10, 5]], pt: [{ q: 8, p: 6, l: 'E' }, { q: 10, p: 5, l: 'E′' }] } },
+  key: 'Muda o preço do próprio bem → movimento ao longo. Muda outra coisa → a curva desloca-se.' },
+
+/* ---------------- EXCEDENTES ---------------- */
+{ id: 'p-surplus', t: 'surp', title: 'Excedente do consumidor, do produtor e total',
+  html: `<ul><li><b>Excedente do consumidor (EC)</b>, em €: diferença total entre a <b>disposição a pagar</b> e o <b>preço</b>. Área entre a procura e o preço, até Q* (rosa).</li>
+  <li><b>Excedente do produtor (EP)</b>, em €: diferença total entre o <b>preço</b> e o <b>custo marginal</b> (preço mínimo que aceitam). Área entre o preço e a oferta (roxo).</li>
+  <li><b>Excedente total = EC + EP</b> = ganhos totais do comércio para a sociedade.</li></ul>
+  <p>Com curvas retas, são triângulos: <b>área = base × altura / 2</b>. No exemplo (D: P = 10 − 0,5Q, S: P = 2 + 0,5Q, Q* = 8, P* = 6):</p>
+  <ul><li>EC = 8 × (10 − 6) / 2 = <b>16 €</b></li><li>EP = 8 × (6 − 2) / 2 = <b>16 €</b></li><li>Excedente total = <b>32 €</b></li></ul>
+  <p>No equilíbrio de mercado concorrencial o excedente total é <b>máximo</b>: qualquer outra quantidade deixa trocas mutuamente vantajosas por fazer (ou faz trocas que custam mais do que valem).</p>`,
+  d: { sd: { r: [20, 12], a: [{ p: [[0, 10], [8, 6], [0, 6]], c: 'cs', l: 'EC' }, { p: [[0, 6], [8, 6], [0, 2]], c: 'ps', l: 'EP' }], ln: [{ n: 'D', p: D, c: 'd' }, { n: 'S', p: S, c: 's' }], g: [[8, 6]], pt: [{ q: 8, p: 6, l: 'E' }] } },
+  key: '{f:cs|EC = Q* × (Pmáx − P*) / 2}: entre a procura e o preço. {f:ps|EP = Q* × (P* − Pmín) / 2}: entre o preço e a oferta.' },
+{ id: 'p-profit', t: 'surp', title: 'Custo marginal, lucro e a quantidade que maximiza o lucro',
+  html: `<p><b>Custo marginal</b> = custo de produzir <b>uma unidade adicional</b> (diferente do custo total). <b>Lucro = EP − custos fixos</b>.</p>
+  <p>Quando uma empresa escolhe o preço ao longo da sua curva da procura com um <b>custo unitário constante c</b>, o lucro é <b>(P − c) × Q</b>. Calcula-o para cada linha da tabela e escolhe o maior (Caderno 1.1, c = 60 €):</p>
+  <div class="tbl-wrap"><table><tr><th class="num">Q</th><th class="num">P</th><th class="num">P − 60</th><th class="num">Lucro</th></tr>
+  <tr><td class="num">200</td><td class="num">240</td><td class="num">180</td><td class="num">36 000</td></tr>
+  <tr><td class="num">300</td><td class="num">210</td><td class="num">150</td><td class="num">45 000</td></tr>
+  <tr><td class="num"><b>400</b></td><td class="num"><b>180</b></td><td class="num"><b>120</b></td><td class="num"><b>48 000</b></td></tr>
+  <tr><td class="num">500</td><td class="num">150</td><td class="num">90</td><td class="num">45 000</td></tr>
+  <tr><td class="num">800</td><td class="num">60</td><td class="num">0</td><td class="num">0</td></tr>
+  <tr><td class="num">900</td><td class="num">30</td><td class="num">−30</td><td class="num">−27 000</td></tr></table></div>
+  <p><b>Armadilha:</b> com P = c o lucro é <b>zero</b>, não negativo. Só há prejuízo quando P &lt; c.</p>`,
+  key: '{f:profit|Lucro = (P − c) × Q}. P = custo → lucro zero, não prejuízo.' },
+
+/* ---------------- IMPOSTOS ---------------- */
+{ id: 'x-tax', t: 'tax', title: 'Impostos deslocam curvas',
+  html: `<p>Ao longo da história os Governos usaram impostos para obter <b>receita</b>. Um imposto por unidade sobre os <b>produtores</b> (incidência <b>legal</b> ou fiscal) desloca a <b>oferta para cima</b> no valor do imposto: para cada quantidade, o preço exigido fica mais alto. Sobre os <b>consumidores</b> desloca a <b>procura</b> (para baixo, do ponto de vista do preço que os vendedores recebem).</p>
+  <p>Exemplo: imposto de 2 € por unidade sobre os produtores. S: P = 2 + 0,5Q passa a S′: P = 4 + 0,5Q. Novo equilíbrio com D: P = 10 − 0,5Q:</p>
+  <ul><li>10 − 0,5Q = 4 + 0,5Q → <b>Q = 6</b></li>
+  <li>Preço pago pelos consumidores: <b>7 €</b>. Preço recebido pelos produtores: 7 − 2 = <b>5 €</b>.</li>
+  <li>A quantidade transacionada desce de 8 para 6.</li></ul>`,
+  d: { sd: { r: [20, 12], ln: [{ n: 'D', p: D, c: 'd' }, { n: 'S', p: S, c: 's' }, { n: 'S+t', p: [[0, 4], [14, 11]], c: 's', dash: true }], g: [[6, 7], [6, 5], [8, 6]], pt: [{ q: 6, p: 7 }, { q: 8, p: 6, l: 'E' }] } },
+  key: 'Imposto por unidade = distância vertical entre as curvas. Consumidores pagam mais, produtores recebem menos.' },
+{ id: 'x-welfare', t: 'tax', title: 'Efeitos no bem-estar: receita e carga excedente',
+  html: `<p>Um imposto <b>reduz os excedentes</b>. A área que antes era EC + EP divide-se em:</p>
+  <ul><li><b>EC</b> (rosa) e <b>EP</b> (roxo), mais pequenos;</li>
+  <li><b>Receita do Governo</b> (verde) = imposto × quantidade transacionada;</li>
+  <li><b>Carga excedente</b> (<i>deadweight loss</i>, DWL, o triângulo amarelo aqui, branco nos slides): a <b>perda de eficiência</b>, o desperdício social das trocas que deixam de se fazer.</li></ul>
+  <p>No exemplo (imposto 2 €, Q cai de 8 para 6, P consumidor 7, P produtor 5):</p>
+  <ul><li>EC = 6 × (10 − 7) / 2 = 9 € · EP = 6 × (5 − 2) / 2 = 9 €</li>
+  <li>Receita = 2 × 6 = 12 € · DWL = (8 − 6) × 2 / 2 = <b>2 €</b></li>
+  <li>Verificação: 9 + 9 + 12 + 2 = 32 € = excedente total sem imposto.</li></ul>`,
+  d: { sd: { r: [20, 12], a: [{ p: [[0, 10], [6, 7], [0, 7]], c: 'cs', l: 'EC' }, { p: [[0, 7], [6, 7], [6, 5], [0, 5]], c: 'gov', l: 'T' }, { p: [[0, 5], [6, 5], [0, 2]], c: 'ps', l: 'EP' }, { p: [[6, 7], [8, 6], [6, 5]], c: 'dwl' }], ln: [{ n: 'D', p: D, c: 'd' }, { n: 'S', p: S, c: 's' }], g: [[6, 7], [6, 5], [8, 6]] } },
+  key: 'Antes = EC + EP. Com imposto = EC′ + EP′ + {f:rev|receita} + {f:dwl|DWL}. A DWL é a perda de eficiência.' },
+{ id: 'x-elastic', t: 'tax', title: 'Elasticidade e quem paga o imposto',
+  html: `<p><b>Elasticidade</b> = quanto a quantidade reage a uma variação do preço. Procura elástica: os consumidores fogem facilmente (há substitutos). Inelástica: compram quase o mesmo (tabaco, combustível a curto prazo).</p>
+  <ul><li>A <b>redução do excedente total</b> (a DWL) está <b>positivamente</b> relacionada com a elasticidade da procura: quanto mais elástica, mais trocas desaparecem e maior a perda.</li>
+  <li>A <b>incidência económica</b> (quem suporta de facto o imposto) depende da elasticidade <b>relativa</b> de consumidores e produtores, não de quem o entrega ao Estado: <b>o grupo com menor elasticidade suporta mais carga</b>.</li></ul>
+  <p>Por isso a incidência <b>legal</b> (sobre quem a lei põe o imposto) e a <b>económica</b> (quem perde excedente) podem ser diferentes.</p>`,
+  key: 'Menos elástico = paga mais. Mais elástica a procura = maior carga excedente.' },
+{ id: 'x-use', t: 'tax', title: 'Impostos que aumentam o bem-estar',
+  html: `<p>Os impostos podem <b>aumentar o bem-estar social</b> se as receitas financiarem bens e serviços benéficos para a sociedade: <b>educação, saúde, segurança, limpeza dos espaços públicos</b>…</p>
+  <p>Também se usam para <b>mudar comportamentos</b>:</p>
+  <ul><li><b>Dinamarca, 2011</b>: imposto por kg sobre a gordura saturada, equivalente a cerca de <b>22% do preço médio da manteiga</b>. O consumo de manteiga e produtos relacionados caiu <b>15–20%</b>.</li>
+  <li>Em Portugal: imposto sobre as <b>bebidas açucaradas</b>, sobre o <b>tabaco</b>, etc.</li></ul>
+  <p>Aqui a descida da quantidade é o <b>objetivo</b> da política, não um efeito indesejado.</p>`,
+  key: 'Imposto sobre a manteiga (DK 2011): ~22% do preço, consumo −15 a −20%.' },
+
+/* ---------------- EXAM ---------------- */
+{ id: 'e-format', t: 'exam', title: 'Como é a avaliação e o exame',
+  html: `<p><b>Nota final = 0,5 × Projeto + 0,5 × Exame</b>.</p>
+  <ul><li><b>Projeto de grupo</b> (50% = 40% relatório + 10% apresentação), grupos de 4 do mesmo turno prático. Grupos no Fénix até 13/11/2026; entrega do projeto e dos slides a 13/12/2026 (23h59); apresentações a 15/12 nas práticas.</li>
+  <li><b>Exame</b> (50%), época normal a 12 de janeiro, recurso a 28 de janeiro. <b>Nota mínima: 8</b>.</li>
+  <li>No recurso, o exame vale 50% se faltaste à época normal (mantém-se o projeto), ou 100% se foste à normal, se não fizeste o projeto, ou se o projeto baixar a nota.</li></ul>
+  <p><b>Formato (exames tipo do Fénix):</b> 1h15, sem consulta.</p>
+  <ul><li><b>20 perguntas de escolha múltipla</b>: as 1–10 valem 1 valor, as 11–20 valem 0,5. <b>Podem ter mais do que uma certa.</b></li>
+  <li>Cotação: todas as certas e só essas → cotação inteira; alguma errada a mais ou alguma certa em falta → <b>metade</b>; só erradas → zero. Opções contraditórias, ou marcar todas sem estarem todas certas → <b>zero</b>.</li>
+  <li><b>2 perguntas abertas</b> (2–3 valores cada): uma conta (ex.: PIB nominal com o deflator) e um comentário curto a uma notícia ou tabela, com gráfico quando ajuda (ex.: a descida do IVA das bicicletas e as elasticidades).</li></ul>
+  <p>As perguntas do caderno (e do exame) são de três tipos:</p>
+  <ul><li><b>Escolha múltipla com “selecione todas as corretas”</b>: pode haver uma, várias ou nenhuma óbvia. Avalia cada opção sozinha.</li>
+  <li><b>Verdadeiro / Falso com justificação</b>: aqui treinas o V/F; no exame escreve a razão em 1–2 linhas.</li>
+  <li><b>Leitura de gráficos e tabelas</b>: curvas de procura e oferta, excedentes, dados macroeconómicos.</li></ul>`,
+  key: 'Mínimo 8 no exame. Em “selecione todas”, decide cada opção como um V/F à parte: uma a mais ou a menos vale metade.' },
+]);
+})();
+
+/* --- courses/ieco/lessons/failures.js --- */
+/* ===== Lessons: chapter 2, Falhas de Mercado & Ambiente ===== */
+(() => {
+// Worked externality (same numbers as the robot factory of Caderno 2.3): P = 340, CMP = 100 + 2Q, CME = Q, CMS = 100 + 3Q.
+// The market produces where P = CMP (Q = 120); the social optimum is where P = CMS (Q = 80).
+const P = { n: 'P', p: [[0, 340], [160, 340]], c: 'd' }, CMP = { n: 'CMP', p: [[0, 100], [160, 420]], c: 's' }, CMS = { n: 'CMS', p: [[0, 100], [133, 499]], c: 'm' };
+const ext = { sd: { r: [160, 520], ax: ['Q', '€'], ln: [P, CMP, CMS], g: [[80, 340], [120, 340]], pt: [{ q: 120, p: 340, l: 'mercado' }, { q: 80, p: 340, l: 'ótimo' }] } };
+const deal = { sd: { r: [160, 520], ax: ['Q', '€'], a: [{ p: [[80, 340], [120, 340], [120, 460]], c: 'ext', l: '' }, { p: [[80, 340], [120, 340], [80, 260]], c: 'ps', l: '' }, { p: [[100, 300], [100, 300]], c: 'ps', l: '1600' }, { p: [[107, 380], [107, 380]], c: 'ext', l: '2400' }], ln: [P, CMP, CMS], g: [[80, 340], [120, 340]] } };
+const tax = { sd: { r: [160, 520], ax: ['Q', '€'], ln: [P, { n: 'P − t', p: [[0, 260], [160, 260]], c: 'd', dash: true }, CMP, CMS], g: [[80, 260], [80, 340]], pt: [{ q: 80, p: 260 }] } };
+// Cap and trade: 30 t to cut in total. A cuts a (from the left), B cuts 30 − a (from the right). CMgR_A = 2a, CMgR_B = 4(30 − a).
+const cap = { sd: { r: [30, 70], ax: ['a', '€/t'], ln: [{ n: 'CMgR A', p: [[0, 0], [30, 60]], c: 'g' }, { n: 'CMgR B', p: [[30, 0], [12.5, 70]], c: 'm' }], g: [[20, 40], [15, 30], [15, 60]], pt: [{ q: 20, p: 40, l: 'E' }] } };
+STUDY.lessons('ieco', [
+/* ---------------- BENS PÚBLICOS ---------------- */
+{ id: 'f-fail', t: 'pub', title: 'Falhas de mercado: as quatro fontes',
+  html: `<p>No capítulo 1 o mercado concorrencial maximizava o excedente total. Na realidade os mercados podem alocar recursos de forma <b>Pareto-ineficiente</b>: é uma <b>falha de mercado</b>.</p>
+  <p><b>Pareto-eficiente</b>: não é possível melhorar a situação de alguém sem piorar a de outro. Se é possível, há ganhos por aproveitar.</p>
+  <p>As quatro causas estudadas na cadeira:</p>
+  <ol><li><b>Bens públicos</b></li><li><b>Informação assimétrica</b></li><li><b>Poder de mercado</b></li><li><b>Externalidades</b>, com o caso das alterações climáticas</li></ol>
+  <p>Para cada uma, duas perguntas: de onde vem a ineficiência e <b>como pode o Governo resolvê-la</b>.</p>`,
+  key: 'Falha de mercado = alocação Pareto-ineficiente. Fontes: bens públicos, informação assimétrica, poder de mercado, externalidades.' },
+{ id: 'f-goods', t: 'pub', title: 'Rival e exclusivo: os quatro tipos de bens',
+  html: `<ul><li><b>Rival</b>: o uso por uma pessoa <b>reduz</b> a disponibilidade para os outros (uma sandes, um lugar sentado).</li>
+  <li><b>Não-rival</b>: usar não gasta o bem para os outros; servir mais uma pessoa custa <b>zero</b> (um teorema, uma emissão de rádio).</li>
+  <li><b>Exclusivo</b> (<i>excludable</i>): é possível impedir alguém de o usar (cobrar entrada, pôr palavra-passe).</li>
+  <li><b>Não exclusivo</b> (<i>non-excludable</i>): é impossível excluir alguém do acesso.</li></ul>
+  <div class="tbl-wrap"><table><tr><th></th><th>Não-rival</th><th>Rival</th></tr>
+  <tr><th>Não exclusivo</th><td><b>Bem público</b> (ou mal público: a poluição do ar). Ex.: defesa nacional, fogo de artifício.</td><td><b>Bem comum</b>. Ex.: peixe no mar, pastagens, uma floresta para madeira.</td></tr>
+  <tr><th>Exclusivo</th><td><b>Bem de clube</b> ou artificialmente escasso: cobra-se uma taxa sem estar congestionado. Ex.: conhecimento com direitos de propriedade intelectual, streaming.</td><td><b>Bem privado</b>. Ex.: uma caixa de sushi, lugares num teatro.</td></tr></table></div>
+  <p><b>Bem público</b> = não-rival <b>e</b> não exclusivo: se está disponível para uma pessoa, está para todos sem custo adicional.</p>
+  <p><b>Depende do contexto:</b> um parque é público vazio, mas comum se estiver congestionado; uma aula aberta é não-rival até a sala encher.</p>`,
+  key: 'Público: não-rival + não exclusivo. Comum: rival + não exclusivo. Clube: não-rival + exclusivo. Privado: rival + exclusivo.' },
+{ id: 'f-free', t: 'pub', title: 'Porque falham: free riding e tragédia dos comuns',
+  html: `<p><b>Bens públicos e free riding</b> (“ir à boleia”): como ninguém pode ser excluído, cada um espera que outros paguem. Uma empresa privada não consegue cobrar, por isso o mercado <b>fornece pouco ou nada</b>. Solução típica: o Governo fornece-o e financia-o com <b>impostos</b> (defesa, iluminação pública, investigação básica).</p>
+  <p><b>Bens comuns e tragédia dos comuns</b>: como são rivais mas ninguém é excluído, cada um usa o máximo antes que os outros gastem. Os recursos comuns são <b>sobre-explorados</b> (pesca excessiva). Soluções: quotas, licenças, direitos de propriedade, regras da comunidade.</p>
+  <p>Ambos são <b>dilemas sociais</b>: cada um, ao seguir o seu interesse, chega a um resultado pior para todos, porque não tem em conta os efeitos das suas ações sobre os outros.</p>`,
+  key: 'Bem público → free riding → o mercado fornece de menos. Bem comum → tragédia dos comuns → usa-se de mais.' },
+
+/* ---------------- INFORMAÇÃO ASSIMÉTRICA ---------------- */
+{ id: 'i-lemons', t: 'info', title: 'O mercado dos limões e a seleção adversa',
+  html: `<p><b>Informação assimétrica</b>: um dos lados da troca sabe mais do que o outro. Exemplo clássico (Akerlof): <i>“The market for lemons”</i>, em que um <i>lemon</i> é um carro em segunda mão estragado.</p>
+  <ol><li>Os <b>vendedores sabem mais</b> sobre a qualidade do carro do que os compradores.</li>
+  <li>Os compradores, com medo de comprar um limão, só pagam um preço que reflete a <b>qualidade média</b>.</li>
+  <li>Quem tem carros <b>bons sai do mercado</b> (o preço médio não lhes chega): fica sobretudo baixa qualidade. É a <b>seleção adversa</b>.</li>
+  <li>A qualidade média desce, o preço desce mais, e o <b>mercado pode entrar em colapso</b>.</li></ol>
+  <p><b>Soluções:</b> garantias, inspeções, reputação (avaliações), contratos de seguro, regulação.</p>`,
+  key: 'Vendedor sabe mais → preço da qualidade média → os bons saem → seleção adversa → o mercado pode colapsar.' },
+{ id: 'i-banks', t: 'info', title: 'Informação assimétrica no crédito e nos bancos',
+  html: `<p>Num <b>empréstimo</b>, as decisões de quem pede emprestado têm efeitos sobre quem empresta: o banco não sabe bem se o projeto é arriscado nem quanto esforço vai ser feito para pagar.</p>
+  <ul><li>Por isso, os indivíduos de <b>menor rendimento</b> têm muitas vezes acesso limitado ao crédito, ou são excluídos: é uma falha do mercado de crédito (volta no capítulo 5).</li>
+  <li>Os <b>próprios bancos</b> também são fonte de falha: se assumirem riscos demais e falirem, os bancos que lhes emprestaram sofrem custos (efeito externo).</li>
+  <li><b>“Too big to fail”</b>: os Governos resgatam os bancos grandes demais para falir, o que <b>incentiva</b> comportamentos ainda mais arriscados (sabem que serão salvos).</li></ul>`,
+  key: 'Crédito: quem tem pouco rendimento fica sem crédito. Too big to fail: o resgate esperado incentiva o risco.' },
+
+/* ---------------- PODER DE MERCADO ---------------- */
+{ id: 'w-power', t: 'pow', title: 'Poder de mercado: o que é e de onde vem',
+  html: `<p><b>Poder de mercado</b> = capacidade de praticar um <b>preço acima do custo marginal</b> sem perder todos os clientes. Resultado: <b>quantidade transacionada inferior à eficiente</b> e uma perda de bem-estar (<b>deadweight loss</b>), como com um imposto.</p>
+  <p><b>Fontes:</b></p>
+  <ul><li><b>Barreiras à entrada</b>: legais (licenças, patentes), tecnológicas…</li>
+  <li><b>Economias de escala</b> e <b>monopólios naturais</b>: o custo médio desce tanto com a escala que uma só empresa produz mais barato do que várias (água canalizada, rede elétrica).</li>
+  <li><b>Efeitos de rede</b>: o produto vale mais quanto mais gente o usa.</li>
+  <li><b>Custos de mudança</b>: fidelização, contratos, perder dados ao mudar de fornecedor.</li></ul>
+  <p><b>Políticas públicas:</b> <b>antitrust</b> (proibir cartéis, controlar fusões), <b>regulação de preços e qualidade</b> nos monopólios naturais, <b>promover a entrada</b>, a interoperabilidade e a portabilidade (levar o número de telemóvel ou os dados para outro operador).</p>`,
+  key: 'Poder de mercado: P > custo marginal → Q menor do que a eficiente → deadweight loss.' },
+{ id: 'w-struct', t: 'pow', title: 'Estruturas de mercado',
+  html: `<p>Duas perguntas classificam um mercado: <b>quantas empresas</b> há e se os <b>produtos são idênticos ou diferenciados</b>.</p>
+  <div class="tbl-wrap"><table><tr><th>Estrutura</th><th>Empresas</th><th>Produto</th><th>Exemplos (aulas)</th></tr>
+  <tr><td><b>Monopólio</b></td><td>Uma</td><td>Único</td><td>Água canalizada</td></tr>
+  <tr><td><b>Oligopólio</b></td><td>Poucas</td><td>Idêntico ou diferenciado</td><td>Computação na cloud, petróleo</td></tr>
+  <tr><td><b>Concorrência monopolística</b></td><td>Muitas</td><td>Diferenciado</td><td>Restaurantes, cabeleireiros</td></tr>
+  <tr><td><b>Concorrência perfeita</b></td><td>Muitas</td><td>Idêntico</td><td>Leite, cereais, praças</td></tr></table></div>
+  <p>Sinais de poder de mercado nas notícias: pouca diversidade de preços, dificuldade de entrada de novos concorrentes, fidelização, <b>discriminação de preços</b> e custos de mudança.</p>`,
+  key: 'Muitas + idêntico = perfeita. Muitas + diferenciado = monopolística. Poucas = oligopólio. Uma = monopólio.' },
+{ id: 'w-network', t: 'pow', title: 'Efeitos de rede e “vencedor leva tudo”',
+  html: `<p><b>Efeitos externos de rede</b>: os benefícios para cada utilizador <b>crescem com o número de utilizadores</b> (idiomas, videojogos, redes sociais).</p>
+  <p>Daí a concorrência <b>“vencedor leva tudo”</b> (<i>winner-takes-all</i>): a primeira tecnologia a ser adotada ganha vantagem (<i>first-adopter advantage</i>) e o mercado fica preso a ela (<b>lock-in</b>), mesmo que não seja a melhor.</p>
+  <p>Exemplo: o <b>Betamax</b> tinha qualidade superior ao <b>VHS</b>, mas o VHS dominou por ter utilizadores suficientes. Outro: DVD e Blu-ray.</p>`,
+  key: 'Efeito de rede → quem chega primeiro ganha tudo (lock-in), nem sempre o melhor (Betamax vs VHS).' },
+{ id: 'w-matching', t: 'pow', title: 'Mercados de matching (two-sided)',
+  html: `<p>Um <b>mercado de matching</b> (<i>two-sided</i>) junta membros de <b>dois grupos distintos</b>, cada um beneficiando de encontrar, através de uma <b>plataforma</b>, o membro certo do outro grupo. Ex.: Airbnb (anfitriões e hóspedes), colocação de alunos em universidades, aeroportos (passageiros e companhias aéreas).</p>
+  <p><b>Problema do ovo e da galinha</b>: basta um número mínimo de quem oferece (<i>posters</i>) ou de quem procura (<i>seekers</i>), mas qual aparece primeiro? Tende a acontecer que o mercado <b>colapsa</b> ou sobrevive com <b>poucas e grandes empresas</b>.</p>
+  <p>Como se forma o mercado:</p>
+  <ul><li>A <b>política pública</b> cria a plataforma (na internet ou física);</li>
+  <li><b>Iniciativa privada</b> que assume o risco de lançar o projeto;</li>
+  <li>Cobrar <b>preço baixo ou zero a um dos grupos</b> para atrair o outro (ex.: software gratuito para utilizadores).</li></ul>
+  <p>Depois de formadas, estas empresas têm <b>rendas de inovação</b> e o problema do ovo e da galinha <b>afasta novos concorrentes</b>: tendem a ser grandes e quase monopólios, um desafio para a política de concorrência.</p>`,
+  key: 'Two-sided: ovo e galinha. Resolve-se com plataforma pública, risco privado ou preço zero para um lado. Acaba quase em monopólio.' },
+
+/* ---------------- EXTERNALIDADES ---------------- */
+{ id: 'e-def', t: 'ext', title: 'Externalidades: definição',
+  html: `<p>Três formas de dizer o mesmo (todas valem no exame):</p>
+  <ul><li>Efeito de uma decisão económica que <b>não está especificado num contrato</b> como benefício ou responsabilidade;</li>
+  <li>Efeitos positivos (benefícios) ou negativos (custos) <b>à margem das transações</b> de mercado;</li>
+  <li>Efeitos <b>sobre terceiros</b> que resultam de ações de agentes económicos.</li></ul>
+  <p>São falha de mercado porque criam uma diferença entre o <b>ótimo privado</b> e o <b>ótimo social</b>.</p>
+  <div class="tbl-wrap"><table><tr><th>Negativas (custo para terceiros)</th><th>Positivas (benefício para terceiros)</th></tr>
+  <tr><td>Poluição, ruído de uma fábrica, pesticidas que contaminam rios, fumo passivo, trânsito</td><td>Abelhas que polinizam o pomar do vizinho, vacinação, educação, investigação, jardim bonito</td></tr></table></div>
+  <p>Caso das aulas: <b>pesticidas nas Caraíbas</b>. Os donos das plantações de banana usaram pesticidas prejudiciais para baixar custos; os químicos contaminaram rios e pescas e os habitantes e pescadores adoeceram.</p>`,
+  key: 'Externalidade = efeito sobre terceiros fora do contrato e do preço. Ótimo privado ≠ ótimo social.' },
+{ id: 'e-cms', t: 'ext', title: 'Custo marginal privado, externo e social',
+  html: `<ul><li><b>CMP</b> (custo marginal privado): o custo marginal para quem decide.</li>
+  <li><b>CME</b> (custo marginal externo): o custo que o decisor impõe a terceiros com mais uma unidade.</li>
+  <li>{f:cms}: custo total para a sociedade. Com efeito externo <b>negativo</b>, <b>CMS &gt; CMP</b>.</li></ul>
+  <p>O produtor produz onde <b>P = CMP</b>. O nível <b>Pareto-eficiente</b> é onde <b>P = CMS</b>. Por isso, com externalidade negativa, a produção (e a poluição) é <b>excessiva</b> do ponto de vista social.</p>
+  <p>Exemplo (os números do caderno, 2.3): P = 340, CMP = 100 + 2Q, CME = Q, logo CMS = 100 + 3Q.</p>
+  <ul><li>Mercado: 340 = 100 + 2Q → <b>Q = 120</b>.</li><li>Ótimo social: 340 = 100 + 3Q → <b>Q = 80</b>.</li></ul>
+  <p>Com externalidade <b>positiva</b> é ao contrário: o benefício marginal social é maior do que o privado e produz-se <b>de menos</b> (o apicultor faz menos mel do que seria eficiente, porque não é pago pela polinização).</p>
+  <p>Atenção às palavras: o <b>custo total externo</b> é o custo total por dia imposto a terceiros; o <b>marginal</b> é o de uma unidade adicional.</p>`,
+  d: ext,
+  key: 'Mercado: P = CMP. Ótimo: P = CMS. Externalidade negativa → produz-se demais; positiva → produz-se de menos.' },
+{ id: 'e-coase', t: 'ext', title: 'Solução 1: negociação privada',
+  html: `<p>Para negociar é preciso que os <b>direitos de propriedade</b> sobre a externalidade estejam atribuídos por lei (o direito de poluir, ou o direito a ar limpo).</p>
+  <p>Na ausência de <b>custos de transação</b>, a negociação privada leva a uma alocação <b>Pareto-eficiente</b>, <b>independentemente de qual parte tem os direitos</b> (teorema de Coase). Pode ser mais eficaz do que o Governo, porque as partes têm mais informação.</p>
+  <p>No exemplo (P = 340, CMP = 100 + 2Q, CMS = 100 + 3Q), reduzir de 120 para 80:</p>
+  <ul><li><b>Lucro perdido</b> pela empresa = área entre P e CMP de 80 a 120 = 40 × 80 / 2 = <b>1600 €</b>. É a <b>oferta mínima</b> que a empresa aceita.</li>
+  <li><b>Ganho para os afetados</b> = custo externo evitado = área entre CMS e CMP de 80 a 120 = <b>4000 €</b>. É o <b>máximo</b> que pagariam.</li>
+  <li><b>Ganho social líquido</b> = 4000 − 1600 = <b>2400 €</b>. Não depende do valor pago: o pagamento só reparte o ganho.</li></ul>
+  <p>No gráfico: o triângulo roxo (abaixo de P) é o lucro perdido, 1600; o cinzento (acima de P) é o ganho líquido, 2400; os dois juntos são o custo externo evitado, 4000.</p>
+  <p>A compensação que acaba por acontecer (entre 1600 e 4000) depende do <b>poder de negociação</b> das partes.</p>
+  <p><b>Limitações:</b> custos de transação (obter informação, fazer cumprir o contrato, organizar uma ação coletiva entre muitos afetados) e falta de informação.</p>`,
+  d: deal,
+  key: 'Mínimo aceite = lucro perdido (1600). Máximo pago = custo externo evitado (4000). Ganho líquido = 2400, seja qual for o pagamento.' },
+{ id: 'e-gov', t: 'ext', title: 'Solução 2: políticas do Governo',
+  html: `<ol><li><b>Regulação da produção</b>: um limite (teto) à quantidade, no nível socialmente ótimo.</li>
+  <li><b>Imposto pigouviano</b> (ou subsídio, se a externalidade é positiva): {f:pigou}. O produtor que maximiza o lucro escolhe onde CMP = preço depois do imposto, que é a quantidade ótima. O imposto obriga-o a <b>suportar o custo total</b> das suas decisões. No exemplo: CME em Q = 80 é 80 €, logo t = 80 e 340 − 80 = 260 = 100 + 2Q → Q = 80.</li>
+  <li><b>Compensação</b>: o Governo obriga a empresa a pagar, por unidade, uma indemnização aos afetados igual a CMS − CMP. Os afetados ficam totalmente compensados e a empresa produz a quantidade ótima. Os pescadores ficam <b>melhor do que com o imposto</b>, porque recebem eles o pagamento, em vez do Estado.</li></ol>
+  <p><b>Limitações:</b> <b>informação</b> em falta (o Governo pode não saber o valor certo do dano), <b>medição</b> (difícil saber a quota de cada poluidor) e <b>lobbying</b>.</p>`,
+  d: tax,
+  key: 'Imposto pigouviano = CME no ótimo. Compensação = CMS − CMP pago aos afetados. Limites: informação, medição, lobbying.' },
+
+/* ---------------- AMBIENTE ---------------- */
+{ id: 'a-abate', t: 'env', title: 'Ambiente: quanto reduzir a poluição',
+  html: `<p>O progresso tecnológico e a globalização subiram muito os padrões de vida, mas o crescimento rápido prejudicou o <b>ambiente</b> e os <b>recursos naturais</b> (pesca excessiva, poluição). As alterações climáticas são a maior externalidade negativa.</p>
+  <p>As <b>políticas de redução da poluição</b> (<i>abatement policies</i>) combatem as alterações climáticas, mas o grau de redução escolhido depende de custos e benefícios:</p>
+  <ol><li>do <b>valor que os cidadãos dão ao ambiente</b>;</li>
+  <li>dos <b>custos económicos da redução</b>: custos <b>contabilísticos</b> (investir em tecnologias limpas) + custos de <b>oportunidade</b> (deixar uma atividade mais lucrativa para outra menos poluente).</li></ol>
+  <p><b>Custo de oportunidade</b> = o valor da melhor alternativa de que se abdica ao fazer uma escolha.</p>
+  <p><b>Curva de custo de redução</b> (como a da McKinsey): cada barra é uma tecnologia; a <b>largura</b> é o <b>potencial</b> de redução (Gt de CO₂) e a <b>altura</b> o <b>custo</b> por tonelada reduzida. Começa-se pelas mais baratas por tonelada, mas um potencial pequeno não é razão para nunca adotar uma tecnologia barata.</p>`,
+  key: 'Quanto reduzir depende do valor dado ao ambiente e dos custos (contabilísticos + de oportunidade).' },
+{ id: 'a-polluter', t: 'env', title: 'Poluidor-pagador e conflitos de interesse',
+  html: `<p><b>Princípio do poluidor-pagador</b>: os responsáveis pelos efeitos externos devem pagar pelos danos. Mas os custos da redução <b>não são partilhados por igual</b>, e o princípio <b>nem sempre é a melhor política</b>:</p>
+  <ul><li><b>Justiça</b>: os poluidores podem ser famílias ou países de <b>baixo rendimento</b> (queimar madeira ou cozinhar a carvão por estarem fora da rede elétrica).</li>
+  <li><b>Eficácia</b>: subsídios ou impostos podem sair <b>mais baratos do que rastrear</b> cada poluidor.</li></ul>
+  <p>Os <b>benefícios</b> também não se repartem por igual: ao contrário dos cidadãos, os poluidores podem nunca sofrer a poluição que causam (países ricos exportam lixo, incluindo têxteis e resíduos tóxicos, para países pobres).</p>
+  <p>A repartição dos ganhos da redução depende do <b>poder de negociação</b> de cada grupo, que depende de:</p>
+  <ul><li>informação verificável (conseguir detetar a poluição);</li><li>consenso entre os cidadãos sobre a qualidade ambiental;</li><li>lobby das empresas;</li><li>direito legal de poluir (licenças);</li><li>capacidade de forçar o cumprimento.</li></ul>`,
+  key: 'Poluidor-pagador falha por justiça (poluidores pobres) e eficácia (rastrear sai caro).' },
+{ id: 'a-policies', t: 'env', title: 'Políticas de preço e de quantidade',
+  html: `<p>Objetivo: alcançar a redução desejada (ex.: toneladas de CO₂) ao <b>custo mínimo</b>. Dois tipos:</p>
+  <ol><li><b>Políticas baseadas no preço</b>: <b>impostos e subsídios</b> que mudam os preços. Procuram <b>internalizar</b> os efeitos externos das escolhas individuais.</li>
+  <li><b>Políticas baseadas na quantidade</b>: <b>proibições</b> (bans), <b>limites</b> (caps) e regulação.</li></ol>
+  <p><b>Tributar empresas</b>: sem imposto, a tecnologia intensiva em carvão pode ser a mais barata; com um imposto sobre o carvão, a solar passa a ser a mais barata. Os impostos tornam as renováveis relativamente mais lucrativas, tornam a sua adoção <b>necessária para se manter competitivo</b> e criam <b>rendas de inovação</b> que puxam pela inovação privada.</p>
+  <p><b>Tributar consumidores</b>: pode mudar estilos de vida e a valorização dos bens (imposto sobre viagens de avião, carros elétricos vs a gasolina). Os impostos não são só incentivos: são também <b>informação</b> sobre a necessidade de mudar de comportamento.</p>
+  <p>Quando um imposto sobre os voos reduz as viagens de avião, isso é o <b>objetivo</b> da política, não um efeito ineficiente.</p>`,
+  key: 'Preço: impostos e subsídios (internalizar). Quantidade: bans, caps, regulação. Cap and trade junta os dois.' },
+{ id: 'a-cap', t: 'env', title: 'Cap and trade (comércio de licenças)',
+  html: `<p>Os efeitos ambientais externos surgem porque <b>falta um mercado</b> para a poluição. O <b>cap and trade</b> cria um mercado de licenças de emissão:</p>
+  <ul><li>O Governo fixa um <b>limite</b> (cap) à poluição e cria licenças suficientes para esse limite (a ideia é <b>baixar o cap</b> ao longo do tempo).</li>
+  <li>Aloca as licenças (ex.: <b>leilão</b>) e as empresas <b>compram e vendem</b> entre si (trade). À medida que o cap desce, o preço das licenças sobe.</li>
+  <li>É uma política <b>combinada</b>: quantidade (o cap) e preço (o mercado de licenças).</li></ul>
+  <p><b>Quem reduz?</b> As empresas têm tecnologias diferentes. O objetivo é que a redução seja feita por quem a faz <b>mais barato</b>. A empresa com custo marginal de redução <b>menor reduz mais</b> e vende licenças à que reduz caro, até {f:cap}. Esse é o preço de equilíbrio das licenças, e o resultado é Pareto-eficiente.</p>
+  <p>Exemplo (no gráfico, a = toneladas que A reduz; B reduz o resto): reduzir 30 t no total; CMgR_A = 2·(redução de A), CMgR_B = 4·(redução de B). Igualando, 2a = 4(30 − a) → <b>A reduz 20 t, B reduz 10 t</b>, licença a <b>40 €/t</b>. Partindo de 15/15 (A a 30 €, B a 60 €), B paga a A para reduzir mais.</p>
+  <p><b>Limitações:</b> é difícil escolher o cap certo; pôr preço na poluição pode mandar o sinal errado (tornar a poluição “lucrativa”). O <b>EU-ETS</b> teve um cap demasiado alto: depois da crise de 2008 (muitas licenças, pouca procura de energia) o preço caiu e quase não havia incentivo a reduzir. Um <b>preço mínimo</b> (price floor) atenua o problema.</p>`,
+  d: cap,
+  key: 'Menor custo marginal de redução → reduz mais. Troca-se até os custos marginais serem iguais ao preço da licença.' },
+{ id: 'a-challenges', t: 'env', title: 'Porque é difícil combater as alterações climáticas',
+  html: `<ol><li>As pessoas podem <b>valorizar mais os aspetos económicos</b> do que o ambiente (falta de informação adequada, conflitos de interesse).</li>
+  <li>As <b>gerações futuras</b> estão sub-representadas, ou nem estão: quanto devemos valorizar os custos e benefícios que as nossas ações têm para elas? É o <b>desconto intertemporal</b>.</li>
+  <li>Exige <b>cooperação internacional</b>, que tem a estrutura de um <b>dilema do prisioneiro</b>.</li></ol>
+  <p><b>Dilema do desconto</b>: um custo B daqui a t anos vale hoje {f:pv}. Com r = 5%, um dano de 1 000 000 € daqui a 100 anos vale hoje cerca de 7 600 € (1,05¹⁰⁰ ≈ 131,5); com r = 1%, cerca de 370 000 € (1,01¹⁰⁰ ≈ 2,70). A escolha de r decide se vale a pena agir já. Quem usa uma taxa alta argumenta, muitas vezes, que o <b>progresso tecnológico</b> tornará as gerações futuras mais ricas e a redução mais barata; quem usa uma taxa baixa diz que não é justo dar menos peso às gerações futuras.</p>`,
+  key: 'Três desafios: economia vs ambiente, gerações futuras (desconto) e cooperação internacional (dilema do prisioneiro).' },
+{ id: 'a-dilemma', t: 'env', title: 'Dilema do prisioneiro e dilemas sociais',
+  html: `<p>O <b>dilema do prisioneiro</b> mostra um conflito entre o interesse privado e o do grupo: cada jogador segue o seu interesse e o equilíbrio é <b>“mau”</b>, pior para todos do que se cooperassem.</p>
+  <p>Exemplo climático (ganhos de cada país; cada um escolhe reduzir ou não):</p>
+  <div class="tbl-wrap"><table><tr><th></th><th>B reduz</th><th>B não reduz</th></tr>
+  <tr><th>A reduz</th><td>A: 3, B: 3</td><td>A: 0, B: 4</td></tr>
+  <tr><th>A não reduz</th><td>A: 4, B: 0</td><td><b>A: 1, B: 1</b></td></tr></table></div>
+  <p>Faça B o que fizer, A ganha mais em <b>não reduzir</b> (4 &gt; 3 e 1 &gt; 0), e o mesmo para B: é a <b>estratégia dominante</b>. O equilíbrio é (não reduz, não reduz) com 1 cada, pior do que (3, 3) se ambos reduzissem.</p>
+  <p><b>Dilema social</b>: ações tomadas de forma independente, cada um no seu interesse, dão um resultado <b>socialmente subótimo</b>, porque ninguém tem totalmente em conta os efeitos sobre os outros. Exemplos:</p>
+  <ul><li><b>Tragédia dos comuns</b>: recursos comuns sobre-explorados;</li>
+  <li><b>Free riding</b>: um suporta os custos enquanto todos desfrutam dos benefícios.</li></ul>`,
+  key: 'Dilema do prisioneiro: a estratégia dominante de cada um leva a um equilíbrio pior para todos.' },
+]);
+})();
+
+/* --- courses/ieco/questions/mkt.js --- */
+STUDY.questions('ieco', [
+{ id: 'mkt-01', t: 'mkt', l: 1, les: 'm-econ',
+  q: 'Segundo a definição usada na cadeira (CORE), a Economia é o estudo de…',
+  o: ['como o Governo fixa os preços dos bens essenciais à população', 'como as pessoas interagem entre si e com o ambiente ao produzir a sua subsistência', 'como as empresas maximizam o lucro nos mercados financeiros globais', 'como o dinheiro circula entre os bancos comerciais e o banco central'], a: 1,
+  e: 'A Economia estuda **como as pessoas interagem umas com as outras e com o seu ambiente, na produção dos seus meios de subsistência**. Lucro, preços e bancos são partes do tema, não a definição.' },
+{ id: 'mkt-02', t: 'mkt', l: 1, les: 'm-econ',
+  q: 'Qual é a diferença entre um sistema económico e um sistema político?',
+  o: ['O económico é a democracia ou a ditadura; o político é o mercado', 'O económico organiza a produção; o político organiza o poder', 'São a mesma coisa, estudada por disciplinas diferentes', 'O político decide os preços; o económico decide as leis'], a: 1,
+  e: 'Um **sistema económico** é a forma de organizar a economia (quem produz, como, para quem). É **diferente** do sistema político (democracia, ditadura…).' },
+{ id: 'mkt-03', t: 'mkt', l: 1, les: 'm-econ',
+  q: 'No fluxo circular da economia, o que recebem as famílias das empresas?',
+  o: ['Impostos e gastos públicos do Estado', 'Pagamentos por exportações de bens', 'Salários, lucros e outros rendimentos', 'Gastos com consumo de bens e serviços'], a: 2,
+  e: 'As famílias fornecem trabalho e capital e recebem **salários, lucros, etc.** Em sentido contrário, gastam em **consumo** junto das empresas.' },
+{ id: 'mkt-04', t: 'mkt', l: 2, les: 'm-econ',
+  q: 'No fluxo circular, em que sentido vão os pagamentos por exportações?',
+  o: ['Das empresas para o resto do mundo', 'Do resto do mundo para as empresas', 'Do Governo para o resto do mundo', 'Das famílias para o Governo'], a: 1,
+  e: 'Exportar é vender ao estrangeiro: o dinheiro **entra**, do resto do mundo para as empresas. Nas importações é o contrário.' },
+{ id: 'mkt-05', t: 'mkt', l: 1, les: 'm-market',
+  q: 'Quais são as três principais instituições de uma economia de mercado?',
+  o: ['Governo central, bancos e sindicatos', 'Propriedade privada, mercados e empresas', 'Moeda, sistema fiscal e tribunais', 'Famílias, cooperativas e o Estado'], a: 1,
+  e: 'As principais instituições económicas de uma economia de mercado são a **propriedade privada**, os **mercados** e as **empresas**.' },
+{ id: 'mkt-06', t: 'mkt', l: 2, les: 'm-market',
+  q: 'Um bem é propriedade privada quando o seu detentor…',
+  o: ['o usa todos os dias sem o partilhar', 'pode excluir outros do seu uso e trocá-lo', 'pagou impostos sobre a sua compra', 'o recebeu por herança ou por doação'], a: 1,
+  e: 'Propriedade privada = o detentor tem o **direito de excluir** outros da utilização **e de o trocar**. Como foi obtido ou se é usado não interessa.' },
+{ id: 'mkt-07', t: 'mkt', l: 2, les: 'm-market',
+  q: 'Porque é que pagar impostos não é uma troca de mercado?',
+  o: ['Porque os impostos são pagos ao Estado e não a empresas', 'Porque não é uma transferência diretamente recíproca e voluntária', 'Porque não há propriedade privada sobre o dinheiro dos impostos', 'Porque o valor pago não depende do preço de nenhum bem'], a: 1,
+  e: 'Num mercado há **transferências diretamente recíprocas, para benefício mútuo**. No imposto pagas sem receber em troca um bem específico, e não é voluntário (tal como o roubo, embora este seja ilegítimo).' },
+{ id: 'mkt-08', t: 'mkt', l: 1, les: 'm-market',
+  q: 'Qual destes é um bem de capital?',
+  o: ['As horas de trabalho de um engenheiro', 'Uma máquina de uma fábrica de pão', 'A farinha usada para fazer pão', 'O pão vendido ao consumidor'], a: 1,
+  e: 'Bens de capital: recursos para produzir que **não são mão-de-obra**, são **duráveis** e têm custo (equipamentos, edifícios). A farinha gasta-se toda (não é durável) e o trabalho é mão-de-obra.' },
+{ id: 'mkt-09', t: 'mkt', l: 2, les: 'm-market',
+  q: 'Numa economia de mercado, quem contrata a mão-de-obra para produzir bens e serviços?',
+  o: ['O Governo, através do planeamento central', 'Os proprietários privados dos bens de capital', 'Os consumidores, que encomendam diretamente', 'Os sindicatos, em nome dos trabalhadores'], a: 1,
+  e: 'Os **proprietários privados de bens de capital** contratam mão-de-obra para produzir bens e serviços para **venda nos mercados**, com o objetivo de **lucro**.' },
+{ id: 'mkt-10', t: 'mkt', l: 2, les: 'm-firms',
+  q: 'Porque é que uma cooperativa não é uma empresa, no sentido usado na cadeira?',
+  o: ['Porque não vende nada do que produz no mercado', 'Porque não contrata mão-de-obra: trabalham os membros', 'Porque os seus bens de capital são propriedade pública', 'Porque a lei a proíbe de ter qualquer lucro'], a: 1,
+  e: 'Na cooperativa **o trabalho é feito pelos membros**, não por mão-de-obra contratada. Pode vender no mercado e o capital não é público.' },
+{ id: 'mkt-11', t: 'mkt', l: 2, les: 'm-firms',
+  q: 'Um agricultor cultiva a sua horta sozinho e vende os legumes na feira. Porque não é uma empresa?',
+  o: ['Porque não contrata ninguém', 'Porque não procura lucro', 'Porque a terra é propriedade pública', 'Porque não vende no mercado'], a: 0,
+  e: 'É **produção individual**: vende no mercado e pode ter lucro, mas **não contrata terceiros**, que é um dos traços da empresa.' },
+{ id: 'mkt-12', t: 'mkt', l: 3, les: 'm-firms',
+  q: 'Uma escola pública não é uma empresa. Qual a razão certa?',
+  o: ['Porque os professores não são contratados, são nomeados', 'Porque não visa lucro e o capital é propriedade pública', 'Porque presta um serviço em vez de produzir bens', 'Porque não cobra propinas aos alunos que a frequentam'], a: 1,
+  e: 'É um **órgão governamental**: o objetivo **não é o lucro** e os bens de capital **são propriedade pública**. Os professores são contratados.' },
+{ id: 'mkt-13', t: 'mkt', l: 3, les: 'm-firms',
+  q: 'Uma ONG contrata funcionários e usa edifícios próprios, mas distribui refeições de graça. Porque não é uma empresa?',
+  o: ['Porque contrata funcionários a tempo parcial', 'Porque os edifícios são de propriedade privada', 'Porque o objetivo não é o lucro nem vender no mercado', 'Porque os funcionários são membros da organização'], a: 2,
+  e: 'É uma **organização sem fins lucrativos**: contrata e tem capital privado, mas **não visa lucro** nem vende o que produz no mercado.' },
+{ id: 'mkt-14', t: 'mkt', l: 1, les: 'm-limits',
+  q: 'Qual destas NÃO é uma das limitações da economia de mercado referidas nas aulas?',
+  o: ['Desigualdade na distribuição do rendimento', '(In)sustentabilidade ambiental', 'Falhas de mercado, como externalidades', 'Excesso de intervenção do Governo nos preços'], a: 3,
+  e: 'As limitações referidas são a **desigualdade**, a **(in)sustentabilidade ambiental** e as **falhas de mercado** (ex.: externalidades). A intervenção do Governo aparece como **resposta** a estas limitações, não como uma delas.' },
+{ id: 'mkt-15', t: 'mkt', l: 3, les: 'm-limits',
+  q: 'Uma fábrica polui um rio e os pescadores perdem rendimento, sem que isso entre no preço do produto. Que limitação é esta?',
+  o: ['Uma desigualdade de rendimento', 'Uma falha de mercado (externalidade)', 'Um imposto sobre os produtores', 'Uma escassez de oferta no mercado'], a: 1,
+  e: 'Um efeito sobre terceiros que **não passa pelo preço** é uma **externalidade negativa**, uma falha de mercado (ineficiência económica). Também é um problema ambiental.' },
+]);
+
+/* --- courses/ieco/questions/sd.js --- */
+(() => {
+// D: P = 10 − 0,5Q and S: P = 2 + 0,5Q (Q* = 8, P* = 6)
+const D = [[0, 10], [20, 0]], S = [[0, 2], [18, 11]];
+const base = { sd: { r: [20, 12], ln: [{ n: 'D', p: D, c: 'd' }, { n: 'S', p: S, c: 's' }], g: [[8, 6]], pt: [{ q: 8, p: 6, l: 'E' }] } };
+STUDY.questions('ieco', [
+{ id: 'sd-01', t: 'sd', l: 1, les: 's-demand',
+  q: 'O que representa a curva da procura?',
+  o: ['A disposição a aceitar dos vendedores', 'A disposição a pagar dos consumidores', 'O custo marginal das empresas', 'A receita total do mercado'], a: 1,
+  e: 'A curva da procura dá a quantidade que os consumidores desejam comprar a cada preço: representa a **disposição a pagar**. A disposição a aceitar é a oferta.' },
+{ id: 'sd-02', t: 'sd', l: 1, les: 's-supply',
+  q: 'O que representa a curva da oferta?',
+  o: ['A disposição a pagar dos consumidores pelo bem', 'A quantidade que os consumidores querem a cada preço', 'A quantidade que as empresas querem produzir a cada preço', 'O preço máximo que o Governo fixa para o bem'], a: 2,
+  e: 'Curva da oferta = **quantidade total que as empresas estão dispostas a produzir a cada preço**, ou seja, a disposição a aceitar dos vendedores.' },
+{ id: 'sd-03', t: 'sd', l: 1, les: 's-eq',
+  q: 'O que acontece ao preço de equilíbrio (market-clearing price)?',
+  o: ['A quantidade oferecida é igual à procurada', 'O excedente do consumidor é igual ao do produtor', 'O preço é igual ao custo marginal mais baixo', 'A receita das empresas é a máxima possível'], a: 0,
+  e: 'Ao preço de equilíbrio a **oferta é igual à procura**: o mercado “limpa”. Qualquer outro preço não é equilíbrio.' },
+{ id: 'sd-04', t: 'sd', l: 1, les: 's-eq',
+  q: 'Se o preço estiver acima do preço de equilíbrio P*, o que há?',
+  o: ['Escassez de oferta', 'Excesso de oferta', 'Equilíbrio de mercado', 'Excesso de procura'], a: 1,
+  e: 'Acima de P* as empresas querem vender mais do que os consumidores compram: **excesso de oferta**. O preço tende a descer.' },
+{ id: 'sd-05', t: 'sd', l: 1, les: 's-eq',
+  q: 'Se o preço estiver abaixo do preço de equilíbrio P*, o que há?',
+  o: ['Excesso de oferta', 'Equilíbrio de mercado', 'Escassez de oferta', 'Carga excedente'], a: 2,
+  e: 'Abaixo de P* procura-se mais do que se oferece: **escassez de oferta** (excesso de procura). O preço tende a subir.' },
+{ id: 'sd-06', t: 'sd', l: 2, les: 's-eq', calc: true,
+  q: 'A procura é P = 10 − 0,5Q e a oferta é P = 2 + 0,5Q. Qual é o equilíbrio?',
+  o: ['Q* = 6, P* = 7', 'Q* = 8, P* = 6', 'Q* = 10, P* = 5', 'Q* = 12, P* = 4'], a: 1,
+  e: 'Igualando: 10 − 0,5Q = 2 + 0,5Q → 8 = Q → **Q* = 8**. P* = 10 − 0,5 × 8 = **6**. Confirma na oferta: 2 + 4 = 6.' },
+{ id: 'sd-07', t: 'sd', l: 2, les: 's-eq', calc: true, d: base,
+  q: 'No gráfico, a procura é P = 10 − 0,5Q e a oferta é P = 2 + 0,5Q. Ao preço P = 8, o que se passa?',
+  o: ['Escassez de 8 unidades', 'Excesso de oferta de 8 unidades', 'Excesso de oferta de 4 unidades', 'Equilíbrio com 8 unidades'], a: 1,
+  e: 'A P = 8: procura 10 − 0,5Q = 8 → Q = 4; oferta 2 + 0,5Q = 8 → Q = 12. Oferecem-se 12 e procuram-se 4: **excesso de oferta de 8**.' },
+{ id: 'sd-08', t: 'sd', l: 3, les: 's-eq', calc: true,
+  q: 'A procura é P = 10 − 0,5Q e a oferta é P = 2 + 0,5Q. Se o preço ficar fixo em 4, quantas unidades se transacionam de facto?',
+  o: ['12 unidades, a quantidade procurada', '8 unidades, a quantidade de equilíbrio', '4 unidades, a quantidade oferecida', '0 unidades, porque não há equilíbrio'], a: 2,
+  e: 'A P = 4: procura Q = 12, oferta Q = 4. Há escassez, e só se vende o que os produtores aceitam vender: **4 unidades** (a menor das duas).' },
+{ id: 'sd-09', t: 'sd', l: 2, les: 's-shift',
+  q: 'Se o preço de um bem baixa e se compra mais desse bem, o que aconteceu à curva da procura?',
+  o: ['Deslocou-se toda para a direita', 'Deslocou-se toda para a esquerda', 'Houve um movimento ao longo da curva', 'Ficou mais elástica do que antes'], a: 2,
+  e: 'Mudar o **preço do próprio bem** faz um **movimento ao longo** da curva. A curva só se desloca quando muda outro fator (rendimento, outros preços, gostos…).' },
+{ id: 'sd-10', t: 'sd', l: 2, les: 's-shift',
+  q: 'Uma nova tecnologia torna mais barato produzir pão. Que efeito tem no mercado do pão?',
+  o: ['A procura sobe; preço e quantidade sobem', 'A oferta sobe; o preço desce e a quantidade sobe', 'A oferta desce; o preço sobe e a quantidade desce', 'A procura desce; preço e quantidade descem'], a: 1,
+  e: 'Exemplo das aulas: a **oferta aumenta** (curva para a direita); ao preço antigo há excesso de oferta e o **preço desce** até ao novo equilíbrio, com **mais quantidade** (movimento ao longo da procura).' },
+{ id: 'sd-11', t: 'sd', l: 2, les: 's-shift',
+  q: 'Há uma escassez mundial de semicondutores. O que acontece no mercado de automóveis elétricos?',
+  o: ['A procura contrai e o preço desce', 'A oferta contrai e o preço sobe', 'A procura expande e o preço sobe', 'A oferta expande e o preço desce'], a: 1,
+  e: 'Uma matéria-prima mais escassa aumenta o **custo de produção**: a **oferta** contrai (para a esquerda), o preço sobe e a quantidade desce. A procura não muda.' },
+{ id: 'sd-12', t: 'sd', l: 3, les: 's-shift',
+  q: 'O café e o açúcar são complementares. O preço do café dispara. O que se espera no mercado do açúcar?',
+  o: ['A oferta de açúcar desloca-se para a direita', 'A procura de açúcar desloca-se para a direita', 'A procura de açúcar desloca-se para a esquerda', 'A oferta de açúcar desloca-se para a esquerda'], a: 2,
+  e: 'Café mais caro → bebe-se menos café → precisa-se de menos açúcar: a **procura de açúcar desloca-se para a esquerda** (preço e quantidade do açúcar descem).' },
+{ id: 'sd-13', t: 'sd', l: 3, les: 's-shift',
+  q: 'Num mercado, as empresas têm lucros elevados (rendas económicas) e entrar no setor é barato. O que é de esperar?',
+  o: ['Entram empresas e a oferta desloca-se para a direita', 'Saem empresas e a oferta desloca-se para a esquerda', 'A procura desloca-se para a direita', 'O preço sobe até as rendas aumentarem'], a: 0,
+  e: 'Rendas económicas e custos de entrada baixos tornam **atrativo entrar**. Com mais empresas a **oferta desloca-se para a direita**, o preço desce e as rendas encolhem.' },
+{ id: 'sd-14', t: 'sd', l: 3, les: 's-shift', a: [1, 2],
+  q: 'O que pode deslocar a curva da oferta de um bem?',
+  o: ['Uma descida do preço do próprio bem', 'Uma melhoria na tecnologia de produção', 'A saída de empresas do mercado', 'Um aumento do rendimento dos consumidores'],
+  e: 'Tecnologia e **entrada/saída de empresas** deslocam a oferta. O preço do próprio bem é um movimento ao longo da curva; o rendimento dos consumidores mexe na **procura**.' },
+{ id: 'sd-15', t: 'sd', l: 4, les: 's-shift',
+  q: 'Num ano, o preço de equilíbrio de um bem desceu e a quantidade transacionada subiu. Qual é a explicação mais simples?',
+  o: ['A procura contraiu', 'A oferta expandiu', 'A oferta contraiu', 'A procura expandiu'], a: 1,
+  e: 'Preço ↓ com quantidade ↑ é o sinal de uma **expansão da oferta**. Uma contração da procura baixaria o preço mas **também** a quantidade.' },
+{ id: 'sd-16', t: 'sd', l: 4, les: 's-shift',
+  q: 'A pandemia fez muita gente trabalhar em casa, e a procura de computadores portáteis subiu muito. Que efeito de curto prazo se espera?',
+  o: ['Preço e quantidade descem', 'O preço sobe e a quantidade desce', 'Preço e quantidade sobem', 'O preço desce e a quantidade sobe'], a: 2,
+  e: 'Choque exógeno na **procura** (para a direita): ao preço antigo há escassez, o preço sobe e as empresas produzem mais, num movimento ao longo da oferta. **P ↑, Q ↑**.' },
+]);
+})();
+
+/* --- courses/ieco/questions/surp.js --- */
+(() => {
+const D = [[0, 10], [20, 0]], S = [[0, 2], [18, 11]];
+const shaded = { sd: { r: [20, 12], a: [{ p: [[0, 10], [8, 6], [0, 6]], c: 'cs', l: 'A' }, { p: [[0, 6], [8, 6], [0, 2]], c: 'ps', l: 'B' }], ln: [{ n: 'D', p: D, c: 'd' }, { n: 'S', p: S, c: 's' }], g: [[8, 6]], pt: [{ q: 8, p: 6, l: 'E' }] } };
+STUDY.questions('ieco', [
+{ id: 'surp-01', t: 'surp', l: 1, les: 'p-surplus',
+  q: 'O excedente do consumidor é a diferença total entre…',
+  o: ['o preço e o custo marginal', 'a disposição a pagar e o preço', 'a receita e os custos fixos', 'a disposição a aceitar e a pagar'], a: 1,
+  e: 'EC = soma, para cada comprador, de **disposição a pagar − preço**. No gráfico é a área entre a procura e o preço.' },
+{ id: 'surp-02', t: 'surp', l: 1, les: 'p-surplus',
+  q: 'O excedente do produtor é a diferença total entre…',
+  o: ['o preço e o custo marginal', 'a disposição a pagar e o preço', 'o lucro e os impostos', 'a receita e o custo total'], a: 0,
+  e: 'EP = soma de **preço − custo marginal** (o preço mínimo que cada fornecedor aceita). No gráfico é a área entre o preço e a oferta.' },
+{ id: 'surp-03', t: 'surp', l: 1, les: 'p-surplus',
+  q: 'O que mede o excedente total (EC + EP)?',
+  o: ['A receita fiscal total do Governo no mercado', 'Os ganhos totais do comércio para a sociedade', 'O lucro das empresas depois de pagos os impostos', 'O valor total de tudo o que é produzido num país'], a: 1,
+  e: 'Excedente total = EC + EP = **ganhos totais do comércio** para a sociedade (compradores e vendedores juntos).' },
+{ id: 'surp-04', t: 'surp', l: 1, les: 'p-profit',
+  q: 'O que é o custo marginal?',
+  o: ['O custo total a dividir pelas unidades', 'O custo de produzir uma unidade adicional', 'O custo dos edifícios e equipamentos', 'O custo mínimo de entrar no mercado'], a: 1,
+  e: 'Custo marginal = custo de **uma unidade adicional**. É diferente do custo total e do custo médio.' },
+{ id: 'surp-05', t: 'surp', l: 2, les: 'p-profit',
+  q: 'Qual é a relação entre o lucro e o excedente do produtor?',
+  o: ['Lucro = EP + custos fixos', 'Lucro = EP − custos fixos', 'Lucro = EP − custo marginal', 'Lucro = EC + EP'], a: 1,
+  e: '**Lucro = EP − custos fixos**. O EP já desconta os custos marginais (variáveis); faltam os custos fixos.' },
+{ id: 'surp-06', t: 'surp', l: 2, les: 'p-surplus', d: shaded,
+  q: 'No gráfico (procura D, oferta S, equilíbrio E), que áreas são o excedente do consumidor (A) e o do produtor (B)?',
+  o: ['A é o EP e B é o EC', 'A é o EC e B é o EP', 'A e B são a carga excedente', 'A é a receita e B é o EP'], a: 1,
+  e: 'O **EC** fica **entre a procura e o preço** (acima de P*): A. O **EP** fica **entre o preço e a oferta** (abaixo de P*): B.' },
+{ id: 'surp-07', t: 'surp', l: 2, les: 'p-surplus', calc: true,
+  q: 'A procura é P = 12 − Q e a oferta é P = Q; o equilíbrio é Q* = 6, P* = 6. Qual é o excedente do consumidor?',
+  o: ['9 €', '18 €', '36 €', '12 €'], a: 1,
+  e: 'Triângulo entre a procura (que começa em P = 12) e o preço 6, até Q = 6: {f:cs|EC = 6 × (12 − 6) / 2} = **18 €**.' },
+{ id: 'surp-08', t: 'surp', l: 2, les: 'p-surplus', calc: true,
+  q: 'A procura é P = 12 − Q e a oferta é P = Q; o equilíbrio é Q* = 6, P* = 6. Qual é o excedente total?',
+  o: ['18 €', '24 €', '36 €', '72 €'], a: 2,
+  e: 'EC = 6 × (12 − 6) / 2 = 18 € e EP = 6 × (6 − 0) / 2 = 18 €. **Excedente total = 36 €**: o triângulo inteiro entre as duas curvas, até Q*. (72 € é esquecer o “/ 2”.)' },
+{ id: 'surp-09', t: 'surp', l: 3, les: 'p-surplus', calc: true,
+  q: 'A procura é P = 20 − Q e a oferta é P = 5 + 0,5Q. Qual é o excedente do produtor no equilíbrio?',
+  o: ['25 €', '50 €', '75 €', '100 €'], a: 0,
+  e: 'Equilíbrio: 20 − Q = 5 + 0,5Q → 1,5Q = 15 → **Q* = 10**, P* = 10. EP = 10 × (10 − 5) / 2 = **25 €**. (EC = 10 × 10 / 2 = 50 €.)' },
+{ id: 'surp-10', t: 'surp', l: 3, les: 'p-profit', calc: true,
+  q: 'Uma empresa tem custo unitário de 60 € e a sua procura é: Q = 300 a 210 €, Q = 400 a 180 €, Q = 500 a 150 €, Q = 600 a 120 €. Que quantidade maximiza o lucro?',
+  o: ['300 unidades', '400 unidades', '500 unidades', '600 unidades'], a: 1,
+  e: 'Lucro = (P − 60) × Q: 300 → 150 × 300 = 45 000; **400 → 120 × 400 = 48 000**; 500 → 90 × 500 = 45 000; 600 → 60 × 600 = 36 000. Máximo em **Q = 400**.',
+  src: 'Caderno 1.1.a (adaptado)' },
+{ id: 'surp-11', t: 'surp', l: 3, les: 'p-profit', calc: true,
+  q: 'Uma empresa com custo unitário de 60 € vende 800 unidades ao preço de 60 €, ou 900 unidades ao preço de 30 €. Que afirmação é verdadeira?',
+  o: ['Tem prejuízo nos dois casos', 'Com 800 o lucro é zero; com 900 há prejuízo', 'Tem lucro positivo nos dois casos', 'Com 800 há prejuízo; com 900 o lucro é zero'], a: 1,
+  e: 'A 800: (60 − 60) × 800 = **0** (nem lucro nem prejuízo). A 900: (30 − 60) × 900 = −27 000 → prejuízo. Por isso “prejuízo a partir de 800” é **falso**.',
+  src: 'Caderno 1.1.b (adaptado)' },
+{ id: 'surp-12', t: 'surp', l: 4, les: 'p-surplus',
+  q: 'Porque é que, num mercado concorrencial, produzir mais do que Q* reduz o excedente total?',
+  o: ['Porque o preço sobe para todos os consumidores', 'Porque essas unidades custam mais do que valem para quem compra', 'Porque o Governo cobra mais impostos sobre elas', 'Porque o excedente do consumidor passa a ser negativo'], a: 1,
+  e: 'Além de Q*, a oferta (custo marginal) está **acima** da procura (disposição a pagar): cada unidade extra custa mais do que vale, e o excedente total diminui. No equilíbrio ele é máximo.' },
+]);
+})();
+
+/* --- courses/ieco/questions/tax.js --- */
+(() => {
+const D = [[0, 10], [20, 0]], S = [[0, 2], [18, 11]];
+const taxed = { sd: { r: [20, 12], a: [{ p: [[0, 10], [6, 7], [0, 7]], c: 'cs', l: 'A' }, { p: [[0, 7], [6, 7], [6, 5], [0, 5]], c: 'gov', l: 'B' }, { p: [[0, 5], [6, 5], [0, 2]], c: 'ps', l: 'C' }, { p: [[6, 7], [8, 6], [6, 5]], c: 'dwl', l: 'D' }], ln: [{ n: 'D', p: D, c: 'd' }, { n: 'S', p: S, c: 's' }], g: [[6, 7], [6, 5], [8, 6]] } };
+STUDY.questions('ieco', [
+{ id: 'tax-01', t: 'tax', l: 1, les: 'x-tax',
+  q: 'Um imposto por unidade sobre os produtores desloca que curva, e para onde?',
+  o: ['A procura, para a direita', 'A oferta, para cima (esquerda)', 'A oferta, para baixo (direita)', 'Nenhuma: só muda a receita'], a: 1,
+  e: 'Para cada quantidade os produtores passam a exigir um preço mais alto (o imposto): a **oferta sobe** no valor do imposto, ou seja, desloca-se para a esquerda.' },
+{ id: 'tax-02', t: 'tax', l: 1, les: 'x-welfare',
+  q: 'O que é a carga excedente (deadweight loss) de um imposto?',
+  o: ['A receita que o Governo arrecada', 'A perda de eficiência: trocas que deixam de se fazer', 'O excedente que passa dos consumidores para os produtores', 'O custo administrativo de cobrar o imposto'], a: 1,
+  e: 'A DWL é o **desperdício social**: o excedente das trocas que deixam de acontecer por causa do imposto. Não vai para ninguém.' },
+{ id: 'tax-03', t: 'tax', l: 1, les: 'x-tax',
+  q: 'Historicamente, qual foi o principal motivo dos Governos para cobrar impostos?',
+  o: ['Obter receita', 'Baixar os preços', 'Mudar comportamentos', 'Proteger produtores'], a: 0,
+  e: 'Ao longo da história os Governos usaram os impostos para **obter receita**. Mudar comportamentos (tabaco, açúcar, manteiga na Dinamarca) é um uso mais recente.' },
+{ id: 'tax-04', t: 'tax', l: 2, les: 'x-welfare', d: taxed,
+  q: 'No gráfico há um imposto por unidade (os consumidores pagam 7, os produtores recebem 5). Que área é a receita do Governo?',
+  o: ['A área A', 'A área B', 'A área C', 'A área D'], a: 1,
+  e: 'A receita é **imposto × quantidade**: o retângulo entre 5 e 7 até Q = 6 (B, verde). A é o EC, C o EP, D a carga excedente.' },
+{ id: 'tax-05', t: 'tax', l: 2, les: 'x-welfare', d: taxed,
+  q: 'No gráfico há um imposto por unidade (os consumidores pagam 7, os produtores recebem 5). Que área é a carga excedente?',
+  o: ['A área A', 'A área B', 'A área C', 'A área D'], a: 3,
+  e: 'A carga excedente é o **triângulo entre Q = 6 e Q = 8**, entre as duas curvas (D): o excedente das unidades que deixaram de ser trocadas.' },
+{ id: 'tax-06', t: 'tax', l: 3, les: 'x-tax', calc: true,
+  q: 'A procura é P = 12 − Q e a oferta é P = Q. O Governo cobra 2 € por unidade aos produtores. Qual é a nova quantidade transacionada?',
+  o: ['Q = 4', 'Q = 5', 'Q = 6', 'Q = 7'], a: 1,
+  e: 'A oferta sobe 2: P = Q + 2. Igualando à procura: 12 − Q = Q + 2 → **Q = 5**. Os consumidores pagam 7 e os produtores ficam com 5. (Q = 6 é o equilíbrio sem imposto; 7 é o preço, não a quantidade.)' },
+{ id: 'tax-07', t: 'tax', l: 3, les: 'x-welfare', calc: true,
+  q: 'A procura é P = 12 − Q e a oferta é P = Q. Com um imposto de 2 € por unidade, a quantidade cai de 6 para 5. Qual é a receita fiscal?',
+  o: ['10 €', '12 €', '14 €', '5 €'], a: 0,
+  e: '{f:rev|Receita = t × Q_t}: imposto × quantidade **com** imposto = 2 × 5 = **10 €**. Usar Q = 6 daria 12 €, o erro clássico.' },
+{ id: 'tax-08', t: 'tax', l: 3, les: 'x-welfare', calc: true,
+  q: 'A procura é P = 12 − Q e a oferta é P = Q. Com um imposto de 2 € por unidade, a quantidade cai de 6 para 5. Qual é a carga excedente?',
+  o: ['1 €', '2 €', '4 €', '10 €'], a: 0,
+  e: '{f:dwl|DWL = (Q* − Q_t) × t / 2} = (6 − 5) × 2 / 2 = **1 €**. Verifica: sem imposto o excedente total é 36 €; com imposto EC = 12,5, EP = 12,5, receita = 10 e DWL = 1, que somam 36.' },
+{ id: 'tax-09', t: 'tax', l: 2, les: 'x-elastic',
+  q: 'Quem suporta a maior parte de um imposto (incidência económica)?',
+  o: ['Sempre quem o entrega ao Estado', 'O grupo com menor elasticidade', 'O grupo com maior elasticidade', 'Sempre os consumidores'], a: 1,
+  e: 'A incidência económica depende da **elasticidade relativa**: **quem reage menos ao preço** (menos elástico) não consegue fugir e suporta mais carga.' },
+{ id: 'tax-10', t: 'tax', l: 3, les: 'x-elastic',
+  q: 'A procura de tabaco é muito inelástica. Um imposto sobre os produtores de tabaco vai ser suportado sobretudo por…',
+  o: ['os produtores, porque a lei põe o imposto sobre eles', 'os consumidores, que não reduzem muito o consumo', 'o Governo, que perde receita', 'ninguém, porque a quantidade não muda'], a: 1,
+  e: 'A incidência **legal** está nos produtores, mas a **económica** recai sobre o grupo **menos elástico**: os fumadores aceitam pagar mais, por isso o preço ao consumidor sobe quase o imposto todo.' },
+{ id: 'tax-11', t: 'tax', l: 3, les: 'x-elastic',
+  q: 'Como se relaciona a carga excedente de um imposto com a elasticidade da procura?',
+  o: ['Não há relação nenhuma', 'Quanto mais elástica, maior a carga excedente', 'Quanto mais elástica, menor a carga excedente', 'Só depende da elasticidade da oferta'], a: 1,
+  e: 'A redução do excedente total está **positivamente** relacionada com a elasticidade da procura: se os consumidores reagem muito, desaparecem muitas trocas, e a DWL é maior.' },
+{ id: 'tax-12', t: 'tax', l: 2, les: 'x-use',
+  q: 'Em que caso pode um imposto aumentar o bem-estar social?',
+  o: ['Nunca, porque todo o imposto cria carga excedente', 'Se a receita financiar bens úteis como saúde e educação', 'Só se for cobrado aos consumidores e não às empresas', 'Só se a quantidade transacionada não mudar nada'], a: 1,
+  e: 'Os impostos podem **aumentar o bem-estar** se as receitas forem usadas para fornecer bens e serviços benéficos: educação, saúde, segurança, limpeza dos espaços públicos…' },
+{ id: 'tax-13', t: 'tax', l: 2, les: 'x-use',
+  q: 'Em 2011 a Dinamarca criou um imposto sobre a gordura saturada (cerca de 22% do preço da manteiga). O que aconteceu ao consumo de manteiga?',
+  o: ['Subiu cerca de 5%', 'Não mudou', 'Caiu 15–20%', 'Caiu mais de 50%'], a: 2,
+  e: 'O consumo de manteiga e produtos relacionados **caiu 15–20%**. Em Portugal há exemplos parecidos: imposto sobre bebidas açucaradas e tabaco.' },
+{ id: 'tax-14', t: 'tax', l: 4, les: 'x-use',
+  q: 'Um imposto sobre bebidas açucaradas reduz a quantidade vendida. Em que sentido é diferente de um imposto apenas para obter receita?',
+  o: ['Não cria nenhuma receita fiscal para o Estado', 'A descida do consumo é o próprio objetivo', 'Não desloca a curva da oferta das bebidas', 'É suportado apenas pelos produtores de bebidas'], a: 1,
+  e: 'Aqui o Governo **quer** que se consuma menos (saúde). A redução da quantidade, que noutro imposto seria só carga excedente, é o próprio **objetivo** da política.' },
+]);
+})();
+
+/* --- courses/ieco/questions/fail.js --- */
+/* Chapter 2: public goods, asymmetric information, market power */
+STUDY.questions('ieco', [
+/* ---------------- BENS PÚBLICOS ---------------- */
+{ id: 'pub-01', t: 'pub', l: 1, les: 'f-fail',
+  q: 'O que é uma falha de mercado?',
+  o: ['Um mercado em que o preço fica acima do custo médio', 'Um mercado que aloca recursos de forma Pareto-ineficiente', 'Um mercado em que alguém fica pior com as trocas', 'Um mercado em que o rendimento fica mal distribuído'], a: 1,
+  e: 'Falha de mercado = alocação **Pareto-ineficiente**: seria possível melhorar alguém sem piorar ninguém. A desigualdade é outra limitação do mercado, não a definição de falha.' },
+{ id: 'pub-04', t: 'pub', l: 1, les: 'f-goods',
+  q: 'Qual é a definição de bem público?',
+  o: ['Rival e não exclusivo', 'Não-rival e exclusivo', 'Não-rival e não exclusivo', 'Rival e exclusivo'], a: 2,
+  e: 'Bem público = **não-rival e não exclusivo**: se está disponível para uma pessoa, está para todos sem custo adicional. Rival + não exclusivo é um bem comum.' },
+{ id: 'pub-05', t: 'pub', l: 2, les: 'f-goods',
+  q: 'Uma caixa de sushi comprada num supermercado é…',
+  o: ['rival e exclusiva: um bem privado', 'não-rival e exclusiva: um bem de clube', 'rival e não exclusiva: um bem comum', 'não-rival e não exclusiva: um bem público'], a: 0,
+  e: 'Se eu como o sushi, tu já não o comes (**rival**), e quem não paga não o leva (**exclusivo**): bem privado.', src: 'Caderno 2.5 (adaptado)' },
+{ id: 'pub-06', t: 'pub', l: 2, les: 'f-goods',
+  q: 'O peixe no alto mar, onde qualquer barco pode pescar, é um exemplo de…',
+  o: ['bem público', 'bem comum', 'bem de clube', 'bem privado'], a: 1,
+  e: 'O peixe que um barco apanha já não está para os outros (**rival**), e não se consegue impedir ninguém de pescar (**não exclusivo**): **bem comum**.' },
+{ id: 'pub-07', t: 'pub', l: 2, les: 'f-goods',
+  q: 'Um serviço de streaming cobra uma assinatura, mas mais um utilizador não tira nada aos outros. É um bem…',
+  o: ['público, porque ninguém fica sem ver', 'comum, porque é partilhado por todos', 'de clube (artificialmente escasso)', 'privado, porque é rival e exclusivo'], a: 2,
+  e: 'Não-rival (ver não gasta o filme) mas **exclusivo** (sem assinatura não entras): **bem de clube**, artificialmente escasso. O conhecimento com direitos de propriedade intelectual também.' },
+{ id: 'pub-09', t: 'pub', l: 3, les: 'f-goods',
+  q: 'Um parque público cheio de gente ao domingo, onde já é difícil encontrar lugar, comporta-se como…',
+  o: ['um bem privado, porque há lugares limitados', 'um bem comum, porque passou a ser rival', 'um bem de clube, porque é exclusivo', 'um bem público, em qualquer circunstância'], a: 1,
+  e: 'Vazio, o parque é público. **Congestionado**, o espaço que um usa já falta aos outros (**rival**), mas continua sem exclusão: comporta-se como um **bem comum**. A classificação pode depender do contexto.', src: 'Caderno 2.8.c (adaptado)' },
+{ id: 'pub-10', t: 'pub', l: 3, les: 'f-goods', a: [2],
+  q: 'Quais destas afirmações são verdadeiras?',
+  o: ['Alguns bens públicos são rivais', 'Um bem não pode ser rival e não exclusivo', 'Se um bem é não-rival, o custo de servir mais uma pessoa é 0', 'Todos os bens não exclusivos são bens públicos'],
+  e: 'Bens públicos são **não-rivais** por definição (1.ª falsa). Rival e não exclusivo é um **bem comum** (2.ª falsa). Não-rival → servir mais uma pessoa **não custa nada** (verdadeira). Os bens comuns também são não exclusivos (4.ª falsa).', src: 'Caderno 2.9 (adaptado)' },
+{ id: 'pub-11', t: 'pub', l: 2, les: 'f-free',
+  q: 'Porque é que o mercado, sozinho, tende a fornecer pouco de um bem público como a defesa nacional?',
+  o: ['Porque produzi-lo custa sempre mais do que o valor que tem', 'Porque não se exclui ninguém e cada um espera que outros paguem', 'Porque é rival e se esgota depressa quando muitos o usam', 'Porque os consumidores não lhe dão valor nenhum'], a: 1,
+  e: 'Sem exclusão não há como cobrar: cada um prefere **ir à boleia** (free riding). Por isso costuma ser o **Governo** a fornecê-lo, pago com impostos.', src: 'Caderno 2.6 (adaptado)' },
+{ id: 'pub-12', t: 'pub', l: 2, les: 'f-free',
+  q: 'Sem intervenção, como tendem a ser usados os recursos comuns?',
+  o: ['De forma controlada, porque todos ganham em poupá-los', 'Em excesso: é a tragédia dos comuns', 'Muito pouco, porque ninguém os pode usar', 'Na quantidade eficiente, como qualquer mercado'], a: 1,
+  e: 'Rivais e sem exclusão: cada um usa o máximo antes que os outros gastem, sem contar o custo que impõe aos outros. São **sobre-explorados**: a tragédia dos comuns.', src: 'Caderno 2.7 e 2.19 (adaptado)' },
+/* ---------------- INFORMAÇÃO ASSIMÉTRICA ---------------- */
+{ id: 'info-02', t: 'info', l: 2, les: 'i-lemons',
+  q: 'No mercado dos limões, porque é que os vendedores de carros bons acabam por sair do mercado?',
+  o: ['Porque os carros bons pagam mais impostos na revenda', 'Porque os compradores só pagam o preço da qualidade média', 'Porque os compradores preferem sempre os carros baratos', 'Porque os vendedores de limões baixam os preços'], a: 1,
+  e: 'Sem saber distinguir, os compradores pagam o preço da **qualidade média**, que não chega a quem tem um carro bom. Os bons saem e fica a baixa qualidade: **seleção adversa**.' },
+{ id: 'info-04', t: 'info', l: 2, les: 'i-lemons', a: [0, 1, 3],
+  q: 'Que medidas ajudam a resolver o problema dos limões?',
+  o: ['Garantias dadas pelo vendedor', 'Inspeções independentes', 'Baixar o preço de todos os carros', 'Reputação e avaliações do vendedor'],
+  e: 'Garantias, inspeções, reputação, seguros e regulação **reduzem a assimetria de informação**. Baixar o preço não resolve nada: até agrava a saída dos bons.' },
+{ id: 'info-05', t: 'info', l: 2, les: 'i-banks',
+  q: 'Porque é que os indivíduos de menor rendimento têm muitas vezes acesso limitado ao crédito?',
+  o: ['Porque lhes falta rendimento para pagar quaisquer juros', 'Porque o banco não observa bem o risco de quem pede', 'Porque o banco central proíbe emprestar a quem tem pouco', 'Porque os bancos preferem emprestar ao Estado sem risco'], a: 1,
+  e: 'É **informação assimétrica** no crédito: o banco não observa bem o risco nem o esforço de quem pede, e protege-se recusando ou limitando o crédito. É uma falha do mercado de crédito.' },
+{ id: 'info-06', t: 'info', l: 3, les: 'i-banks',
+  q: 'Que efeito tem a expectativa de que um banco “too big to fail” será resgatado pelo Governo?',
+  o: ['Torna o banco mais prudente nos investimentos', 'Incentiva o banco a tomar decisões mais arriscadas', 'Faz baixar os lucros esperados do banco', 'Elimina os efeitos externos sobre outros bancos'], a: 1,
+  e: 'Se o banco sabe que será salvo, não suporta o custo total de falhar: tem **incentivo a arriscar mais**. Além disso, a falência de um banco tem efeitos externos sobre os bancos que lhe emprestaram.' },
+
+/* ---------------- PODER DE MERCADO ---------------- */
+{ id: 'pow-01', t: 'pow', l: 1, les: 'w-power',
+  q: 'O que é o poder de mercado?',
+  o: ['Ser a única empresa a vender um produto', 'Cobrar acima do custo marginal sem perder todos', 'Produzir com o menor custo de todo o setor', 'Vender mais barato do que todos os concorrentes'], a: 1,
+  e: 'Poder de mercado = capacidade de praticar um **preço acima do custo marginal** sem perder todos os clientes. Não é preciso ser monopólio: oligopólios e concorrência monopolística também têm algum.' },
+{ id: 'pow-02', t: 'pow', l: 2, les: 'w-power',
+  q: 'Porque é que o poder de mercado é uma falha de mercado?',
+  o: ['Porque as empresas com poder passam a ter prejuízo', 'Porque se transaciona menos do que o eficiente', 'Porque a quantidade vendida aumenta demasiado', 'Porque o preço fica abaixo do custo marginal'], a: 1,
+  e: 'Com preço acima do custo marginal, compra-se **menos do que a quantidade eficiente**: há trocas vantajosas que não acontecem, e isso é uma **deadweight loss**.' },
+{ id: 'pow-03', t: 'pow', l: 2, les: 'w-power', a: [0, 1, 3],
+  q: 'Quais destas são fontes de poder de mercado?',
+  o: ['Barreiras legais à entrada, como licenças', 'Economias de escala', 'Muitas empresas a vender o mesmo produto', 'Custos de mudança para o cliente'],
+  e: 'Barreiras à entrada, **economias de escala** (monopólios naturais), **efeitos de rede** e **custos de mudança** dão poder de mercado. Muitas empresas com o mesmo produto é concorrência perfeita.' },
+{ id: 'pow-07', t: 'pow', l: 2, les: 'w-struct',
+  q: 'Muitos restaurantes, cada um com a sua cozinha e o seu estilo, são um exemplo de…',
+  o: ['monopólio natural', 'oligopólio diferenciado', 'concorrência monopolística', 'concorrência perfeita'], a: 2,
+  e: '**Muitas empresas** com **produtos diferenciados**: concorrência monopolística. Muitas com produto idêntico (leite, cereais) seria concorrência perfeita.' },
+{ id: 'pow-09', t: 'pow', l: 1, les: 'w-network',
+  q: 'O que é um efeito externo de rede?',
+  o: ['Cada utilizador ganha mais quanto mais utilizadores houver', 'O custo de produção médio cai à medida que se produz mais', 'A poluição de uma rede elétrica afeta os vizinhos', 'Uma só empresa controla toda a rede de distribuição do bem'], a: 0,
+  e: 'Efeito de rede: **o produto vale mais quanto mais gente o usa** (idiomas, videojogos, redes sociais). O custo a cair com a escala são economias de escala.' },
+{ id: 'pow-10', t: 'pow', l: 3, les: 'w-network',
+  q: 'O Betamax tinha melhor qualidade do que o VHS, mas foi o VHS que dominou. Porquê?',
+  o: ['O VHS chegou com um preço mais baixo do que o Betamax', 'Efeitos de rede: ganha quem tem mais utilizadores', 'O Betamax tinha economias de escala menores', 'O VHS tinha patentes que bloqueavam a concorrência'], a: 1,
+  e: 'Concorrência **“vencedor leva tudo”**: com efeitos de rede, quem ganha utilizadores primeiro fica com o mercado (**lock-in**), mesmo sem ser a melhor tecnologia.' },
+{ id: 'pow-11', t: 'pow', l: 2, les: 'w-matching',
+  q: 'Qual é o “problema do ovo e da galinha” num mercado de matching como o Airbnb?',
+  o: ['Cada grupo só aparece se o outro já lá estiver', 'O preço dos alojamentos sobe sem parar com a procura', 'A plataforma não consegue cobrar comissões a ninguém', 'Os hóspedes sabem mais sobre a casa do que o anfitrião'], a: 0,
+  e: 'Cada grupo só vale a pena se o outro já existir: qual aparece primeiro? Por isso estes mercados ou **colapsam** ou ficam com **poucas e grandes empresas**.' },
+{ id: 'pow-13', t: 'pow', l: 4, les: 'w-matching',
+  q: 'Porque é que os mercados de matching preocupam os reguladores da concorrência depois de formados?',
+  o: ['Porque cobram preço zero a um dos lados do mercado', 'Porque tendem a quase-monopólios difíceis de contestar', 'Porque têm informação assimétrica sobre os utilizadores', 'Porque criam externalidades negativas para os vizinhos'], a: 1,
+  e: 'Depois de formadas, as plataformas têm **rendas de inovação** e o problema do ovo e da galinha **afasta novos concorrentes**: tendem a ser grandes e próximas do monopólio.' },
+]);
+
+/* --- courses/ieco/questions/ext.js --- */
+/* Chapter 2: externalities and the environment */
+(() => {
+// P = 340, CMP = 100 + 2Q, CMS = 100 + 3Q (CME = Q): market Q = 120, optimum Q = 80
+const P = { n: 'P', p: [[0, 340], [160, 340]], c: 'd' }, CMP = { n: 'CMP', p: [[0, 100], [160, 420]], c: 's' }, CMS = { n: 'CMS', p: [[0, 100], [133, 499]], c: 'm' };
+const robots = { sd: { r: [160, 520], ax: ['Q', '$'], ln: [P, CMP, CMS], g: [[80, 340], [120, 340], [80, 260], [120, 460]] } };
+const cap = { sd: { r: [30, 70], ax: ['a', '€/t'], ln: [{ n: 'CMgR A', p: [[0, 0], [30, 60]], c: 'g' }, { n: 'CMgR B', p: [[30, 0], [12.5, 70]], c: 'm' }], g: [[15, 30], [15, 60]] } };
+STUDY.questions('ieco', [
+/* ---------------- EXTERNALIDADES ---------------- */
+{ id: 'ext-01', t: 'ext', l: 1, les: 'e-def',
+  q: 'O que é uma externalidade?',
+  o: ['Um custo que a empresa suporta fora do seu país', 'Um efeito sobre terceiros, fora do contrato e do preço', 'Um custo que o comprador paga além do preço', 'Um benefício que só o comprador do bem recebe'], a: 1,
+  e: 'Externalidade = efeito de uma decisão económica **sobre terceiros**, à margem das transações e **não especificado num contrato**.' },
+{ id: 'ext-02', t: 'ext', l: 1, les: 'e-def', a: [0, 3],
+  q: 'Quais destes são externalidades positivas?',
+  o: ['Abelhas de um apicultor que polinizam o pomar do vizinho', 'O ruído de um aeroporto sobre as casas próximas', 'Pesticidas que contaminam um rio', 'A vacinação, que protege também quem não se vacinou'],
+  e: 'Polinização e vacinação **beneficiam terceiros** sem pagamento: positivas. Ruído e pesticidas impõem custos: negativas.', src: 'Caderno 2.1 (adaptado)' },
+{ id: 'ext-05', t: 'ext', l: 2, les: 'e-cms',
+  q: 'Uma fábrica de robôs perturba o sono dos enfermeiros do dormitório ao lado. Qual das afirmações está correta?',
+  o: ['O custo marginal privado é o custo total diário da fábrica', 'O custo marginal social é só o custo do ruído para os enfermeiros', 'O custo marginal externo inclui o custo da fábrica e o dos enfermeiros', 'O custo total externo é o custo total diário imposto aos enfermeiros'], a: 3,
+  e: 'CMP é o custo de **uma unidade adicional** para a fábrica (não o total). O CMS é fábrica **+** enfermeiros; o CME é só o dos enfermeiros. O **custo total externo** é, de facto, o custo total por dia imposto aos enfermeiros.', src: 'Caderno 2.2 (adaptado)' },
+{ id: 'ext-07', t: 'ext', l: 3, les: 'e-cms',
+  q: 'Um apicultor vende mel a preço constante e as suas abelhas polinizam o pomar do vizinho. Comparado com o ótimo social, o apicultor produz…',
+  o: ['a quantidade ótima, porque o preço é constante', 'mais mel do que o ótimo', 'menos mel do que o ótimo', 'nenhum mel, porque não é pago pela polinização'], a: 2,
+  e: 'Externalidade **positiva**: o benefício marginal social (preço + polinização) é maior do que o privado (preço). O apicultor iguala o custo marginal ao preço e produz **de menos**.', src: 'Caderno 2.4.b (adaptado)' },
+{ id: 'ext-08', t: 'ext', l: 2, les: 'e-cms', calc: true,
+  q: 'Um mercado tem preço P = 340, custo marginal privado CMP = 100 + 2Q e custo marginal externo CME = Q. Que quantidades escolhem o mercado e o ótimo social?',
+  o: ['Mercado 80, ótimo 120', 'Mercado 120, ótimo 80', 'Mercado 120, ótimo 120', 'Mercado 170, ótimo 80'], a: 1,
+  e: 'Mercado: 340 = 100 + 2Q → **Q = 120**. CMS = 100 + 3Q, e o ótimo: 340 = 100 + 3Q → **Q = 80**.' },
+{ id: 'ext-09', t: 'ext', l: 3, les: 'e-coase', calc: true, d: robots,
+  q: 'Uma fábrica vende robôs a $340 e produz Q = 120, com CMP = 100 + 2Q; o eficiente seria Q = 80. Qual é o mínimo que a fábrica aceita receber para baixar para Q = 80?',
+  o: ['$1 600', '$2 400', '$4 000', '$800'], a: 0,
+  e: 'O mínimo é o **lucro perdido**: a área entre o preço e o CMP de 80 a 120. Em Q = 80 o CMP é 260, a altura é 340 − 260 = 80: 40 × 80 / 2 = **$1 600**.', src: 'Caderno 2.3.a (adaptado)' },
+{ id: 'ext-10', t: 'ext', l: 3, les: 'e-coase', calc: true, d: robots,
+  q: 'Uma fábrica produz Q = 120 e impõe aos enfermeiros um custo marginal externo CME = Q (CMP = 100 + 2Q, CMS = 100 + 3Q). Qual é o máximo que os enfermeiros pagariam para a produção baixar para Q = 80?',
+  o: ['$1 600', '$2 400', '$4 000', '$6 400'], a: 2,
+  e: 'É o **custo externo evitado**: a área entre CMS e CMP de 80 a 120. A altura vai de 80 (em Q = 80) a 120 (em Q = 120): 40 × (80 + 120) / 2 = **$4 000**.', src: 'Caderno 2.3.b (adaptado)' },
+{ id: 'ext-11', t: 'ext', l: 4, les: 'e-coase',
+  q: 'Os enfermeiros pagam à fábrica para baixar a produção para o nível eficiente. De que depende o ganho social líquido desta redução?',
+  o: ['Do montante exato que os enfermeiros pagam à fábrica', 'Do custo externo evitado menos o lucro perdido', 'Do número de enfermeiros que contribuem para pagar', 'Do preço que a fábrica cobra pelos robôs depois do acordo'], a: 1,
+  e: 'Ganho líquido = custo externo evitado − lucro perdido (no caderno: 4000 − 1600 = 2400). O **pagamento só reparte** esse ganho entre as partes; não o muda.', src: 'Caderno 2.3.d (adaptado)' },
+{ id: 'ext-14', t: 'ext', l: 2, les: 'e-gov',
+  q: 'Qual deve ser o valor de um imposto pigouviano sobre uma empresa poluidora?',
+  o: ['O lucro total da empresa', 'O custo marginal externo no ótimo social', 'O custo marginal privado no equilíbrio', 'A receita total de que o Governo precisa'], a: 1,
+  e: '{f:pigou}. Assim a empresa produz onde CMP = P − t, que é a quantidade socialmente ótima: passa a suportar o custo total das suas decisões.' },
+{ id: 'ext-15', t: 'ext', l: 3, les: 'e-gov', calc: true,
+  q: 'Uma empresa vende a P = 340 com CMP = 100 + 2Q. O custo marginal externo é CME = Q e o ótimo social é Q = 80. Que imposto por unidade leva a empresa a produzir 80?',
+  o: ['40 €', '80 €', '120 €', '240 €'], a: 1,
+  e: 'Imposto = CME no ótimo = **80 €**. Verificação: 340 − 80 = 260 = 100 + 2Q → Q = 80.' },
+{ id: 'ext-17', t: 'ext', l: 2, les: 'e-gov', a: [0, 1, 2],
+  q: 'Quais são limitações das políticas do Governo contra externalidades?',
+  o: ['Falta de informação sobre o valor do dano', 'Dificuldade em medir a quota de cada poluidor', 'Lobbying das empresas afetadas', 'Custos de transação entre as vítimas'],
+  e: 'Para o Governo: **informação**, **medição** e **lobbying**. Os custos de transação entre as partes são a limitação da **negociação privada**.' },
+
+/* ---------------- AMBIENTE ---------------- */
+{ id: 'env-01', t: 'env', l: 1, les: 'a-abate',
+  q: 'De que depende a escolha da quantidade ideal de redução da poluição?',
+  o: ['Só do custo de investir em tecnologias limpas', 'Do valor dado ao ambiente e dos custos da redução', 'Só das toneladas que o país emite por ano', 'Do lucro das empresas que fazem a redução'], a: 1,
+  e: 'Depende do **valor que os cidadãos dão ao ambiente** e dos **custos da redução** (contabilísticos + de oportunidade).' },
+{ id: 'env-03', t: 'env', l: 2, les: 'a-abate',
+  q: 'Numa curva de custo de redução (como a da McKinsey), o que indicam a largura e a altura de cada barra?',
+  o: ['Largura: custo por tonelada; altura: potencial de redução', 'Largura: potencial de redução; altura: custo por tonelada', 'Largura: emissões atuais; altura: lucro da tecnologia', 'Largura: anos até 2030; altura: preço da licença'], a: 1,
+  e: 'A **largura** é o **potencial** de redução (Gt de CO₂) e a **altura** o **custo** por tonelada reduzida.', src: 'Caderno 2.17 (adaptado)' },
+{ id: 'env-06', t: 'env', l: 3, les: 'a-polluter',
+  q: 'Porque é que o princípio do poluidor-pagador nem sempre é a melhor política?',
+  o: ['Porque nunca é possível identificar o poluidor', 'Porque o poluidor pode ser pobre e rastreá-lo sai caro', 'Porque deixa os custos todos para os lesados', 'Porque só funciona dentro de um cap and trade'], a: 1,
+  e: '**Justiça**: os poluidores podem ser famílias ou países pobres (cozinhar a carvão sem rede elétrica). **Eficácia**: subsídios ou impostos podem sair mais baratos do que rastrear cada poluidor.' },
+{ id: 'env-08', t: 'env', l: 1, les: 'a-policies',
+  q: 'Qual destas é uma política de redução baseada na quantidade?',
+  o: ['Um imposto sobre o carbono', 'Um subsídio aos painéis solares', 'A proibição de um pesticida', 'Uma taxa sobre os voos'], a: 2,
+  e: 'Políticas de **quantidade**: proibições, limites e regulação. Impostos, subsídios e taxas são políticas de **preço**.' },
+{ id: 'env-10', t: 'env', l: 3, les: 'a-policies',
+  q: 'Um imposto sobre os voos reduz as viagens de avião. Como deve ser visto este efeito?',
+  o: ['Como um efeito colateral ineficiente do imposto', 'Como o objetivo da política', 'Como uma falha de mercado criada pelo Governo', 'Como prova de que o imposto não funciona'], a: 1,
+  e: 'Reduzir as viagens é exatamente o que se pretende: a descida da quantidade **é o objetivo**, não um subproduto indesejado.', src: 'Caderno 2.14.c (adaptado)' },
+{ id: 'env-12', t: 'env', l: 1, les: 'a-cap',
+  q: 'Num sistema cap and trade, o que faz o Governo?',
+  o: ['Fixa por lei o preço de cada tonelada de CO₂', 'Fixa um limite total às emissões e cria as licenças', 'Proíbe as emissões das empresas mais poluentes', 'Paga às empresas para deixarem de produzir'], a: 1,
+  e: 'O Governo fixa o **cap** (limite) e cria licenças para esse limite; as empresas **trocam** licenças entre si, e é o mercado que forma o preço.' },
+{ id: 'env-14', t: 'env', l: 2, les: 'a-cap', src: 'Caderno 2.15',
+  q: 'No equilíbrio de um cap and trade, se a empresa A tem o ___ custo marginal de redução, vai reduzir ___; trocam-se licenças até o custo marginal de A ser ___ ao da outra empresa.',
+  o: ['menor; mais; igual', 'maior; menos; inferior', 'menor; mais; superior', 'maior; mais; igual'], a: 0,
+  e: 'Quem reduz **mais barato reduz mais** e vende licenças; troca-se até {f:cap|os custos marginais serem iguais}, que é o preço da licença.' },
+{ id: 'env-15', t: 'env', l: 3, les: 'a-cap', calc: true, d: cap,
+  q: 'Duas empresas têm de reduzir 30 t de CO₂ no total. O custo marginal de redução é 2a para A (a = toneladas que A reduz) e 4b para B. Quanto reduz cada uma no equilíbrio do mercado de licenças?',
+  o: ['A 15 t, B 15 t', 'A 20 t, B 10 t', 'A 10 t, B 20 t', 'A 30 t, B 0 t'], a: 1,
+  e: 'Iguala os custos marginais: 2a = 4b com a + b = 30 → 2a = 4(30 − a) → 6a = 120 → **a = 20, b = 10**. Preço da licença: 2 × 20 = 40 €/t. A, mais barata, reduz mais.' },
+{ id: 'env-17', t: 'env', l: 2, les: 'a-challenges', a: [0, 1, 2],
+  q: 'Porque é difícil combater as alterações climáticas?',
+  o: ['As pessoas podem valorizar mais a economia do que o ambiente', 'As gerações futuras estão sub-representadas', 'Exige cooperação internacional, como num dilema do prisioneiro', 'Não existem tecnologias capazes de reduzir as emissões'],
+  e: 'Os três desafios: **economia vs ambiente**, **gerações futuras** (desconto intertemporal) e **cooperação internacional** (dilema do prisioneiro). Tecnologias de redução existem (curvas de custo de redução).' },
+{ id: 'env-18', t: 'env', l: 3, les: 'a-challenges', calc: true,
+  q: 'Um dano climático de 1 000 000 € acontece daqui a 100 anos. Com uma taxa de desconto de 5% ao ano (1,05¹⁰⁰ ≈ 131,5), quanto vale hoje?',
+  o: ['Cerca de 7 600 €', 'Cerca de 50 000 €', 'Cerca de 370 000 €', 'Cerca de 950 000 €'], a: 0,
+  e: '{f:pv}: 1 000 000 / 131,5 ≈ **7 600 €**. Com 1% (1,01¹⁰⁰ ≈ 2,70) seria ~370 000 €. É o **dilema do desconto**: a taxa escolhida decide se compensa agir já.' },
+{ id: 'env-21', t: 'env', l: 3, les: 'a-dilemma',
+  q: 'Dois países decidem se reduzem emissões. Ganhos (A, B): ambos reduzem (3, 3); só A reduz (0, 4); só B reduz (4, 0); nenhum reduz (1, 1). Qual é o equilíbrio?',
+  o: ['Ambos reduzem: (3, 3)', 'Nenhum reduz: (1, 1)', 'Só A reduz: (0, 4)', 'Só B reduz: (4, 0)'], a: 1,
+  e: 'Faça o outro o que fizer, cada país ganha mais em **não reduzir** (4 > 3 e 1 > 0): é a estratégia dominante. O equilíbrio é **(1, 1)**, pior do que (3, 3).' },
+]);
+})();
+
+/* --- courses/ieco/questions/exam.js --- */
+/* Exam style: the chapter 1 exercises of the Caderno de Exercícios (2026/27 P2), with our own figures */
+(() => {
+// Caderno 1.2: two demand curves. D: P = 6000 − 100Q, D′: P = 8000 − 100Q
+const twoD = { sd: { r: [85, 9000], ax: ['Q', 'P (€)'], ln: [{ n: 'D', p: [[0, 6000], [60, 0]], c: 'd' }, { n: 'D′', p: [[0, 8000], [80, 0]], c: 'd', dash: true }], g: [[10, 5000], [30, 3000], [30, 5000], [50, 1000], [70, 1000]] } };
+// Caderno 1.3: books, curves cross at (24, 8). D: P = 14 − 0,25Q, S: P = 2 + 0,25Q
+const books = { sd: { r: [60, 16], ax: ['Q', 'P ($)'], ln: [{ n: 'D', p: [[0, 14], [56, 0]], c: 'd' }, { n: 'S', p: [[0, 2], [48, 14]], c: 's' }], g: [[24, 8], [16, 10], [32, 10]], pt: [{ q: 24, p: 8, l: 'E' }] } };
+// Caderno 1.4: bread, 5 000 units a day at €2
+const bread = { sd: { r: [10, 4], ax: ['Q (milhares/dia)', 'P (€)'], ln: [{ n: 'D', p: [[0, 3.5], [10, 0.5]], c: 'd' }, { n: 'S', p: [[0, 0.5], [9, 3.2]], c: 's' }], g: [[5, 2]], pt: [{ q: 5, p: 2, l: 'E' }] } };
+STUDY.questions('ieco', [
+{ id: 'ex-01', t: 'exam', l: 3, les: 's-demand', calc: true, d: twoD, a: [0, 2], src: 'Caderno 1.2 (adaptado)',
+  q: 'O gráfico mostra duas curvas da procura: D (P = 6 000 − 100Q) e D′ (P = 8 000 − 100Q). Quais das afirmações estão corretas?',
+  o: ['Na curva D, ao preço 5 000 €, a empresa vende 10 unidades', 'Na curva D′, ao preço 3 000 €, a empresa vende 70 unidades', 'A 1 000 €, vende mais 20 unidades em D′ do que em D', 'Com 30 unidades, cobra mais 1 000 € em D′ do que em D'],
+  e: 'D a 5 000: 6 000 − 100Q = 5 000 → **Q = 10** ✓. D′ a 3 000: Q = 50, não 70 ✗. A 1 000: D dá 50 e D′ dá 70, **mais 20** ✓. Com 30 unidades: D cobra 3 000 e D′ cobra 5 000, a diferença é **2 000** ✗.' },
+{ id: 'ex-02', t: 'exam', l: 3, les: 's-eq', d: books, a: [2], src: 'Caderno 1.3 (adaptado)',
+  q: 'O gráfico mostra a procura e a oferta de um livro, que se cruzam em (Q*, P*) = (24, 8). Quais das afirmações estão corretas?',
+  o: ['A 10 $ há excesso de procura do livro', 'A 8 $ alguns vendedores querem subir o preço para 9 $', 'A 8 $ o mercado está em equilíbrio', 'No total, serão vendidos 40 livros'],
+  e: 'A 10 $ procuram-se 16 e oferecem-se 32: é **excesso de oferta** ✗. A 8 $ estamos em **equilíbrio** ✓, e ninguém ganha em subir o preço (perderia os clientes para quem vende a 8) ✗. Vendem-se **24** livros, não 40 ✗.' },
+{ id: 'ex-03', t: 'exam', l: 3, les: 's-shift', d: bread, src: 'Caderno 1.4 (adaptado)',
+  q: 'O mercado do pão estava em equilíbrio com 5 000 unidades por dia a 2 €. Um ano depois, o preço de equilíbrio é 1,50 €. O que se pode concluir?',
+  o: ['A descida foi causada por uma contração da procura', 'A descida foi causada por uma contração da oferta', 'Pode ter sido causada pelo movimento de qualquer das curvas', 'Ao novo preço de 1,50 € há excesso de procura'], a: 2,
+  e: 'Um preço mais baixo resulta de **procura que contrai** ou de **oferta que expande**: só com o preço não se distingue (a quantidade ajudaria). A contração da oferta subiria o preço. E 1,50 € é o novo equilíbrio, sem excesso de procura.' },
+{ id: 'ex-04', t: 'exam', l: 3, les: 's-shift', a: [2], src: 'Caderno 1.5',
+  q: 'Que fatores podem causar uma contração da procura de veículos elétricos?',
+  o: ['Um aumento do preço do gasóleo', 'Uma escassez de semicondutores', 'Uma descida do preço dos carros a gasóleo', 'Políticas que encarecem a produção'],
+  e: 'Carros a gasóleo mais baratos são um **substituto mais barato**: a procura de elétricos contrai ✓. Gasóleo mais caro faz o contrário (a procura expande). Semicondutores e custos de produção mexem na **oferta**, não na procura.' },
+{ id: 'ex-05', t: 'exam', l: 4, les: 's-shift', a: [1], src: 'Caderno 1.6',
+  q: 'A manteiga e a margarina são bens substitutos. A produção de manteiga torna-se mais eficiente. O que se espera no mercado da margarina?',
+  o: ['A curva da procura desloca-se para a direita', 'A curva da procura desloca-se para a esquerda', 'A curva da oferta desloca-se para a direita', 'A curva da oferta desloca-se para a esquerda'],
+  e: 'Manteiga mais eficiente → oferta de manteiga ↑ → manteiga **mais barata** → quem comprava margarina passa para a manteiga: a **procura de margarina desloca-se para a esquerda** ✓. Nada mudou nos custos da margarina, por isso a sua oferta fica igual.' },
+{ id: 'ex-06', t: 'exam', l: 4, les: 'm-firms', a: [0, 3],
+  q: 'Quais destas organizações são empresas no sentido da cadeira?',
+  o: ['Uma startup que contrata programadores para vender software', 'Uma cooperativa agrícola em que só trabalham os sócios', 'Um hospital público do Serviço Nacional de Saúde', 'Uma padaria que contrata dois padeiros e vende pão'],
+  e: 'Empresa = capital privado + **mão-de-obra contratada** + venda no mercado com **lucro**. A startup e a padaria cumprem tudo ✓. Na cooperativa trabalham os membros; o hospital público tem capital público e não visa lucro.' },
+{ id: 'ex-07', t: 'exam', l: 4, les: 'x-welfare', a: [0, 2],
+  q: 'Sobre um imposto por unidade num mercado concorrencial, quais são verdadeiras?',
+  o: ['Reduz a quantidade transacionada', 'Não altera o excedente do consumidor', 'Cria uma carga excedente (perda de eficiência)', 'É sempre suportado por quem a lei designa'],
+  e: 'O imposto **reduz a quantidade** e **cria carga excedente** ✓. O EC diminui (os consumidores pagam mais). Quem o suporta de facto depende das **elasticidades**, não da incidência legal.' },
+{ id: 'ex-08', t: 'exam', l: 4, les: 'e-gov', a: [1, 3], src: 'Caderno 2.14 (adaptado)',
+  q: 'Plantações usam pesticidas que contaminam rios e prejudicam pescadores. Quais destas afirmações são verdadeiras?',
+  o: ['A negociação entre as partes resolve sempre a ineficiência', 'O preço dos pesticidas não reflete provavelmente o custo social', 'Reduzir os voos com um imposto é um efeito ineficiente desse imposto', 'Fazer os poluidores pagar é uma das boas políticas para a externalidade'],
+  e: 'Negociar **nem sempre** resulta (custos de transação, falta de informação) ✗. O preço só reflete o CMP, não o CME ✓. Menos voos é o **objetivo** de taxar voos ✗. O poluidor-pagador internaliza o custo ✓ (com os limites de justiça e eficácia).' },
+{ id: 'ex-09', t: 'exam', l: 4, les: 'f-goods', a: [2, 3], src: 'Caderno 2.8 (adaptado)',
+  q: 'Quais destes bens (ou males) são rivais?',
+  o: ['Uma aula teórica aberta e gratuita, com lugares livres', 'O barulho dos aviões perto de um aeroporto', 'Uma floresta usada para cortar madeira', 'Os lugares sentados num teatro'],
+  e: 'A aula com lugares livres e o barulho são **não-rivais** (mais uma pessoa não tira nada aos outros; o barulho é um mal público). A madeira cortada e o lugar ocupado já não estão disponíveis para os outros: **rivais** (a floresta é um bem comum, o teatro um bem privado).' },
+]);
+})();
+
+/* --- courses/ieco/questions/examtipo.js --- */
+/* Note: Fénix renumbered the two sample exams. Ids et1-* are from what is now Exame Tipo 2, and et2-* from Exame Tipo 1;
+   the src says the current name. Ids never change. */
+/* Exame Tipo 1 and 2 (Fénix): only the questions on chapters 1–2 for now.
+   Questions on chapters 3–7 (GDP, unemployment, inflation, banks, policy, trade) come in when those chapters do. */
+STUDY.questions('ieco', [
+/* ---------------- EXAME TIPO 2 ---------------- */
+{ id: 'et1-03', t: 'ext', l: 3, les: 'e-coase', a: [1, 2], src: 'Exame Tipo 2, 3',
+  q: 'Numa situação em que o poluidor compensa o lesado para ter o direito de poluir, provavelmente…',
+  o: ['O direito de propriedade está do lado do poluidor', 'O direito de propriedade está do lado do lesado', 'O poluidor internaliza a externalidade', 'A negociação não resultou'],
+  e: 'Se é o poluidor que paga para poder poluir, é porque o **direito** (a ar limpo, ao silêncio) **é do lesado** ✓. Ao pagar, o poluidor passa a sentir o custo que impõe: **internaliza** a externalidade ✓. Houve acordo, por isso a negociação resultou.' },
+{ id: 'et1-06', t: 'env', l: 3, les: 'a-abate', a: [0, 1, 2], src: 'Exame Tipo 2, 6',
+  q: 'Os custos de abatimento (redução da poluição) devem incluir…',
+  o: ['Os custos de tecnologias menos poluentes', 'A perda de lucro por fazer o abatimento', 'O custo de oportunidade do abatimento', 'O benefício do abatimento'],
+  e: 'Custos de redução = **contabilísticos** (tecnologias limpas) + **de oportunidade** (o lucro de que se abdica) ✓✓✓. O benefício é o outro prato da balança, não um custo.' },
+{ id: 'et1-07', t: 'pow', l: 3, les: 'w-matching', a: [0, 2, 3], src: 'Exame Tipo 2, 7',
+  q: 'A criação de mercados de matching…',
+  o: ['Pode ser estimulada pelo Governo, com subsídios ou isenção de impostos', 'Acontece sempre, pois há vantagem para os dois lados do mercado', 'Pode resultar da iniciativa privada, se esta suportar o risco', 'Sofre do problema “do ovo e da galinha”'],
+  e: 'Formam-se por **política pública** ✓ ou **iniciativa privada** que assume o risco ✓, e sofrem do **ovo e da galinha** ✓. Não acontecem “sempre”: muitos colapsam antes de ter utilizadores suficientes dos dois lados.' },
+{ id: 'et1-15', t: 'pub', l: 2, les: 'f-goods', a: [1, 3], src: 'Exame Tipo 2, 15',
+  q: 'Para qual/quais destes bens ou serviços a exclusão não é possível?',
+  o: ['Um táxi', 'Uma ponte sem portagem', 'Uma discoteca', 'A atmosfera'],
+  e: 'Na **ponte sem portagem** e na **atmosfera** não se consegue impedir ninguém ✓✓. O táxi e a discoteca excluem quem não paga.' },
+{ id: 'et1-16', t: 'env', l: 3, les: 'a-polluter', a: [3], src: 'Exame Tipo 2, 16',
+  q: 'Quais destas afirmações são verdadeiras?',
+  o: ['As políticas de abatimento são somente baseadas na quantidade', 'Os custos da redução de emissões são partilhados igualmente por toda a sociedade', 'Os benefícios da redução de emissões são partilhados igualmente por toda a sociedade', 'Melhorias tecnológicas podem tornar a redução mais eficiente ou baixar os custos ambientais do consumo'],
+  e: 'Há políticas de **preço e de quantidade** ✗. Nem os **custos** nem os **benefícios** da redução se repartem por igual (os poluidores podem nem sofrer a poluição) ✗✗. A tecnologia pode tornar a redução mais eficiente ✓.' },
+{ id: 'et1-18', fixed: true, t: 'ext', l: 3, les: 'e-gov', a: [0, 1], src: 'Exame Tipo 2, 18',
+  q: 'Numa situação em que o Estado coloca um imposto sobre uma atividade poluente…',
+  o: ['Os objetivos do poluidor ficam alinhados com os objetivos sociais', 'A atividade poluente torna-se menos rentável', 'O bem-estar dos lesados diminui', 'Nenhuma das anteriores'],
+  e: 'O imposto pigouviano faz o poluidor suportar o custo total: ao maximizar o lucro escolhe o **ótimo social** ✓, e a atividade dá **menos lucro** ✓. Os lesados ficam **melhor** (menos poluição), embora não recebam a receita, que vai para o Estado.' },
+{ id: 'et1-22a', t: 'tax', l: 3, les: 'x-elastic', calc: true, src: 'Exame Tipo 2, 22', ch: 'et1-22', step: '1/2',
+  q: 'Em 2023 o IVA das bicicletas baixou de 23% para 6%. Se a descida do IVA passasse toda para o consumidor, de quanto desceria o preço final de uma bicicleta?\n(Preço com IVA = P × (1 + taxa), sendo P o preço sem IVA.)',
+  o: ['−17%, porque o IVA desce 17 pontos percentuais', '−13,8%, porque 1,06 / 1,23 − 1 ≈ −0,138', '−74%, porque 6 / 23 − 1 ≈ −0,74', '−6%, porque passa a pagar só 6% de IVA'], a: 1,
+  e: 'O preço passa de P × 1,23 para P × 1,06: (1,06 − 1,23) / 1,23 ≈ **−13,8%** (1 500 € → 1 293 €). A taxa desce 17 **p.p.**, mas o preço mede-se em **%** e não tem de descer 17%.' },
+{ id: 'et1-22b', t: 'tax', l: 4, les: 'x-elastic', src: 'Exame Tipo 2, 22', ch: 'et1-22', step: '2/2',
+  q: 'O IVA das bicicletas baixou de 23% para 6%, e uma associação estima que o preço ao consumidor desça 13,8% (toda a descida passa para o preço). Há muitas alternativas à bicicleta. Esta estimativa está…',
+  o: ['subestimada: o preço deveria descer 17%', 'sobrestimada: parte da descida fica com os vendedores', 'correta: a descida do imposto vai sempre toda para o preço', 'sobrestimada: o preço não pode descer nada'], a: 1,
+  e: 'A descida só passava **toda** para os consumidores se a procura fosse perfeitamente inelástica (ou a oferta perfeitamente elástica). Com uma procura **elástica** (há alternativas), os consumidores ganham **menos** e os vendedores ficam com parte: o preço desce menos de 13,8%. Quem é **menos elástico** ganha mais com a descida do imposto (tal como perde mais com a subida).' },
+/* ---------------- EXAME TIPO 1 ---------------- */
+{ id: 'et2-08', t: 'env', l: 3, les: 'a-policies', a: [3], src: 'Exame Tipo 1, 8',
+  q: 'As políticas de abatimento…',
+  o: ['São usadas para incentivar as empresas a reduzir o consumo de energia', 'Têm um custo distribuído uniformemente pela sociedade', 'São mais justas e eficazes quando fazem o poluidor pagar', 'Podem ser baseadas no preço ou na quantidade'],
+  e: 'O objetivo é **reduzir a poluição** (emissões), não o consumo de energia em si ✗. O custo **não** se reparte por igual ✗. O poluidor-pagador **nem sempre** é o mais justo ou eficaz (poluidores pobres, rastrear sai caro) ✗. Podem ser de **preço ou de quantidade** ✓.' },
+{ id: 'et2-11', t: 'pow', l: 3, les: 'w-matching', a: [3], src: 'Exame Tipo 1, 11',
+  q: 'O problema “do ovo e da galinha” nos two-sided markets…',
+  o: ['Impede que estes mercados sejam formados', 'Faz com que só possam ser formados com intervenção pública', 'Faz com que só possam ser formados por iniciativa privada', 'Pode obrigar a uma subscrição gratuita para um dos grupos'],
+  e: 'Dificulta, mas **não impede** ✗. Formam-se por política pública **ou** iniciativa privada, não “só” por uma ✗✗. Dar o serviço **de graça a um grupo** para atrair o outro é uma das saídas ✓.' },
+{ id: 'et2-12', t: 'pub', l: 2, les: 'f-goods', a: [0, 1], src: 'Exame Tipo 1, 12',
+  q: 'Para qual/quais destes bens ou serviços a exclusão não é possível?',
+  o: ['Uma autoestrada sem portagem', 'A atmosfera', 'Um avião', 'Uma discoteca'],
+  e: 'Na **autoestrada sem portagem** e na **atmosfera** ninguém é impedido de entrar ✓✓. O avião e a discoteca só deixam entrar quem paga.' },
+{ id: 'et2-16', t: 'ext', l: 3, les: 'e-cms', a: [1, 2], src: 'Exame Tipo 1, 16',
+  q: 'Um aeródromo para jatos privados emite ruído e poluição sobre as casas vizinhas. Quais destas afirmações são verdadeiras?',
+  o: ['O custo marginal externo representa o custo para as casas e para o aeródromo dos voos', 'O custo marginal social representa o custo para as casas e para o aeródromo de um voo adicional', 'O custo marginal privado representa o custo para o aeródromo de um voo adicional', 'O custo marginal social representa o custo para as casas de um voo adicional'],
+  e: 'CMS = custo de **mais um voo** para o aeródromo **e** para as casas ✓. CMP = custo de mais um voo **só para o aeródromo** ✓. O externo é só o das casas (1.ª ✗), e o custo só para as casas é o CME, não o CMS (4.ª ✗).' },
+{ id: 'et2-18', t: 'sd', l: 3, les: 's-shift', a: [2, 3], src: 'Exame Tipo 1, 18',
+  q: 'Qual/quais destes cenários contribuem para a expansão da oferta de um produto?',
+  o: ['Aumento do poder de compra dos consumidores', 'Diminuição do poder de compra dos consumidores', 'Diminuição dos preços das matérias-primas', 'Diminuição do poder negocial dos trabalhadores'],
+  e: 'Matérias-primas mais baratas e salários mais baixos (menos poder negocial dos trabalhadores) **baixam os custos**: a oferta expande ✓✓. O poder de compra dos consumidores mexe na **procura**, não na oferta.' },
+{ id: 'et2-19', fixed: true, t: 'env', l: 2, les: 'a-dilemma', a: [0, 2], src: 'Exame Tipo 1, 19',
+  q: 'O dilema do prisioneiro é um jogo…',
+  o: ['Que se pode aplicar a dilemas ambientais', 'Em que todos os jogadores ganham', 'Em que cada um só vê o seu interesse e todos perdem face à cooperação', 'Nenhuma das anteriores'],
+  e: 'Aplica-se ao ambiente (cooperação internacional no clima) ✓, e cada jogador segue o seu interesse e o equilíbrio é **pior para todos** do que cooperar ✓. Não “ganham todos”.' },
+]);
+
+})();
 STUDY.ids("ams", [
 "sys-01",
 "sys-02",
@@ -19307,6 +20379,157 @@ STUDY.ids("so", ["fs-01",
 "ex-51",
 "ex-52",
 "ex-53"]);
+STUDY.ids("ieco", ["mkt-01",
+"mkt-02",
+"mkt-03",
+"mkt-04",
+"mkt-05",
+"mkt-06",
+"mkt-07",
+"mkt-08",
+"mkt-09",
+"mkt-10",
+"mkt-11",
+"mkt-12",
+"mkt-13",
+"mkt-14",
+"mkt-15",
+"sd-01",
+"sd-02",
+"sd-03",
+"sd-04",
+"sd-05",
+"sd-06",
+"sd-07",
+"sd-08",
+"sd-09",
+"sd-10",
+"sd-11",
+"sd-12",
+"sd-13",
+"sd-14",
+"sd-15",
+"sd-16",
+"surp-01",
+"surp-02",
+"surp-03",
+"surp-04",
+"surp-05",
+"surp-06",
+"surp-07",
+"surp-08",
+"surp-09",
+"surp-10",
+"surp-11",
+"surp-12",
+"tax-01",
+"tax-02",
+"tax-03",
+"tax-04",
+"tax-05",
+"tax-06",
+"tax-07",
+"tax-08",
+"tax-09",
+"tax-10",
+"tax-11",
+"tax-12",
+"tax-13",
+"tax-14",
+"ex-01",
+"ex-02",
+"ex-03",
+"ex-04",
+"ex-05",
+"ex-06",
+"ex-07",
+"pub-01",
+"pub-02",
+"pub-03",
+"pub-04",
+"pub-05",
+"pub-06",
+"pub-07",
+"pub-08",
+"pub-09",
+"pub-10",
+"pub-11",
+"pub-12",
+"pub-13",
+"info-01",
+"info-02",
+"info-03",
+"info-04",
+"info-05",
+"info-06",
+"pow-01",
+"pow-02",
+"pow-03",
+"pow-04",
+"pow-05",
+"pow-06",
+"pow-07",
+"pow-08",
+"pow-09",
+"pow-10",
+"pow-11",
+"pow-12",
+"pow-13",
+"ext-01",
+"ext-02",
+"ext-03",
+"ext-04",
+"ext-05",
+"ext-06",
+"ext-07",
+"ext-08",
+"ext-09",
+"ext-10",
+"ext-11",
+"ext-12",
+"ext-13",
+"ext-14",
+"ext-15",
+"ext-16",
+"ext-17",
+"env-01",
+"env-02",
+"env-03",
+"env-04",
+"env-05",
+"env-06",
+"env-07",
+"env-08",
+"env-09",
+"env-10",
+"env-11",
+"env-12",
+"env-13",
+"env-14",
+"env-15",
+"env-16",
+"env-17",
+"env-18",
+"env-19",
+"env-20",
+"env-21",
+"env-22",
+"ex-08",
+"ex-09",
+"et1-03",
+"et1-06",
+"et1-07",
+"et1-15",
+"et1-16",
+"et1-18",
+"et1-22a",
+"et1-22b",
+"et2-08",
+"et2-11",
+"et2-12",
+"et2-16",
+"et2-18",
+"et2-19"]);
 </script>
 <script>
 /* ===== Progress key =====
@@ -20110,15 +21333,19 @@ function Top() {
 /* ---------- COURSES (start menu) ---------- */
 function Courses() {
   const list = REG.order.map(id => REG.courses[id]).filter(c => c.topics);
-  const cards = list.map(c => { const p = courseProgress(c); const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
+  const card = c => { const p = courseProgress(c); const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
     return `<button class="mode course-card" data-act="openC" data-id="${esc(c.id)}">
-      <span class="eyebrow">${[c.year ? `${c.year}.º ano` : '', c.semester ? `${c.semester}.º sem.` : ''].filter(Boolean).join(' · ')}</span>
+      <span class="eyebrow">${esc(c.when || [c.year ? `${c.year}.º ano` : '', c.semester ? `${c.semester}.º sem.` : ''].filter(Boolean).join(' · '))}</span>
       <h3><span class="code">${esc(c.code)}</span></h3><p>${esc(c.name)}</p>
       <span class="lvl-bar"><span style="width:${pct}%"></span></span>
-      <span class="meta">${p.done}/${p.total} dominadas · ${p.xp} XP</span></button>`; }).join('');
+      <span class="meta">${p.done}/${p.total} dominadas · ${p.xp} XP</span></button>`; };
+  // Courses with a `group` (e.g. HACS, outside the main degree plan) go in their own section below the main ones
+  const groups = [...new Set(list.filter(c => c.group).map(c => c.group.id))].map(g => list.filter(c => c.group && c.group.id === g));
+  const side = groups.map(cs => { const G = cs[0].group; return `<section class="course-group"><div class="course-group-head"><span class="eyebrow">${esc(G.eyebrow || 'Fora do plano principal')}</span><h2>${esc(G.title || G.id)}</h2>${G.desc ? `<p>${esc(G.desc)}</p>` : ''}</div>
+    <div class="modes">${cs.map(card).join('')}</div></section>`; }).join('');
   return `<section class="hero"><span class="eyebrow">Técnico · LEIC</span><h1>Escolhe a cadeira.</h1>
     <p>Cada cadeira tem os mesmos modos: aprender, rever erros, exame simulado e biblioteca de teoria. Algumas têm secções próprias.</p></section>
-    <div class="modes">${cards}</div>`;
+    <div class="modes">${list.filter(c => !c.group).map(card).join('')}</div>${side}`;
 }
 
 /* ---------- HOME (of a course) ---------- */

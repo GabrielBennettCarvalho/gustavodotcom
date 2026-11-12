@@ -250,6 +250,12 @@ textarea.code{width:100%;min-height:180px;font:12.5px/1.5 var(--f-mono);border:1
 
 /* course menu and review picker */
 .mode.course-card h3{font-size:22px}
+.course-group{margin-top:34px;padding-top:18px;border-top:1px dashed var(--line)}
+.course-group-head{display:grid;gap:4px;margin-bottom:12px}
+.course-group-head h2{font-size:20px;margin:0}
+.course-group-head p{color:var(--muted);max-width:62ch;margin:0;font-size:14px}
+.course-group .modes{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.course-group .course-card h3{font-size:19px}
 .mode.course-card .code{font-family:var(--f-display);font-weight:800;font-stretch:120%;letter-spacing:-.01em}
 .lvl-bar{display:block;height:5px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:6px}
 .lvl-bar span{display:block;height:100%;background:var(--good)}

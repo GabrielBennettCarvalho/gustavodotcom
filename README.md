@@ -44,6 +44,7 @@ src/
                          point plots and decision trees; exam problems split into steps in questions/exam.js)
     so/                  Sistemas Operativos (route.js: the exam route; skills.js: past exams and problem types;
                          render.js: address fields and page tables / TLB)
+    ieco/                Introdução à Economia, a HACS (render.js draws supply and demand plots with shaded surplus areas)
   vendor/qrcode.js       QR code generator (MIT, Kazuhiko Arase)
 tools/validate.js        content checks, used by build.py
 ```
@@ -90,6 +91,8 @@ A lesson with no markers works as before: the whole text, then its two easiest q
    Each stop opens with `brief` (HTML: what this part of the exam asks), then each lesson followed by two of its questions
    (an easy one and one a level up), then `drill` questions (level 3–4 of `topics`, default 5) as in the exam.
    It can live in its own file that calls `STUDY.course({ id, route: {...} })` after course.js.
+   `group: { id, title, eyebrow, desc }` puts the course in its own section below the main ones (IEco uses it for HACS,
+   outside the main LEIC plan); `when` replaces the "3.º ano · 1.º sem." line on its card.
    For the exam (see ML): `parts` (`[{ id, label, topics, note, past }]`, one per test; a part with no topics shows as "em breve"; `past` lists that test's past exams),
    `past` (the past exams the questions come from, newest first, as written at the start of `src`) and `skills`
    (`[{ id, t, label, les: [lessons], seen: [past exams], sheet: 'HTML for the cheat sheet' }]`; `core: true` makes a

@@ -242,15 +242,19 @@ function Top() {
 /* ---------- COURSES (start menu) ---------- */
 function Courses() {
   const list = REG.order.map(id => REG.courses[id]).filter(c => c.topics);
-  const cards = list.map(c => { const p = courseProgress(c); const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
+  const card = c => { const p = courseProgress(c); const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
     return `<button class="mode course-card" data-act="openC" data-id="${esc(c.id)}">
-      <span class="eyebrow">${[c.year ? `${c.year}.º ano` : '', c.semester ? `${c.semester}.º sem.` : ''].filter(Boolean).join(' · ')}</span>
+      <span class="eyebrow">${esc(c.when || [c.year ? `${c.year}.º ano` : '', c.semester ? `${c.semester}.º sem.` : ''].filter(Boolean).join(' · '))}</span>
       <h3><span class="code">${esc(c.code)}</span></h3><p>${esc(c.name)}</p>
       <span class="lvl-bar"><span style="width:${pct}%"></span></span>
-      <span class="meta">${p.done}/${p.total} dominadas · ${p.xp} XP</span></button>`; }).join('');
+      <span class="meta">${p.done}/${p.total} dominadas · ${p.xp} XP</span></button>`; };
+  // Courses with a `group` (e.g. HACS, outside the main degree plan) go in their own section below the main ones
+  const groups = [...new Set(list.filter(c => c.group).map(c => c.group.id))].map(g => list.filter(c => c.group && c.group.id === g));
+  const side = groups.map(cs => { const G = cs[0].group; return `<section class="course-group"><div class="course-group-head"><span class="eyebrow">${esc(G.eyebrow || 'Fora do plano principal')}</span><h2>${esc(G.title || G.id)}</h2>${G.desc ? `<p>${esc(G.desc)}</p>` : ''}</div>
+    <div class="modes">${cs.map(card).join('')}</div></section>`; }).join('');
   return `<section class="hero"><span class="eyebrow">Técnico · LEIC</span><h1>Escolhe a cadeira.</h1>
     <p>Cada cadeira tem os mesmos modos: aprender, rever erros, exame simulado e biblioteca de teoria. Algumas têm secções próprias.</p></section>
-    <div class="modes">${cards}</div>`;
+    <div class="modes">${list.filter(c => !c.group).map(card).join('')}</div>${side}`;
 }
 
 /* ---------- HOME (of a course) ---------- */

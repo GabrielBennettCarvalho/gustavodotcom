@@ -133,6 +133,25 @@
         "questions/mem.js",
         "questions/exam.js"
       ]
+    },
+    "ieco": {
+      "styles": [
+        "theme.css"
+      ],
+      "files": [
+        "render.js",
+        "course.js",
+        "lessons/markets.js",
+        "lessons/failures.js",
+        "questions/mkt.js",
+        "questions/sd.js",
+        "questions/surp.js",
+        "questions/tax.js",
+        "questions/fail.js",
+        "questions/ext.js",
+        "questions/exam.js",
+        "questions/examtipo.js"
+      ]
     }
   }
 }

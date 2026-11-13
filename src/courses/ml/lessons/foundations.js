@@ -46,7 +46,8 @@ STUDY.lessons('ml', [
   <li>Cria um ramo para cada valor e distribui os exemplos pelos ramos.</li>
   <li>Se todos os exemplos de um ramo têm a mesma classe, é uma folha. Senão, repete no ramo com os atributos que sobram.</li></ol>
   <!--card--><p>É <b>hill-climbing</b> no espaço das árvores: rápido, mas não garante a menor árvore (pode ficar num ótimo local). A preferência por árvores pequenas é a <b>navalha de Occam</b>: a explicação mais simples que cobre os dados tem menos hipóteses desnecessárias.</p>
-  <p>Uma árvore não usa necessariamente todos os atributos: os que nunca são escolhidos ficam de fora. É uma <b>seleção de atributos implícita</b>.</p>`,
+  <p>Uma árvore não usa necessariamente todos os atributos: os que nunca são escolhidos ficam de fora. É uma <b>seleção de atributos implícita</b>.</p>
+  <p><b>Ler a árvore ao contrário</b> (“recupera os dados originais”): quando o enunciado dá a árvore e, em cada folha, quantos exemplos lá caem e quantos acerta, dá para reconstruir a tabela de treino. Cada folha diz os valores dos atributos (o caminho até lá) e as classes: os certos têm a classe da folha, os errados a outra. Exemplo: a folha “y₁ = 1 e y₂ = 0 → P, 2 certas e 2 erradas” dá 4 exemplos com x = [1, 0]: 2 P e 2 N. Com a tabela feita, já se pode contar probabilidades (Bayes) ou distâncias (kNN).</p>`,
   key: 'ID3 = greedy, top-down, escolhe sempre o atributo com maior ganho de informação. Heurística: não garante a árvore mínima.' },
 { id: 'dt-entropy', t: 'dt', title: 'Entropia de Shannon',
   html: `<p>Entropia = surpresa média. Uma moeda viciada que sai sempre cara não surpreende ninguém (0 bits); uma moeda justa surpreende ao máximo (1 bit).</p>
@@ -88,7 +89,12 @@ STUDY.lessons('ml', [
   <!--card--><p>Atenção à orientação: nos exames de Aprendizagem as <b>linhas são o previsto</b> e as <b>colunas o real</b> (“True”). Confirma sempre.</p>
   <p>Com classes desequilibradas a accuracy engana: com 1% de doentes, dizer sempre “saudável” dá 99% de accuracy e recall 0.</p>
   <p>Multiclasse: a sensibilidade da classe B = (exemplos de B previstos B) / (total real de B), ou seja, a diagonal sobre a soma da <b>coluna</b> real B.</p>
-  <p>Exemplo: TP = 1, FP = 3, FN = 7, TN = 3. Precision = 1/4 = 0,25; recall = 1/8 = 0,125; accuracy = 4/14 ≈ 0,29.</p>`,
+  <p>Exemplo: TP = 1, FP = 3, FN = 7, TN = 3. Precision = 1/4 = 0,25; recall = 1/8 = 0,125; accuracy = 4/14 ≈ 0,29.</p>
+  <!--card--><p><b>Montar a matriz a partir de um modelo.</b> Muitas vezes o enunciado não dá TP, FP, FN e TN: dá um modelo (uma árvore, regras, um kNN) e os exemplos. Passa por cada exemplo, ou por cada folha, e pergunta duas coisas: <b>o que o modelo prevê</b> (positivo ou negativo) e <b>se acertou</b>.</p>
+  <ul><li>Prevê positivo e acerta → <b>TP</b>; prevê positivo e erra (era negativo) → <b>FP</b>.</li>
+  <li>Prevê negativo e acerta → <b>TN</b>; prevê negativo e erra (era positivo) → <b>FN</b>.</li></ul>
+  <p>Numa árvore, cada folha prevê uma classe para todos os exemplos que lá caem: os certos dessa folha vão para TP (folha positiva) ou TN (folha negativa), os errados para FP ou FN.</p>
+  <p>Exemplo, com positivo = Sim: a folha A prevê Sim e tem 4 exemplos, 3 certos e 1 errado → TP += 3, FP += 1. A folha B prevê Não e tem 5, 4 certos e 1 errado → TN += 4, FN += 1. Matriz: TP = 3, FP = 1, FN = 1, TN = 4. Precisão = 3/4, sensibilidade = 3/4, accuracy = 7/9.</p>`,
   key: '{f:prec|Precision = TP/(TP+FP)}. {f:rec|Recall = sensibilidade = TP/(TP+FN)}. Especificidade = TN/(TN+FP).' },
 { id: 'ev-roc', t: 'eval', title: 'Curvas ROC, AUC e lift',
   html: `<p>Um classificador probabilístico dá um score; o <b>limiar</b> decide a classe. Baixar o limiar apanha mais positivos (recall sobe) mas também mais falsos positivos.</p>

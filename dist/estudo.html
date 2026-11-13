@@ -7516,14 +7516,6 @@ STUDY.questions('oc', [
   q: 'int x[16384], y[16384] (64 KB cada, seguidos). Cache direta de 16 KB. O ciclo faz x[i] = x[i] + y[i]. Que mudança NA CACHE ajuda mais?',
   o: ['2 vias de associatividade', 'Capacidade de 32 KB', 'Blocos de 64 B', 'Política write-through'], a: 0,
   e: 'x[i] e y[i] distam 64 KB, múltiplo de 16 KB (e de 32 KB): mesma linha → conflito. Com **2 vias** cabem os dois no mesmo conjunto.' },
-{ id: 'ocx-20', t: 'exam2', l: 3, les: 'v-size', calc: true, reserved: 'exam',
-  q: 'Endereço virtual de 32 bits, páginas de 8 KB, PTE de 4 B. Tamanho da tabela de páginas de um nível?',
-  o: ['2 MB', '4 MB', '512 KB', '8 MB'], a: 0,
-  e: 'Offset = 13 bits. Entradas = 2³²⁻¹³ = 2¹⁹. × 4 B = 2²¹ B = **2 MB**.' },
-{ id: 'ocx-21', t: 'exam2', l: 3, les: 'v-int', reserved: 'exam',
-  q: 'Qual destes cenários é IMPOSSÍVEL?',
-  o: ['Página fora da RAM, mas dado na cache', 'TLB miss, tradução na tabela, cache hit', 'TLB hit, cache miss, dado na RAM', 'TLB miss e page fault, dado no disco'], a: 0,
-  e: 'Se a página não está na RAM, nenhum dos seus blocos pode estar na cache.' },
 { id: 'ocx-22', t: 'exam', l: 3, les: 'o-struct', calc: true, reserved: 'exam',
   q: 'Uma tabela de hash percorre struct no { int key; char dados[56]; struct no *next; } procurando chaves. Quantos bytes são quentes e frios?',
   o: ['Quentes 8 B, frios 56 B', 'Quentes 60 B, frios 4 B', 'Quentes 4 B, frios 60 B', 'Quentes 64 B, frios 0 B'], a: 0,
@@ -7553,10 +7545,6 @@ STUDY.questions('oc', [
   q: 'Mantendo a capacidade, aumentar o tamanho do bloco…',
   o: ['reduz os compulsórios, mas aumenta a penalty e, em excesso, o miss rate', 'reduz sempre o AMAT, seja qual for o tamanho do bloco escolhido', 'elimina os misses de conflito, porque há menos blocos na cache', 'reduz o hit time, porque cada acesso traz mais dados de uma vez'], a: 0,
   e: 'Mais localidade espacial por miss, mas **menos blocos** (mais competição) e **mais bytes** a transferir em cada miss.' },
-{ id: 'ocx-29', t: 'exam2', l: 4, les: 'v-int', calc: true, reserved: 'exam',
-  q: 'Páginas de 8 KB. Qual é a maior cache de MAPEAMENTO DIRETO que pode ser lida em paralelo com a TLB (VIPT)?',
-  o: ['8 KB', '4 KB', '16 KB', '64 KB'], a: 0,
-  e: 'Índice + offset da cache ≤ 13 bits (offset de página) → capacidade ≤ 2¹³ = **8 KB**.' },
 { id: 'ocx-30', t: 'exam', l: 4, les: 'p-amdahl', calc: true, reserved: 'exam',
   q: 'Um modo foi acelerado 4×. DEPOIS da otimização, esse modo ocupa 40% do tempo. Qual é o speedup global?',
   o: ['2,2', '1,43', '4', '1,6'], a: 0,
@@ -8055,7 +8043,7 @@ STUDY.questions('oc', [
   d: { pipe: [['lw s4, 0(s6)', 'FDXMW'], ['add s5, s5, s4', '.FD-XMW'], ['sw s5, 0(s6)', '..F-DXMW'], ['sll s6, s5, 4', '....FDXMW'], ['bne s2, s5, Loop', '.....FDXMW'], ['lw s4, 0(s6)', '........FDXMW']] },
   o: ['8/5', '5/5', '10/5', '13/5'], a: 0,
   e: 'A 1.ª instrução da iteração seguinte começa no ciclo 9: a iteração tem 9 − 1 = 8 ciclos, para 5 instruções. **8/5**.' },
-{ id: 'haz-57', t: 'haz', l: 3, les: 'h-load', kind: 'bug',
+{ id: 'haz-57', t: 'haz', l: 3, les: 'h-load',
   q: 'Este diagrama pretende mostrar um pipeline com full forwarding. O que está errado?',
   d: { pipe: [['lw x1, 0(x2)', 'FDXMW'], ['add x3, x1, x4', '.FDXMW']] },
   o: ['Falta uma bolha entre o lw e o add', 'O add deveria ter duas bolhas seguidas', 'O lw deveria terminar logo no andar X', 'O diagrama está todo correto'], a: 0,
@@ -8528,6 +8516,19 @@ STUDY.questions('oc', [
   q: 'Oito threads somam 800 números em fatias iguais. Cada soma demora T, a sincronização 20T, e no fim a thread 0 acumula as outras 7 somas. Truncando às décimas, qual é o speedup?',
   o: ['6,2', '8,0', '6,6', '5,9'], a: 0,
   e: 'Sequencial 800T. Paralelo: 100T + 20T + 7T = 127T. 800 / 127 ≈ 6,29 → **6,2**.' },
+/* ===== Estilo do teste: memória virtual (2.º teste) ===== */
+{ id: 'ocx-20', t: 'exam2', l: 3, les: 'v-size', calc: true, reserved: 'exam',
+  q: 'Endereço virtual de 32 bits, páginas de 8 KB, PTE de 4 B. Tamanho da tabela de páginas de um nível?',
+  o: ['2 MB', '4 MB', '512 KB', '8 MB'], a: 0,
+  e: 'Offset = 13 bits. Entradas = 2³²⁻¹³ = 2¹⁹. × 4 B = 2²¹ B = **2 MB**.' },
+{ id: 'ocx-21', t: 'exam2', l: 3, les: 'v-int', reserved: 'exam',
+  q: 'Qual destes cenários é IMPOSSÍVEL?',
+  o: ['Página fora da RAM, mas dado na cache', 'TLB miss, tradução na tabela, cache hit', 'TLB hit, cache miss, dado na RAM', 'TLB miss e page fault, dado no disco'], a: 0,
+  e: 'Se a página não está na RAM, nenhum dos seus blocos pode estar na cache.' },
+{ id: 'ocx-29', t: 'exam2', l: 4, les: 'v-int', calc: true, reserved: 'exam',
+  q: 'Páginas de 8 KB. Qual é a maior cache de MAPEAMENTO DIRETO que pode ser lida em paralelo com a TLB (VIPT)?',
+  o: ['8 KB', '4 KB', '16 KB', '64 KB'], a: 0,
+  e: 'Índice + offset da cache ≤ 13 bits (offset de página) → capacidade ≤ 2¹³ = **8 KB**.' },
 ]);
 
 })();
@@ -9747,6 +9748,11 @@ STUDY.questions('rc', [
   q: 'Um proxy na instituição tem a página em cache. Um browser da instituição pede-a. Quem pode mandar um GET condicional, e a quem?',
   o: ['O proxy ao servidor de origem, para validar a cópia', 'O servidor de origem ao proxy, para atualizar a cópia', 'O browser ao servidor DNS, para saber se o IP mudou', 'Ninguém: o proxy entrega sempre a cópia sem verificar'], a: 0,
   e: 'O proxy é **servidor** para o browser e **cliente** para o servidor de origem. Pode validar a sua cópia com If-Modified-Since: se receber 304, entrega-a ao browser.' },
+/* ---------- Exame 2021/22, Parte III.1.2c: persistent vs non-persistent ---------- */
+{ id: 'cg-53', t: 'http', l: 4, les: 'h-persist', src: 'Exame 2021/22, Parte III.1.2c',
+  q: 'O servidor envia o ficheiro base (HTML) e uma imagem. Qual é o número mínimo de sessões TCP usadas, conforme a versão do HTTP?',
+  o: ['Persistente: 1 sessão; não persistente: 2', 'Sempre 1 sessão, em qualquer versão', 'Sempre 2 sessões, em qualquer versão', 'Persistente: 2 sessões; não persistente: 1'], a: 0,
+  e: 'Persistente: os dois objetos na **mesma** ligação. Não persistente: **uma ligação por objeto** → 2.' },
 ]);
 
 /* --- courses/rc/questions/dns.js --- */
@@ -10280,10 +10286,6 @@ STUDY.questions('rc', [
   q: 'Em slow start, que evento faz o TCP passar a crescer linearmente sem ter havido perdas?',
   o: ['A cwnd atingir o limiar ssthresh', 'Receber um primeiro ACK duplicado', 'O recetor anunciar uma rwnd maior', 'Passarem 10 RTT desde o início'], a: 0,
   e: '**cwnd ≥ ssthresh** → congestion avoidance (linear). Timeouts e 3 ACKs duplicados são os eventos de perda.' },
-{ id: 'cg-53', t: 'http', l: 4, les: 'h-persist', src: 'Exame 2021/22, Parte III.1.2c',
-  q: 'O servidor envia o ficheiro base (HTML) e uma imagem. Qual é o número mínimo de sessões TCP usadas, conforme a versão do HTTP?',
-  o: ['Persistente: 1 sessão; não persistente: 2', 'Sempre 1 sessão, em qualquer versão', 'Sempre 2 sessões, em qualquer versão', 'Persistente: 2 sessões; não persistente: 1'], a: 0,
-  e: 'Persistente: os dois objetos na **mesma** ligação. Não persistente: **uma ligação por objeto** → 2.' },
 ]);
 
 /* --- courses/rc/questions/ip.js --- */
@@ -11053,7 +11055,7 @@ STUDY.course({
       sheet: '<p>Raiz = maior ganho. Em cada ramo repete <b>só com os exemplos desse ramo</b> e sem os atributos já usados no caminho.</p><p>Pára quando o nó é puro (folha com essa classe) ou já não há atributos (folha com a classe maioritária).</p><p>Cada caminho raiz → folha é uma regra: SE … E … ENTÃO classe.</p><p><b>Armadilha:</b> a entropia de um ramo calcula-se com as contagens do ramo, não do conjunto todo.</p>' },
     { id: 'ev-cm', t: 'eval', les: ['ev-cm'], label: 'Matriz de confusão: precisão, sensibilidade, accuracy',
       seen: ['Exame 2 2022/23', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
-      sheet: '<p>Vê primeiro a orientação: as linhas são o previsto ou o real?</p><p>{f:acc} · {f:prec} · Sensibilidade: {f:rec} · Especificidade = TN/(TN + FP) · {f:f1}.</p><p>Várias classes: para a classe c, “positivo” é c e “negativo” é o resto.</p><p><b>Armadilha:</b> trocar FP com FN quando a matriz vem transposta.</p>' },
+      sheet: '<p>Vê primeiro a orientação: as linhas são o previsto ou o real?</p><p>{f:acc} · {f:prec} · Sensibilidade: {f:rec} · Especificidade = TN/(TN + FP) · {f:f1}.</p><p>Várias classes: para a classe c, “positivo” é c e “negativo” é o resto.</p><p>Dão um modelo (árvore, regras) em vez da matriz? Folha a folha: prevê positivo → certos em TP, errados em FP; prevê negativo → certos em TN, errados em FN.</p><p><b>Armadilha:</b> trocar FP com FN quando a matriz vem transposta.</p>' },
     { id: 'ev-fit', t: 'eval', les: ['ev-cv'], label: 'Complexidade do modelo e overfitting',
       seen: ['Exame 2 2021/22', 'Exame 1 2021/22'],
       sheet: '<p>Overfitting: erro de treino baixo e de teste alto. Mais parâmetros (graus de liberdade) → mais risco.</p><p>Validação cruzada com k folds: k modelos, média dos k erros. Os hiperparâmetros escolhem-se na validação, nunca no teste.</p><p>Remédios: mais dados, regularização, modelo mais simples, early stopping.</p>' },
@@ -11281,7 +11283,8 @@ STUDY.lessons('ml', [
   <li>Cria um ramo para cada valor e distribui os exemplos pelos ramos.</li>
   <li>Se todos os exemplos de um ramo têm a mesma classe, é uma folha. Senão, repete no ramo com os atributos que sobram.</li></ol>
   <!--card--><p>É <b>hill-climbing</b> no espaço das árvores: rápido, mas não garante a menor árvore (pode ficar num ótimo local). A preferência por árvores pequenas é a <b>navalha de Occam</b>: a explicação mais simples que cobre os dados tem menos hipóteses desnecessárias.</p>
-  <p>Uma árvore não usa necessariamente todos os atributos: os que nunca são escolhidos ficam de fora. É uma <b>seleção de atributos implícita</b>.</p>`,
+  <p>Uma árvore não usa necessariamente todos os atributos: os que nunca são escolhidos ficam de fora. É uma <b>seleção de atributos implícita</b>.</p>
+  <p><b>Ler a árvore ao contrário</b> (“recupera os dados originais”): quando o enunciado dá a árvore e, em cada folha, quantos exemplos lá caem e quantos acerta, dá para reconstruir a tabela de treino. Cada folha diz os valores dos atributos (o caminho até lá) e as classes: os certos têm a classe da folha, os errados a outra. Exemplo: a folha “y₁ = 1 e y₂ = 0 → P, 2 certas e 2 erradas” dá 4 exemplos com x = [1, 0]: 2 P e 2 N. Com a tabela feita, já se pode contar probabilidades (Bayes) ou distâncias (kNN).</p>`,
   key: 'ID3 = greedy, top-down, escolhe sempre o atributo com maior ganho de informação. Heurística: não garante a árvore mínima.' },
 { id: 'dt-entropy', t: 'dt', title: 'Entropia de Shannon',
   html: `<p>Entropia = surpresa média. Uma moeda viciada que sai sempre cara não surpreende ninguém (0 bits); uma moeda justa surpreende ao máximo (1 bit).</p>
@@ -11323,7 +11326,12 @@ STUDY.lessons('ml', [
   <!--card--><p>Atenção à orientação: nos exames de Aprendizagem as <b>linhas são o previsto</b> e as <b>colunas o real</b> (“True”). Confirma sempre.</p>
   <p>Com classes desequilibradas a accuracy engana: com 1% de doentes, dizer sempre “saudável” dá 99% de accuracy e recall 0.</p>
   <p>Multiclasse: a sensibilidade da classe B = (exemplos de B previstos B) / (total real de B), ou seja, a diagonal sobre a soma da <b>coluna</b> real B.</p>
-  <p>Exemplo: TP = 1, FP = 3, FN = 7, TN = 3. Precision = 1/4 = 0,25; recall = 1/8 = 0,125; accuracy = 4/14 ≈ 0,29.</p>`,
+  <p>Exemplo: TP = 1, FP = 3, FN = 7, TN = 3. Precision = 1/4 = 0,25; recall = 1/8 = 0,125; accuracy = 4/14 ≈ 0,29.</p>
+  <!--card--><p><b>Montar a matriz a partir de um modelo.</b> Muitas vezes o enunciado não dá TP, FP, FN e TN: dá um modelo (uma árvore, regras, um kNN) e os exemplos. Passa por cada exemplo, ou por cada folha, e pergunta duas coisas: <b>o que o modelo prevê</b> (positivo ou negativo) e <b>se acertou</b>.</p>
+  <ul><li>Prevê positivo e acerta → <b>TP</b>; prevê positivo e erra (era negativo) → <b>FP</b>.</li>
+  <li>Prevê negativo e acerta → <b>TN</b>; prevê negativo e erra (era positivo) → <b>FN</b>.</li></ul>
+  <p>Numa árvore, cada folha prevê uma classe para todos os exemplos que lá caem: os certos dessa folha vão para TP (folha positiva) ou TN (folha negativa), os errados para FP ou FN.</p>
+  <p>Exemplo, com positivo = Sim: a folha A prevê Sim e tem 4 exemplos, 3 certos e 1 errado → TP += 3, FP += 1. A folha B prevê Não e tem 5, 4 certos e 1 errado → TN += 4, FN += 1. Matriz: TP = 3, FP = 1, FN = 1, TN = 4. Precisão = 3/4, sensibilidade = 3/4, accuracy = 7/9.</p>`,
   key: '{f:prec|Precision = TP/(TP+FP)}. {f:rec|Recall = sensibilidade = TP/(TP+FN)}. Especificidade = TN/(TN+FP).' },
 { id: 'ev-roc', t: 'eval', title: 'Curvas ROC, AUC e lift',
   html: `<p>Um classificador probabilístico dá um score; o <b>limiar</b> decide a classe. Baixar o limiar apanha mais positivos (recall sobe) mas também mais falsos positivos.</p>
@@ -11948,6 +11956,11 @@ STUDY.questions('ml', [
   q: 'Uma árvore com 4 níveis tem accuracy de treino 0,936; podada a 2 níveis, tem 0,874. Não há dados de teste. O que se pode concluir sobre overfitting?',
   o: ['Nada: falta o erro de teste', 'A árvore de 4 níveis está em overfitting', 'A árvore podada está em underfitting', 'A de 4 níveis generaliza melhor'], a: 0,
   e: 'Mais profundidade **sobe sempre** a accuracy de treino, por isso 0,936 contra 0,874 é o esperado. Overfitting é o erro de **teste** piorar enquanto o de treino melhora: sem teste (ou validação), não há evidência nem a favor nem contra.' },
+{ id: 'ev-22', t: 'eval', l: 3, les: 'ev-cm', card: 3, calc: true,
+  q: 'Uma árvore tem duas folhas. A folha A prevê Sim e tem 4 exemplos de treino, 3 certos e 1 errado. A folha B prevê Não e tem 5 exemplos, 4 certos e 1 errado. Com Sim como positivo, quanto vale a sensibilidade no treino?',
+  o: ['3/4 = 0,75', '4/5 = 0,8', '7/9 ≈ 0,78', '3/5 = 0,6'], a: 0,
+  e: 'Folha A (prevê Sim): 3 certos → TP = 3, 1 errado (era Não) → FP = 1. Folha B (prevê Não): 4 certos → TN = 4, 1 errado (era Sim) → FN = 1. Sensibilidade = TP/(TP + FN) = 3/4 = **0,75**.',
+  w: { 1: '4/5 = TN/(TN + FN) olha para a folha que prevê Não: não é a sensibilidade.', 2: '7/9 = (TP + TN)/total é a accuracy.', 3: 'O errado da folha B era Sim, por isso é FN e entra no denominador: TP/(TP + FN) = 3/4.' } },
 ]);
 
 /* --- courses/ml/questions/bayes.js --- */
@@ -12802,6 +12815,8 @@ const X26_EM = 'EM com 2 clusters em x₁ = (0,2; 0,3), x₂ = (2; 1,5), x₃ = 
 const X24_KM = { pts: { p: [{ x: 0, y: 1, l: 'x₁' }, { x: 1, y: 0, l: 'x₂' }, { x: -1, y: -1, l: 'x₃' }, { x: -2, y: -2, l: 'x₄' }], c: [{ x: 1, y: 1, l: 'c₁' }, { x: -2, y: -2, l: 'c₂' }], r: [-3, 2, -3, 2] } };
 const X24_LG = { pts: { p: [{ x: 0, y: 0, l: 'x₁ t=1', c: 1 }, { x: -1, y: -1, l: 'x₂ t=0', c: 2 }, { x: 1, y: 1, l: 'x₃ t=0', c: 2 }], line: [1, 1, 1], r: [-2, 2, -2, 2] } };
 
+const X23_NN_TXT = 'Rede com W[1] = [[1, 1, 1], [1, 2, 1], [1, 1, 0,4]], b[1] = (0, 1, 0), W[2] = [[2, 1, 1], [1, 1, 1]], b[2] = (0,2; 0), f(z) = 0,4z + 0,6 (para z > 0) em todas as unidades, erro ½Σ(x[2] − t)², x[0] = (0, 1, 0), t = (0, 1).';
+
 STUDY.questions('ml', [
 /* ---------- Exame 1 2025/26: árvore de decisão (Studied, Slept, Cheated) ---------- */
 { id: 'x26-dt-1', t: 'exam', l: 3, les: 'dt-entropy', calc: true, ch: 'x26-dt', step: '1/4', src: 'Exame 1 2025/26, 2.a', d: X26_TREE,
@@ -12999,9 +13014,31 @@ STUDY.questions('ml', [
   q: 'Num conjunto com 2 exemplos de A e 3 de B, o classificador falha x₂ (A), x₃ (B) e x₄ (B). Qual é a sensibilidade da classe B?',
   o: ['1/3', '2/3', '1/2', '3/5'], a: 0,
   e: 'Dos 3 B reais (x₃, x₄, x₅), só x₅ foi bem classificado: TP = 1, FN = 2. Sensibilidade = 1/3.' },
+/* ===== Exame 1 2022/23 (14 de novembro de 2022): the remaining questions =====
+   The information gain question rebuilds the class counts from the official solution, hence "(adaptado)". */
+{ id: 'x23-ig', t: 'exam', l: 3, les: 'dt-gain', card: 2, calc: true, src: 'Exame 1 2022/23, II.2.a (adaptado)',
+  q: 'Classe binária com 8 exemplos N e 6 P. O atributo y₁ divide-os em A: 4 N e 2 P; B: 1 N e 3 P; C: 3 N e 1 P. Qual é o ganho de informação de y₁?',
+  o: ['≈ 0,128', '≈ 0,857', '≈ 0,985', '≈ −0,128'], a: 0,
+  e: 'H(classe) = −(8/14)log₂(8/14) − (6/14)log₂(6/14) = 0,985. H(classe|y₁) = (6/14)·0,918 + (4/14)·0,811 + (4/14)·0,811 = 0,857. IG = 0,985 − 0,857 = **0,128**.',
+  w: { 1: '0,857 é a entropia condicional H(classe|y₁).', 2: '0,985 é a entropia da classe antes de dividir.', 3: 'O ganho nunca é negativo.' } },
+{ id: 'x23-lg', t: 'exam', l: 4, les: 'lg-sig', card: 2, calc: true, src: 'Exame 1 2022/23, III.1',
+  q: 'Regressão logística com entropia cruzada, x₁ = (0, −1) com t = 0, x₂ = (2, 2) com t = 1, x₃ = (1, 1) com t = 1. Todos os pesos começam a 1 (bias incluído) e η = 1. Quais são os pesos depois de uma atualização batch?',
+  o: ['(0,55; 1,06; 1,56)', '(0,88; 1,00; 1,13)', '(1,45; 0,94; 0,44)', '(0,50; 1,00; 1,50)'], a: 0,
+  e: 'wᵀx = 0, 5 e 3 → σ = 0,5; 0,993; 0,953. w ← w + ηΣ(t − σ)x = (1, 1, 1) − 0,5·(1, 0, −1) + 0,007·(1, 2, 2) + 0,047·(1, 1, 1) ≈ **(0,55; 1,06; 1,56)**. Fronteira: 0,55 + 1,06y₁ + 1,56y₂ = 0.',
+  w: { 1: 'Isso é com erro quadrático, que multiplica por σ(1 − σ) e dá passos mais pequenos.', 2: 'Sinal trocado: subiu o erro.', 3: 'Isso só conta o exemplo x₁ e esquece x₂ e x₃.' } },
+{ id: 'x23-nn-1', t: 'exam', l: 3, les: 'm-fwd', card: 1, calc: true, ch: 'x23-nn', step: '1/2', src: 'Exame 1 2022/23, III.2',
+  q: X23_NN_TXT + '\nFaz a forward propagation. Quanto vale a saída x[2]?',
+  o: ['(2,6; 2,12)', '(5; 3,8)', '(2,2; 1,82)', '(1; 1,8)'], a: 0,
+  e: 'z[1] = W[1]x[0] + b[1] = (1, 3, 1), x[1] = 0,4z + 0,6 = (1; 1,8; 1). z[2] = W[2]x[1] + b[2] = (5; 3,8), x[2] = (0,4·5 + 0,6; 0,4·3,8 + 0,6) = **(2,6; 2,12)**.',
+  w: { 1: 'Isso é z[2], antes da ativação.', 3: 'Isso é x[1], a camada escondida.' } },
+{ id: 'x23-nn-2', t: 'exam', l: 4, les: 'm-bp', card: 2, calc: true, ch: 'x23-nn', step: '2/2', src: 'Exame 1 2022/23, III.2',
+  q: X23_NN_TXT + '\nA forward dá x[1] = (1; 1,8; 1) e x[2] = (2,6; 2,12). Com um passo de descida do gradiente estocástica e η = 1, como fica a 1.ª linha de W[2]?',
+  o: ['(0,96; −0,872; −0,04)', '(0,96; −2,12; −0,04)', '(−0,6; −3,68; −1,6)', '(3,04; 2,872; 2,04)'], a: 0,
+  e: 'f′ = 0,4. δ[2] = (x[2] − t)·0,4 = (1,04; 0,448). W[2] ← W[2] − δ[2](x[1])ᵀ. 1.ª linha: (2, 1, 1) − 1,04·(1; 1,8; 1) = **(0,96; −0,872; −0,04)**. b[2] passa a (−0,84; −0,448).',
+  w: { 1: 'Usaste z[1] = (1, 3, 1) em vez de x[1].', 2: 'Faltou multiplicar por f′ = 0,4.', 3: 'Sinal trocado: somaste o gradiente.' } },
 ]);
 
-/* --- courses/ml/questions/exam22b.js --- */
+/* --- courses/ml/questions/exam2-2122.js --- */
 /* ===== EXAME 2 DE 2021/22 (25 de fevereiro de 2022) =====
    The whole exam, rewritten as multiple choice and in the original order. The regression target of x₄
    follows the official solution (0,2), which differs from the statement, hence "(adaptado)". */
@@ -13066,20 +13103,20 @@ STUDY.questions('ml', [
   w: { 1: 'Cu₁ = 0,122·u₁: u₁ é a direção de menor variância.', 2: 'Cu = λu dá λ ≈ 5,46 e λ ≈ 0,12, muito diferentes.', 3: 'A covariância chega: multiplica C por cada vetor e vê o fator λ.' } },
 
 /* ----- 3. Bayes e árvores ----- */
-{ id: 'x22b-dt-1', t: 'exam', l: 3, les: 'ev-cm', card: 2, calc: true, ch: 'x22b-dt', step: '1/3', src: 'Exame 2 2021/22, 3.a',
+{ id: 'x22b-dt-1', t: 'exam', l: 3, les: 'ev-cm', card: 3, calc: true, ch: 'x22b-dt', step: '1/3', src: 'Exame 2 2021/22, 3.a',
   q: X22B_TREE + '\nCom P como classe positiva, qual é a precisão da árvore no treino?',
   o: ['5/7 ≈ 0,71', '5/5 = 1', '8/10 = 0,8', '3/5 = 0,6'], a: 0,
-  e: 'Previstos P: 3 + 4 = 7, dos quais 5 são mesmo P (TP = 5, FP = 2). Previstos N: 3, todos N (TN = 3, FN = 0). Precisão = 5/7 ≈ **0,71**.',
+  e: 'Folha a folha (positivo = P):\n• y₁ = 0 prevê P, 3 certas → TP += 3.\n• y₁ = 1, y₂ = 0 prevê P, 2 certas e 2 erradas → TP += 2 e FP += 2 (eram N).\n• y₁ = 1, y₂ = 1 prevê N, 3 certas → TN += 3.\nTP = 5, FP = 2, FN = 0, TN = 3. Precisão = TP/(TP + FP) = 5/7 ≈ **0,71**.',
   w: { 1: 'Essa é a sensibilidade: TP/(TP + FN) = 5/5.', 2: 'Essa é a accuracy.' } },
 { id: 'x22b-dt-2', t: 'exam', l: 3, les: 'b-rule', card: 1, calc: true, ch: 'x22b-dt', step: '2/3', src: 'Exame 2 2021/22, 3.b',
   q: X22B_TREE + '\nRecupera os dados originais. Para x = [1, 0], quanto vale p(P|x)?',
   o: ['0,5', '0,4', '0,2', '0,25'], a: 0,
-  e: 'Há 5 P e 5 N. x = [1, 0] aparece 4 vezes: 2 P e 2 N. p(P) = 1/2, p(x|P) = 2/5, p(x) = 4/10 → p(P|x) = (1/2·2/5)/(4/10) = **0,5**.',
+  e: '**Recuperar os dados** = ler cada folha ao contrário: os certos têm a classe da folha, os errados a outra.\n• y₁ = 0 → 3 exemplos, todos P (y₂ não se sabe, a árvore não o testou).\n• [1, 0] → 4 exemplos: 2 P (certos) e 2 N (errados).\n• [1, 1] → 3 exemplos, todos N.\nTotal: 5 P e 5 N. Bayes: p(P) = 5/10, p(x|P) = 2/5 (dos 5 P, 2 têm x = [1, 0]) e p(x) = 4/10. p(P|x) = (1/2 · 2/5)/(4/10) = **0,5**. Mais rápido: dos 4 exemplos com x = [1, 0], 2 são P.',
   w: { 1: '0,4 é p(x).', 2: '0,2 é p(x|P)·p(P), antes de dividir por p(x).' } },
 { id: 'x22b-dt-3', t: 'exam', l: 3, les: 'k-knn', card: 3, calc: true, ch: 'x22b-dt', step: '3/3', src: 'Exame 2 2021/22, 3.c',
   q: X22B_TREE + '\nRecupera os dados originais e classifica x = [0, 0] com kNN, distância de Hamming, k = 7 e votos uniformes.',
   o: ['P: 5 vizinhos P contra 2 N', 'N: 4 vizinhos N contra 3 P', 'Empate: depende da ordem', 'N: os 3 mais afastados são N'], a: 0,
-  e: 'Os 3 exemplos com y₁ = 0 (P) estão a distância ≤ 1; os 4 com [1, 0] (2 P, 2 N) a distância 1; os 3 com [1, 1] (N) a distância 2. Os 7 vizinhos são os 3 + 4: **5 P e 2 N → P**.' },
+  e: 'Dados recuperados das folhas: 3 P com y₁ = 0, 4 com [1, 0] (2 P certos e 2 N errados) e 3 N com [1, 1]. Os 3 exemplos com y₁ = 0 (P) estão a distância ≤ 1; os 4 com [1, 0] (2 P, 2 N) a distância 1; os 3 com [1, 1] (N) a distância 2. Os 7 vizinhos são os 3 + 4: **5 P e 2 N → P**.' },
 { id: 'x22b-svm', t: 'exam', l: 3, les: 's-kernel', card: 2, reserved: 'exam', src: 'Exame 2 2021/22, 3.d',
   q: X22B_TREE + '\nOs dados originais são separáveis por uma SVM com kernel RBF?',
   o: ['Não: x = [1, 0] tem as duas classes', 'Sim: o RBF separa quaisquer dados', 'Sim, mas só com um C muito grande', 'Não: os dados são todos binários'], a: 0,
@@ -13095,34 +13132,6 @@ STUDY.questions('ml', [
   q: 'Um MLP tem todos os pesos e biases a zero, f(z) = z² em todas as unidades e erro quadrático. O que acontece no treino?',
   o: ['Não aprende: todos os δ são 0', 'Aprende só a última camada', 'Aprende, mas muito devagar', 'Diverge: os pesos explodem'], a: 0,
   e: 'Com tudo a zero, z = 0 em todas as camadas e f′(z) = 2z = **0**. O δ da saída é (x − t)·f′(z) = 0 e os outros também: nenhum peso nem bias muda.' },
-]);
-
-/* --- courses/ml/questions/exam23.js --- */
-/* ===== EXAME 1 DE 2022/23 (14 de novembro de 2022): o que faltava =====
-   The information gain question rebuilds the class counts from the official solution, hence "(adaptado)". */
-const X23_NN_TXT = 'Rede com W[1] = [[1, 1, 1], [1, 2, 1], [1, 1, 0,4]], b[1] = (0, 1, 0), W[2] = [[2, 1, 1], [1, 1, 1]], b[2] = (0,2; 0), f(z) = 0,4z + 0,6 (para z > 0) em todas as unidades, erro ½Σ(x[2] − t)², x[0] = (0, 1, 0), t = (0, 1).';
-
-STUDY.questions('ml', [
-{ id: 'x23-ig', t: 'exam', l: 3, les: 'dt-gain', card: 2, calc: true, src: 'Exame 1 2022/23, II.2.a (adaptado)',
-  q: 'Classe binária com 8 exemplos N e 6 P. O atributo y₁ divide-os em A: 4 N e 2 P; B: 1 N e 3 P; C: 3 N e 1 P. Qual é o ganho de informação de y₁?',
-  o: ['≈ 0,128', '≈ 0,857', '≈ 0,985', '≈ −0,128'], a: 0,
-  e: 'H(classe) = −(8/14)log₂(8/14) − (6/14)log₂(6/14) = 0,985. H(classe|y₁) = (6/14)·0,918 + (4/14)·0,811 + (4/14)·0,811 = 0,857. IG = 0,985 − 0,857 = **0,128**.',
-  w: { 1: '0,857 é a entropia condicional H(classe|y₁).', 2: '0,985 é a entropia da classe antes de dividir.', 3: 'O ganho nunca é negativo.' } },
-{ id: 'x23-lg', t: 'exam', l: 4, les: 'lg-sig', card: 2, calc: true, src: 'Exame 1 2022/23, III.1',
-  q: 'Regressão logística com entropia cruzada, x₁ = (0, −1) com t = 0, x₂ = (2, 2) com t = 1, x₃ = (1, 1) com t = 1. Todos os pesos começam a 1 (bias incluído) e η = 1. Quais são os pesos depois de uma atualização batch?',
-  o: ['(0,55; 1,06; 1,56)', '(0,88; 1,00; 1,13)', '(1,45; 0,94; 0,44)', '(0,50; 1,00; 1,50)'], a: 0,
-  e: 'wᵀx = 0, 5 e 3 → σ = 0,5; 0,993; 0,953. w ← w + ηΣ(t − σ)x = (1, 1, 1) − 0,5·(1, 0, −1) + 0,007·(1, 2, 2) + 0,047·(1, 1, 1) ≈ **(0,55; 1,06; 1,56)**. Fronteira: 0,55 + 1,06y₁ + 1,56y₂ = 0.',
-  w: { 1: 'Isso é com erro quadrático, que multiplica por σ(1 − σ) e dá passos mais pequenos.', 2: 'Sinal trocado: subiu o erro.', 3: 'Isso só conta o exemplo x₁ e esquece x₂ e x₃.' } },
-{ id: 'x23-nn-1', t: 'exam', l: 3, les: 'm-fwd', card: 1, calc: true, ch: 'x23-nn', step: '1/2', src: 'Exame 1 2022/23, III.2',
-  q: X23_NN_TXT + '\nFaz a forward propagation. Quanto vale a saída x[2]?',
-  o: ['(2,6; 2,12)', '(5; 3,8)', '(2,2; 1,82)', '(1; 1,8)'], a: 0,
-  e: 'z[1] = W[1]x[0] + b[1] = (1, 3, 1), x[1] = 0,4z + 0,6 = (1; 1,8; 1). z[2] = W[2]x[1] + b[2] = (5; 3,8), x[2] = (0,4·5 + 0,6; 0,4·3,8 + 0,6) = **(2,6; 2,12)**.',
-  w: { 1: 'Isso é z[2], antes da ativação.', 3: 'Isso é x[1], a camada escondida.' } },
-{ id: 'x23-nn-2', t: 'exam', l: 4, les: 'm-bp', card: 2, calc: true, ch: 'x23-nn', step: '2/2', src: 'Exame 1 2022/23, III.2',
-  q: X23_NN_TXT + '\nA forward dá x[1] = (1; 1,8; 1) e x[2] = (2,6; 2,12). Com um passo de descida do gradiente estocástica e η = 1, como fica a 1.ª linha de W[2]?',
-  o: ['(0,96; −0,872; −0,04)', '(0,96; −2,12; −0,04)', '(−0,6; −3,68; −1,6)', '(3,04; 2,872; 2,04)'], a: 0,
-  e: 'f′ = 0,4. δ[2] = (x[2] − t)·0,4 = (1,04; 0,448). W[2] ← W[2] − δ[2](x[1])ᵀ. 1.ª linha: (2, 1, 1) − 1,04·(1; 1,8; 1) = **(0,96; −0,872; −0,04)**. b[2] passa a (−0,84; −0,448).',
-  w: { 1: 'Usaste z[1] = (1, 3, 1) em vez de x[1].', 2: 'Faltou multiplicar por f′ = 0,4.', 3: 'Sinal trocado: somaste o gradiente.' } },
 ]);
 
 /* --- courses/ml/questions/prep.js --- */
@@ -13287,67 +13296,82 @@ STUDY.questions('ml', [
   e: 'Diferenças 3 e 4: euclidiana √(9 + 16) = **5**; Manhattan 3 + 4 = 7. A euclidiana nunca passa a Manhattan.',
   w: { 2: '25 é o quadrado da distância: falta a raiz.' } },
 
-/* ----- Onde está o erro? ----- */
-{ id: 'bug-02', t: 'dt', l: 3, les: 'dt-gain', card: 2, kind: 'bug', calc: true, fixed: true,
-  q: 'Nó [5+, 5−] dividido pelo atributo A em a₁ = [4+, 1−] e a₂ = [1+, 4−]. Qual é o primeiro passo errado?\n1) H(S) = 1\n2) H(a₁) = H(a₂) = 0,722\n3) H(S|A) = 0,722 + 0,722 = 1,444\n4) IG(A) = 1 − 1,444 = −0,444',
-  o: ['Passo 1', 'Passo 2', 'Passo 3', 'Passo 4'], a: 2,
-  e: 'A entropia condicional é uma média **pesada**: H(S|A) = (5/10)·0,722 + (5/10)·0,722 = 0,722. IG = 1 − 0,722 = **0,278**. O ganho negativo era o sinal de alarme.' },
-{ id: 'bug-03', t: 'eval', l: 3, les: 'ev-cm', card: 1, kind: 'bug', calc: true, fixed: true,
-  q: 'Com TP = 30, FP = 10, FN = 20 e TN = 40. Qual é o primeiro passo errado?\n1) Precisão = TP/(TP + FP) = 30/40 = 0,75\n2) Sensibilidade = TP/(TP + FP) = 30/40 = 0,75\n3) Accuracy = (30 + 40)/100 = 0,70\n4) F1 = 2·0,75·0,75/(0,75 + 0,75) = 0,75',
-  o: ['Passo 1', 'Passo 2', 'Passo 3', 'Passo 4'], a: 1,
-  e: 'A sensibilidade usa os **falsos negativos**: TP/(TP + FN) = 30/50 = 0,6. Então F1 = 2·0,75·0,6/1,35 ≈ 0,667.' },
-{ id: 'bug-04', t: 'bayes', l: 3, les: 'b-map', card: 1, kind: 'bug', calc: true, fixed: true,
-  q: 'Classificação MAP com p(A) = 0,4, p(B) = 0,6, p(x|A) = 0,5 e p(x|B) = 0,2. Qual é o primeiro passo errado?\n1) p(x|A)·p(A) = 0,5·0,4 = 0,20\n2) p(x|B)·p(B) = 0,2·0,6 = 0,12\n3) p(x) = 0,20 + 0,12 = 0,32\n4) Escolhe-se B, porque p(B) = 0,6 é maior',
-  o: ['Passo 1', 'Passo 2', 'Passo 3', 'Passo 4'], a: 3,
-  e: 'MAP compara p(x|c)·p(c), não só p(c): 0,20 > 0,12, por isso a classe é **A**, com p(A|x) = 0,20/0,32 = 0,625.' },
-{ id: 'bug-05', t: 'linreg', l: 3, les: 'lr-ls', card: 3, kind: 'bug', calc: true, fixed: true,
-  q: 'Alvos t = (1, 3, 5) e previsões ŷ = (2, 3, 3). Qual é o primeiro passo errado?\n1) Erros t − ŷ = (−1, 0, 2)\n2) Quadrados: 1, 0 e 4\n3) MSE = (1 + 0 + 4)/3 ≈ 1,67\n4) RMSE = √(1 + 0 + 4) ≈ 2,24',
-  o: ['Passo 1', 'Passo 2', 'Passo 3', 'Passo 4'], a: 3,
-  e: 'O RMSE é a raiz do **MSE**, que já estava calculado: √1,67 ≈ **1,29**. √5 esquece a divisão por N.' },
-{ id: 'bug-06', t: 'percep', l: 3, les: 'p-rosen', card: 1, kind: 'bug', calc: true, fixed: true,
-  q: 'Perceptrão com w = (0, 1, −1) (bias primeiro), η = 1, exemplo x = (1, 2, 1) (com x₀ = 1) e t = −1. Qual é o primeiro passo errado?\n1) wᵀx = 0 + 2 − 1 = 1\n2) o = sinal(1) = 1\n3) Errou, porque t = −1\n4) w ← (0, 1, −1) + (−2)·(1, 2, 1) = (−2, −1, −3)',
-  o: ['Passo 1', 'Passo 2', 'Passo 3', 'Passo 4'], a: 3,
-  e: 'η(t − o) = −2 e −2·(1, 2, 1) = (−2, −4, −2). Somando: (0 − 2, 1 − 4, −1 − 2) = **(−2, −3, −3)**.' },
-{ id: 'bug-07', t: 'percep', l: 4, les: 'p-gd', card: 2, kind: 'bug', fixed: true,
-  q: 'Regra do gradiente para o = (wᵀx)², net = wᵀx, com E = ½(t − o)². Qual é o primeiro passo errado?\n1) ∂E/∂o = −(t − o)\n2) ∂o/∂net = 2·net\n3) ∂net/∂w = x\n4) Δw = −η∂E/∂w = η(t − o)x',
-  o: ['Passo 1', 'Passo 2', 'Passo 3', 'Passo 4'], a: 3,
-  e: 'Regra da cadeia: ∂E/∂w = −(t − o)·2net·x. O passo 4 esqueceu ∂o/∂net: Δw = **η(t − o)·2(wᵀx)·x**.' },
-{ id: 'bug-08', t: 'logreg', l: 3, les: 'lg-sig', card: 2, kind: 'bug', calc: true, fixed: true,
-  q: 'Regressão logística com w = (0, 1, 1) (bias primeiro), x = (1, 1, −1), t = 1, η = 0,5 e entropia cruzada. Qual é o primeiro passo errado?\n1) wᵀx = 0 + 1 − 1 = 0\n2) o = σ(0) = 0,5\n3) w ← w − η(o − t)x = w + 0,25·x\n4) w = (0, 1, 1) − 0,25·(1, 1, −1) = (−0,25; 0,75; 1,25)',
-  o: ['Passo 1', 'Passo 2', 'Passo 3', 'Passo 4'], a: 3,
-  e: 'O passo 3 já dizia w + 0,25·x, mas o passo 4 subtraiu. Certo: (0,25; 1,25; 0,75), que aproxima a saída de t = 1.' },
-{ id: 'bug-09', t: 'mlp', l: 3, les: 'm-fwd', card: 1, kind: 'bug', calc: true, fixed: true,
-  q: 'Rede com ReLU na camada escondida e saída linear: x[0] = (1, 2), W[1] = [[1, −1], [2, 0]], b[1] = 0, W[2] = [1, 1], b[2] = 0. Qual é o primeiro passo errado?\n1) z[1] = (1 − 2; 2 + 0) = (−1; 2)\n2) x[1] = ReLU(z[1]) = (1; 2)\n3) z[2] = 1·1 + 1·2 = 3\n4) x[2] = z[2] = 3',
-  o: ['Passo 1', 'Passo 2', 'Passo 3', 'Passo 4'], a: 1,
-  e: 'ReLU(−1) = max(0, −1) = **0**, não 1. Então x[1] = (0; 2) e a saída é 2.' },
-{ id: 'bug-10', t: 'mlp', l: 4, les: 'm-bp', card: 2, kind: 'bug', calc: true, fixed: true,
-  q: 'Backprop com sigmoides na camada escondida: x[1] = (0,5; 0,8), W[2] = [1, −1] e δ[2] = 0,2. Qual é o primeiro passo errado?\n1) (W[2])ᵀδ[2] = (0,2; −0,2)\n2) f′(z[1]) = x[1]∘(1 − x[1]) = (0,25; 0,16)\n3) δ[1] = (0,2·0,25; −0,2·0,16) = (0,05; −0,032)\n4) ∂E/∂W[2] = δ[2]·(x[0])ᵀ',
-  o: ['Passo 1', 'Passo 2', 'Passo 3', 'Passo 4'], a: 3,
-  e: 'O gradiente de W[l] usa a entrada **dessa** camada: ∂E/∂W[2] = δ[2]·(x[1])ᵀ = 0,2·(0,5; 0,8) = (0,1; 0,16).' },
-{ id: 'bug-11', t: 'clust', l: 3, les: 'c-kmeans', card: 3, kind: 'bug', calc: true, fixed: true,
-  q: 'k-means a 1 dimensão com os pontos 0, 2, 3, 9 e 10 e centróides iniciais c₁ = 0 e c₂ = 10. Qual é o primeiro passo errado?\n1) 0, 2 e 3 vão para c₁; 9 e 10 vão para c₂\n2) c₁ = (0 + 2 + 3)/3 ≈ 1,67\n3) c₂ = (9 + 10)/2 = 9,5\n4) Na 2.ª iteração, o ponto 3 passa para c₂',
-  o: ['Passo 1', 'Passo 2', 'Passo 3', 'Passo 4'], a: 3,
-  e: '|3 − 1,67| = 1,33 e |3 − 9,5| = 6,5: o ponto 3 **fica** em c₁. Nada muda e o k-means já convergiu.' },
-{ id: 'bug-12', t: 'clust', l: 3, les: 'c-valid', card: 2, kind: 'bug', calc: true, fixed: true,
-  q: 'Silhueta do ponto 0, no cluster {0, 2}; o outro cluster é {5, 7}. Qual é o primeiro passo errado?\n1) a = distância média ao ponto 2 = 2\n2) b = (5 + 7)/2 = 6\n3) s = (b − a)/min(a, b) = 4/2 = 2',
-  o: ['Passo 1', 'Passo 2', 'Passo 3', 'Nenhum: está certo'], a: 2,
-  e: 'A silhueta divide pelo **máximo**: s = 4/6 ≈ 0,667. Um s acima de 1 já indicava o erro.' },
-{ id: 'bug-13', t: 'clust', l: 3, les: 'c-em', card: 2, kind: 'bug', calc: true, fixed: true,
-  q: 'Passo E com π₁ = π₂ = 0,5, p(x|1) = 0,2 e p(x|2) = 0,6. Qual é o primeiro passo errado?\n1) π₁·p(x|1) = 0,1\n2) π₂·p(x|2) = 0,3\n3) γ₁ = 0,1 e γ₂ = 0,3',
-  o: ['Passo 1', 'Passo 2', 'Passo 3', 'Nenhum: está certo'], a: 2,
-  e: 'Falta normalizar: γ₁ = 0,1/(0,1 + 0,3) = **0,25** e γ₂ = 0,75. As responsabilidades somam 1.' },
-{ id: 'bug-14', t: 'pca', l: 3, les: 'pc-cov', card: 1, kind: 'bug', calc: true, fixed: true,
-  q: 'Covariância de X = {(0, 0), (2, 0), (4, 3)}. Qual é o primeiro passo errado?\n1) m = (2, 1)\n2) Desvios: (−2, −1), (0, −1), (2, 2)\n3) c₁₁ = (4 + 0 + 4)/2 = 4 e c₂₂ = (1 + 1 + 4)/2 = 3\n4) c₁₂ = (2 + 0 + 4)/3 = 2',
-  o: ['Passo 1', 'Passo 2', 'Passo 3', 'Passo 4'], a: 3,
-  e: 'A covariância também divide por **n − 1 = 2**: c₁₂ = 6/2 = 3. C = [[4, 3], [3, 3]].' },
-{ id: 'bug-15', t: 'pca', l: 3, les: 'pc-pca', card: 2, kind: 'bug', calc: true, fixed: true,
-  q: 'PCA com C = [[2, 1], [1, 2]]. Qual é o primeiro passo errado?\n1) Traço = 4 e det = 3\n2) λ² − 4λ + 3 = 0, por isso λ₁ = 3 e λ₂ = 1\n3) u₁ = (1, 1)/√2\n4) A 1.ª componente explica 3/3 = 100% da variância',
-  o: ['Passo 1', 'Passo 2', 'Passo 3', 'Passo 4'], a: 3,
-  e: 'A fração divide pela **soma** dos valores próprios: 3/(3 + 1) = **75%**.' },
-{ id: 'bug-16', t: 'svm', l: 3, les: 's-margin', card: 1, kind: 'bug', calc: true, fixed: true,
-  q: 'SVM com w = (3, 4), b = −5, escalado para os vetores de suporte darem |wᵀx + b| = 1. Ponto x = (1, 2). Qual é o primeiro passo errado?\n1) wᵀx + b = 3 + 8 − 5 = 6\n2) ‖w‖ = √(9 + 16) = 5\n3) Distância de x ao hiperplano = 6/5 = 1,2\n4) Largura da margem = 1/‖w‖ = 0,2',
-  o: ['Passo 1', 'Passo 2', 'Passo 3', 'Passo 4'], a: 3,
-  e: 'A margem inteira mede **2/‖w‖ = 0,4** (1/‖w‖ de cada lado do hiperplano).' },
+/* ----- Armadilhas de contas (were "Onde está o erro?"): the classic mistake is a wrong option ----- */
+{ id: 'bug-02', t: 'dt', l: 3, les: 'dt-gain', card: 2, calc: true,
+  q: 'Nó [5+, 5−] dividido pelo atributo A em a₁ = [4+, 1−] e a₂ = [1+, 4−], com H(a₁) = H(a₂) = 0,722. Quanto vale IG(A)?',
+  o: ['0,278', '−0,444', '0,722', '0,5'], a: 0,
+  e: 'H(S) = 1. A entropia condicional é uma média **pesada**: H(S|A) = (5/10)·0,722 + (5/10)·0,722 = 0,722. IG = 1 − 0,722 = **0,278**.',
+  w: { 1: 'Somaste as entropias dos ramos sem as pesar (H(S|A) = 1,444). Um ganho negativo é impossível.', 2: '0,722 é H(S|A), a entropia depois da divisão, não o ganho.' } },
+{ id: 'bug-03', t: 'eval', l: 3, les: 'ev-cm', card: 1, calc: true,
+  q: 'Com TP = 30, FP = 10, FN = 20 e TN = 40, quanto vale a sensibilidade (recall)?',
+  o: ['0,6', '0,75', '0,7', '0,667'], a: 0,
+  e: 'A sensibilidade usa os **falsos negativos**: TP/(TP + FN) = 30/50 = **0,6**.',
+  w: { 1: '0,75 = TP/(TP + FP) é a precisão.', 2: '0,7 = (TP + TN)/100 é a accuracy.', 3: '0,667 é o F1, com precisão 0,75 e sensibilidade 0,6.' } },
+{ id: 'bug-04', t: 'bayes', l: 3, les: 'b-map', card: 1, calc: true,
+  q: 'Classificação MAP com p(A) = 0,4, p(B) = 0,6, p(x|A) = 0,5 e p(x|B) = 0,2. Que classe se escolhe?',
+  o: ['A, com p(A|x) = 0,625', 'B, porque p(B) = 0,6 é maior', 'B, com p(B|x) = 0,6', 'A, com p(A|x) = 0,20'], a: 0,
+  e: 'MAP compara p(x|c)·p(c): A → 0,5·0,4 = 0,20; B → 0,2·0,6 = 0,12. Ganha **A**, com p(A|x) = 0,20/0,32 = **0,625**.',
+  w: { 1: 'Só o prior não chega: MAP multiplica-o pela verosimilhança.', 3: '0,20 = p(x|A)·p(A); falta dividir por p(x) = 0,32.' } },
+{ id: 'bug-05', t: 'linreg', l: 3, les: 'lr-ls', card: 3, calc: true,
+  q: 'Alvos t = (1, 3, 5) e previsões ŷ = (2, 3, 3). Quanto vale o RMSE?',
+  o: ['≈ 1,29', '≈ 2,24', '≈ 1,67', '1'], a: 0,
+  e: 'Erros (−1, 0, 2), quadrados 1, 0, 4. MSE = 5/3 ≈ 1,67 e RMSE = √1,67 ≈ **1,29**.',
+  w: { 1: '√5: faltou dividir por N antes da raiz.', 2: '1,67 é o MSE; falta a raiz.', 3: '1 = (1 + 0 + 2)/3 é o MAE.' } },
+{ id: 'bug-06', t: 'percep', l: 3, les: 'p-rosen', card: 1, calc: true,
+  q: 'Perceptrão com w = (0, 1, −1) (bias primeiro), η = 1, exemplo x = (1, 2, 1) (com x₀ = 1) e t = −1. Como fica w?',
+  o: ['(−2, −3, −3)', '(−2, −1, −3)', '(0, 1, −1)', '(2, 5, 1)'], a: 0,
+  e: 'wᵀx = 0 + 2 − 1 = 1 → o = 1 ≠ t. η(t − o) = −2, e w ← (0, 1, −1) − 2·(1, 2, 1) = **(−2, −3, −3)**.',
+  w: { 1: 'Conta da 2.ª componente: 1 − 2·2 = −3.', 2: 'o = 1 e t = −1: errou, por isso os pesos mudam.', 3: 'Sinal trocado: t − o = −2, por isso subtrai-se 2x.' } },
+{ id: 'bug-07', t: 'percep', l: 4, les: 'p-gd', card: 2,
+  q: 'Descida do gradiente com o = (wᵀx)², net = wᵀx e E = ½(t − o)². Qual é a regra Δw?',
+  o: ['η(t − o)·2(wᵀx)·x', 'η(t − o)·x', 'η(t − o)·(wᵀx)²·x', '−η(t − o)·2(wᵀx)·x'], a: 0,
+  e: 'Regra da cadeia: ∂E/∂w = −(t − o)·∂o/∂net·∂net/∂w = −(t − o)·2net·x. Δw = −η∂E/∂w = **η(t − o)·2(wᵀx)·x**.',
+  w: { 1: 'Falta ∂o/∂net = 2·net: essa é a regra de uma unidade linear.', 2: 'Multiplicaste por o, não pela derivada de o.', 3: 'Sinal trocado: Δw = −η∂E/∂w, e ∂E/∂w já traz um menos.' } },
+{ id: 'bug-08', t: 'logreg', l: 3, les: 'lg-sig', card: 2, calc: true,
+  q: 'Regressão logística com w = (0, 1, 1) (bias primeiro), x = (1, 1, −1), t = 1, η = 0,5 e entropia cruzada. Como fica w depois deste exemplo?',
+  o: ['(0,25; 1,25; 0,75)', '(−0,25; 0,75; 1,25)', '(0,5; 1,5; 0,5)', '(0; 1; 1)'], a: 0,
+  e: 'wᵀx = 0, o = σ(0) = 0,5. w ← w − η(o − t)x = w + 0,25·(1, 1, −1) = **(0,25; 1,25; 0,75)**: a saída aproxima-se de t = 1.',
+  w: { 1: 'Sinal trocado: como o < t, soma-se 0,25·x.', 2: 'Faltou o (t − o) = 0,5: o passo é 0,5·0,5 = 0,25.', 3: 'o = 0,5 ≠ t = 1: há erro e os pesos mudam.' } },
+{ id: 'bug-09', t: 'mlp', l: 3, les: 'm-fwd', card: 1, calc: true,
+  q: 'Rede com ReLU na camada escondida e saída linear: x[0] = (1, 2), W[1] = [[1, −1], [2, 0]], b[1] = 0, W[2] = [1, 1], b[2] = 0. Quanto vale a saída x[2]?',
+  o: ['2', '3', '1', '5'], a: 0,
+  e: 'z[1] = (1 − 2; 2 + 0) = (−1; 2). x[1] = ReLU(z[1]) = (0; 2). z[2] = 0 + 2 = **2**.',
+  w: { 1: 'ReLU(−1) = max(0, −1) = 0, não 1.', 2: '1 = −1 + 2 soma z[1] sem aplicar a ReLU.', 3: 'Usaste W[1]ᵀ: cada linha de W[1] é uma unidade.' } },
+{ id: 'bug-10', t: 'mlp', l: 4, les: 'm-bp', card: 2, calc: true,
+  q: 'Backprop com sigmoides na camada escondida: x[0] = (1, 0), x[1] = (0,5; 0,8), W[2] = [1, −1] e δ[2] = 0,2. Quanto vale ∂E/∂W[2]?',
+  o: ['(0,1; 0,16)', '(0,2; 0)', '(0,05; −0,032)', '(0,2; −0,2)'], a: 0,
+  e: 'O gradiente de W[l] usa a entrada **dessa** camada: ∂E/∂W[2] = δ[2]·(x[1])ᵀ = 0,2·(0,5; 0,8) = **(0,1; 0,16)**.',
+  w: { 1: 'Usaste x[0]; a entrada da camada 2 é x[1].', 2: 'Isso é δ[1], o delta da camada escondida.', 3: 'Isso é (W[2])ᵀδ[2], o que se propaga para trás.' } },
+{ id: 'bug-11', t: 'clust', l: 3, les: 'c-kmeans', card: 3, calc: true,
+  q: 'k-means a 1 dimensão com os pontos 0, 2, 3, 9 e 10 e centróides iniciais c₁ = 0 e c₂ = 10. Onde ficam os centróides quando o algoritmo converge?',
+  o: ['c₁ ≈ 1,67 e c₂ = 9,5', 'c₁ = 1 e c₂ = 7,33', 'c₁ = 0 e c₂ = 10', 'c₁ ≈ 1,67 e c₂ = 7,33'], a: 0,
+  e: '{0, 2, 3} vão para c₁ e {9, 10} para c₂: c₁ = 5/3 ≈ 1,67 e c₂ = 9,5. Na iteração seguinte o 3 está a 1,33 de c₁ e a 6,5 de c₂, por isso **nada muda**.',
+  w: { 1: 'O ponto 3 não muda de grupo: fica muito mais perto de c₁.', 2: 'São os centróides iniciais: falta atualizar.', 3: 'Mistura dois cenários: se o 3 mudasse, c₁ também passava a 1.' } },
+{ id: 'bug-12', t: 'clust', l: 3, les: 'c-valid', card: 2, calc: true,
+  q: 'Silhueta do ponto 0, no cluster {0, 2}; o outro cluster é {5, 7}. Quanto vale s(0)?',
+  o: ['≈ 0,667', '2', '≈ 0,333', '1'], a: 0,
+  e: 'a = 2 (distância ao 2); b = (5 + 7)/2 = 6. s = 1 − a/b = 1 − 2/6 ≈ **0,667**.',
+  w: { 1: 'Dividiste por min(a, b): a silhueta divide pelo máximo e nunca passa de 1.', 2: 'a/b = 1/3 é o que se subtrai: s = 1 − a/b.' } },
+{ id: 'bug-13', t: 'clust', l: 3, les: 'c-em', card: 2, calc: true,
+  q: 'Passo E com π₁ = π₂ = 0,5, p(x | c₁ = 1) = 0,2 e p(x | c₂ = 1) = 0,6. Quanto vale a responsabilidade γ₁ do cluster 1?',
+  o: ['0,25', '0,1', '0,75', '0,5'], a: 0,
+  e: 'π₁·p(x|c₁ = 1) = 0,1 e π₂·p(x|c₂ = 1) = 0,3. Normalizando: γ₁ = 0,1/0,4 = **0,25** (e γ₂ = 0,75).',
+  w: { 1: 'Falta normalizar: as responsabilidades somam 1.', 2: '0,75 é γ₂, a responsabilidade do cluster 2.', 3: '0,5 é o prior π₁; o passo E junta-lhe os dados.' } },
+{ id: 'bug-14', t: 'pca', l: 3, les: 'pc-cov', card: 1, calc: true,
+  q: 'Amostra X = {(0, 0), (2, 0), (4, 3)}, com média (2, 1). A soma dos produtos dos desvios é (−2)(−1) + 0·(−1) + 2·2 = 6. Quanto vale c₁₂?',
+  o: ['3', '2', '6', '1,5'], a: 0,
+  e: 'A covariância amostral divide por **n − 1 = 2**: c₁₂ = 6/2 = **3**.',
+  w: { 1: 'Dividiste por n = 3: a amostral divide por n − 1.', 2: 'Falta dividir por n − 1.' } },
+{ id: 'bug-15', t: 'pca', l: 3, les: 'pc-pca', card: 2, calc: true,
+  q: 'PCA com C = [[2, 1], [1, 2]], cujos valores próprios são 3 e 1. Que fração da variância explica a 1.ª componente?',
+  o: ['75%', '100%', '50%', '33%'], a: 0,
+  e: 'Variância explicada = λ₁/(λ₁ + λ₂) = 3/4 = **75%**.',
+  w: { 1: 'Divide pela **soma** dos valores próprios, não só por λ₁.', 2: 'Seria assim com valores próprios iguais.', 3: '1/3 = λ₂/λ₁ não é uma fração da variância.' } },
+{ id: 'bug-16', t: 'svm', l: 3, les: 's-margin', card: 1, calc: true,
+  q: 'SVM com w = (3, 4) e b = −5, escalado para os vetores de suporte darem |wᵀx + b| = 1. Qual é a largura da margem?',
+  o: ['0,4', '0,2', '5', '2'], a: 0,
+  e: '‖w‖ = √(9 + 16) = 5. A margem mede **ρ = 2/‖w‖ = 0,4** (1/‖w‖ de cada lado do hiperplano).',
+  w: { 1: '1/‖w‖ é só metade da margem.', 2: '‖w‖ = 5; a margem é 2/‖w‖.', 3: 'Faltou dividir por ‖w‖ = 5.' } },
 ]);
 
 /* --- courses/ml/problems.js --- */
@@ -19984,7 +20008,8 @@ STUDY.ids("ml", ["data-01",
 "pe-16",
 "pe-17",
 "pc-19",
-"mlp-19"]);
+"mlp-19",
+"ev-22"]);
 STUDY.ids("so", ["fs-01",
 "fs-02",
 "fs-03",
@@ -22349,7 +22374,7 @@ function Feedback(q, it) {
   </div>`;
 }
 // question kinds that train the open-book exam: which method, quick sanity check, find the wrong step
-const KINDS = { method: 'Que método?', check: 'Verificação', bug: 'Onde está o erro?' };
+const KINDS = { method: 'Que método?', check: 'Verificação' };
 const pickOne = a => a[Math.floor(Math.random() * a.length)];
 const codeBlock = c => `<pre class="codeblk">${esc(c)}</pre>`;
 // k: only card k of the lesson (the diagram and the key line belong to the last card)

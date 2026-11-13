@@ -92,4 +92,9 @@ STUDY.questions('ml', [
   q: 'Uma árvore com 4 níveis tem accuracy de treino 0,936; podada a 2 níveis, tem 0,874. Não há dados de teste. O que se pode concluir sobre overfitting?',
   o: ['Nada: falta o erro de teste', 'A árvore de 4 níveis está em overfitting', 'A árvore podada está em underfitting', 'A de 4 níveis generaliza melhor'], a: 0,
   e: 'Mais profundidade **sobe sempre** a accuracy de treino, por isso 0,936 contra 0,874 é o esperado. Overfitting é o erro de **teste** piorar enquanto o de treino melhora: sem teste (ou validação), não há evidência nem a favor nem contra.' },
+{ id: 'ev-22', t: 'eval', l: 3, les: 'ev-cm', card: 3, calc: true,
+  q: 'Uma árvore tem duas folhas. A folha A prevê Sim e tem 4 exemplos de treino, 3 certos e 1 errado. A folha B prevê Não e tem 5 exemplos, 4 certos e 1 errado. Com Sim como positivo, quanto vale a sensibilidade no treino?',
+  o: ['3/4 = 0,75', '4/5 = 0,8', '7/9 ≈ 0,78', '3/5 = 0,6'], a: 0,
+  e: 'Folha A (prevê Sim): 3 certos → TP = 3, 1 errado (era Não) → FP = 1. Folha B (prevê Não): 4 certos → TN = 4, 1 errado (era Sim) → FN = 1. Sensibilidade = TP/(TP + FN) = 3/4 = **0,75**.',
+  w: { 1: '4/5 = TN/(TN + FN) olha para a folha que prevê Não: não é a sensibilidade.', 2: '7/9 = (TP + TN)/total é a accuracy.', 3: 'O errado da folha B era Sim, por isso é FN e entra no denominador: TP/(TP + FN) = 3/4.' } },
 ]);

@@ -466,7 +466,8 @@ body:has(.pb-actions) .calc-fab{bottom:calc(84px + env(safe-area-inset-bottom,0p
 .calc-disp{position:relative;border:1.5px solid var(--line);border-radius:10px;background:var(--panel-2);padding:10px 12px 8px;cursor:text;min-height:86px;display:flex;flex-direction:column;justify-content:space-between;gap:4px}
 .calc-disp.focus{border-color:var(--accent)}
 /* a block, not flex: flex items ignore vertical-align, which raises exponents and lowers indices */
-.calc-expr{font-size:24px;min-height:44px;overflow-x:auto;overflow-y:hidden;padding:6px 0 2px;line-height:1.7;white-space:nowrap}
+.calc-expr{font-size:24px;min-height:44px;overflow-x:auto;overflow-y:hidden;padding:6px 0 2px 3px;line-height:1.7;white-space:nowrap;scrollbar-width:thin}
+.calc-tail{display:inline-block;width:1.5em}
 .calc-ph{color:var(--muted);font-size:15px;font-family:var(--f-body);opacity:.8}
 .calc-prev{display:flex;align-items:baseline;justify-content:flex-end;gap:10px;min-height:22px;text-align:right;color:var(--muted)}
 .calc-prev .cl{font-size:18px}

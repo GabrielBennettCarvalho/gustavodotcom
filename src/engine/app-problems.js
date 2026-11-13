@@ -81,8 +81,25 @@ function pbAdvance() {
   renderView();
 }
 function pbDoneStep(x, state) { x.state = state; x.marks = null; x.msg = ''; if (state === 'clean') pbAdvance(); else { pb.showing = true; pb.focus = 'cont'; renderView(); } }
+// an alone stage (and a review) is one answer sheet: the statement and the boxes of the results, with no steps to follow
+function pbCheckSheet() {
+  const todo = pb.steps.filter(x => x.state === 'todo');
+  if (todo.some(x => pbCells(x.s).some((c, i) => !c.shown && pbParse(x.vals[i]) === null))) {
+    pb.msg = 'Preenche todas as caixas com números. Aceita vírgula, ponto e frações (2/3).'; todo.forEach(x => { x.marks = null; x.msg = ''; }); pb.focus = 'empty'; renderView(); return; }
+  pb.msg = '';
+  for (const x of todo) {
+    const s = x.s, cells = pbCells(s), tol = s.tol || PB_TOL, got = cells.map((c, i) => c.shown ? c.v : pbParse(x.vals[i]));
+    x.marks = cells.map((c, i) => Math.abs(got[i] - c.v) <= tol);
+    if (x.marks.every(Boolean)) { x.state = x.wrong ? 'helped' : 'clean'; x.msg = ''; continue; }
+    x.wrong++; const miss = (s.miss || []).find(m => pbFlat(m.v).every((v, i) => Math.abs(v - got[i]) <= tol));
+    x.msg = miss ? miss.m : 'Ainda não.';
+  }
+  if (pb.steps.every(x => x.state !== 'todo')) { pbFinish(); return; }
+  pb.focus = 'bad'; renderView();
+}
 function pbCheck() {
-  if (!pb || pb.showing) return; const x = pb.steps[pb.i], s = x.s, cells = pbCells(s), vals = x.vals.map(pbParse), tol = s.tol || PB_TOL;
+  if (!pb || pb.showing) return; if (pb.alone) { pbCheckSheet(); return; }
+  const x = pb.steps[pb.i], s = x.s, cells = pbCells(s), vals = x.vals.map(pbParse), tol = s.tol || PB_TOL;
   if (cells.some((c, i) => !c.shown && vals[i] === null)) { x.msg = 'Preenche todas as caixas com números. Aceita vírgula, ponto e frações (2/3).'; x.marks = null; pb.focus = 'empty'; renderView(); return; }
   const got = cells.map((c, i) => c.shown ? c.v : vals[i]);
   x.marks = cells.map((c, i) => Math.abs(got[i] - c.v) <= tol);
@@ -95,14 +112,16 @@ function pbCheck() {
 }
 function pbReveal() { const x = pb.steps[pb.i]; x.vals = pbCells(x.s).map(c => pbNum(c.v)); pbDoneStep(x, 'revealed'); }
 function pbHint() {
-  if (!pb || pb.showing) return; const x = pb.steps[pb.i], n = (x.s.hints || []).length;
-  if (pb.alone || x.hints >= n) { pbReveal(); return; }
+  if (!pb || pb.showing) return;
+  if (pb.alone) { pb.steps.filter(x => x.state === 'todo').forEach(x => { x.vals = pbCells(x.s).map(c => pbNum(c.v)); x.state = 'revealed'; }); pbFinish(); return; }
+  const x = pb.steps[pb.i], n = (x.s.hints || []).length;
+  if (x.hints >= n) { pbReveal(); return; }
   x.hints++; renderView();
 }
 function pbSign() {
-  if (!pb) return; const a = document.activeElement, i = a && a.dataset && a.dataset.act === 'pval' ? +a.dataset.c : pb.lastCell; if (i === null) return;
-  const el = document.querySelector(`input.pb-cell[data-c="${i}"]`); if (!el) return;
-  el.value = /^[−-]/.test(el.value) ? el.value.slice(1) : '−' + el.value; pb.steps[pb.i].vals[i] = el.value; el.focus();
+  if (!pb) return; const a = document.activeElement, at = a && a.dataset && a.dataset.act === 'pval' ? [+a.dataset.s, +a.dataset.c] : pb.lastCell; if (!at) return;
+  const el = document.querySelector(`input.pb-cell[data-s="${at[0]}"][data-c="${at[1]}"]`); if (!el) return;
+  el.value = /^[−-]/.test(el.value) ? el.value.slice(1) : '−' + el.value; pb.steps[at[0]].vals[at[1]] = el.value; el.focus();
 }
 const pbWorth = x => x.state === 'revealed' ? 0 : x.state === 'helped' ? (x.wrong + x.hints <= 1 ? 0.5 : 0.25) : 1;
 function pbFinish() {
@@ -145,6 +164,7 @@ function Problem() {
   if (!pb) return ProblemPick();
   if (pb.result) return pbResults();
   const T = TOPICS[pb.p.t], x = pb.steps[pb.i], S_ = pb.stage, typed = pb.steps.filter(y => y.state !== 'given'), k = typed.indexOf(x) + 1;
+  if (pb.alone) return pbSheet(T, S_);
   const prog = `<div class="progress" aria-hidden="true">${typed.map(y => `<i class="${y.state === 'clean' ? 'ok' : y.state === 'helped' || y.state === 'revealed' ? 'sk' : y === x ? 'cur' : ''}"></i>`).join('')}</div>`;
   const head = `<div class="qhead"><button class="btn small" data-act="pbQuit" aria-label="Sair do problema">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="badge kind">${pb.review ? 'Revisão' : PB_KIND[S_.kind]}</span>${prog}<span class="mono muted">${k}/${typed.length}</span></div>`;
   const stmt = `<details class="card pb-stmt" id="pb-stmt" ${pb.stmtOpen ? 'open' : ''}><summary><span class="eyebrow">${esc(S_.src || 'Como no exame')}${S_.pts ? ` · ${pbNum(S_.pts)} valores` : ''}</span><span class="pb-stmt-t">${pb.stmtOpen ? 'Enunciado' : 'Ver enunciado'}</span></summary>
@@ -152,15 +172,27 @@ function Problem() {
   const rows = pb.steps.slice(0, pb.i).map(pbRow).join('');   // only what comes before: a later step that is filled in would give away the answer
   return `${head}${stmt}${rows ? `<div class="pb-work" aria-label="Contas feitas">${rows}</div>` : ''}${pbStep(x, k, typed.length)}`;
 }
+function pbSheet(T, S_) {
+  const head = `<div class="qhead"><button class="btn small" data-act="pbQuit" aria-label="Sair do problema">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="badge kind">${pb.review ? 'Revisão' : PB_KIND[S_.kind]}</span></div>`;
+  const stmt = `<article class="card pb-stmt"><span class="eyebrow">${esc(S_.src || 'Como no exame')}${S_.pts ? ` · ${pbNum(S_.pts)} valores` : ''}</span>
+      <p class="qtext" style="margin-top:6px">${md(S_.stmt)}</p>${S_.d ? `<div class="diagram">${renderD(S_.d)}</div>` : ''}</article>`;
+  const boxes = pb.steps.map((x, j) => x.state === 'given' ? '' : `<div class="pb-res">${pbGrid(x, j)}${x.msg ? `<p class="pb-msg" role="status">${md(x.msg)}</p>` : ''}</div>`).join('');
+  const all = pb.steps.filter(x => x.state !== 'given').length, left = pb.steps.filter(x => x.state === 'todo').length;
+  return `${head}${stmt}<article class="card pb-step" id="pbStep"><span class="eyebrow">Sem passos nem pistas, como no exame</span>
+    <p class="muted" style="margin-top:6px;font-size:13.5px">Resolve no papel e escreve aqui só os resultados. Verificas tudo no fim; o que estiver errado podes corrigir.</p>
+    ${boxes}${pb.msg ? `<p class="pb-msg" role="status">${md(pb.msg)}</p>` : ''}
+    ${cabPeek(pb.p.skill, 'pb:' + pb.p.id)}
+    <div class="pb-actions"><button class="btn primary" data-act="pbCheck">Verificar${left < all ? ` (faltam ${left})` : ''}</button><button class="btn pb-sign" data-act="pbSign" aria-label="Trocar o sinal da caixa ativa">±</button><span class="spacer"></span><button class="btn ghost small" data-act="pbHint">Não sei: ver a resolução</button></div></article>`;
+}
 function pbRow(y) {
   const tag = { clean: ['ok', 'à primeira'], helped: ['help', y.hints ? `com ${y.hints} pista${y.hints > 1 ? 's' : ''}` : 'corrigido'], revealed: ['rev', 'vista'], given: ['giv', y.byQ ? 'já fizeste' : 'já sabes'] }[y.state];
   return `<details class="pb-row ${tag[0]}"><summary><span class="pb-name mono">${esc(y.s.name)}</span><span class="pb-val mono">${esc(pbText(y.s.ans))}</span>${y.s.also ? `<span class="mono pb-also">${esc(y.s.also)}</span>` : ''}<span class="pb-tag">${tag[1]}</span></summary><p class="explain">${md(y.s.e)}</p></details>`;
 }
-function pbGrid(x) {
-  const s = x.s, cells = pbCells(s), rows = pbRows(s.ans); let c = 0;
+function pbGrid(x, si = pb.i) {
+  const s = x.s, cells = pbCells(s), rows = pbRows(s.ans), done = pb.showing || (pb.alone && x.state !== 'todo'); let c = 0;
   const html = rows.map((r, ri) => `<div class="pb-gr">${r.map((_, j) => { const i = c++, cl = x.marks ? (x.marks[i] ? 'good' : 'bad') : '';
     if (cells[i].shown) return `<span class="pb-cell fixed">${pbNum(cells[i].v)}</span>`;
-    return `<input class="pb-cell ${pb.showing ? 'good' : cl}" data-act="pval" data-c="${i}" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" value="${esc(x.vals[i])}" aria-label="${esc(s.name)}, ${pbIsMat(s.ans) ? `linha ${ri + 1}, coluna ${j + 1}` : `componente ${j + 1}`}" ${pb.showing ? 'disabled' : ''}>`; }).join('')}</div>`).join('');
+    return `<input class="pb-cell ${done ? 'good' : cl}" data-act="pval" data-s="${si}" data-c="${i}" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" value="${esc(x.vals[i])}" aria-label="${esc(s.name)}, ${pbIsMat(s.ans) ? `linha ${ri + 1}, coluna ${j + 1}` : `componente ${j + 1}`}" ${done ? 'disabled' : ''}>`; }).join('')}</div>`).join('');
   return `<div class="pb-answer"><span class="pb-name mono">${esc(s.name)} =</span><div class="pb-mat ${pbIsMat(s.ans) ? 'm' : 'v'}">${html}</div></div>`;
 }
 function pbStep(x, k, n) {
@@ -203,8 +235,8 @@ function afterProblemRender() {
   if (card) (f === 'cont' ? (cont || card) : card).scrollIntoView({ block: f === 'cont' ? 'nearest' : 'start' });
 }
 let pbKeepT = null;
-document.addEventListener('input', ev => { const t = ev.target; if (pb && t.dataset && t.dataset.act === 'pval') { const x = pb.steps[pb.i]; x.vals[+t.dataset.c] = t.value; t.classList.remove('bad', 'good'); clearTimeout(pbKeepT); pbKeepT = setTimeout(pbKeep, 800); } });
-document.addEventListener('focusin', ev => { const t = ev.target; if (pb && t.dataset && t.dataset.act === 'pval') pb.lastCell = +t.dataset.c; });
+document.addEventListener('input', ev => { const t = ev.target; if (pb && t.dataset && t.dataset.act === 'pval') { const x = pb.steps[+t.dataset.s]; x.vals[+t.dataset.c] = t.value; t.classList.remove('bad', 'good'); clearTimeout(pbKeepT); pbKeepT = setTimeout(pbKeep, 800); } });
+document.addEventListener('focusin', ev => { const t = ev.target; if (pb && t.dataset && t.dataset.act === 'pval') pb.lastCell = [+t.dataset.s, +t.dataset.c]; });
 document.addEventListener('toggle', ev => { if (pb && ev.target.id === 'pb-stmt') pb.stmtOpen = ev.target.open; }, true);
 // the ± button must not take the focus away from the box it changes
 document.addEventListener('pointerdown', ev => { if (ev.target.closest && ev.target.closest('.pb-sign')) ev.preventDefault(); });

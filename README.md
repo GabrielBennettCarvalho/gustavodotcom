@@ -158,6 +158,9 @@ The end screen also folds out the whole worked solution, every step with its lin
   already got them right, the step comes filled in ("já fizeste"), except in `alone` stages and reviews. If that would
   fill every step, the last one stays to do.
 - A clean first problem finishes the type. Otherwise the next stage is due the next day ("Fazer já" skips the wait).
+- An `alone` stage (and a review) is not walked step by step: it is one answer sheet, the statement and a box for each
+  step's result (labelled by its `name`; the `ask` and the hints are not shown). The student solves on paper, checks
+  everything at once, fixes what is wrong, or gives up with "Não sei: ver a resolução".
 - A type can have several `alone` stages (extra full-length practice). A failed `alone` stage goes back to the last stage
   with help, and the next `alone` one is the one seen longest ago, so a retry gets new data.
 - A finished type comes back once, with no hints, a week later.

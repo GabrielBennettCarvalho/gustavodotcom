@@ -332,16 +332,32 @@ function exitText(src) {
   const T = tokenize(src); if (!T.length) return '';
   let open = 0; T.forEach(t => { if (t.k === '(') open++; else if (t.k === ')' && open) open--; });
   if (/\s$/.test(src)) return open ? ')' : '';
-  const last = T[T.length - 1]; let j = T.length - 1;
+  const last = T[T.length - 1], j = T.length - 1;
   if (last.k === 'Fn') return last.sub && !last.sub.text ? '' : '(';
   if (last.sub) return last.sub.text ? ' ' : '';
-  if (last.k === ')') { for (let d = 0; j >= 0; j--) { if (T[j].k === ')') d++; else if (T[j].k === '(' && !--d) break; } if (j > 0 && T[j - 1].k === 'Fn') j--; }
-  if (['N', 'V', 'K', ')'].includes(last.k)) {
+  // a number or name right after ^ or / would grow if typing went on (2^3 then 4 → 2^34): a space ends it.
+  // A closing bracket needs nothing: whatever box it closed is left already, so → goes on to the next open bracket.
+  if (['N', 'V', 'K'].includes(last.k)) {
     let pv = T[j - 1]; if (pv && pv.k === 'Op' && (pv.v === '-' || pv.v === '+') && T[j - 2] && T[j - 2].v === '^') pv = T[j - 2];   // 2^-3
     if (pv && pv.k === 'Op' && (pv.v === '^' || pv.v === '/')) return ' ';
   }
   return open ? ')' : '';
 }
 
-ROOT.CALC = { parse, run, render, show, ser, de, CHUNK, exitText };
+/* Where the fraction whose denominator's bracket closes right at p begins, or -1. The caret there is drawn past the
+   whole fraction, so an exponent or "!" typed there belongs to all of it: app-calc.js brackets it first ((2/3)², not
+   2/3²). */
+const startOf = n => n.t === 'num' || n.t === 'var' ? n.tok.s : n.t === 'hole' ? n.p : n.t === 'neg' ? n.op.s : n.t === 'par' ? n.l.s
+  : n.t === 'call' ? n.f.s : n.t === 'set' ? n.v.s : n.t === 'seq' ? startOf(n.items[0]) : n.a ? startOf(n.a) : 0;
+function fracBefore(src, p) {
+  let s = -1;
+  (function walk(n) {
+    if (!n || typeof n !== 'object' || !n.t) return;
+    if (n.t === 'frac' && n.b.t === 'par' && n.b.r && n.b.r.e === p) s = startOf(n.a);
+    [n.a, n.b, ...(n.args || []), ...(n.items || [])].forEach(walk);
+  })(parse(src));
+  return s;
+}
+
+ROOT.CALC = { parse, run, render, show, ser, de, CHUNK, exitText, fracBefore };
 })();

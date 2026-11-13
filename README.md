@@ -194,7 +194,8 @@ Definições → Calculadora turns the button on or off per course (`settings.ca
 - `/` and `^` open a box, as on a graphing calculator: they type `/(` or `^(`, a bracket the layout hides, so `1/2+3`
   typed in a row is 1/(2+3) and stays in the denominator until → or `)` (a `(` typed right after is absorbed; backspace
   removes `/(` in one go). The caret right after that bracket sits past the whole fraction, exponent or root, and a tap
-  past the end of the expression leaves every box. The x² key types `^2 `: no box, and the space puts what follows back on the line.
+  past the end of the expression leaves every box. An exponent or `!` typed right after a fraction is for the whole fraction, so it gets brackets
+  first: `2/3`, →, `^2` is (2/3)² (`CALC.fracBefore`). The x² key types `^2 `: no box, and the space puts what follows back on the line.
 - The text has no boxes, so → at the end of it leaves the one being typed in (`CALC.exitText`): after a function's
   name or base it types `(` (`log_2` → log₂(□)), after an index or a one-piece exponent or denominator a space
   (`2^3 4` is 2³·4), inside an open bracket `)`.

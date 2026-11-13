@@ -125,7 +125,9 @@ function calcPosAt(ev, len) {
 }
 
 function calcInsert(t) {
-  const inp = calcEl('calc-in'), a = inp.selectionStart, b = inp.selectionEnd;
+  const inp = calcEl('calc-in'); let a = inp.selectionStart, b = inp.selectionEnd;
+  // ^ or ! right after a fraction (caret drawn past it) is for the whole fraction: bracket it, so (2/3)² and not 2/3²
+  if (a === b && /^[\^!]/.test(t)) { const s = CX.fracBefore(inp.value, a); if (s >= 0) { const v = inp.value; inp.value = v.slice(0, s) + '(' + v.slice(s, a) + ')' + v.slice(a); a = b = a + 2; } }
   // "/" and "^" open a box (a bracket the layout hides): what follows stays in the denominator or exponent until → or ")"
   if (t === '(' && a === b && /[/^]\($/.test(inp.value.slice(0, a))) { calcDraw(); return; }   // that box is already the bracket
   if (/^[/^](?!\()/.test(t) && t !== '^2 ') t = t[0] + '(' + t.slice(1);   // x² types "^2 ": no box, and the space ends it
@@ -180,7 +182,7 @@ function calcBind(p) {
   // beforeinput, not keydown: phone keyboards often send keydown without the key
   inp.addEventListener('beforeinput', ev => {
     if (ev.inputType === 'deleteContentBackward') { ev.preventDefault(); calcBack(); }
-    else if (ev.inputType === 'insertText' && ev.data && (/^[/^(]/.test(ev.data) || (/^[+*!]/.test(ev.data) && !inp.value.trim() && calcMem.ans))) { ev.preventDefault(); calcInsert(ev.data); }
+    else if (ev.inputType === 'insertText' && ev.data && (/^[/^(!]/.test(ev.data) || (/^[+*]/.test(ev.data) && !inp.value.trim() && calcMem.ans))) { ev.preventDefault(); calcInsert(ev.data); }
   });
   inp.addEventListener('focus', () => { disp.classList.add('focus'); calcDraw(); });
   inp.addEventListener('blur', () => disp.classList.remove('focus'));

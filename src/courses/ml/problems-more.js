@@ -50,7 +50,7 @@ STUDY.problems('ml', [
       { name: 'H(z)', c: 'dt-h', ask: 'Qual é a entropia **H(z)**?', ans: [1.371], e: 'p = (1/5; 3/5; 1/5), logo H = **1,371 bits**.' },
       { name: 'H(z|·) (y₁; y₂)', c: 'dt-ig', ask: 'Calcula as entropias condicionais **H(z|y₁)** e **H(z|y₂)**.', ans: [1.2, 0.951], e: 'y₁: 4/5·H(1/4; 2/4; 1/4) = **1,2**. y₂: 2/5·1 + 3/5·0,918 = **0,951**.' },
       { name: 'IG (y₁; y₂)', c: 'dt-ig', ask: 'Calcula o ganho de **y₁** e de **y₂**.', ans: [0.171, 0.42], also: 'Raiz: y₂', e: '1,371 − 1,2 = **0,171** e 1,371 − 0,951 = **0,420**. **y₂** vai para a raiz.' },
-      { name: 'IG(y₁) (y₂ = 0; y₂ = 1)', c: 'dt-branch', ask: 'Qual é o ganho de **y₁** em cada ramo: y₂ = 0 e y₂ = 1?', ans: [1, 0], e: 'y₂ = 0 = {B, C}: y₁ separa, IG = **1**. y₂ = 1 = {A, B, B}: y₁ é sempre 0, IG = **0**, e fica uma folha com a maioria, B.' },
+      { name: 'IG(y₁) (y₂ = 0; y₂ = 1)', c: 'dt-branch', ask: 'Qual é o ganho de **y₁** em cada ramo: y₂ = 0 e y₂ = 1?', ans: [1, 0], e: 'Ramo **y₂ = 0**: x₂ (y₁ = 1, B) e x₅ (y₁ = 0, C). H = 1; y₁ põe cada um num ramo puro, H(z|y₁) = 0, IG = 1 − 0 = **1**.\nRamo **y₂ = 1**: x₁, x₃, x₄ (A, B, B), todos com y₁ = 0. H = 0,918, mas y₁ não os separa: H(z|y₁) = 0,918, IG = **0**. Não há mais atributos, por isso fica uma folha com a maioria, **B** (x₁ fica mal classificado no treino).\nÁrvore: y₂ = 1 → B; y₂ = 0 → (y₁ = 1 → B, y₁ = 0 → C).' },
     ] },
   { id: 'dt-build-4', kind: 'alone', alone: true, src: 'Ficha P02, ex. 2', pts: 2,
     stmt: 'Com estes dados (4 classes), constrói a árvore de decisão pelo **ganho de informação** para prever O.',

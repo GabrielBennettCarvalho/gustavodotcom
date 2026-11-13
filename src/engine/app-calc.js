@@ -25,7 +25,7 @@ function calcSync() {
 }
 
 // [text to insert, label, title]; special keys start with '#'
-const CALC_FN = [['/', '<span class="cl-frac sm"><span class="cl-fn">▫</span><span class="cl-fd">▫</span></span>', 'Fração ( / )'], ['^2', 'x²', 'Ao quadrado ( ^2 )'], ['^', 'xⁿ', 'Potência ( ^ )'],
+const CALC_FN = [['/', '<span class="cl-frac sm"><span class="cl-fn">▫</span><span class="cl-fd">▫</span></span>', 'Fração ( / )'], ['^2 ', 'x²', 'Ao quadrado ( ^2 )'], ['^', 'xⁿ', 'Potência ( ^ )'],
   ['sqrt(', '√', 'Raiz quadrada ( sqrt )'], ['(', '('], [')', ')'],
   ['ln(', 'ln', 'Logaritmo natural ( ln )'], ['log_2(', 'log₂', 'Logaritmo de base 2 ( log_2 ). Outra base: log_b'], ['log(', 'log', 'Logaritmo de base 10 ( log )'],
   ['pi', 'π', 'Pi ( pi )'], ['e', 'e', 'Número de Euler ( e )'], ['#idx', 'x₁', 'Índice ( _ ): depois de uma letra põe-lhe um índice (w₁, log₂); sozinho escreve x₁']];
@@ -103,23 +103,32 @@ function calcCaret(ex, p) {
   const hole = !word && leaves.find(l => isHole(l) && +l.dataset.s <= p && p <= +l.dataset.e);
   if (hole) hole.appendChild(caret);
   // right after ^ _ / or an opening bracket the caret belongs inside the box they open
-  else if (after && !('open' in after.dataset)) after.after(caret);
+  else if (after && !('open' in after.dataset)) calcAfter(after, caret);
   else if (before) before.before(caret);
   else if (after) after.after(caret);
   // after a space at the end (→ left a box): back on the line, inside the innermost bracket still open
   else if (leaves.every(l => +l.dataset.e < p)) { const g = ex.querySelector('[data-ghost]'); if (g) g.before(caret); else ex.append(caret); }
   else { const prev = leaves.filter(l => +l.dataset.e < p).pop(); if (prev) prev.after(caret); else ex.prepend(caret); }
 }
-// where a tap on the drawn expression puts the caret: before or after the piece tapped
+// right after the bracket that ends a denominator, an exponent or a root, the caret is past the whole box
+function calcAfter(l, caret) {
+  const box = l.parentElement;
+  if (!('close' in l.dataset) || box.lastElementChild !== l || !box.matches('.cl-fd, .cl-sup, .cl-rc')) { l.after(caret); return; }
+  (box.matches('.cl-sup') ? box : box.parentElement).after(caret);
+}
+// where a tap on the drawn expression puts the caret: before or after the piece tapped; -1 past its end
 function calcPosAt(ev, len) {
   const l = ev.target.closest && ev.target.closest('#calc-expr [data-s]');
-  if (!l) { const r = calcEl('calc-expr').getBoundingClientRect(); return ev.clientX < r.left + 8 ? 0 : len; }
+  if (!l) { const r = calcEl('calc-expr').getBoundingClientRect(); return ev.clientX < r.left + 8 ? 0 : ev.target.closest && ev.target.closest('#calc-expr') ? -1 : len; }
   if ('hole' in l.dataset) return +l.dataset.s;
   const r = l.getBoundingClientRect(); return ev.clientX < r.left + r.width / 2 ? +l.dataset.s : +l.dataset.e;
 }
 
 function calcInsert(t) {
   const inp = calcEl('calc-in'), a = inp.selectionStart, b = inp.selectionEnd;
+  // "/" and "^" open a box (a bracket the layout hides): what follows stays in the denominator or exponent until → or ")"
+  if (t === '(' && a === b && /[/^]\($/.test(inp.value.slice(0, a))) { calcDraw(); return; }   // that box is already the bracket
+  if (/^[/^](?!\()/.test(t) && t !== '^2 ') t = t[0] + '(' + t.slice(1);   // x² types "^2 ": no box, and the space ends it
   // an operator on an empty line continues from the last result, as on a calculator
   if (!inp.value.trim() && /^[+*/^!]/.test(t) && calcMem.ans) t = 'ans' + t;
   inp.setRangeText(t, a, b, 'end'); calcHi = -1; calcErr = ''; calcDraw();
@@ -171,13 +180,15 @@ function calcBind(p) {
   // beforeinput, not keydown: phone keyboards often send keydown without the key
   inp.addEventListener('beforeinput', ev => {
     if (ev.inputType === 'deleteContentBackward') { ev.preventDefault(); calcBack(); }
-    else if (ev.inputType === 'insertText' && /^[+*/^!]/.test(ev.data || '') && !inp.value.trim() && calcMem.ans) { ev.preventDefault(); calcInsert(ev.data); }
+    else if (ev.inputType === 'insertText' && ev.data && (/^[/^(]/.test(ev.data) || (/^[+*!]/.test(ev.data) && !inp.value.trim() && calcMem.ans))) { ev.preventDefault(); calcInsert(ev.data); }
   });
   inp.addEventListener('focus', () => { disp.classList.add('focus'); calcDraw(); });
   inp.addEventListener('blur', () => disp.classList.remove('focus'));
   disp.addEventListener('pointerdown', ev => {
     if (ev.target === inp) return; ev.preventDefault();
-    const pos = calcPosAt(ev, inp.value.length); inp.focus({ preventScroll: true }); inp.setSelectionRange(pos, pos); calcDraw();
+    const pos = calcPosAt(ev, inp.value.length), n = inp.value.length; inp.focus({ preventScroll: true }); inp.setSelectionRange(pos < 0 ? n : pos, pos < 0 ? n : pos);
+    if (pos < 0) for (let k = 0; k < 20; k++) { const t = CX.exitText(inp.value); if (t !== ')' && t !== ' ') break; inp.setRangeText(t, inp.value.length, inp.value.length, 'end'); }   // a tap past the end leaves every box
+    calcDraw();
   });
   // keys keep the focus in the input (and the phone keyboard as it was)
   p.addEventListener('pointerdown', ev => { if (ev.target.closest('.calc-k')) ev.preventDefault(); });

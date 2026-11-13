@@ -191,6 +191,10 @@ Definições → Calculadora turns the button on or off per course (`settings.ca
 - Typing goes to a hidden input; above it `calc.js` draws the expression as on paper while it is typed: `/` stacks a
   fraction, `^` raises an exponent, `_` lowers an index (`w_1`, `log_2`), `sqrt` draws a radical. A missing operand is
   an empty box and an unclosed bracket a faint one; Enter closes brackets by itself.
+- `/` and `^` open a box, as on a graphing calculator: they type `/(` or `^(`, a bracket the layout hides, so `1/2+3`
+  typed in a row is 1/(2+3) and stays in the denominator until → or `)` (a `(` typed right after is absorbed; backspace
+  removes `/(` in one go). The caret right after that bracket sits past the whole fraction, exponent or root, and a tap
+  past the end of the expression leaves every box. The x² key types `^2 `: no box, and the space puts what follows back on the line.
 - The text has no boxes, so → at the end of it leaves the one being typed in (`CALC.exitText`): after a function's
   name or base it types `(` (`log_2` → log₂(□)), after an index or a one-piece exponent or denominator a space
   (`2^3 4` is 2³·4), inside an open bracket `)`.

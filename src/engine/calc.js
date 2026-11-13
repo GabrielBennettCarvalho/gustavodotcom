@@ -247,7 +247,8 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 const leaf = (cls, html, s, e) => `<span class="cl-${cls}" data-s="${s}" data-e="${e}">${html}</span>`;
 // a sign the layout replaces (^ _ / brackets of a fraction, a function's name): zero width, but the caret can sit by it.
 // "open" ones lead into a box (exponent, denominator…), so a caret right after them goes inside that box.
-const hid = (s, e, open) => `<span class="cl-h" data-s="${s}" data-e="${e}"${open ? ' data-open=""' : ''}></span>`;
+// k: true for one that opens a box; 'close' for the bracket that ends one (the caret right after it leaves the box)
+const hid = (s, e, k) => `<span class="cl-h" data-s="${s}" data-e="${e}"${k === 'close' ? ' data-close=""' : k ? ' data-open=""' : ''}></span>`;
 const holeH = (p, q = p) => `<span class="cl-hole" data-s="${p}" data-e="${q}" data-hole=""></span>`;
 const ghostH = (c, t = '') => `<span class="cl-p ghost${t}" data-ghost="">${c}</span>`;   // a bracket not typed yet
 const fracH = (a, b) => `<span class="cl-frac"><span class="cl-fn">${a}</span><span class="cl-fd">${b}</span></span>`;
@@ -263,11 +264,11 @@ function varH(tok) {
   const name = tok.k === 'K' ? (tok.v === 'pi' ? leaf('k', 'π', tok.s, tok.ne) : tok.v === 'e' ? leaf('v', 'e', tok.s, tok.ne) : leaf('k ans', 'ans', tok.s, tok.ne)) : leaf('v', esc(tok.v), tok.s, tok.ne);
   return name + (tok.sub ? subH(tok.sub) : '');
 }
-const G = n => n.t === 'par' ? hid(n.l.s, n.l.e, true) + R(n.a) + (n.r ? hid(n.r.s, n.r.e) : '') : R(n);   // brackets the layout already shows
+const G = n => n.t === 'par' ? hid(n.l.s, n.l.e, true) + R(n.a) + (n.r ? hid(n.r.s, n.r.e, 'close') : '') : R(n);   // brackets the layout already shows
 function callH(n) {
   const f = n.f, nm = f.v, t = n.args.some(tall) ? ' tall' : '';
   const args = n.args.map((a, k) => (k ? leaf('o c', ',', n.commas[k - 1].s, n.commas[k - 1].e) : '') + (n.lp ? R(a) : G(a))).join('');
-  if (nm === 'sqrt' || nm === 'cbrt') return `<span class="cl-sqrt">${nm === 'cbrt' ? '<span class="cl-idx">3</span>' : ''}${RAD}<span class="cl-rc">${hid(f.s, f.ne, true)}${n.lp ? hid(n.lp.s, n.lp.e, true) : ''}${n.lp ? n.args.map((a, k) => (k ? leaf('o c', ',', n.commas[k - 1].s, n.commas[k - 1].e) : '') + G(a)).join('') : args}${n.rp ? hid(n.rp.s, n.rp.e) : n.lp ? '<span data-ghost=""></span>' : ''}</span></span>`;
+  if (nm === 'sqrt' || nm === 'cbrt') return `<span class="cl-sqrt">${nm === 'cbrt' ? '<span class="cl-idx">3</span>' : ''}${RAD}<span class="cl-rc">${hid(f.s, f.ne, true)}${n.lp ? hid(n.lp.s, n.lp.e, true) : ''}${n.lp ? n.args.map((a, k) => (k ? leaf('o c', ',', n.commas[k - 1].s, n.commas[k - 1].e) : '') + G(a)).join('') : args}${n.rp ? hid(n.rp.s, n.rp.e, 'close') : n.lp ? '<span data-ghost=""></span>' : ''}</span></span>`;
   if (nm === 'abs') return leaf('p' + t, '|', f.s, f.ne) + (n.lp ? hid(n.lp.s, n.lp.e, true) : '') + args + (n.rp ? leaf('p' + t, '|', n.rp.s, n.rp.e) : ghostH('|', t));
   const head = leaf('f', esc(DISP[nm] || nm), f.s, f.ne) + (f.sub ? subH(f.sub) : '');
   if (n.lp) return head + leaf('p' + t, '(', n.lp.s, n.lp.e) + args + (n.rp ? leaf('p' + t, ')', n.rp.s, n.rp.e) : ghostH(')', t));
@@ -321,8 +322,8 @@ function show(v) {
 }
 const ser = v => isQ(v) ? { n: v.n.toString(), d: v.d.toString() } : { f: v.f };
 function de(o) { try { return o && (o.n !== undefined ? Q(big(o.n), big(o.d)) : typeof o.f === 'number' ? { f: o.f } : null); } catch { return null; } }
-// a word to delete in one go with backspace: "sqrt(", "log_2(", "pi", "ans"
-const CHUNK = new RegExp(`(?:(?:${[...Object.keys(FNS), ...Object.keys(ALIAS)].join('|')})(?:_[A-Za-z0-9]*|\\d+)?\\(|pi|ans)$`, 'i');
+// a word to delete in one go with backspace: "sqrt(", "log_2(", "pi", "ans", and the "/(" or "^(" that opens a box
+const CHUNK = new RegExp(`(?:(?:${[...Object.keys(FNS), ...Object.keys(ALIAS)].join('|')})(?:_[A-Za-z0-9]*|\\d+)?\\(|pi|ans|[/^]\\()$`, 'i');
 
 /* What → types at the end of the text to leave the box being typed in (the text has no boxes, so leaving one needs a
    sign): "(" after a function's name or base (log₂ → log₂(□)), a space after an index or a one-piece exponent or

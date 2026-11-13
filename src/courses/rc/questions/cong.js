@@ -143,8 +143,4 @@ STUDY.questions('rc', [
   q: 'Em slow start, que evento faz o TCP passar a crescer linearmente sem ter havido perdas?',
   o: ['A cwnd atingir o limiar ssthresh', 'Receber um primeiro ACK duplicado', 'O recetor anunciar uma rwnd maior', 'Passarem 10 RTT desde o início'], a: 0,
   e: '**cwnd ≥ ssthresh** → congestion avoidance (linear). Timeouts e 3 ACKs duplicados são os eventos de perda.' },
-{ id: 'cg-53', t: 'http', l: 4, les: 'h-persist', src: 'Exame 2021/22, Parte III.1.2c',
-  q: 'O servidor envia o ficheiro base (HTML) e uma imagem. Qual é o número mínimo de sessões TCP usadas, conforme a versão do HTTP?',
-  o: ['Persistente: 1 sessão; não persistente: 2', 'Sempre 1 sessão, em qualquer versão', 'Sempre 2 sessões, em qualquer versão', 'Persistente: 2 sessões; não persistente: 1'], a: 0,
-  e: 'Persistente: os dois objetos na **mesma** ligação. Não persistente: **uma ligação por objeto** → 2.' },
 ]);

@@ -157,4 +157,9 @@ STUDY.questions('rc', [
   q: 'Um proxy na instituição tem a página em cache. Um browser da instituição pede-a. Quem pode mandar um GET condicional, e a quem?',
   o: ['O proxy ao servidor de origem, para validar a cópia', 'O servidor de origem ao proxy, para atualizar a cópia', 'O browser ao servidor DNS, para saber se o IP mudou', 'Ninguém: o proxy entrega sempre a cópia sem verificar'], a: 0,
   e: 'O proxy é **servidor** para o browser e **cliente** para o servidor de origem. Pode validar a sua cópia com If-Modified-Since: se receber 304, entrega-a ao browser.' },
+/* ---------- Exame 2021/22, Parte III.1.2c: persistent vs non-persistent ---------- */
+{ id: 'cg-53', t: 'http', l: 4, les: 'h-persist', src: 'Exame 2021/22, Parte III.1.2c',
+  q: 'O servidor envia o ficheiro base (HTML) e uma imagem. Qual é o número mínimo de sessões TCP usadas, conforme a versão do HTTP?',
+  o: ['Persistente: 1 sessão; não persistente: 2', 'Sempre 1 sessão, em qualquer versão', 'Sempre 2 sessões, em qualquer versão', 'Persistente: 2 sessões; não persistente: 1'], a: 0,
+  e: 'Persistente: os dois objetos na **mesma** ligação. Não persistente: **uma ligação por objeto** → 2.' },
 ]);

@@ -137,4 +137,17 @@ STUDY.questions('oc', [
   q: 'Oito threads somam 800 números em fatias iguais. Cada soma demora T, a sincronização 20T, e no fim a thread 0 acumula as outras 7 somas. Truncando às décimas, qual é o speedup?',
   o: ['6,2', '8,0', '6,6', '5,9'], a: 0,
   e: 'Sequencial 800T. Paralelo: 100T + 20T + 7T = 127T. 800 / 127 ≈ 6,29 → **6,2**.' },
+/* ===== Estilo do teste: memória virtual (2.º teste) ===== */
+{ id: 'ocx-20', t: 'exam2', l: 3, les: 'v-size', calc: true, reserved: 'exam',
+  q: 'Endereço virtual de 32 bits, páginas de 8 KB, PTE de 4 B. Tamanho da tabela de páginas de um nível?',
+  o: ['2 MB', '4 MB', '512 KB', '8 MB'], a: 0,
+  e: 'Offset = 13 bits. Entradas = 2³²⁻¹³ = 2¹⁹. × 4 B = 2²¹ B = **2 MB**.' },
+{ id: 'ocx-21', t: 'exam2', l: 3, les: 'v-int', reserved: 'exam',
+  q: 'Qual destes cenários é IMPOSSÍVEL?',
+  o: ['Página fora da RAM, mas dado na cache', 'TLB miss, tradução na tabela, cache hit', 'TLB hit, cache miss, dado na RAM', 'TLB miss e page fault, dado no disco'], a: 0,
+  e: 'Se a página não está na RAM, nenhum dos seus blocos pode estar na cache.' },
+{ id: 'ocx-29', t: 'exam2', l: 4, les: 'v-int', calc: true, reserved: 'exam',
+  q: 'Páginas de 8 KB. Qual é a maior cache de MAPEAMENTO DIRETO que pode ser lida em paralelo com a TLB (VIPT)?',
+  o: ['8 KB', '4 KB', '16 KB', '64 KB'], a: 0,
+  e: 'Índice + offset da cache ≤ 13 bits (offset de página) → capacidade ≤ 2¹³ = **8 KB**.' },
 ]);

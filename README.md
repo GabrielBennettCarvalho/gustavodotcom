@@ -27,6 +27,8 @@ src/
     progress-key.js      the "other device" key: encode, decode, merge
     calc.js              calculator maths: parser, exact fractions, natural-display HTML (window.CALC)
     app-core.js          state, course menu, course home, sessions, mock exam
+    app-problems.js      Problemas-chave: typed exam problems, stage by stage
+    app-plan.js          Hoje: the plan at the top of every course home
     app-calc.js          the calculator panel and its corner button
     app-views.js         quiz, results, library, question bank, other device, events
     style.css
@@ -41,7 +43,10 @@ src/
     oc/                  Organização de Computadores (same layout; render.js draws address fields, tables and pipeline diagrams)
     rc/                  Redes de Computadores (render.js draws space-time diagrams, topologies, addresses)
     ml/                  Aprendizagem / Machine Learning (render.js draws data tables, matrices,
-                         point plots and decision trees; exam problems split into steps in questions/exam.js)
+                         point plots and decision trees). Past exams: questions/exam.js (one section per exam, long
+                         problems split into steps) and questions/exam2-2122.js (all of Exame 2 2021/22);
+                         questions/prep.js holds the Que método? / Verificação questions and the calculation traps;
+                         problems.js and problems-more.js are the key problems (Problemas-chave)
     so/                  Sistemas Operativos (route.js: the exam route; skills.js: past exams and problem types;
                          render.js: address fields and page tables / TLB)
     ieco/                Introdução à Economia, a HACS (render.js draws supply and demand plots with shaded surplus areas)
@@ -64,7 +69,7 @@ option (or a list) · `e` explanation. Optional: `w` note per wrong option, `les
 shown above the question, `d` diagram, `src` source, `fixed` don't shuffle options, `reserved: 'exam'` only in
 the mock exam, `calc: true` the question needs calculations (hidden by "Só teoria", the only ones in "Só contas", tagged "Contas"), `step: '2/3'`
 step of a guided calculation, `code` a code listing shown above the options, `k` the exam problem type (when it is not the
-one of its lesson; `k: ''` for none), `kind: 'method' | 'check' | 'bug'` (Que método? / Verificação / Onde está o erro?),
+one of its lesson; `k: ''` for none), `kind: 'method' | 'check'` (Que método? / Verificação),
 `card: n` the card of its lesson it is about (see below).
 
 New file? Add it to the course's list in `manifest.json`. Lessons work the same way with `STUDY.lessons`.

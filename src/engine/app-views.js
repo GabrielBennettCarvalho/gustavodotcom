@@ -21,7 +21,7 @@ function Quiz() {
   const cabBtn = isExam && openBook() ? `<button class="btn small cab-btn" data-act="cabExam" aria-pressed="${!!ses.cab}">Cábula</button>` : '';
   return `${cabBtn ? `<div class="cab-bar">${cabBtn}<span class="muted">Exame com consulta: abre a tua cábula quando precisares. O tempo continua a contar.</span></div>` : ''}<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="badge">N${q.l}</span>${KINDS[q.kind] ? `<span class="badge kind">${KINDS[q.kind]}</span>` : ''}${q.calc ? `<span class="badge calc" title="Pergunta com contas">Contas${q.step && !isExam ? ` · ${esc(q.step)}` : ''}</span>` : ''}${prog}${(isExam) ? `<span class="timer" id="timer">${fmt(ses.timeLimit - Math.floor((Date.now() - ses.startedAt) / 1000))}</span>` : ''}<span class="mono muted">${qIndex()}/${qCount()}</span></div>
     <article class="card" id="qcard">
-      <span class="eyebrow">${it.recall ? 'Revisão rápida · cartões anteriores' : esc(ses.title)}</span>
+      <span class="eyebrow">${it.recall ? 'Revisão rápida · cartões anteriores' : esc(qTitle(q))}</span>
       <p class="qtext" style="margin-top:6px">${md(q.q)}</p>
       ${multi ? '<div class="multi-note">Seleciona todas as corretas</div>' : ''}
       ${q.ctx && LBYID[q.ctx] ? `<details class="lesson-peek" style="margin-top:12px"><summary>Ler o caso: ${esc(LBYID[q.ctx].title)}</summary><div class="lbody lesson">${lessonBody(LBYID[q.ctx])}</div></details>` : ''}
@@ -49,6 +49,8 @@ function Feedback(q, it) {
 }
 // question kinds that train the open-book exam: which method, quick sanity check, find the wrong step
 const KINDS = { method: 'Que método?', check: 'Verificação' };
+// a problem type's session brings whole problems, whose other steps can be of other types: name each step by its own type
+const qTitle = q => { const k = ses.skill && skillOf(q); return k && k !== ses.skill && SKBYID[k] ? SKBYID[k].label : ses.title; };
 const pickOne = a => a[Math.floor(Math.random() * a.length)];
 const codeBlock = c => `<pre class="codeblk">${esc(c)}</pre>`;
 // k: only card k of the lesson (the diagram and the key line belong to the last card)

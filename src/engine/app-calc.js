@@ -75,15 +75,23 @@ function calcHist() {
 function calcDraw() {
   const inp = calcEl('calc-in'), ex = calcEl('calc-expr'), pv = calcEl('calc-prev'); if (!inp) return;
   const src = inp.value, tree = CX.parse(src);
-  ex.innerHTML = tree.empty ? '<span class="calc-ph">por exemplo 3/4 + log_2(8)</span>' : CX.render(tree);
+  ex.innerHTML = tree.empty ? '<span class="calc-ph">por exemplo 3/4 + log_2(8)</span>' : CX.render(tree) + '<span class="calc-tail"></span>';   // tail: room to scroll past the end
   const a = inp.selectionStart ?? src.length, b = inp.selectionEnd ?? a;
   if (a !== b) ex.querySelectorAll('[data-s]').forEach(l => { if (+l.dataset.s >= a && +l.dataset.e <= b && +l.dataset.e > +l.dataset.s) l.classList.add('sel'); });
   else calcCaret(ex, inp.selectionDirection === 'backward' ? a : b);
+  calcReveal(ex, ex.querySelector('.cl-caret') || [...ex.querySelectorAll('.sel')][inp.selectionDirection === 'backward' ? 0 : ex.querySelectorAll('.sel').length - 1]);
   pv.classList.toggle('err', !!calcErr);
   if (calcErr) { pv.innerHTML = calcErr; return; }
   if (tree.empty) { pv.innerHTML = ''; return; }
   const r = CX.run(tree, calcEnv());
   pv.innerHTML = r.ok ? (r.name ? `<span class="cl">${CX.render(CX.parse(r.name))}</span> ` : '') + calcResultH(r.v, 'calc-live') : '';
+}
+// a long expression scrolls sideways with the caret, keeping a little of what is around it in sight
+function calcReveal(ex, el) {
+  if (!el || ex.scrollWidth <= ex.clientWidth) return;
+  const box = ex.getBoundingClientRect(), r = el.getBoundingClientRect(), room = Math.min(40, box.width / 4);
+  if (r.right > box.right - room) ex.scrollLeft += r.right - box.right + room;
+  else if (r.left < box.left + room) ex.scrollLeft -= box.left + room - r.left;
 }
 function calcCaret(ex, p) {
   const caret = document.createElement('span'); caret.className = 'cl-caret';

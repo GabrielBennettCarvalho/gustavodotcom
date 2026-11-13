@@ -32,6 +32,32 @@ let fxBtn = null;   // the formula whose card is open
 function fxClose() { const c = document.getElementById('fxcard'); if (c) c.remove(); if (fxBtn) fxBtn.setAttribute('aria-expanded', 'false'); fxBtn = null; }
 // light markup for text fields: **bold**, `code`, line breaks, {f:id} formulas
 const md = s => fxify(esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code class="mono">$1</code>').replace(/\n/g, '<br>'));
+// Students paste notes from chatbots with LaTeX (\(y_2 = 0\), \rightarrow, \frac{a}{b}): show them as plain Unicode maths.
+const TEX_SYM = { rightarrow: '→', to: '→', Rightarrow: '⇒', implies: '⇒', leftarrow: '←', Leftarrow: '⇐', leftrightarrow: '↔', iff: '⇔', mapsto: '↦',
+  times: '×', cdot: '·', div: '÷', pm: '±', mp: '∓', leq: '≤', le: '≤', geq: '≥', ge: '≥', neq: '≠', ne: '≠', approx: '≈', sim: '∼', equiv: '≡', propto: '∝',
+  sum: 'Σ', prod: 'Π', int: '∫', partial: '∂', nabla: '∇', infty: '∞', in: '∈', notin: '∉', subset: '⊂', subseteq: '⊆', cup: '∪', cap: '∩', emptyset: '∅',
+  forall: '∀', exists: '∃', neg: '¬', lnot: '¬', land: '∧', wedge: '∧', lor: '∨', vee: '∨', odot: '⊙', circ: '∘', ldots: '…', cdots: '⋯', dots: '…', top: 'ᵀ', prime: '′',
+  alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ε', varepsilon: 'ε', zeta: 'ζ', eta: 'η', theta: 'θ', kappa: 'κ', lambda: 'λ', mu: 'μ', nu: 'ν', xi: 'ξ',
+  pi: 'π', rho: 'ρ', sigma: 'σ', tau: 'τ', phi: 'φ', varphi: 'φ', chi: 'χ', psi: 'ψ', omega: 'ω', Gamma: 'Γ', Delta: 'Δ', Theta: 'Θ', Lambda: 'Λ', Sigma: 'Σ', Phi: 'Φ', Pi: 'Π', Omega: 'Ω',
+  log: 'log', ln: 'ln', exp: 'exp', max: 'max', min: 'min', arg: 'arg', argmax: 'argmax', argmin: 'argmin', sin: 'sin', cos: 'cos', tanh: 'tanh', det: 'det',
+  quad: ' ', qquad: ' ', left: '', right: '', big: '', Big: '', displaystyle: '', ',': ' ', ';': ' ', ':': ' ', '!': '', '{': '{', '}': '}', '%': '%', '_': '_', '&': '&', '#': '#', '$': '$', '\\': '\n' };
+const TEX_SUB = { 0: '₀', 1: '₁', 2: '₂', 3: '₃', 4: '₄', 5: '₅', 6: '₆', 7: '₇', 8: '₈', 9: '₉', '+': '₊', '-': '₋', '−': '₋', '=': '₌', '(': '₍', ')': '₎', a: 'ₐ', e: 'ₑ', h: 'ₕ', i: 'ᵢ', j: 'ⱼ', k: 'ₖ', l: 'ₗ', m: 'ₘ', n: 'ₙ', o: 'ₒ', p: 'ₚ', r: 'ᵣ', s: 'ₛ', t: 'ₜ', u: 'ᵤ', v: 'ᵥ', x: 'ₓ', ',': ',', ' ': '' };
+const TEX_SUP = { 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹', '+': '⁺', '-': '⁻', '−': '⁻', '=': '⁼', '(': '⁽', ')': '⁾', n: 'ⁿ', i: 'ⁱ', T: 'ᵀ', k: 'ᵏ', j: 'ʲ', '*': '*', '′': '′', ' ': '' };
+const texScript = (s, map, mark) => [...s].every(ch => map[ch] !== undefined) ? [...s].map(ch => map[ch]).join('') : mark + (s.length > 1 ? `(${s})` : s);
+function tex(s) {
+  if (!/\\[a-zA-Z([{]|\$|[_^]\{/.test(s)) return s;
+  let t = s.replace(/\\\[|\\\]/g, ' ').replace(/\\\(|\\\)|\$\$?/g, '');
+  for (let k = 0; k < 4; k++) t = t
+    .replace(/\\(?:d|t)?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, (_, a, b) => `${/^\w+$|^[\w.,]+$/.test(a) ? a : `(${a})`}/${/^\w+$|^[\w.,]+$/.test(b) ? b : `(${b})`}`)
+    .replace(/\\sqrt\s*\{([^{}]*)\}/g, (_, a) => `√${/^[\w.,]+$/.test(a) ? a : `(${a})`}`)
+    .replace(/\\(?:text|mathrm|mathbf|mathit|operatorname|boldsymbol|mathcal|textbf|textit|hat|bar|vec|tilde)\s*\{([^{}]*)\}/g, (m, a) => /^\\hat/.test(m) ? a + '̂' : /^\\bar/.test(m) ? a + '̄' : a)
+    .replace(/_\{([^{}]*)\}/g, (_, a) => texScript(a, TEX_SUB, '_')).replace(/\^\{([^{}]*)\}/g, (_, a) => texScript(a, TEX_SUP, '^'));
+  t = t.replace(/\\([a-zA-Z]+|[,;:!{}%_&#$\\])/g, (m, n) => TEX_SYM[n] !== undefined ? TEX_SYM[n] : n)
+    .replace(/_([0-9a-z])/g, (m, a) => TEX_SUB[a] || m).replace(/\^([0-9nTi])/g, (m, a) => TEX_SUP[a] || m)
+    .replace(/[{}]/g, '').replace(/ {2,}/g, ' ').replace(/ ?\n ?/g, '\n').replace(/\n{3,}/g, '\n\n');
+  return t.trim();
+}
+const noteMd = s => md(tex(s));
 const shuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 const ls = { get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 

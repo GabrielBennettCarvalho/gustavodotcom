@@ -17,7 +17,7 @@ STUDY.questions('ml', [
 { id: 'ev-04', t: 'eval', l: 1, les: 'ev-cm', card: 2,
   q: 'Só 1% dos pacientes estão doentes. Um modelo que diz sempre “saudável” tem accuracy de…',
   o: ['99%, mas recall de 0', '1%, porque falha os doentes', '50%, porque é ao acaso', '99% e recall de 99%'], a: 0,
-  e: 'Acerta os 99% saudáveis → accuracy 99%. Mas não apanha **nenhum** doente: recall = 0. Com classes desequilibradas, a accuracy engana.' },
+  e: 'Imagina 1000 pacientes: 10 doentes (positivos) e 990 saudáveis. O modelo diz sempre “saudável”: TP = 0, FN = 10, TN = 990, FP = 0.\nAccuracy = (TP + TN)/total = 990/1000 = **99%**: acerta todos os saudáveis.\nRecall = TP/(TP + FN) = 0/10 = **0**: dos 10 doentes não apanha nenhum.\nCom classes desequilibradas a accuracy engana; o recall mostra que o modelo é inútil.' },
 { id: 'ev-05', t: 'eval', l: 1, les: 'ev-roc',
   q: 'Numa curva ROC, o que está em cada eixo?',
   o: ['y: recall (TPR); x: FPR', 'y: precision; x: recall', 'y: accuracy; x: limiar de decisão', 'y: erro de treino; x: erro de teste'], a: 0,

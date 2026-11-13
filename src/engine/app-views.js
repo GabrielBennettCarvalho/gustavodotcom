@@ -57,7 +57,7 @@ function lessonBody(L, k) { const cs = lessonCards(L), one = k && cs.length > 1 
   return `${body}${L.d && last ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key && last ? `<p class="key">${L.trusted ? fxify(L.key) : md(L.key)}</p>` : ''}`; }
 /* The cheat sheet while solving (open-book courses only). Opening it is free, as in the exam: it never counts as a hint.
    Not in Aprender, which is for learning, and not after answering, when the theory is already there. */
-const sheetNotes = s => BANK.filter(q => skillOf(q) === s.id && S.notes[q.id]).map(q => `<li>${md(S.notes[q.id])}</li>`).join('');
+const sheetNotes = s => BANK.filter(q => skillOf(q) === s.id && S.notes[q.id]).map(q => `<li>${noteMd(S.notes[q.id])}</li>`).join('');
 let cabOpen = '';   // the peek that is open (a question id or 'pb:<problem>'), so it stays open across re-renders
 function cabPeek(sid, key) { const s = SKBYID[sid]; if (!openBook() || !s || !s.sheet) return ''; const n = sheetNotes(s);
   return `<details class="lesson-peek cab-peek" data-k="${esc(key)}" ${cabOpen === key ? 'open' : ''}><summary>Cábula: ${esc(s.label)}</summary><div class="lbody lesson">${fxify(s.sheet)}${n ? `<ul class="sheet-notes">${n}</ul>` : ''}<p class="cab-tip">Consultar é livre, como no exame: não conta como pista.</p></div></details>`; }
@@ -203,7 +203,7 @@ function Past() {
 }
 function Sheet() {
   const all = !!view.all; const sk = partSkills().filter(s => all || sheetMine(s));
-  const noteOf = id => S.notes[id] ? `<li>${md(S.notes[id])}</li>` : '';
+  const noteOf = id => S.notes[id] ? `<li>${noteMd(S.notes[id])}</li>` : '';
   const items = sheetItems(sk, true);
   const loose = Object.keys(S.notes).filter(id => S.notes[id] && BYID[id] && !skillOf(BYID[id]));
   return `<div class="qhead no-print">${BACK}<span class="eyebrow">Cábula</span><span class="spacer"></span><button class="btn small" data-act="print">Imprimir</button></div>
@@ -283,7 +283,7 @@ document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && fxBtn) {
 function Notes() {
   const ids = Object.keys(S.notes).filter(k => S.notes[k] && BYID[k]);
   return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="eyebrow">As minhas notas</span></div>
-  ${ids.length ? ids.map(id => { const q = BYID[id]; return `<div class="review-item" style="margin-bottom:10px"><span class="badge" style="--c:${TOPICS[q.t].c};align-self:flex-start"><span class="sw"></span>${TOPICS[q.t].short} · N${q.l}</span><p class="q">${md(q.q)}</p><p class="a">Resposta: <b>${(Array.isArray(q.a) ? q.a : [q.a]).map(i => md(q.o[i])).join(' · ')}</b></p><p class="x" style="color:var(--ink)">📝 ${md(S.notes[id])}</p></div>`; }).join('') : '<p class="muted">Ainda não escreveste notas. Depois de responderes a uma pergunta, aparece uma caixa para guardares o teu truque.</p>'}`;
+  ${ids.length ? ids.map(id => { const q = BYID[id]; return `<div class="review-item" style="margin-bottom:10px"><span class="badge" style="--c:${TOPICS[q.t].c};align-self:flex-start"><span class="sw"></span>${TOPICS[q.t].short} · N${q.l}</span><p class="q">${md(q.q)}</p><p class="a">Resposta: <b>${(Array.isArray(q.a) ? q.a : [q.a]).map(i => md(q.o[i])).join(' · ')}</b></p><p class="x" style="color:var(--ink)">📝 ${noteMd(S.notes[id])}</p></div>`; }).join('') : '<p class="muted">Ainda não escreveste notas. Depois de responderes a uma pergunta, aparece uma caixa para guardares o teu truque.</p>'}`;
 }
 
 /* ---------- BANK / IMPORT ---------- */

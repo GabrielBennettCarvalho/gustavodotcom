@@ -252,7 +252,7 @@ STUDY.questions('oc', [
   d: { pipe: [['lw s4, 0(s6)', 'FDXMW'], ['add s5, s5, s4', '.FD-XMW'], ['sw s5, 0(s6)', '..F-DXMW'], ['sll s6, s5, 4', '....FDXMW'], ['bne s2, s5, Loop', '.....FDXMW'], ['lw s4, 0(s6)', '........FDXMW']] },
   o: ['8/5', '5/5', '10/5', '13/5'], a: 0,
   e: 'A 1.ª instrução da iteração seguinte começa no ciclo 9: a iteração tem 9 − 1 = 8 ciclos, para 5 instruções. **8/5**.' },
-{ id: 'haz-57', t: 'haz', l: 3, les: 'h-load', kind: 'bug',
+{ id: 'haz-57', t: 'haz', l: 3, les: 'h-load',
   q: 'Este diagrama pretende mostrar um pipeline com full forwarding. O que está errado?',
   d: { pipe: [['lw x1, 0(x2)', 'FDXMW'], ['add x3, x1, x4', '.FDXMW']] },
   o: ['Falta uma bolha entre o lw e o add', 'O add deveria ter duas bolhas seguidas', 'O lw deveria terminar logo no andar X', 'O diagrama está todo correto'], a: 0,

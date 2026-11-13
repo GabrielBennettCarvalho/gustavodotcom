@@ -48,7 +48,7 @@ function Feedback(q, it) {
   </div>`;
 }
 // question kinds that train the open-book exam: which method, quick sanity check, find the wrong step
-const KINDS = { method: 'Que método?', check: 'Verificação', bug: 'Onde está o erro?' };
+const KINDS = { method: 'Que método?', check: 'Verificação' };
 const pickOne = a => a[Math.floor(Math.random() * a.length)];
 const codeBlock = c => `<pre class="codeblk">${esc(c)}</pre>`;
 // k: only card k of the lesson (the diagram and the key line belong to the last card)

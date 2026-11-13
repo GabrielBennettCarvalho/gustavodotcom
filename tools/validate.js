@@ -37,7 +37,7 @@ for (const id of REG.order) {
     if (q.code !== undefined && typeof q.code !== 'string') err(`${tag}: "code" must be text`);
     if (q.step !== undefined && typeof q.step !== 'string') err(`${tag}: "step" must be text like '2/3'`);
     if (q.k !== undefined && q.k !== '' && !SK.has(q.k)) err(`${tag}: skill "${q.k}" does not exist`);
-    if (q.kind !== undefined && !['method', 'check', 'bug'].includes(q.kind)) err(`${tag}: "kind" must be method, check or bug`);
+    if (q.kind !== undefined && !['method', 'check'].includes(q.kind)) err(`${tag}: "kind" must be method or check`);
     if (q.d && c.render) { try { const s = c.render(q.d); if (!s || !String(s).includes('<svg')) err(`${tag}: empty diagram`); } catch (e) { err(`${tag}: diagram fails (${e.message})`); } }
   }
   // key problems (typed answers): every answer, mask and known mistake must have the same shape

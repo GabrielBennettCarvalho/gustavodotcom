@@ -37,6 +37,9 @@ Full field reference and layout are in README.md. Read it only when you need a d
   A `calc` question tests one idea with a few operations. When summing a list is not the point (a covariance, a
   variance, a median of many values), give the sums in the statement and ask for the step that matters. Long exam
   calculations go in Problemas-chave, split into steps.
+- APRE is open book: no question that only plugs given numbers into a cheat-sheet formula (recall from TP/FN, a
+  distance, a z-score). Ask what the formula cannot do for you: which one applies, reading the data or a model,
+  interpreting a result.
 - Exam questions carry `src` starting with an exam name ("Exame 1 2024/25, 6.b"): it drives Exames anteriores and priority.
   In courses with `skills` (ML), a question with no exam type (by lesson or `k`) is supplementary.
 - Long exam problems are split into steps with `ch` (problem id) and `step: 'k/n'`, each step self-contained.

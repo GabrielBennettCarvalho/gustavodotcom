@@ -45,7 +45,7 @@ STUDY.course({
       sheet: '<p>ISA = a interface entre o hardware e o software: instruções, registos, tipos de dados, modos de endereçamento e formatos.</p><p>RISC: instruções simples de tamanho fixo, arquitetura load/store, muitos registos. RISC-V: 32 registos de 32 bits e x0 vale sempre 0.</p>' },
     { id: 'oc-fmt', t: 'isa', les: ['i-fmt', 'k-pseudo'], label: 'Formatos de instrução e pseudo-instruções',
       seen: ['Exame P1 2025/26'],
-      sheet: '<p>R: registo-registo (add, sll). I: imediato de 12 bits (addi, loads, slli, jalr). S: stores. SB/B: branches. U: lui, auipc. UJ/J: jal.</p><p>Pseudo-instruções: mv rd, rs = addi rd, rs, 0 · not rd, rs = xori rd, rs, −1 · li = lui + addi · j = jal x0.</p><p><b>Armadilha:</b> slli é do tipo I: o shamt vai no campo do imediato.</p>' },
+      sheet: '<p>R: registo-registo (add, sll). I: imediato de 12 bits (addi, loads, slli, jalr). S: stores. SB/B: branches. U: lui, auipc. UJ/J: jal.</p><ul><li>Pseudo-instruções: mv rd, rs = addi rd, rs, 0</li><li>not rd, rs = xori rd, rs, −1</li><li>li = lui + addi</li><li>j = jal x0</li></ul><p><b>Armadilha:</b> slli é do tipo I: o shamt vai no campo do imediato.</p>' },
     { id: 'oc-const', t: 'isa', les: ['i-const'], label: 'Constantes grandes: lui + addi',
       seen: ['Exame P1 2024/25'],
       sheet: '<p>Constante de 32 bits: <b>lui rd, hi20</b> seguido de <b>addi rd, rd, lo12</b>.</p><p>O imediato do addi vai de −2048 a 2047 e tem sinal: se o bit 11 de lo12 for 1, soma 1 a hi20 para compensar.</p>' },

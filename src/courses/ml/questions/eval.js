@@ -46,7 +46,7 @@ STUDY.questions('ml', [
   d: { tbl: { h: ['Previsto \\ Real', 'A', 'B', 'C'], r: [['A', '0', '0', '0'], ['B', '1', '3', '0'], ['C', '0', '0', '1']] } },
   q: 'Na matriz de confusão (linhas = previsto, colunas = real), qual é a sensibilidade da classe B?',
   o: ['1', '0,75', '0,60', '0,80'], a: 0,
-  e: 'Sensibilidade de B = acertos de B / total **real** de B = 3/(0 + 3 + 0) (coluna B) = **1**. Todos os B foram apanhados.',
+  e: '**Dados:** linhas = previsto, colunas = real. Na coluna B (os B reais) há 0 previstos A, 3 previstos B e 0 previstos C.\n**Sensibilidade de B** = dos B reais, quantos foram previstos B = TP/(TP + FN).\n**Contas:** TP = 3 (na diagonal); total real de B = 0 + 3 + 0 = 3 → 3/3 = **1**. Todos os B foram apanhados.',
   w: { 1: '0,75 = 3/4 é a precision de B (linha B: 1 A também foi previsto B).' } },
 { id: 'ev-20', t: 'eval', l: 4, les: 'ev-cm', card: 1,
   q: 'Num rastreio de cancro é muito grave deixar escapar um doente. Que métrica se deve privilegiar?',
@@ -60,6 +60,6 @@ STUDY.questions('ml', [
 { id: 'ev-22', t: 'eval', l: 3, les: 'ev-cm', card: 3, calc: true,
   q: 'Uma árvore tem duas folhas. A folha A prevê Sim e tem 4 exemplos de treino, 3 certos e 1 errado. A folha B prevê Não e tem 5 exemplos, 4 certos e 1 errado. Com Sim como positivo, quanto vale a sensibilidade no treino?',
   o: ['3/4 = 0,75', '4/5 = 0,8', '7/9 ≈ 0,78', '3/5 = 0,6'], a: 0,
-  e: 'Folha A (prevê Sim): 3 certos → TP = 3, 1 errado (era Não) → FP = 1. Folha B (prevê Não): 4 certos → TN = 4, 1 errado (era Sim) → FN = 1. Sensibilidade = TP/(TP + FN) = 3/4 = **0,75**.',
+  e: '**Dados:** positivo = Sim. Folha A prevê Sim: 4 exemplos, 3 certos e 1 errado. Folha B prevê Não: 5 exemplos, 4 certos e 1 errado.\n**1. Montar a matriz, folha a folha:**\n• Folha A prevê Sim: os 3 certos eram Sim → TP = 3; o errado era Não → FP = 1.\n• Folha B prevê Não: os 4 certos eram Não → TN = 4; o errado era Sim → FN = 1.\n**2. Sensibilidade** = TP/(TP + FN) = 3/(3 + 1) = **0,75**.',
   w: { 1: '4/5 = TN/(TN + FN) olha para a folha que prevê Não: não é a sensibilidade.', 2: '7/9 = (TP + TN)/total é a accuracy.', 3: 'O errado da folha B era Sim, por isso é FN e entra no denominador: TP/(TP + FN) = 3/4.' } },
 ]);

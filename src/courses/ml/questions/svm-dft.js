@@ -23,11 +23,11 @@ STUDY.questions('ml', [
 { id: 'ft-07', t: 'dft', l: 3, les: 'f-dft', card: 2, calc: true,
   q: 'Qual é a DFT (N = 4) de x = (1, 0, 1, 0)?',
   o: ['(2, 0, 2, 0)', '(1, 0, 1, 0)', '(2, 2, 0, 0)', '(0, 2, 0, 2)'], a: 0,
-  e: 'ω = −i. X₀ = 1 + 1 = 2; X₁ = 1 + (−i)²·1 = 1 − 1 = 0; X₂ = 1 + (−1)²·1 = 2; X₃ = 1 + (i)²·1 = 0 → **(2, 0, 2, 0)**. O sinal repete-se a cada 2 amostras: frequência k = 2.' },
+  e: '**Dados:** x = (1, 0, 1, 0), N = 4, ω = e^(−2πi/4) = −i.\n**1. Fórmula:** Xₖ = Σₙ xₙ·ωᵏⁿ. Só x₀ = 1 e x₂ = 1 contam, por isso Xₖ = 1 + ω²ᵏ = 1 + (−1)ᵏ.\n**2. Contas:** X₀ = 1 + 1 = 2; X₁ = 1 − 1 = 0; X₂ = 1 + 1 = 2; X₃ = 1 − 1 = 0 → **(2, 0, 2, 0)**.\nO sinal repete-se a cada 2 amostras: só aparecem as frequências k = 0 e k = 2.' },
 { id: 'ft-08', t: 'dft', l: 3, les: 'f-dft', card: 1, calc: true,
   q: 'Quantas operações faz aproximadamente a FFT para N = 1024 amostras, comparada com a DFT direta?',
   o: ['≈ 10 000 contra ≈ 1 000 000', '≈ 1 000 contra ≈ 10 000', 'As duas ≈ 1 000 000', '≈ 100 000 contra ≈ 1 000 000'], a: 0,
-  e: 'FFT: N log₂N = 1024·10 ≈ **10 000**. DFT direta: N² ≈ **1 000 000**.' },
+  e: '**Dados:** N = 1024 amostras.\n**1. FFT:** custa ≈ N·log₂N = 1024·10 ≈ **10 000** operações (log₂1024 = 10).\n**2. DFT direta:** N² = 1024² ≈ **1 000 000**.\nA FFT é cerca de 100 vezes mais rápida aqui.' },
 
 /* ===== SVM E KERNELS ===== */
 { id: 'sv-01', t: 'svm', l: 1, les: 's-margin', card: 1,

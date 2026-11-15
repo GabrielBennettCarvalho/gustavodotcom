@@ -45,7 +45,7 @@ STUDY.questions('ml', [
 { id: 'data-14', t: 'data', l: 3, les: 'd-spread', card: 1, calc: true,
   q: 'Uma variável tem Q1 = 20 e Q3 = 30. Pela regra de 1,5·IQR, qual destes valores é outlier?',
   o: ['47', '44', '6', '35'], a: 0,
-  e: 'IQR = 10. Limites: 20 − 15 = **5** e 30 + 15 = **45**. Só 47 fica fora de [5, 45].',
+  e: '**Dados:** Q1 = 20, Q3 = 30.\n**1. IQR** = Q3 − Q1 = 30 − 20 = 10.\n**2. Limites de Tukey:** Q1 − 1,5·IQR = 20 − 15 = **5** e Q3 + 1,5·IQR = 30 + 15 = **45**.\n**3. Comparar:** 44, 6 e 35 estão dentro de [5, 45]; só **47** fica fora, por isso é outlier.',
   w: { 2: '6 está dentro: o limite de baixo é Q1 − 1,5·IQR = 5.' } },
 { id: 'data-18', t: 'data', l: 4, les: 'd-corr', card: 3,
   q: 'X e Y seguem y = eˣ (sempre a subir, muito curvo) e há um outlier enorme. Que coeficiente descreve melhor a relação?',

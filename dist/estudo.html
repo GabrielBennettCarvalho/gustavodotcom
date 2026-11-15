@@ -7360,7 +7360,7 @@ STUDY.questions('oc', [
 { id: 'vm-62', t: 'vm', l: 2, les: 'v-trans', calc: true, src: 'Ficha VII, ex. 1.a',
   q: 'Processador com endereçamento à palavra de 16 bits. Espaço virtual de 1 M palavras, físico de 64 K palavras, páginas de 1 K palavras. Como se dividem os endereços?',
   o: ['Virtual 10 | 10, físico 6 | 10', 'Virtual 20 | 10, físico 16 | 10', 'Virtual 10 | 6, físico 6 | 6', 'Virtual 16 | 10, físico 6 | 10'], a: 0,
-  e: 'Offset: 1 K = **10 bits**. Virtual: 1 M = 20 bits, logo VPN = 10. Físico: 64 K = 16 bits, logo PPN = 6.' },
+  e: 'O nº de bits de um endereço depende de **quantas palavras** há a distinguir, não do tamanho de cada uma.\n1. Offset: uma página tem 1 K = 2¹⁰ palavras, logo **10 bits**.\n2. Virtual: 1 M = 2²⁰ palavras, logo endereço de 20 bits. VPN = 20 − 10 = **10 bits** (2²⁰ / 2¹⁰ = 2¹⁰ páginas virtuais).\n3. Físico: 64 K = 2¹⁶ palavras, logo endereço de 16 bits. O offset é o mesmo, PPN = 16 − 10 = **6 bits** (64 páginas físicas).\nOs "16 bits" são a largura de cada palavra: com endereçamento à palavra, cada endereço aponta para uma palavra inteira, por isso não entram nas contas.' },
 { id: 'vm-63', t: 'vm', l: 2, les: 'v-trans', calc: true, src: 'Ficha VII, ex. 1.c',
   q: 'Espaço físico de 64 K palavras e páginas de 1 K palavras. Quantas páginas físicas existem, no máximo?',
   o: ['64', '1024', '16', '1 K'], a: 0,

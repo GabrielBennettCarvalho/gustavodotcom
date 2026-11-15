@@ -31,7 +31,10 @@ const fxify = h => String(h ?? '').replace(/\{f:([a-z0-9-]+)(?:\|([^}]*))?\}/g, 
 let fxBtn = null;   // the formula whose card is open
 function fxClose() { const c = document.getElementById('fxcard'); if (c) c.remove(); if (fxBtn) fxBtn.setAttribute('aria-expanded', 'false'); fxBtn = null; }
 // light markup for text fields: **bold**, `code`, line breaks, {f:id} formulas
-const md = s => fxify(esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code class="mono">$1</code>').replace(/\n/g, '<br>'));
+// keep a short vector or matrix on one line, so "(0,02; −0,2; 0)" or "[[1, 0], [0, 1]]" never splits; short enough for a phone
+const keepMath = s => s.replace(/\[\[[^\n\[\]]*(?:\], \[[^\n\[\]]*)*\]\]|\([^()\n]{1,24}\)|\[[^\[\]\n]{1,24}\]/g, m => m.length <= (m[1] === '[' ? 36 : 26) ? m.replace(/ /g, ' ') : m)
+  .replace(/ = ([−-]?\d+(?:,\d+)?|[A-Za-zÀ-ÿ]{1,4})(?=[\s.,;:)]|$)/gm, ' = $1');   // "η = 0,1" and "b[2] = 0" stay whole
+const md = s => fxify(keepMath(esc(s)).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code class="mono">$1</code>').replace(/\n/g, '<br>'));
 // Students paste notes from chatbots with LaTeX (\(y_2 = 0\), \rightarrow, \frac{a}{b}): show them as plain Unicode maths.
 const TEX_SYM = { rightarrow: '→', to: '→', Rightarrow: '⇒', implies: '⇒', leftarrow: '←', Leftarrow: '⇐', leftrightarrow: '↔', iff: '⇔', mapsto: '↦',
   times: '×', cdot: '·', div: '÷', pm: '±', mp: '∓', leq: '≤', le: '≤', geq: '≥', ge: '≥', neq: '≠', ne: '≠', approx: '≈', sim: '∼', equiv: '≡', propto: '∝',

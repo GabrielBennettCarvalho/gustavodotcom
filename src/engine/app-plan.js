@@ -153,16 +153,22 @@ function planNextBtn(fromPlan) {
    - Resumo de hoje (end of the day): at most RECAP_N things from today: the key line of lessons seen today, then the
      questions answered today, the ones answered wrong first.
    Each one can be read (question, then "Ver solução") or done (a normal session). Reading never raises a box:
-   "Não sabia" brings the question back tomorrow, "Sabia" only postpones it. Done today: S.today.did has 'warm'/'recap'; S.today.rd lists the questions only read today (local, not in the key). */
+   "Não sabia" brings the question back tomorrow, "Sabia" only spaces it out in the warm-up (S.warmK[id] counts the
+   "Sabia" in a row, local only, and adds to the box when choosing the gap). Among the questions due, the order is
+   mixed each day, so the warm-up does not keep showing the same few. Done today: S.today.did has 'warm'/'recap'; S.today.rd lists the questions only read today (local, not in the key). */
 const WARM_N = 3, RECAP_N = 5, RECAP_LES = 2, WARM_GAP = [1, 1, 3, 7, 14, 30];
 const daysSince = ms => Math.round((new Date(todayStr()) - new Date(new Date(ms).toLocaleDateString('sv'))) / 864e5);
 const rcDone = k => planToday().did.includes(k);
+const warmK = id => (S.warmK && S.warmK[id]) || 0;
+const warmLvl = q => Math.min(5, peek(q.id).box + warmK(q.id));
+// a fixed mix for the day: the same order all day long, a different one tomorrow
+const dayMix = id => { let h = 2166136261; for (const ch of todayStr() + id) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
 function warmPool() {
   return basePool().filter(q => { const s = peek(q.id);
     if (!s.c || !s.last || q.calc || q.ch || q.code) return false;
     if (s.w && s.box < TRAIN_CLEAR) return false;   // still a mistake: the mistakes task has it
-    const d = daysSince(s.last); return d >= 1 && d >= WARM_GAP[Math.min(5, s.box)]; })
-    .sort((a, b) => peek(a.id).box - peek(b.id).box || peek(a.id).last - peek(b.id).last).slice(0, WARM_N);
+    const d = daysSince(s.last); return d >= 1 && d >= WARM_GAP[warmLvl(q)]; })
+    .sort((a, b) => warmLvl(a) - warmLvl(b) || dayMix(a.id) - dayMix(b.id)).slice(0, WARM_N);
 }
 function recapItems() {
   const les = LESSONS.filter(l => S.seenL && S.seenL[l.id] && daysSince(S.seenL[l.id]) === 0 && l.key && activeTopics().includes(l.t)).slice(0, RECAP_LES).map(l => ({ kind: 'les', id: l.id }));
@@ -195,8 +201,9 @@ function rcSkip(k) { const td = planToday(); if (!td.did.includes(k)) td.did.pus
 function rcNext(rate) {
   const it = rc.items[rc.i];
   if (it.kind === 'q' && rate) { const s = st(it.id), td = planToday(); if (!td.rd) td.rd = []; if (!td.rd.includes(it.id)) td.rd.push(it.id);
-    if (rate === 'no') { s.box = Math.min(s.box, 1); s.last = Date.now(); }   // back tomorrow, to be done
-    else s.last = Date.now(); }                                               // known: later, by its box
+    if (!S.warmK) S.warmK = {};
+    if (rate === 'no') { s.box = Math.min(s.box, 1); s.last = Date.now(); delete S.warmK[it.id]; }   // back tomorrow, to be done
+    else { s.last = Date.now(); if (rc.k === 'warm') S.warmK[it.id] = warmK(it.id) + 1; } }        // known: a longer gap each time
   rc.i++; rc.shown = false;
   if (rc.i >= rc.items.length) { planLog(rc.k, Date.now() - rc.t0, rc.items.length, 0, true); rc.done = true; }
   save(); renderView(); window.scrollTo(0, 0);

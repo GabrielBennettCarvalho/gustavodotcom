@@ -173,7 +173,7 @@ STUDY.lessons('ml', [
   <p>Só l₂ vem de um produto interno: há ângulos e ortogonalidade (espaço de Hilbert). Com vetores normalizados ao comprimento 1, a distância euclidiana e o cosseno ordenam os vizinhos da mesma maneira.</p>`,
   key: 'l₁ = Σ|dif|, l₂ = √Σdif², l∞ = max|dif|. Cosseno = semelhança de direção, não distância.' },
 { id: 'k-knn', t: 'knn', title: 'k vizinhos mais próximos',
-  html: `<p>Diz-me com quem andas… O kNN não aprende nenhum modelo: guarda os exemplos todos (<b>instance-based</b>, <b>lazy learning</b>) e, para um ponto novo, olha para os k exemplos mais próximos.</p>
+  html: `<p>Diz-me com quem andas… O kNN não aprende nenhum modelo: guarda os exemplos todos (<b>instance-based</b>, <b>lazy learning</b>) e, para um ponto novo, olha para os k exemplos mais próximos. Na prática: calcula a distância do ponto novo a <b>todos</b> os exemplos de treino, ordena-as da menor para a maior e fica com os <b>k primeiros</b>. Se o k-ésimo empata com o seguinte, o enunciado diz como desempatar.</p>
   <ul><li><b>Classificação</b>: voto maioritário (moda) das classes dos k vizinhos.</li>
   <li><b>Regressão</b>: média (ou mediana) dos valores dos vizinhos.</li>
   <li><b>Pesos</b>: cada vizinho vota com peso 1/d (ou 1/d²), para os mais próximos contarem mais. Pesos uniformes = todos iguais.</li></ul>

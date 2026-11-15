@@ -218,7 +218,11 @@ Definições → Calculadora turns the button on or off per course (`settings.ca
 
 ## Progress and the "other device" key
 
-Progress lives in the browser (`localStorage`). The **Outro dispositivo** screen packs it into a key
+Progress lives in the browser (`localStorage`). Every answer is saved as it is given. A round left half way (back to
+the start, the formulas, a closed tab) is also kept, in `S.sesCur` for 3 days and on this device only: the course home
+shows "Ronda a meio" with Continuar / Descartar (not for the mock exam, which has a clock).
+
+The **Outro dispositivo** screen packs it into a key
 (link + QR on the site, text in the local file) that another device merges in; nothing is ever overwritten.
 Besides the answers, notes, XP and test date, it carries the lessons seen, the key problems, the pace and today's plan,
 in a block at the end that older copies of the app skip. Format details are at the top of `src/engine/progress-key.js`.

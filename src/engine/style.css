@@ -529,3 +529,4 @@ body:has(.pb-actions) .calc-fab{bottom:calc(84px + env(safe-area-inset-bottom,0p
 .cl-err{color:var(--bad);text-decoration:underline wavy var(--bad)}
 .cl-h{display:inline}
 @media (prefers-reduced-motion:reduce){.cl-caret{animation:none}}
+.ses-resume{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;border-color:var(--accent)}

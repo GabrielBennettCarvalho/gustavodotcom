@@ -85,12 +85,12 @@ function choose(oi) {
 function grade() {
   const it = curItem(), q = BYID[it.id]; const picked = [...ses.picked];
   const ok = Array.isArray(q.a) ? (picked.length === q.a.length && q.a.every(x => ses.picked.has(x))) : picked[0] === q.a;
-  ses.answered = true; ses.results.push({ item: it, id: q.id, ok, picked });
+  ses.answered = true; ses.results.push({ item: it, id: q.id, ok, picked }); sesKeep();
   const s = st(q.id); s.last = Date.now();
   if (S.skipped && S.skipped[q.id]) delete S.skipped[q.id];   // answered: leaves the "Saltadas" list
   if (ses.mode === 'exam') { if (ok) s.c++; else { s.ew++; s.eb = 0; } }           // exam mistake: goes to the exam review
   else if (ses.examGrading) { if (ok) { s.c++; s.eb++; } else { s.ew++; s.eb = 0; } }
-  else if (ok) { s.c++; if (ses.mode !== 'recap') s.box = Math.min(5, s.box + 1); } else { s.w++; s.box = 0; }   // the same day again proves no spacing
+  else if (ok) { s.c++; if (ses.mode !== 'recap') s.box = Math.min(5, s.box + 1); } else { s.w++; s.box = 0; if (S.warmK) delete S.warmK[q.id]; }   // the same day again proves no spacing
   if (ses.mode !== 'exam') { const gain = ok ? XP[q.l] + (s.c === 1 && !s.w && !s.ew ? 5 : 0) : 0; S.xp += gain; ses.xp += gain; }
   save();
   if (ses.mode === 'exam') { next(); return; }
@@ -106,11 +106,36 @@ function skip() {
 function next() {
   if (!ses) return;
   if (ses.i >= ses.items.length - 1) { finish(); return; }
-  ses.i++; ses.picked = new Set(); ses.answered = false;
+  ses.i++; ses.picked = new Set(); ses.answered = false; sesKeep();
   go(viewOf(curItem()));
 }
+/* A round left half way (back to the start, the formulas, a closed tab) is kept in S.sesCur for 3 days; the home
+   offers to carry on from the question where it stopped. The answers themselves were saved as they were given.
+   Not for the mock exam, which has a clock. */
+const SES_KEEP = 3 * 864e5;
+function sesKeep() {
+  if (!ses || ses.ended || ses.mode === 'exam') return;
+  S.sesCur = { mode: ses.mode, title: ses.title, items: ses.items, i: ses.i, answered: ses.answered, results: ses.results, xp: ses.xp, planKey: ses.planKey,
+    level: ses.level, stop: ses.stop, topic: ses.topic, skill: ses.skill, examGrading: ses.examGrading, t0: ses.startedAt, at: Date.now() };
+  save();
+}
+const sesSaved = () => { const K = S.sesCur; return K && Date.now() - K.at < SES_KEEP && K.items.every(x => x.kind !== 'q' || BYID[x.id]) ? K : null; };
+function sesResume() {
+  const K = sesSaved(); if (!K) { S.sesCur = null; save(); renderView(); return; }
+  clearInterval(tick);
+  ses = { mode: K.mode, title: K.title, items: K.items, i: K.i, results: K.results, xp: K.xp || 0, planKey: K.planKey, level: K.level, stop: K.stop, topic: K.topic,
+    skill: K.skill, examGrading: K.examGrading, picked: new Set(), answered: false, timeLimit: 0, startedAt: Date.now() - Math.max(0, K.at - K.t0), nextWasOpen: false, ended: false };
+  if (K.answered) { if (ses.i >= ses.items.length - 1) { finish(); return; } ses.i++; }
+  sesKeep(); go(viewOf(curItem()));
+}
+function sesStrip() {
+  const K = sesSaved(); if (!K) return '';
+  const nq = K.items.filter(x => x.kind === 'q').length, done = K.results.length;
+  return `<div class="card ses-resume"><div><b>Ronda a meio</b> <span class="muted">· ${esc(K.title)}</span><p class="muted" style="margin-top:2px;font-size:13.5px">${done} de ${nq} pergunta${nq === 1 ? '' : 's'} feita${done === 1 ? '' : 's'}. As respostas já estão guardadas; continuas onde paraste.</p></div>
+    <div class="row"><button class="btn primary small" data-act="sesResume">Continuar</button><button class="btn ghost small" data-act="sesDrop">Descartar</button></div></div>`;
+}
 function finish() {
-  if (!ses || ses.ended) return; ses.ended = true; clearInterval(tick);
+  if (!ses || ses.ended) return; ses.ended = true; clearInterval(tick); S.sesCur = null;
   if (ses.mode === 'exam') { const tot = ses.items.length, ok = ses.results.filter(r => r.ok).length; const X = examCfg();
     // real grading: a wrong answer costs 1/(number of options), or a fixed fraction (exam: { penalty: 1/3 }); blank is 0
     const cost = q => typeof X.penalty === 'number' ? X.penalty : 1 / q.o.length;
@@ -456,7 +481,9 @@ document.addEventListener('click', async ev => {
     case 'opt': choose(+b.dataset.oi); break;
     case 'confirm': if (ses && ses.picked.size) grade(); break;
     case 'next': next(); break;
-    case 'quit': if (ses && ses.results.length) finish(); else { ses = null; go('home'); } break;
+    case 'quit': if (ses && ses.results.length) finish(); else { ses = null; S.sesCur = null; save(); go('home'); } break;
+    case 'sesResume': sesResume(); break;
+    case 'sesDrop': S.sesCur = null; save(); renderView(); break;
     case 'finish': finish(); break;
     case 'retryWrong': { const ids = ses.results.filter(r => !r.ok && !r.skipped).map(r => r.id); start('retry', { ids, examGrading: ses.mode === 'exam' || ses.examGrading }); break; }
     case 'bank': go('bank'); break;

@@ -339,6 +339,7 @@ function Home() {
       ${dl !== null ? `<p><b>${dl > 0 ? `Faltam ${dl} dia${dl === 1 ? '' : 's'} para o teste.` : dl === 0 ? 'O teste é hoje. Força!' : 'O teste já passou.'}</b></p>` : ''}
       ${partSwitch ? `<div class="row part-row"><span class="eyebrow">Matéria</span>${partSwitch}</div>` : ''}
     </section>
+    ${sesStrip()}
     ${PlanCard()}
     ${readyCard}
     <details class="section fold explore" id="fold-explore" ${folds['fold-explore'] ? 'open' : ''}><summary class="section-h"><h2>Explorar</h2><span class="muted" style="font-size:13px">níveis, temas, modos, exames anteriores, definições</span></summary>
@@ -516,5 +517,5 @@ function start(mode, opts = {}) {
   if (!items.length) { toast('Não há perguntas para estes filtros.'); return; }
   ses = { mode, title, items, i: 0, planKey: opts.planKey || null, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, stop: opts.stop, nextWasOpen: !!opts.level && opts.level < LEVELS.length && unlocked(opts.level + 1), topic: opts.topic, skill: mode === 'skill' ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
   if (timeLimit) startTimer();
-  go(viewOf(items[0]));
+  sesKeep(); go(viewOf(items[0]));
 }

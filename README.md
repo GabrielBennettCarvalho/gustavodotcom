@@ -214,6 +214,9 @@ Definições → Calculadora turns the button on or off per course (`settings.ca
 - On a touch screen a keypad replaces the system keyboard, with `x` and `x=` keys for variables (`abc`, at the top,
   brings the system keyboard back for other names). The x₁ key adds an index to the letter before it, or types x₁.
 - The panel's class is `calc-panel`, not `calc`: `.badge.calc` already marks calculation questions.
+- Results can be copied: the button beside the live result and each history entry copies it as plain text (`3/4`,
+  `-2`, `1.5e-7`; a huge integer whole), and a selection copies as `3/4 = 0.75`, one line per history entry
+  (`show(v).p`, the `data-copy` of each piece). A drag over a history result selects it; a tap still inserts it.
 - History, variables and ans are saved per device in `localStorage` key `estudo-ist-calc`.
 
 ## Progress and the "other device" key

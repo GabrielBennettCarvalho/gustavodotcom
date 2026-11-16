@@ -464,6 +464,13 @@ body:has(.pb-actions) .calc-fab{bottom:calc(84px + env(safe-area-inset-bottom,0p
 .calc-hr .cl{font-size:17px;font-weight:600}
 .calc-hx:hover,.calc-hr:hover{background:var(--panel-2)}
 .calc-alt{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+/* results can be selected and copied (app-calc.js gives the copy plain text); the copy button confirms with a ✓ */
+.calc-prev,.calc-hr{-webkit-user-select:text;user-select:text}
+.calc-prev{cursor:text}
+.calc-copy{flex:none;align-self:center;width:28px;height:28px;display:grid;place-items:center;border:0;border-radius:6px;background:none;color:var(--muted);cursor:pointer;padding:0;font-weight:700}
+.calc-copy:hover{background:var(--panel-2);color:var(--ink)}
+.calc-copy .glyph{width:16px;height:16px}
+.calc-copy.done{color:var(--good)}
 .calc-disp{position:relative;border:1.5px solid var(--line);border-radius:10px;background:var(--panel-2);padding:10px 12px 8px;cursor:text;min-height:86px;display:flex;flex-direction:column;justify-content:space-between;gap:4px}
 .calc-disp.focus{border-color:var(--accent)}
 /* a block, not flex: flex items ignore vertical-align, which raises exponents and lowers indices */

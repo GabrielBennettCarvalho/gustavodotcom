@@ -302,7 +302,7 @@ const trimZ = s => s.includes('.') ? s.replace(/0+$/, '').replace(/\.$/, '') : s
 function fmtNum(x) {
   const a = Math.abs(x); let m, e = null;
   if (a !== 0 && (a >= 1e10 || a < 1e-6)) { const [mm, ee] = x.toExponential(9).split('e'); m = trimZ(mm); e = +ee; } else m = trimZ(x.toPrecision(10));
-  return { h: m.replace('-', '−') + (e === null ? '' : sciH(e)), approx: Number(e === null ? m : m + 'e' + e) !== x, t: x < 0 ? `(${x})` : String(x) };
+  return { h: m.replace('-', '−') + (e === null ? '' : sciH(e)), approx: Number(e === null ? m : m + 'e' + e) !== x, t: x < 0 ? `(${x})` : String(x), p: e === null ? m : `${m}e${e}` };
 }
 function exactDec(q) {   // the decimal, when it ends and is short (3/8 = 0.375)
   let d = q.d, k2 = 0, k5 = 0; while (d % 2n === 0n) { d /= 2n; k2++; } while (d % 5n === 0n) { d /= 5n; k5++; }
@@ -311,14 +311,15 @@ function exactDec(q) {   // the decimal, when it ends and is short (3/8 = 0.375)
   if (s.length > 16) return null;
   return (ng ? '−' : '') + trimZ(s.slice(0, s.length - k) + '.' + s.slice(s.length - k));
 }
-// { h: html, approx: shown value is rounded, t: text to insert in an expression, alt: { h, approx } a second form }
+// { h: html, approx: shown value is rounded, t: text to insert in an expression, p: plain text to copy (3/4, -2, 1.5e-7),
+//   alt: { h, approx, p } a second form }
 function show(v) {
   if (!isQ(v)) return fmtNum(v.f);
   const ng = v.n < 0n, an = (ng ? -v.n : v.n).toString(), ds = v.d.toString();
-  if (v.d === 1n) return an.length <= 20 ? { h: (ng ? '−' : '') + an, approx: false, t: ng ? `(${v.n})` : an } : Object.assign(fmtNum(qToNum(v)), { t: ng ? `(${v.n})` : an });
-  const dec = exactDec(v), x = fmtNum(qToNum(v)), alt = dec !== null ? { h: dec, approx: false } : { h: x.h, approx: true };
-  if (an.length + ds.length <= 18 && (dec === null || ds.length <= 4)) return { h: (ng ? '<span class="cl-o u">−</span>' : '') + fracH(an, ds), approx: false, t: `(${v.n}/${ds})`, alt };
-  return { h: alt.h, approx: alt.approx, t: x.t };
+  if (v.d === 1n) return an.length <= 20 ? { h: (ng ? '−' : '') + an, approx: false, t: ng ? `(${v.n})` : an, p: v.n.toString() } : Object.assign(fmtNum(qToNum(v)), { t: ng ? `(${v.n})` : an, p: v.n.toString() });   // shown rounded, copied whole
+  const dec = exactDec(v), x = fmtNum(qToNum(v)), alt = dec !== null ? { h: dec, approx: false, p: dec.replace('−', '-') } : { h: x.h, approx: true, p: x.p };
+  if (an.length + ds.length <= 18 && (dec === null || ds.length <= 4)) return { h: (ng ? '<span class="cl-o u">−</span>' : '') + fracH(an, ds), approx: false, t: `(${v.n}/${ds})`, p: `${v.n}/${ds}`, alt };
+  return { h: alt.h, approx: alt.approx, t: x.t, p: alt.p };
 }
 const ser = v => isQ(v) ? { n: v.n.toString(), d: v.d.toString() } : { f: v.f };
 function de(o) { try { return o && (o.n !== undefined ? Q(big(o.n), big(o.d)) : typeof o.f === 'number' ? { f: o.f } : null); } catch { return null; } }

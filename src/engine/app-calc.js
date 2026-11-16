@@ -59,15 +59,31 @@ function calcOpen(open, refocus) {
   calcEl('calc-in').focus({ preventScroll: true });
 }
 
+// data-copy: the plain text a copy of that piece gives (3/4, not the stacked "34"); data-join: what goes before it
 function calcResultH(v, cls = '') {
   const s = CX.show(v);
-  return `<span class="cl ${cls}">${s.approx ? '≈' : '='} ${s.h}</span>${s.alt ? `<span class="calc-alt">${s.alt.approx ? '≈' : '='} ${s.alt.h}</span>` : ''}`;
+  return `<span class="cl ${cls}" data-copy="${esc(s.p)}">${s.approx ? '≈' : '='} ${s.h}</span>${s.alt ? `<span class="calc-alt" data-copy="${esc(s.alt.p)}" data-join="${s.alt.approx ? ' ≈ ' : ' = '}">${s.alt.approx ? '≈' : '='} ${s.alt.h}</span>` : ''}`;
 }
+// the last text copied, for a moment: its buttons show ✓, even after the result line is drawn again
+let calcCopied = { t: null, until: 0 };
+const calcCopyBtn = t => { const ok = calcCopied.t === t && Date.now() < calcCopied.until;
+  return `<button type="button" class="calc-copy${ok ? ' done' : ''}" data-cc="${esc(t)}" title="${ok ? 'Copiado' : 'Copiar ' + esc(t)}" aria-label="Copiar o resultado, ${esc(t)}">${ok ? '✓' : glyph('copy')}</button>`; };
+// the clipboard API where the page may use it (https, file), else the old way
+function calcCopy(text) {
+  const done = () => { calcCopied = { t: text, until: Date.now() + 1400 }; calcRedrawCopy(); setTimeout(calcRedrawCopy, 1450); };
+  const old = () => {
+    const t = document.createElement('textarea'); t.value = text; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;top:0;opacity:0';
+    document.body.appendChild(t); t.select(); let ok = false; try { ok = document.execCommand('copy'); } catch { /* not allowed */ } t.remove();
+    if (ok) done(); else toast('Não consegui copiar.');
+  };
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, old); else old();
+}
+function calcRedrawCopy() { document.querySelectorAll('#calc [data-cc]').forEach(b => { b.outerHTML = calcCopyBtn(b.dataset.cc); }); }
 function calcHist() {
   const ol = calcEl('calc-hist'); if (!ol) return;
   ol.innerHTML = calcMem.hist.map((h, i) => { const v = CX.de(h.v); return v ? `<li>
     <button type="button" class="calc-hx cl" data-ci="${i}" title="Editar outra vez">${CX.render(CX.parse(h.x))}</button>
-    <button type="button" class="calc-hr" data-cv="${i}" title="Usar este resultado na conta">${calcResultH(v)}</button></li>` : ''; }).join('');
+    <div class="calc-hr" data-cv="${i}" role="button" tabindex="0" title="Usar este resultado na conta">${calcResultH(v)}</div>${calcCopyBtn(CX.show(v).p)}</li>` : ''; }).join('');
   ol.hidden = !calcMem.hist.length; ol.scrollTop = ol.scrollHeight;
 }
 
@@ -84,7 +100,7 @@ function calcDraw() {
   if (calcErr) { pv.innerHTML = calcErr; return; }
   if (tree.empty) { pv.innerHTML = ''; return; }
   const r = CX.run(tree, calcEnv());
-  pv.innerHTML = r.ok ? (r.name ? `<span class="cl">${CX.render(CX.parse(r.name))}</span> ` : '') + calcResultH(r.v, 'calc-live') : '';
+  pv.innerHTML = r.ok ? (r.name ? `<span class="cl">${CX.render(CX.parse(r.name))}</span> ` : '') + calcResultH(r.v, 'calc-live') + calcCopyBtn(CX.show(r.v).p) : '';
 }
 // a long expression scrolls sideways with the caret, keeping a little of what is around it in sight
 function calcReveal(ex, el) {
@@ -187,15 +203,19 @@ function calcBind(p) {
   inp.addEventListener('focus', () => { disp.classList.add('focus'); calcDraw(); });
   inp.addEventListener('blur', () => disp.classList.remove('focus'));
   disp.addEventListener('pointerdown', ev => {
-    if (ev.target === inp) return; ev.preventDefault();
+    if (ev.target === inp || ev.target.closest('#calc-prev')) return;   // the result line is for selecting and copying
+    ev.preventDefault();
     const pos = calcPosAt(ev, inp.value.length), n = inp.value.length; inp.focus({ preventScroll: true }); inp.setSelectionRange(pos < 0 ? n : pos, pos < 0 ? n : pos);
     if (pos < 0) for (let k = 0; k < 20; k++) { const t = CX.exitText(inp.value); if (t !== ')' && t !== ' ') break; inp.setRangeText(t, inp.value.length, inp.value.length, 'end'); }   // a tap past the end leaves every box
     calcDraw();
   });
+  p.addEventListener('keydown', ev => { const hr = ev.target.closest && ev.target.closest('[data-cv]'); if (hr && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); hr.click(); } });
   // keys keep the focus in the input (and the phone keyboard as it was)
   p.addEventListener('pointerdown', ev => { if (ev.target.closest('.calc-k')) ev.preventDefault(); });
   p.addEventListener('click', ev => {
-    const k = ev.target.closest('[data-ck]'), hx = ev.target.closest('[data-ci]'), hr = ev.target.closest('[data-cv]');
+    const k = ev.target.closest('[data-ck]'), hx = ev.target.closest('[data-ci]'), hr = ev.target.closest('[data-cv]'), cc = ev.target.closest('[data-cc]');
+    if (cc) { calcCopy(cc.dataset.cc); return; }
+    if (hr) { const sel = getSelection(), r = sel.rangeCount && !sel.isCollapsed && sel.getRangeAt(0); if (r && r.intersectsNode(hr) && r.toString().trim()) return; }   // a drag to select it, not a tap
     if (hx) { inp.value = calcMem.hist[+hx.dataset.ci].x; calcErr = ''; inp.focus({ preventScroll: true }); inp.setSelectionRange(inp.value.length, inp.value.length); calcDraw(); return; }
     if (hr) { const v = CX.de(calcMem.hist[+hr.dataset.cv].v); if (v) { inp.focus({ preventScroll: true }); calcInsert(CX.show(v).t); } return; }
     if (!k) return;
@@ -213,4 +233,12 @@ function calcBind(p) {
     else calcInsert(c);
   });
 }
+// copying a selected result gives its plain text: 3/4 = 0.75, one line per history entry. While the input has the focus,
+// Ctrl+C copies the expression as typed, as usual.
+document.addEventListener('copy', ev => {
+  const sel = getSelection(), panel = calcEl('calc');
+  if (!panel || !sel.rangeCount || sel.isCollapsed || document.activeElement === calcEl('calc-in') || !panel.contains(sel.anchorNode)) return;
+  const parts = [...panel.querySelectorAll('[data-copy]')].filter(el => sel.containsNode(el, true)); if (!parts.length) return;
+  ev.clipboardData.setData('text/plain', parts.map((el, i) => (i ? el.dataset.join || '\n' : '') + el.dataset.copy).join('')); ev.preventDefault();
+});
 document.addEventListener('selectionchange', () => { if (document.activeElement && document.activeElement.id === 'calc-in') calcDraw(); });

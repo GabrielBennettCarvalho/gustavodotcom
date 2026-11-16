@@ -151,6 +151,7 @@ const GPLAYER = (() => {
       scrub.value = i;
       if (animate && s.sfx) SFX.play(s.sfx);
       if (i === steps.length - 1) { stop(); if (st.mode === 'play' && animate) endCard(); }
+      else if (st.pending === null && !ask.hidden) { ask.hidden = true; ask.innerHTML = ''; }   // left the end card
     }
     function table(t) {
       const hl = new Set((t.hl || []).map(([r, c]) => `${r < 0 ? t.r.length + r : r}:${c}`)), mk = new Set((t.mk || []).map(([r, c]) => `${r}:${c}`));
@@ -165,9 +166,9 @@ const GPLAYER = (() => {
     function goTo(i, animate = true) {
       i = Math.max(0, Math.min(steps.length - 1, i));
       closeAsk();
-      if (st.mode === 'play' && i > st.i && steps[i].ask && !st.answered[i]) {
+      if (st.mode === 'play' && i > st.i) {
         // a jump forward over unanswered questions stops at the first one
-        for (let k = st.i + 1; k <= i; k++) if (steps[k].ask && !st.answered[k]) { if (k > st.i + 1) render(k - 1, false); return openAsk(k); }
+        for (let k = st.i + 1; k <= i; k++) if (steps[k].ask && !(k in st.answered)) { if (k > st.i + 1) render(k - 1, false); return openAsk(k); }
       }
       render(i, animate);
     }
@@ -284,12 +285,21 @@ const GPLAYER = (() => {
     return { steps, get mode() { return st.mode; }, stop, destroy() { stop(); clearPk(); document.removeEventListener('keydown', onKey); } };
   }
 
-  /* --- over the page (from a question's feedback) --- */
+  /* --- over the page (from a lesson or a question's feedback), so a session is never left ---
+     cfg.next: a function that makes a fresh problem; the end card then offers "Outro problema" */
   function overlay(cfg) {
     const wrap = document.createElement('div'); wrap.className = 'gmodal'; wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true');
-    wrap.innerHTML = `<div class="gmodal-card"><div class="row gmodal-head"><h3>${esc(cfg.title || 'Resolução animada')}</h3><span class="spacer"></span><button class="btn small" data-close aria-label="Fechar">Fechar ✕</button></div>${cfg.stmt ? `<p class="gp-stmt">${md(cfg.stmt)}</p>` : ''}<div class="gmodal-body"></div></div>`;
+    wrap.innerHTML = `<div class="gmodal-card"><div class="row gmodal-head"><h3></h3><span class="spacer"></span><button class="btn small" data-close aria-label="Fechar">Fechar ✕</button></div><p class="gp-stmt"></p><div class="gmodal-body"></div></div>`;
     document.body.appendChild(wrap); document.body.classList.add('gmodal-open');
-    const ctl = mount(wrap.querySelector('.gmodal-body'), cfg);
+    let ctl;
+    const show = (c, mode) => {
+      wrap.querySelector('h3').textContent = c.title || 'Resolução animada';
+      const st = wrap.querySelector('.gp-stmt'); st.innerHTML = c.stmt ? md(c.stmt) : ''; st.hidden = !c.stmt;
+      if (ctl) ctl.destroy();
+      ctl = mount(wrap.querySelector('.gmodal-body'), Object.assign({}, c, { mode: mode || c.mode, onNew: cfg.next ? m => show(cfg.next(), m) : null }));
+      wrap.scrollTop = 0;
+    };
+    show(cfg);
     const close = () => { ctl.destroy(); wrap.remove(); document.body.classList.remove('gmodal-open'); document.removeEventListener('keydown', esc_); };
     const esc_ = ev => { if (ev.key === 'Escape') close(); };
     wrap.addEventListener('click', ev => { if (ev.target === wrap || ev.target.closest('[data-close]')) close(); });
@@ -307,6 +317,18 @@ function glabProblem(lab, v) {
   const kind = lab.kinds.find(k => k.id === v.kind) || lab.kinds[0];
   const made = kind.make(GRAPH, GRAPH.rng(v.seed), v.opt || {});
   return Object.assign({ title: kind.label }, made, { p: Object.assign({}, made.p, v.opt) });
+}
+/* Links from lessons and questions: a lab maps lesson ids to { ex, kind } (lab.les). A lesson shows its example
+   animated; a question on that lesson offers a fresh generated problem of that kind. Both open over the page. */
+function labLink(lesId) {
+  for (const lab of courseLabs()) { const m = lab.les && lesId && lab.les[lesId]; if (m) return { lab, m }; }
+  return null;
+}
+function labLessonBtn(lesId) {
+  const L = labLink(lesId); return L && L.m.ex ? `<button class="btn small anim-btn" data-gl="lesEx" data-les="${esc(lesId)}">▶ Ver o exemplo animado</button>` : '';
+}
+function labPracticeBtn(lesId) {
+  const L = labLink(lesId); return L && L.m.kind ? `<button class="btn small anim-btn" data-gl="lesGo" data-les="${esc(lesId)}">Praticar com uma rede nova</button>` : '';
 }
 function GraphLab() {
   const lab = courseLabs().find(l => l.id === view.lab); if (!lab) return Home();
@@ -346,5 +368,9 @@ document.addEventListener('click', ev => {
     case 'new': view.seed = GRAPH.newSeed(); view.mode = mode; renderView(); break;
     case 'opt': view.opt = Object.assign({}, view.opt, { [b.dataset.k]: !view.opt[b.dataset.k] }); view.mode = mode; renderView(); break;
     case 'anim': { const q = BYID[b.dataset.id]; if (q && q.anim) GPLAYER.overlay(Object.assign({ title: 'Resolução animada' }, q.anim)); break; }
+    case 'lesEx': { const L = labLink(b.dataset.les); if (L) GPLAYER.overlay(Object.assign(glabProblem(L.lab, { ex: L.m.ex }), { mode: 'watch' })); break; }
+    case 'lesGo': { const L = labLink(b.dataset.les); if (!L) break;
+      const next = () => glabProblem(L.lab, { kind: L.m.kind, seed: GRAPH.newSeed() });
+      GPLAYER.overlay(Object.assign(next(), { mode: 'play', next })); break; }
   }
 });

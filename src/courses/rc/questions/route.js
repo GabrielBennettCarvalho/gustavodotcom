@@ -3,6 +3,8 @@ const LS_TOPO = { topo: { n: { u: [10, 100], v: [130, 20], w: [270, 20], x: [130
 const DV_TOPO = { topo: { n: { X: [200, 10], W: [20, 190], Y: [380, 190], Z: [200, 120] },
   e: [['X', 'W', '1'], ['X', 'Z', '1'], ['X', 'Y', '5'], ['Y', 'Z', '1'], ['Y', 'W', '4'], ['Z', 'W', '3']] } };
 const DV_TOPO_FAIL = { topo: Object.assign({}, DV_TOPO.topo, { x: ['X-W'] }) };
+// slides T04, "Mudanças no custo da ligação": good news travel fast, bad news (4 → 60) count to infinity (also in lab.js)
+const LAB_XYZ = { n: { x: [40, 170], y: [200, 30], z: [360, 170] }, e: [['x', 'y', 4], ['y', 'z', 1], ['x', 'z', 50]] };
 // "Ver a resolução animada" in the feedback (graph lab player, src/engine/app-graph.js)
 const LS_ANIM = { title: 'Dijkstra a partir de u', algo: 'dijkstra', g: LS_TOPO.topo, p: { src: 'u' } };
 const DV_ANIM = { title: 'Vetor-distância até W', algo: 'dv', g: DV_TOPO.topo, p: { dest: 'W' } };

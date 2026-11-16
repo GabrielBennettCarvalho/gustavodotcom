@@ -1,13 +1,13 @@
 /* ===== RC graph lab: routing algorithms, animated, with a problem generator =====
    Engine: src/engine/graph.js (graphs, generator), graph-algos.js (dijkstra, dv), app-graph.js (player, lab screen).
    Each kind's make(GRAPH, rnd, opts) builds a fresh problem from the random generator rnd (seeded).
-   The examples are the networks from the T04 slides and from past exams. LS_TOPO and DV_TOPO come from route.js. */
+   The examples are the networks from the T04 slides and from past exams. LS_TOPO, DV_TOPO and LAB_XYZ come from
+   route.js (questions there use them too). `les` links the routing lessons to the lab: the lesson shows `ex` animated,
+   and every question on that lesson offers a new problem of kind `kind`. */
 
 // slides T04, "Dijkstra: exemplo" and "Bellman Ford: exemplo" (best path from / to R8)
 const LAB_R8 = { n: { R1: [10, 10], R2: [140, 10], R4: [262, 10], R6: [390, 10], R3: [50, 190], R5: [190, 150], R7: [300, 120], R8: [390, 190] },
   e: [['R1', 'R2', 1], ['R1', 'R3', 4], ['R2', 'R3', 5], ['R2', 'R4', 4], ['R2', 'R5', 1], ['R4', 'R5', 2], ['R4', 'R7', 1], ['R4', 'R6', 4], ['R5', 'R8', 6], ['R3', 'R8', 4], ['R7', 'R8', 1], ['R6', 'R8', 2]] };
-// slides T04, "Mudanças no custo da ligação": good news travel fast, bad news (4 → 60) count to infinity
-const LAB_XYZ = { n: { x: [40, 170], y: [200, 30], z: [360, 170] }, e: [['x', 'y', 4], ['y', 'z', 1], ['x', 'z', 50]] };
 const LAB_POISON = [{ id: 'poison', label: 'Poisoned reverse', title: 'Um nó anuncia ∞ ao vizinho por onde passa a sua rota' }];
 
 // every node has a single shortest path to (or from) s: no ties to explain in a generated problem
@@ -19,6 +19,7 @@ STUDY.labs('rc', [{
   id: 'routing', title: 'Laboratório de encaminhamento', icon: 'route',
   desc: 'Dijkstra e vetor-distância animados, passo a passo, com o código ao lado. Vê a resolução ou faz tu; o gerador cria sempre redes novas.',
   meta: 'Dijkstra · vetor-distância · contagem até ao infinito',
+  les: { 'r-ls': { ex: 'uz-ls', kind: 'ls' }, 'r-dv': { ex: 'x2223-dv', kind: 'dv' }, 'r-cti': { ex: 'xyz-bad', kind: 'chg' } },
   kinds: [
     { id: 'ls', label: 'Dijkstra',
       make(GR, r) {
@@ -80,6 +81,8 @@ STUDY.labs('rc', [{
     { id: 'xyz-good', label: 'Slides: boas notícias (4 → 1)', algo: 'dv', g: LAB_XYZ,
       p: { dest: 'x', start: 'stable', change: { a: 'x', b: 'y', c: 1 }, asks: 2 },
       stmt: 'A ligação **x–y** passa de 4 para **1**. y nota logo, avisa z, e em poucas rondas está tudo estável: "as boas notícias propagam-se depressa".' },
+    { id: 'x2223-dv', label: 'Exame 2022/23: Bellman-Ford até W', algo: 'dv', g: DV_TOPO.topo, p: { dest: 'W' },
+      stmt: 'Exame 2022/23, Parte III.2.3: rede com vetor-distância, destino **W**. Em t = 0 cada nó só conhece as suas ligações. Calcula, ronda a ronda, D(X), D(Y) e D(Z) até W, e por onde passa cada um.' },
     { id: 'x2223', label: 'Exame 2022/23: falha de X–W', algo: 'dv', g: DV_TOPO.topo, opts: LAB_POISON,
       p: { dest: 'W', start: 'stable', change: { a: 'X', b: 'W', c: null }, asks: 2 },
       stmt: 'Exame 2022/23, Parte III.2.3: rede estável com vetor-distância, destino **W**. A ligação **X–W** falha. Que estimativa calcula X logo a seguir, e porque é um problema? Qual é o caminho final de X até W?' },

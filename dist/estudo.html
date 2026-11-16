@@ -670,6 +670,9 @@ body:has(.pb-actions) .calc-fab{bottom:calc(84px + env(safe-area-inset-bottom,0p
 .glab-card h2{font-size:19px}
 .mode.lab{border-color:color-mix(in srgb,var(--token) 55%,var(--line));background:linear-gradient(135deg,color-mix(in srgb,var(--token) 9%,var(--panel)),var(--panel) 60%)}
 .anim-btn{align-self:flex-start;border-color:var(--token);margin:4px 0}
+.anim-row{gap:8px}
+.anim-row .anim-btn{margin:0}
+.lesson .anim-btn{display:inline-flex;margin-top:10px}
 .gmodal{position:fixed;inset:0;z-index:60;background:rgba(10,14,20,.55);backdrop-filter:blur(3px);display:flex;justify-content:center;align-items:flex-start;overflow-y:auto;padding:24px 12px;animation:gp-fade .2s ease}
 .gmodal-card{width:min(980px,100%);background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
 .gmodal-open{overflow:hidden}
@@ -10697,6 +10700,8 @@ const LS_TOPO = { topo: { n: { u: [10, 100], v: [130, 20], w: [270, 20], x: [130
 const DV_TOPO = { topo: { n: { X: [200, 10], W: [20, 190], Y: [380, 190], Z: [200, 120] },
   e: [['X', 'W', '1'], ['X', 'Z', '1'], ['X', 'Y', '5'], ['Y', 'Z', '1'], ['Y', 'W', '4'], ['Z', 'W', '3']] } };
 const DV_TOPO_FAIL = { topo: Object.assign({}, DV_TOPO.topo, { x: ['X-W'] }) };
+// slides T04, "Mudanças no custo da ligação": good news travel fast, bad news (4 → 60) count to infinity (also in lab.js)
+const LAB_XYZ = { n: { x: [40, 170], y: [200, 30], z: [360, 170] }, e: [['x', 'y', 4], ['y', 'z', 1], ['x', 'z', 50]] };
 // "Ver a resolução animada" in the feedback (graph lab player, src/engine/app-graph.js)
 const LS_ANIM = { title: 'Dijkstra a partir de u', algo: 'dijkstra', g: LS_TOPO.topo, p: { src: 'u' } };
 const DV_ANIM = { title: 'Vetor-distância até W', algo: 'dv', g: DV_TOPO.topo, p: { dest: 'W' } };
@@ -11024,6 +11029,8 @@ STUDY.questions('rc', [
   o: ['1024', '512', '65 536', '256'], a: 0,
   e: '2 × 2¹⁶ = 131 072 portos públicos. / 128 = **1024** estações.' },
 { id: 'rcx-42', t: 'exam', l: 4, les: 'r-cti', reserved: 'exam', src: 'Exame 2023/24, Parte II.3',
+  anim: { title: 'Más notícias: x–y passa de 4 para 60', algo: 'dv', g: LAB_XYZ, p: { dest: 'x', start: 'stable', change: { a: 'x', b: 'y', c: 60 } },
+    stmt: 'O exemplo dos slides: a ligação x–y passa de 4 para 60. Vê quantas rondas demora até y e z voltarem a acertar o caminho para x.' },
   q: 'Rede com vetor-distância, estável. Uma ligação no caminho de A para X fica indisponível. O nó A descobre imediatamente o novo caminho para X?',
   o: ['Não: as distâncias sobem aos poucos (contagem até ao infinito)', 'Sim: o vetor-distância propaga as falhas numa só ronda', 'Sim, porque cada nó conhece o mapa completo da rede', 'Não: depois de uma falha, A nunca mais chega a X'], a: 0,
   e: 'Más notícias viajam devagar no DV: é preciso várias trocas até os valores convergirem.' },
@@ -11061,13 +11068,13 @@ STUDY.questions('rc', [
 /* ===== RC graph lab: routing algorithms, animated, with a problem generator =====
    Engine: src/engine/graph.js (graphs, generator), graph-algos.js (dijkstra, dv), app-graph.js (player, lab screen).
    Each kind's make(GRAPH, rnd, opts) builds a fresh problem from the random generator rnd (seeded).
-   The examples are the networks from the T04 slides and from past exams. LS_TOPO and DV_TOPO come from route.js. */
+   The examples are the networks from the T04 slides and from past exams. LS_TOPO, DV_TOPO and LAB_XYZ come from
+   route.js (questions there use them too). `les` links the routing lessons to the lab: the lesson shows `ex` animated,
+   and every question on that lesson offers a new problem of kind `kind`. */
 
 // slides T04, "Dijkstra: exemplo" and "Bellman Ford: exemplo" (best path from / to R8)
 const LAB_R8 = { n: { R1: [10, 10], R2: [140, 10], R4: [262, 10], R6: [390, 10], R3: [50, 190], R5: [190, 150], R7: [300, 120], R8: [390, 190] },
   e: [['R1', 'R2', 1], ['R1', 'R3', 4], ['R2', 'R3', 5], ['R2', 'R4', 4], ['R2', 'R5', 1], ['R4', 'R5', 2], ['R4', 'R7', 1], ['R4', 'R6', 4], ['R5', 'R8', 6], ['R3', 'R8', 4], ['R7', 'R8', 1], ['R6', 'R8', 2]] };
-// slides T04, "Mudanças no custo da ligação": good news travel fast, bad news (4 → 60) count to infinity
-const LAB_XYZ = { n: { x: [40, 170], y: [200, 30], z: [360, 170] }, e: [['x', 'y', 4], ['y', 'z', 1], ['x', 'z', 50]] };
 const LAB_POISON = [{ id: 'poison', label: 'Poisoned reverse', title: 'Um nó anuncia ∞ ao vizinho por onde passa a sua rota' }];
 
 // every node has a single shortest path to (or from) s: no ties to explain in a generated problem
@@ -11079,6 +11086,7 @@ STUDY.labs('rc', [{
   id: 'routing', title: 'Laboratório de encaminhamento', icon: 'route',
   desc: 'Dijkstra e vetor-distância animados, passo a passo, com o código ao lado. Vê a resolução ou faz tu; o gerador cria sempre redes novas.',
   meta: 'Dijkstra · vetor-distância · contagem até ao infinito',
+  les: { 'r-ls': { ex: 'uz-ls', kind: 'ls' }, 'r-dv': { ex: 'x2223-dv', kind: 'dv' }, 'r-cti': { ex: 'xyz-bad', kind: 'chg' } },
   kinds: [
     { id: 'ls', label: 'Dijkstra',
       make(GR, r) {
@@ -11140,6 +11148,8 @@ STUDY.labs('rc', [{
     { id: 'xyz-good', label: 'Slides: boas notícias (4 → 1)', algo: 'dv', g: LAB_XYZ,
       p: { dest: 'x', start: 'stable', change: { a: 'x', b: 'y', c: 1 }, asks: 2 },
       stmt: 'A ligação **x–y** passa de 4 para **1**. y nota logo, avisa z, e em poucas rondas está tudo estável: "as boas notícias propagam-se depressa".' },
+    { id: 'x2223-dv', label: 'Exame 2022/23: Bellman-Ford até W', algo: 'dv', g: DV_TOPO.topo, p: { dest: 'W' },
+      stmt: 'Exame 2022/23, Parte III.2.3: rede com vetor-distância, destino **W**. Em t = 0 cada nó só conhece as suas ligações. Calcula, ronda a ronda, D(X), D(Y) e D(Z) até W, e por onde passa cada um.' },
     { id: 'x2223', label: 'Exame 2022/23: falha de X–W', algo: 'dv', g: DV_TOPO.topo, opts: LAB_POISON,
       p: { dest: 'W', start: 'stable', change: { a: 'X', b: 'W', c: null }, asks: 2 },
       stmt: 'Exame 2022/23, Parte III.2.3: rede estável com vetor-distância, destino **W**. A ligação **X–W** falha. Que estimativa calcula X logo a seguir, e porque é um problema? Qual é o caminho final de X até W?' },
@@ -23057,6 +23067,7 @@ const GPLAYER = (() => {
       scrub.value = i;
       if (animate && s.sfx) SFX.play(s.sfx);
       if (i === steps.length - 1) { stop(); if (st.mode === 'play' && animate) endCard(); }
+      else if (st.pending === null && !ask.hidden) { ask.hidden = true; ask.innerHTML = ''; }   // left the end card
     }
     function table(t) {
       const hl = new Set((t.hl || []).map(([r, c]) => `${r < 0 ? t.r.length + r : r}:${c}`)), mk = new Set((t.mk || []).map(([r, c]) => `${r}:${c}`));
@@ -23071,9 +23082,9 @@ const GPLAYER = (() => {
     function goTo(i, animate = true) {
       i = Math.max(0, Math.min(steps.length - 1, i));
       closeAsk();
-      if (st.mode === 'play' && i > st.i && steps[i].ask && !st.answered[i]) {
+      if (st.mode === 'play' && i > st.i) {
         // a jump forward over unanswered questions stops at the first one
-        for (let k = st.i + 1; k <= i; k++) if (steps[k].ask && !st.answered[k]) { if (k > st.i + 1) render(k - 1, false); return openAsk(k); }
+        for (let k = st.i + 1; k <= i; k++) if (steps[k].ask && !(k in st.answered)) { if (k > st.i + 1) render(k - 1, false); return openAsk(k); }
       }
       render(i, animate);
     }
@@ -23190,12 +23201,21 @@ const GPLAYER = (() => {
     return { steps, get mode() { return st.mode; }, stop, destroy() { stop(); clearPk(); document.removeEventListener('keydown', onKey); } };
   }
 
-  /* --- over the page (from a question's feedback) --- */
+  /* --- over the page (from a lesson or a question's feedback), so a session is never left ---
+     cfg.next: a function that makes a fresh problem; the end card then offers "Outro problema" */
   function overlay(cfg) {
     const wrap = document.createElement('div'); wrap.className = 'gmodal'; wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true');
-    wrap.innerHTML = `<div class="gmodal-card"><div class="row gmodal-head"><h3>${esc(cfg.title || 'Resolução animada')}</h3><span class="spacer"></span><button class="btn small" data-close aria-label="Fechar">Fechar ✕</button></div>${cfg.stmt ? `<p class="gp-stmt">${md(cfg.stmt)}</p>` : ''}<div class="gmodal-body"></div></div>`;
+    wrap.innerHTML = `<div class="gmodal-card"><div class="row gmodal-head"><h3></h3><span class="spacer"></span><button class="btn small" data-close aria-label="Fechar">Fechar ✕</button></div><p class="gp-stmt"></p><div class="gmodal-body"></div></div>`;
     document.body.appendChild(wrap); document.body.classList.add('gmodal-open');
-    const ctl = mount(wrap.querySelector('.gmodal-body'), cfg);
+    let ctl;
+    const show = (c, mode) => {
+      wrap.querySelector('h3').textContent = c.title || 'Resolução animada';
+      const st = wrap.querySelector('.gp-stmt'); st.innerHTML = c.stmt ? md(c.stmt) : ''; st.hidden = !c.stmt;
+      if (ctl) ctl.destroy();
+      ctl = mount(wrap.querySelector('.gmodal-body'), Object.assign({}, c, { mode: mode || c.mode, onNew: cfg.next ? m => show(cfg.next(), m) : null }));
+      wrap.scrollTop = 0;
+    };
+    show(cfg);
     const close = () => { ctl.destroy(); wrap.remove(); document.body.classList.remove('gmodal-open'); document.removeEventListener('keydown', esc_); };
     const esc_ = ev => { if (ev.key === 'Escape') close(); };
     wrap.addEventListener('click', ev => { if (ev.target === wrap || ev.target.closest('[data-close]')) close(); });
@@ -23213,6 +23233,18 @@ function glabProblem(lab, v) {
   const kind = lab.kinds.find(k => k.id === v.kind) || lab.kinds[0];
   const made = kind.make(GRAPH, GRAPH.rng(v.seed), v.opt || {});
   return Object.assign({ title: kind.label }, made, { p: Object.assign({}, made.p, v.opt) });
+}
+/* Links from lessons and questions: a lab maps lesson ids to { ex, kind } (lab.les). A lesson shows its example
+   animated; a question on that lesson offers a fresh generated problem of that kind. Both open over the page. */
+function labLink(lesId) {
+  for (const lab of courseLabs()) { const m = lab.les && lesId && lab.les[lesId]; if (m) return { lab, m }; }
+  return null;
+}
+function labLessonBtn(lesId) {
+  const L = labLink(lesId); return L && L.m.ex ? `<button class="btn small anim-btn" data-gl="lesEx" data-les="${esc(lesId)}">▶ Ver o exemplo animado</button>` : '';
+}
+function labPracticeBtn(lesId) {
+  const L = labLink(lesId); return L && L.m.kind ? `<button class="btn small anim-btn" data-gl="lesGo" data-les="${esc(lesId)}">Praticar com uma rede nova</button>` : '';
 }
 function GraphLab() {
   const lab = courseLabs().find(l => l.id === view.lab); if (!lab) return Home();
@@ -23252,6 +23284,10 @@ document.addEventListener('click', ev => {
     case 'new': view.seed = GRAPH.newSeed(); view.mode = mode; renderView(); break;
     case 'opt': view.opt = Object.assign({}, view.opt, { [b.dataset.k]: !view.opt[b.dataset.k] }); view.mode = mode; renderView(); break;
     case 'anim': { const q = BYID[b.dataset.id]; if (q && q.anim) GPLAYER.overlay(Object.assign({ title: 'Resolução animada' }, q.anim)); break; }
+    case 'lesEx': { const L = labLink(b.dataset.les); if (L) GPLAYER.overlay(Object.assign(glabProblem(L.lab, { ex: L.m.ex }), { mode: 'watch' })); break; }
+    case 'lesGo': { const L = labLink(b.dataset.les); if (!L) break;
+      const next = () => glabProblem(L.lab, { kind: L.m.kind, seed: GRAPH.newSeed() });
+      GPLAYER.overlay(Object.assign(next(), { mode: 'play', next })); break; }
   }
 });
 
@@ -23298,7 +23334,7 @@ function Feedback(q, it) {
     <div class="verdict">${C.verdict ? `<span class="vtag">${esc(ok ? C.verdict.ok : C.verdict.ko)}</span>` : ''}${ok ? pickOne(['Certo.', 'Exatamente.', 'Na mouche.', 'Isso mesmo.']) : pickOne(['Ainda não.', 'Quase, mas não.', 'Falhou. Bora perceber porquê.'])}</div>
     <p class="explain">${md(q.e)}</p>
     ${wrongNotes}
-    ${q.anim && typeof GPLAYER !== 'undefined' ? `<button class="btn small anim-btn" data-gl="anim" data-id="${esc(q.id)}">▶ Ver a resolução animada</button>` : ''}
+    ${q.anim || labLink(q.les) ? `<div class="row anim-row">${q.anim ? `<button class="btn small anim-btn" data-gl="anim" data-id="${esc(q.id)}">▶ Ver a resolução animada</button>` : ''}${labPracticeBtn(q.les)}</div>` : ''}
     ${L ? `<details class="lesson-peek" ${ok ? '' : 'open'}><summary>Teoria: ${esc(L.title)}</summary><div class="lbody lesson">${lessonBody(L, q.card)}</div></details>` : ''}
     <div class="note-box"><label class="eyebrow" for="note-${esc(q.id)}">${toSheet ? 'Para a tua cábula: o que te faltou?' : 'A minha nota sobre esta pergunta'}</label><textarea id="note-${esc(q.id)}" data-act="note" data-id="${esc(q.id)}" placeholder="${toSheet ? 'A fórmula, o passo ou a armadilha que te escapou…' : 'Escreve aqui o truque para não voltares a errar…'}">${esc(S.notes[q.id] || '')}</textarea>${toSheet ? `<span class="cab-tip">Fica na tua cábula, em “${esc(SKBYID[skillOf(q)].label)}”, para levares para o exame.</span>` : ''}</div>
     ${SKBYID[skillOf(q)] ? `<span class="src">Tipo de problema: ${esc(SKBYID[skillOf(q)].label)}</span>` : ''}
@@ -23314,7 +23350,7 @@ const codeBlock = c => `<pre class="codeblk">${esc(c)}</pre>`;
 // k: only card k of the lesson (the diagram and the key line belong to the last card)
 function lessonBody(L, k) { const cs = lessonCards(L), one = k && cs.length > 1 && cs[k - 1] !== undefined, last = !one || k === cs.length;
   const h = one ? cs[k - 1] : (L.html || ''), body = L.trusted ? fxify(h) : md(h);
-  return `${body}${L.d && last ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key && last ? `<p class="key">${L.trusted ? fxify(L.key) : md(L.key)}</p>` : ''}`; }
+  return `${body}${L.d && last ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key && last ? `<p class="key">${L.trusted ? fxify(L.key) : md(L.key)}</p>` : ''}${last ? labLessonBtn(L.id) : ''}`; }
 /* The cheat sheet while solving (open-book courses only). Opening it is free, as in the exam: it never counts as a hint.
    Not in Aprender, which is for learning, and not after answering, when the theory is already there. */
 const sheetNotes = s => BANK.filter(q => skillOf(q) === s.id && S.notes[q.id]).map(q => `<li>${noteMd(S.notes[q.id])}</li>`).join('');

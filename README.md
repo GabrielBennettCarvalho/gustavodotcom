@@ -195,7 +195,10 @@ are synthesized (no files) and can be muted.
   An example is a fixed problem (`{ id, label, algo, g, p, stmt }`, e.g. the slides' network). `opts` adds toggles
   (RC: poisoned reverse) that are merged into `p`.
 - A graph is `{ n: { id: [x, y] }, e: [[a, b, cost, labelPos?]] }` in a 400 × 200 box: the same shape as RC's `d.topo`.
-- A question with `anim: { title, algo, g, p }` gets "▶ Ver a resolução animada" in its feedback (an overlay player).
+- A question with `anim: { title, algo, g, p, stmt }` gets "▶ Ver a resolução animada" in its feedback (an overlay player).
+- A lab's `les: { lessonId: { ex, kind } }` links it to the lessons: the lesson ends with "▶ Ver o exemplo animado"
+  (example `ex`), and every question on that lesson offers "Praticar com uma rede nova" (a generated `kind` problem in
+  "Tu fazes", with "Outro problema" at the end). Both open over the page, so a session is never left.
 - Labs keep no progress: generated problems have no ids. RC's lab is `src/courses/rc/lab.js`.
 
 ## Skip, Tudo / Só teoria / Só contas, and theme

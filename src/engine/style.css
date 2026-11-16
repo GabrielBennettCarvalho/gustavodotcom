@@ -664,6 +664,9 @@ body:has(.pb-actions) .calc-fab{bottom:calc(84px + env(safe-area-inset-bottom,0p
 .glab-card h2{font-size:19px}
 .mode.lab{border-color:color-mix(in srgb,var(--token) 55%,var(--line));background:linear-gradient(135deg,color-mix(in srgb,var(--token) 9%,var(--panel)),var(--panel) 60%)}
 .anim-btn{align-self:flex-start;border-color:var(--token);margin:4px 0}
+.anim-row{gap:8px}
+.anim-row .anim-btn{margin:0}
+.lesson .anim-btn{display:inline-flex;margin-top:10px}
 .gmodal{position:fixed;inset:0;z-index:60;background:rgba(10,14,20,.55);backdrop-filter:blur(3px);display:flex;justify-content:center;align-items:flex-start;overflow-y:auto;padding:24px 12px;animation:gp-fade .2s ease}
 .gmodal-card{width:min(980px,100%);background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
 .gmodal-open{overflow:hidden}

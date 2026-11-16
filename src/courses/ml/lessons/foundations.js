@@ -9,21 +9,36 @@ STUDY.lessons('ml', [
   <li><b>Moda</b>: o valor mais frequente. Com valores reais quase não diz nada, a não ser que os agrupes em <i>bins</i> (histograma).</li>
   <li><b>Amplitude</b> (range) = máximo − mínimo: uma medida grosseira da dispersão.</li></ul>
   <!--card--><p><b>Variância da população</b>: σ² = (1/N) Σ (x<sub>i</sub> − x̄)². <b>Variância amostral</b>: s² = (1/(N−1)) Σ (x<sub>i</sub> − x̄)². O N−1 é a <b>correção de Bessel</b>: como só vemos uma amostra, dividir por N subestimaria a variância real. Em ML nunca temos a população inteira, por isso usamos sempre a amostral. O desvio padrão é a raiz quadrada da variância.</p>
-  <p>Exemplo: 2, 4, 4, 4, 5, 5, 7, 9. Média = 40/8 = <b>5</b>. Σ (x − 5)² = 9+1+1+1+0+0+4+16 = 32. Variância populacional = 32/8 = 4; amostral = 32/7 ≈ <b>4,57</b> (s ≈ 2,14). Mediana = (4+5)/2 = 4,5; moda = 4.</p>`,
+  <p><b>Exemplo</b>: os valores 2, 4, 4, 4, 5, 5, 7, 9 (N = 8).</p>
+  <ol><li><b>Média</b>: soma = 40 → x̄ = 40/8 = <b>5</b>.</li>
+  <li><b>Desvios à média</b> (x − 5): −3, −1, −1, −1, 0, 0, 2, 4. Ao quadrado: 9, 1, 1, 1, 0, 0, 4, 16, que somam 32.</li>
+  <li><b>Variância</b>: da população 32/8 = 4; amostral 32/(8 − 1) = 32/7 ≈ <b>4,57</b>. Desvio padrão amostral: s = √4,57 ≈ 2,14.</li>
+  <li><b>Mediana</b>: N = 8 é par, por isso é a média do 4.º e do 5.º valores ordenados: (4 + 5)/2 = 4,5.</li>
+  <li><b>Moda</b>: o 4 aparece 3 vezes, mais do que qualquer outro → moda = 4.</li></ol>`,
   key: 'Amostra → divide por N−1 (Bessel). Mediana e média aparada resistem a outliers; a média não.' },
 { id: 'd-spread', t: 'data', title: 'Quartis, outliers e a curva normal',
   html: `<p>Ordena os dados e corta-os em quatro partes iguais: Q1, Q2 (= mediana) e Q3. O <b>intervalo interquartil</b> IQR = Q3 − Q1 mede a dispersão da metade central, sem ser afetado pelos extremos.</p>
   <p><b>Outliers</b> (regra de Tukey): valores fora de [Q1 − 1,5·IQR, Q3 + 1,5·IQR]. Também se usa a <b>média aparada</b>: tira uma fração dos valores mais altos e mais baixos e faz a média do resto.</p>
   <p><b>Assimetria</b> (skew): se a cauda está à direita (o grosso dos dados à esquerda), a distribuição é <i>right-skewed</i> ou positivamente assimétrica, e a média fica à direita da mediana. Cauda à esquerda = negativamente assimétrica.</p>
   <!--card--><p><b>Distribuição normal</b> N(μ, σ²): μ diz onde está o centro, σ a largura (σ maior = curva mais achatada). Regra 68–95–99,7: entre μ ± σ ficam ~68% dos valores, entre μ ± 2σ ~95%, entre μ ± 3σ ~99,7%. A densidade (PDF) pode ser maior do que 1 (σ pequeno): a probabilidade é a <i>área</i> debaixo da curva, não a altura.</p>
-  <p>Exemplo: 48, 52, 57, 64, 72, 76, 77, 81, 85, 88 (N = 10). Q2 = (72+76)/2 = 74; Q1 = 57, Q3 = 81 (medianas de cada metade); IQR = 24; outliers seriam valores &lt; 21 ou &gt; 117.</p>`,
+  <p><b>Exemplo</b>: 48, 52, 57, 64, 72, 76, 77, 81, 85, 88 (N = 10, já ordenados).</p>
+  <ol><li><b>Mediana (Q2)</b>: N é par → média do 5.º e do 6.º valores: (72 + 76)/2 = 74.</li>
+  <li><b>Q1</b> = mediana da metade de baixo (48, 52, <b>57</b>, 64, 72) = 57. <b>Q3</b> = mediana da metade de cima (76, 77, <b>81</b>, 85, 88) = 81.</li>
+  <li><b>IQR</b> = Q3 − Q1 = 81 − 57 = 24, e 1,5·IQR = 36.</li>
+  <li><b>Limites de Tukey</b>: 57 − 36 = 21 e 81 + 36 = 117. Nenhum valor fica fora de [21, 117]: não há outliers.</li></ol>`,
   key: 'IQR = Q3 − Q1; outlier fora de [Q1 − 1,5·IQR, Q3 + 1,5·IQR]. Normal: 68 / 95 / 99,7% a 1, 2, 3 σ.' },
 { id: 'd-corr', t: 'data', title: 'Covariância e correlação (Pearson e Spearman)',
   html: `<p>Com duas variáveis, a primeira pergunta é: andam juntas? Se duas variáveis estão muito correlacionadas, uma delas é redundante (fica-se com a de maior variabilidade).</p>
   <p><b>Covariância amostral</b>: cov(X, Y) = (1/(N−1)) Σ (x<sub>i</sub> − x̄)(y<sub>i</sub> − ȳ). Positiva: quando X sobe, Y tende a subir. Mas o valor depende das unidades.</p>
   <!--card--><p><b>Correlação de Pearson</b>: r = cov(X, Y) / (s<sub>X</sub> s<sub>Y</sub>), sempre em [−1, 1]. O sinal diz o sentido da relação; o valor absoluto a força (≈ |r| &gt; 0,75 forte, &lt; 0,25 fraca). r = 0 quer dizer <b>sem relação linear</b> (pode haver uma relação não linear). Correlação não implica causalidade.</p>
   <!--card--><p><b>Spearman</b>: substitui cada valor pela sua <i>ordem</i> (rank) e calcula Pearson sobre as ordens. Mede relações <b>monótonas</b>, não só lineares, e é robusta a outliers. Serve também para variáveis ordinais.</p>
-  <p>Exemplo: X = (1, 2, 3), Y = (2, 4, 6). x̄ = 2, ȳ = 4; cov = [(−1)(−2) + 0 + (1)(2)]/2 = 2; s<sub>X</sub> = 1, s<sub>Y</sub> = 2; r = 2/(1·2) = <b>1</b> (relação linear perfeita).</p>`,
+  <p><b>Exemplo</b> de Pearson: X = (1, 2, 3), Y = (2, 4, 6).</p>
+  <ol><li><b>Médias</b>: x̄ = 2, ȳ = 4.</li>
+  <li><b>Desvios</b>: X → (−1, 0, 1); Y → (−2, 0, 2).</li>
+  <li><b>Covariância</b>: soma dos produtos (−1)(−2) + 0·0 + 1·2 = 4, a dividir por N − 1 = 2 → cov = 2.</li>
+  <li><b>Desvios padrão</b>: s<sub>X</sub> = √((1 + 0 + 1)/2) = 1; s<sub>Y</sub> = √((4 + 0 + 4)/2) = 2.</li>
+  <li><b>Pearson</b>: r = 2/(1·2) = <b>1</b>: relação linear perfeita (Y = 2X).</li></ol>
+  <p>Spearman com X = (1, 2, 3) e Y = (1, 8, 27): as ordens são (1, 2, 3) e (1, 2, 3), por isso Spearman = 1, embora os pontos não estejam numa reta (Pearson &lt; 1).</p>`,
   key: 'Pearson = covariância normalizada, em [−1, 1], só vê relações lineares. Spearman = Pearson sobre as ordens (monótonas).' },
 { id: 'd-prep', t: 'data', title: 'Tipos de variáveis e preparação dos dados',
   html: `<p>Os dados reais vêm “sujos”: incompletos (valores em falta), com ruído (erros, outliers) e inconsistentes (códigos diferentes para a mesma coisa).</p>
@@ -35,7 +50,9 @@ STUDY.lessons('ml', [
   <li><b>Discretização</b>: idade em 0–10, 11–20… (necessária para árvores ID3).</li>
   <li><b>Agregação</b> de categorias com cardinalidade alta; <b>imputação</b> de valores em falta (por exemplo com a média).</li></ul>
   <!--card--><p>Nos métodos baseados em distâncias (kNN, k-means) a normalização é essencial: sem ela, um atributo com gama grande (rendimento em euros) abafa os outros (idade em anos).</p>
-  <p>Exemplo: rendimentos entre 12 000 € e 98 000 €; 73 600 € em [0, 1] = (73 600 − 12 000)/86 000 = <b>0,716</b>. Com μ = 54 000 e σ = 16 000, o z-score é 19 600/16 000 = <b>1,225</b>.</p>`,
+  <p><b>Exemplo</b>: rendimentos entre 12 000 € (mínimo) e 98 000 € (máximo); queremos transformar 73 600 €.</p>
+  <ul><li><b>Min-max para [0, 1]</b>: (v − min)/(max − min) = (73 600 − 12 000)/(98 000 − 12 000) = 61 600/86 000 = <b>0,716</b>.</li>
+  <li><b>Z-score</b>, com média μ = 54 000 e desvio σ = 16 000: (73 600 − 54 000)/16 000 = 19 600/16 000 = <b>1,225</b>, ou seja 1,225 desvios padrão acima da média.</li></ul>`,
   key: 'min-max: (v − min)/(max − min). z-score: (v − μ)/σ. Distâncias exigem atributos na mesma escala.' },
 
 /* ---------------- DECISION TREES ---------------- */
@@ -56,7 +73,10 @@ STUDY.lessons('ml', [
   <li>Duas classes meio a meio → H = 1 bit. Com n classes equiprováveis, H máxima = log₂ n.</li></ul>
   <div class="tbl-wrap"><table><tr><th>Distribuição</th><th>H (bits)</th></tr>
   <tr><td>[4, 4]</td><td>1</td></tr><tr><td>[6, 2] (75/25)</td><td>0,811</td></tr><tr><td>[3, 2] (60/40)</td><td>0,971</td></tr><tr><td>[9, 5]</td><td>0,940</td></tr><tr><td>[2, 1, 1]</td><td>1,5</td></tr><tr><td>[2, 1] (2/3, 1/3)</td><td>0,918</td></tr></table></div>
-  <p>Exemplo: 3 aprovados e 2 reprovados → H = −0,6·log₂0,6 − 0,4·log₂0,4 = 0,442 + 0,529 = <b>0,971 bits</b>.</p>
+  <p><b>Exemplo</b>: um nó com 3 aprovados e 2 reprovados.</p>
+  <ol><li><b>Proporções</b>: p(aprovado) = 3/5 = 0,6; p(reprovado) = 2/5 = 0,4.</li>
+  <li><b>Logaritmos</b>: log₂0,6 = −0,737; log₂0,4 = −1,322 (na calculadora, log₂ p = ln p / ln 2).</li>
+  <li><b>Entropia</b>: H = −(0,6·(−0,737) + 0,4·(−1,322)) = 0,442 + 0,529 = <b>0,971 bits</b>.</li></ol>
   <p>Valores úteis: log₂0,5 = −1; log₂0,25 = −2; log₂0,75 = −0,415; log₂(1/3) = −1,585; log₂(2/3) = −0,585.</p>`,
   key: '{f:entropy|H = −Σ p log₂ p}. Puro = 0; meio a meio = 1 bit; máximo = log₂(nº de classes).' },
 { id: 'dt-gain', t: 'dt', title: 'Receita: ganho de informação',
@@ -65,7 +85,12 @@ STUDY.lessons('ml', [
   <p>H(Y | A) é a <b>média ponderada</b> das entropias dos ramos, cada uma pesada pela fração de exemplos que lá cai.</p>
   <ol><li>Calcula H(Y) no nó.</li><li>Para cada atributo, parte os exemplos pelos valores e calcula a entropia de cada ramo.</li>
   <li>Faz a média ponderada → H(Y | A).</li><li>IG = H(Y) − H(Y | A). Escolhe o <b>maior</b> (equivale a escolher o menor H(Y | A)).</li></ol>
-  <!--card--><p>Exemplo: 8 exemplos [4 sim, 4 não], H = 1. O atributo A parte em a₁ = [3 sim, 0 não] e a₂ = [1 sim, 4 não]. H(a₁) = 0; H(a₂) = H(1/5, 4/5) = 0,722. H(Y | A) = 3/8·0 + 5/8·0,722 = 0,451. <b>IG = 1 − 0,451 = 0,549</b>.</p>
+  <!--card--><p><b>Exemplo</b>: um nó com 8 exemplos, 4 sim e 4 não. O atributo A tem dois valores: a₁ fica com 3 exemplos (3 sim, 0 não) e a₂ com 5 (1 sim, 4 não).</p>
+  <ol><li><b>Entropia antes</b>: 4 contra 4 → H(Y) = 1.</li>
+  <li><b>Entropia de cada ramo</b>: a₁ é puro → H = 0. a₂ tem proporções 1/5 e 4/5 → H = −0,2·log₂0,2 − 0,8·log₂0,8 = 0,464 + 0,258 = 0,722.</li>
+  <li><b>Média pesada</b> (a₁ tem 3 de 8 exemplos, a₂ tem 5 de 8): H(Y | A) = 3/8·0 + 5/8·0,722 = 0,451.</li>
+  <li><b>Ganho</b>: IG = 1 − 0,451 = <b>0,549</b>.</li></ol>
+  <p>Faz-se o mesmo para cada atributo, e o de maior ganho vai para o nó.</p>
   <p>Atenção: o ganho favorece atributos com muitos valores (um ID único dá ramos todos puros). O C4.5 corrige com o <i>gain ratio</i>.</p>
   <p><b>Nos slides</b> (aula 2) as mesmas contas têm outros nomes: a entropia do nó é I(C) = −Σ p(m<sub>i</sub>) log₂ p(m<sub>i</sub>), a média ponderada dos ramos é E(P) = Σ<sub>i</sub> (|C<sub>i</sub>| / |C|) · I(C<sub>i</sub>) e o ganho é <b>{f:ig|gain(P) = I(C) − E(P)}</b>. Os exames escrevem H e IG.</p>`,
   key: 'IG = H(antes) − Σ (|Sᵥ|/|S|)·H(Sᵥ). Maior ganho na raiz. Ramos puros contam 0.' },
@@ -89,7 +114,11 @@ STUDY.lessons('ml', [
   <!--card--><p>Atenção à orientação: nos exames de Aprendizagem as <b>linhas são o previsto</b> e as <b>colunas o real</b> (“True”). Confirma sempre.</p>
   <p>Com classes desequilibradas a accuracy engana: com 1% de doentes, dizer sempre “saudável” dá 99% de accuracy e recall 0.</p>
   <p>Multiclasse: a sensibilidade da classe B = (exemplos de B previstos B) / (total real de B), ou seja, a diagonal sobre a soma da <b>coluna</b> real B.</p>
-  <p>Exemplo: TP = 1, FP = 3, FN = 7, TN = 3. Precision = 1/4 = 0,25; recall = 1/8 = 0,125; accuracy = 4/14 ≈ 0,29.</p>
+  <p><b>Exemplo</b>, com linhas = previsto e colunas = real: a linha “previsto P” tem 1 P real e 3 N reais; a linha “previsto N” tem 7 P reais e 3 N reais.</p>
+  <ul><li><b>Ler a matriz</b>: TP = 1 (previu P e era P); FP = 3 (previu P, era N); FN = 7 (previu N, era P); TN = 3.</li>
+  <li><b>Precision</b> = TP/(TP + FP) = 1/4 = 0,25: dos 4 que disse P, só 1 era.</li>
+  <li><b>Recall</b> = TP/(TP + FN) = 1/8 = 0,125: dos 8 P reais, só apanhou 1.</li>
+  <li><b>Accuracy</b> = (TP + TN)/total = 4/14 ≈ 0,29.</li></ul>
   <!--card--><p><b>Montar a matriz a partir de um modelo.</b> Muitas vezes o enunciado não dá TP, FP, FN e TN: dá um modelo (uma árvore, regras, um kNN) e os exemplos. Passa por cada exemplo, ou por cada folha, e pergunta duas coisas: <b>o que o modelo prevê</b> (positivo ou negativo) e <b>se acertou</b>.</p>
   <ul><li>Prevê positivo e acerta → <b>TP</b>; prevê positivo e erra (era negativo) → <b>FP</b>.</li>
   <li>Prevê negativo e acerta → <b>TN</b>; prevê negativo e erra (era positivo) → <b>FN</b>.</li></ul>
@@ -102,7 +131,11 @@ STUDY.lessons('ml', [
   <li>A diagonal é um classificador aleatório; o canto (0, 1) é o perfeito. Quanto mais a curva se afasta da diagonal, melhor.</li>
   <li><b>AUC</b> = área debaixo da ROC: 0,5 = aleatório, 1 = perfeito. Interpretação: probabilidade de um positivo ao acaso ter score maior do que um negativo ao acaso.</li>
   <li><b>Curva precision-recall</b>: mais informativa quando os positivos são raros.</li>
-  <li><b>Lift</b>: quanto melhor do que o acaso é o modelo nos exemplos com score mais alto (por exemplo, fração de positivos nos 10% de topo ÷ fração de positivos global).</li></ul>`,
+  <li><b>Lift</b>: quanto melhor do que o acaso é o modelo nos exemplos com score mais alto (por exemplo, fração de positivos nos 10% de topo ÷ fração de positivos global).</li></ul>
+  <p><b>Exemplo</b>: 4 exemplos com scores e classes reais 0,9 (P), 0,7 (N), 0,6 (P) e 0,2 (N); 2 positivos e 2 negativos.</p>
+  <ol><li><b>Limiar 0,65</b>: o modelo diz P a 0,9 e 0,7 → TP = 1, FP = 1 → TPR = 1/2, FPR = 1/2.</li>
+  <li><b>Limiar 0,5</b>: diz P a 0,9, 0,7 e 0,6 → TP = 2, FP = 1 → TPR = 1, FPR = 1/2.</li></ol>
+  <p>Cada limiar dá um ponto (FPR, TPR) da curva ROC.</p>`,
   key: 'ROC = TPR vs FPR ao variar o limiar. AUC 0,5 = acaso, 1 = perfeito.' },
 { id: 'ev-cv', t: 'eval', title: 'Overfitting, holdout e validação cruzada',
   html: `<p>Um aluno que decora as respostas dos testes antigos tem 20 no treino e chumba no exame. É <b>overfitting</b>: o erro de treino é baixo, mas o erro em dados novos (generalização) é alto. O contrário, <b>underfitting</b>, é um modelo simples demais (erro alto em ambos).</p>
@@ -120,7 +153,12 @@ STUDY.lessons('ml', [
   <li><b>p-value</b>: probabilidade de observar uma diferença pelo menos tão grande <i>se H₀ for verdade</i>. Se p &lt; α (por exemplo 0,05), rejeita-se H₀.</li>
   <li>Um p-value pequeno não é a probabilidade de H₀ ser verdade.</li></ul>
   <!--card--><p><b>t-test emparelhado</b>: quando os dois modelos são avaliados nos mesmos folds, usa as diferenças d<sub>i</sub> = a<sub>i</sub> − b<sub>i</sub>. Calcula a média d̄ e o desvio padrão s<sub>d</sub>; t = d̄ / (s<sub>d</sub> / √n), com n − 1 graus de liberdade, e compara com a tabela t.</p>
-  <p><b>Intervalo de confiança</b> a 95% para uma média: x̄ ± t<sub>0,025; n−1</sub>·s/√n (com σ conhecido usa-se z = 1,96 em vez de t). Quanto mais dados, mais estreito.</p>`,
+  <p><b>Intervalo de confiança</b> a 95% para uma média: x̄ ± t<sub>0,025; n−1</sub>·s/√n (com σ conhecido usa-se z = 1,96 em vez de t). Quanto mais dados, mais estreito.</p>
+  <p><b>Exemplo</b>: as diferenças de accuracy entre A e B em 5 folds são 2, 1, 3, 2 e 2 (pontos percentuais).</p>
+  <ol><li><b>Média</b>: d̄ = 10/5 = 2.</li>
+  <li><b>Desvio padrão</b>: desvios 0, −1, 1, 0, 0 → soma dos quadrados 2 → s<sub>d</sub> = √(2/4) ≈ 0,707.</li>
+  <li><b>t</b> = 2/(0,707/√5) = 2/0,316 ≈ 6,32, com 5 − 1 = 4 graus de liberdade.</li>
+  <li><b>Comparar</b>: na tabela t, o valor crítico a 5% (bilateral) com 4 graus de liberdade é 2,776. Como 6,32 &gt; 2,776, rejeita-se H₀: a diferença é significativa.</li></ol>`,
   key: 't emparelhado: t = d̄ / (s_d/√n), n−1 graus de liberdade. p < α → rejeita H₀ (não há diferença).' },
 
 /* ---------------- BAYES ---------------- */
@@ -129,9 +167,11 @@ STUDY.lessons('ml', [
   <p style="text-align:center"><b>p(h | D) = p(D | h) · p(h) / p(D)</b></p>
   <ul><li>p(h): <b>prior</b>, o que se acreditava antes de ver os dados.</li><li>p(D | h): <b>verosimilhança</b> (likelihood).</li>
   <li>p(h | D): <b>posterior</b>. p(D) = Σ<sub>h</sub> p(D | h)p(h) (probabilidade total) só normaliza.</li></ul>
-  <!--card--><p>Exemplo clássico (Mitchell): p(cancro) = 0,008; p(+ | cancro) = 0,98; p(+ | ¬cancro) = 0,03.</p>
-  <ol><li>p(+ | cancro)·p(cancro) = 0,98 × 0,008 = <b>0,0078</b></li><li>p(+ | ¬cancro)·p(¬cancro) = 0,03 × 0,992 = <b>0,0298</b></li>
-  <li>h<sub>MAP</sub> = ¬cancro! Normalizando: p(cancro | +) = 0,0078 / (0,0078 + 0,0298) ≈ <b>0,21</b>.</li></ol>
+  <!--card--><p><b>Exemplo clássico</b> (Mitchell): 0,8% das pessoas têm cancro; o teste dá positivo em 98% dos doentes e em 3% dos saudáveis. Uma pessoa deu positivo. Tem cancro?</p>
+  <ol><li><b>Passar para probabilidades</b>: p(cancro) = 0,008, logo p(¬cancro) = 0,992; p(+ | cancro) = 0,98; p(+ | ¬cancro) = 0,03.</li>
+  <li><b>Verosimilhança × prior</b> de cada hipótese: cancro → 0,98 × 0,008 = <b>0,0078</b>; ¬cancro → 0,03 × 0,992 = <b>0,0298</b>.</li>
+  <li><b>MAP</b>: o maior é ¬cancro, apesar do positivo.</li>
+  <li><b>Probabilidade</b>: p(+) = 0,0078 + 0,0298 = 0,0376 (probabilidade total), e p(cancro | +) = 0,0078/0,0376 ≈ <b>0,21</b>.</li></ol>
   <p>O prior baixo pesa muito: mesmo com um bom teste, a maioria dos positivos são falsos positivos.</p>`,
   key: 'Posterior ∝ verosimilhança × prior. Para comparar classes, p(D) não interessa.' },
 { id: 'b-map', t: 'bayes', title: 'MAP, ML e o classificador ótimo de Bayes',
@@ -139,26 +179,43 @@ STUDY.lessons('ml', [
   <ul><li><b>MAP</b> (maximum a posteriori): h<sub>MAP</sub> = argmax<sub>h</sub> p(D | h)·p(h). Usa o prior.</li>
   <li><b>ML</b> (maximum likelihood): h<sub>ML</sub> = argmax<sub>h</sub> p(D | h). Ignora o prior (é o MAP com prior uniforme).</li></ul>
   <p>Num exame típico: “classifica com ML e com MAP”. Calcula p(x | c) para cada classe (ML) e depois multiplica por p(c) (MAP). As respostas podem ser diferentes!</p>
-  <p>Exemplo (Exame 2 2022/23): p(x | A) = 1, p(x | B) = 2/3, p(x | C) = 0; priors 1/5, 3/5, 1/5. ML → <b>A</b> (1 &gt; 2/3). MAP → 1·1/5 = 0,2 vs 2/3·3/5 = 0,4 → <b>B</b>.</p>
+  <p><b>Exemplo</b> (Exame 2 2022/23): três classes, com p(x | A) = 1, p(x | B) = 2/3, p(x | C) = 0 e priors p(A) = 1/5, p(B) = 3/5, p(C) = 1/5.</p>
+  <ol><li><b>ML</b>: compara só as verosimilhanças: 1 &gt; 2/3 &gt; 0 → <b>A</b>.</li>
+  <li><b>MAP</b>: multiplica cada uma pelo seu prior: A → 1·1/5 = 0,2; B → 2/3·3/5 = 0,4; C → 0 → <b>B</b>.</li></ol>
+  <p>O prior de B, 3 vezes maior, vira a decisão.</p>
   <!--card--><p>Se não há hipótese de independência, p(x | c) estima-se contando quantos exemplos da classe c têm exatamente aquele vetor x. Funciona com poucos atributos, mas com muitos quase nenhuma combinação aparece no treino: daí o Naive Bayes.</p>
   <p>O <b>classificador ótimo de Bayes</b> combina as previsões de todas as hipóteses pesadas pelos seus posteriores: nenhum classificador com a mesma informação faz melhor em média.</p>`,
   key: 'ML = argmax p(x|c). MAP = argmax p(x|c)·p(c). Com priors diferentes podem discordar.' },
 { id: 'b-naive', t: 'bayes', title: 'Naive Bayes',
-  html: `<p>O Naive Bayes faz uma simplificação “ingénua”: dentro de cada classe, os atributos são <b>independentes</b>. Assim a verosimilhança conjunta é o produto das individuais:</p>
-  <p style="text-align:center"><b>c<sub>NB</sub> = argmax<sub>c</sub> p(c) · Π<sub>i</sub> p(x<sub>i</sub> | c)</b></p>
-  <ol><li>p(c) = fração de exemplos da classe c.</li><li>p(x<sub>i</sub> = v | c) = (nº de exemplos de c com x<sub>i</sub> = v) / (nº de exemplos de c).</li>
-  <li>Multiplica tudo por classe e escolhe o maior.</li></ol>
-  <p>Atributos numéricos: assume-se p(x<sub>i</sub> | c) gaussiana, com a média e a variância da classe.</p>
-  <!--card--><p>Exemplo (Exame 1 2021/22): 5 exemplos, 2 de A e 3 de B. Para x = (B, C): p(y₁ = B | A)·p(y₂ = C | A) = 1/2 · 1/2 = 1/4; p(y₁ = B | B)·p(y₂ = C | B) = 2/3 · 1/3 = 2/9. MAP: A → 1/4 · 2/5 = 0,1; B → 2/9 · 3/5 ≈ 0,133 → <b>B</b>.</p>
-  <p><b>Amostras pequenas</b>: se um valor nunca aparece numa classe, p = 0 e anula o produto todo. Solução: <b>m-estimate</b> / suavização de Laplace: (n<sub>c</sub> + m·p)/(n + m).</p>`,
-  key: 'Naive Bayes: p(c)·Π p(xᵢ|c). Uma contagem 0 anula tudo → suavização de Laplace.' },
+  html: `<p>O MAP pede p(x | c)·p(c) para cada classe. O problema é p(x | c): sem mais hipóteses, conta-se quantos exemplos da classe c têm <b>exatamente</b> aquele vetor x, e com vários atributos quase nenhum vetor se repete no treino (dá 0 a tudo).</p>
+  <p>O Naive Bayes faz uma simplificação “ingénua”: dentro de cada classe, os atributos são <b>independentes</b>. Então p(x | c) é o produto das probabilidades de cada atributo, e cada uma conta-se sozinha:</p>
+  <p style="text-align:center"><b>c<sub>NB</sub> = argmax<sub>c</sub> p(c) · p(x₁ | c) · p(x₂ | c) · …</b></p>
+  <p><b>Receita</b>, para cada classe c:</p>
+  <ol><li><b>Prior</b>: p(c) = nº de exemplos de c / nº total de exemplos.</li>
+  <li><b>Verosimilhança de cada atributo</b>: p(x<sub>i</sub> = v | c) = nº de exemplos <b>de c</b> com x<sub>i</sub> = v / nº de exemplos de c. Conta só dentro da classe.</li>
+  <li><b>Multiplica</b> o prior pelas verosimilhanças.</li>
+  <li><b>Escolhe</b> a classe com o maior produto. Se pedirem a probabilidade p(c | x), divide o produto de c pela soma dos produtos de todas as classes.</li></ol>
+  <p>Atributos numéricos: p(x<sub>i</sub> | c) é uma gaussiana, com a média e a variância desse atributo nos exemplos de c.</p>
+  <!--card--><p><b>Exemplo.</b> Classificar x = (Tempo = Chuva, Vento = Forte) com estes 6 exemplos:</p>
+  <div class="tbl-wrap"><table><tr><th></th><th>Tempo</th><th>Vento</th><th>Joga</th></tr><tr><td>1</td><td>Sol</td><td>Fraco</td><td>Sim</td></tr><tr><td>2</td><td>Sol</td><td>Forte</td><td>Sim</td></tr><tr><td>3</td><td>Chuva</td><td>Fraco</td><td>Sim</td></tr><tr><td>4</td><td>Sol</td><td>Fraco</td><td>Sim</td></tr><tr><td>5</td><td>Chuva</td><td>Forte</td><td>Não</td></tr><tr><td>6</td><td>Chuva</td><td>Fraco</td><td>Não</td></tr></table></div>
+  <ol><li><b>Separar por classe</b>: Sim = {1, 2, 3, 4} (4 exemplos); Não = {5, 6} (2 exemplos).</li>
+  <li><b>Priors</b>: p(Sim) = 4/6; p(Não) = 2/6.</li>
+  <li><b>Contar dentro de cada classe</b>: nos 4 Sim, Chuva aparece 1 vez (ex. 3) e Forte 1 vez (ex. 2): p(Chuva | Sim) = 1/4, p(Forte | Sim) = 1/4. Nos 2 Não, Chuva aparece 2 vezes e Forte 1 vez: p(Chuva | Não) = 2/2 = 1, p(Forte | Não) = 1/2.</li>
+  <li><b>Multiplicar</b>: Sim → 4/6 · 1/4 · 1/4 = 1/24 ≈ 0,042. Não → 2/6 · 1 · 1/2 = 1/6 ≈ 0,167.</li>
+  <li><b>Escolher</b>: 0,167 &gt; 0,042 → <b>Não</b>. Probabilidade: p(Não | x) = 0,167/(0,167 + 0,042) ≈ 0,8.</li></ol>
+  <p><b>Contagens a zero.</b> Para x = (Sol, Forte), na classe Não o Sol nunca aparece: p(Sol | Não) = 0/2 = 0, e o produto de Não dá 0, por muito que o Forte aponte para Não. Uma única contagem a zero decide sozinha. Solução, a <b>suavização de Laplace</b>: soma 1 a cada contagem, p(x<sub>i</sub> = v | c) = (contagem + 1)/(n<sub>c</sub> + k), com n<sub>c</sub> o nº de exemplos de c e k o nº de valores possíveis do atributo. Aqui: p(Sol | Não) = (0 + 1)/(2 + 2) = 1/4. (O m-estimate é a versão geral: (contagem + m·p)/(n<sub>c</sub> + m).)</p>`,
+  key: 'Naive Bayes: p(c)·Π p(xᵢ|c), contando cada atributo só dentro da classe. Uma contagem 0 anula tudo → Laplace: (contagem + 1)/(n_c + k).' },
 { id: 'b-gauss', t: 'bayes', title: 'A gaussiana em D dimensões e a matriz de covariância',
   html: `<p>A gaussiana numa dimensão: p(x) = 1/(σ√(2π)) · exp(−(x − μ)² / (2σ²)). Em D dimensões, a média é um vetor μ e a largura é a <b>matriz de covariância</b> Σ (D × D):</p>
   <p style="text-align:center">p(x) = 1/((2π)<sup>D/2</sup> |Σ|<sup>1/2</sup>) · exp(−½ (x − μ)ᵀ Σ⁻¹ (x − μ))</p>
   <ul><li>Na diagonal de Σ estão as variâncias de cada atributo; fora dela as covariâncias.</li>
   <li>Σ é simétrica e semidefinida positiva. Σ = σ²I → círculos; diagonal → elipses alinhadas com os eixos; geral → elipses rodadas.</li>
   <li>Se há menos exemplos do que dimensões, ou atributos linearmente dependentes, Σ é <b>singular</b> (não tem inversa).</li></ul>
-  <p>Um classificador de Bayes com gaussianas estima μ<sub>c</sub> e Σ<sub>c</sub> por classe e escolhe argmax p(x | c)p(c). É isto que reaparece no clustering EM, com classes escondidas.</p>`,
+  <p>Um classificador de Bayes com gaussianas estima μ<sub>c</sub> e Σ<sub>c</sub> por classe e escolhe argmax p(x | c)p(c). É isto que reaparece no clustering EM, com classes escondidas.</p>
+  <p><b>Exemplo</b> a 1 dimensão: numa classe, um atributo tem média μ = 2 e desvio σ = 1. Para x = 3:</p>
+  <ol><li>(x − μ)²/(2σ²) = 1/2 → exp(−0,5) = 0,607.</li>
+  <li>1/(σ√(2π)) = 1/2,507 = 0,399.</li>
+  <li>p(x | classe) = 0,399·0,607 ≈ <b>0,242</b>. No Naive Bayes, este número entra no produto no lugar de uma contagem.</li></ol>`,
   key: 'Gaussiana D-dim: média μ (vetor) e covariância Σ (matriz). Diagonal = variâncias.' },
 
 /* ---------------- kNN ---------------- */
@@ -180,6 +237,9 @@ STUDY.lessons('ml', [
   <!--card--><p>É <b>não paramétrico</b>: não há um número fixo de parâmetros, o “modelo” são os dados. Treinar custa 0; classificar custa caro (calcular distâncias a todos os exemplos).</p>
   <p>k pequeno (k = 1) → fronteira irregular, sensível a ruído (overfitting); k grande → fronteira demasiado suave. Com k = 1 a fronteira é um <b>diagrama de Voronoi</b>.</p>
   <!--card--><p><b>Maldição da dimensionalidade</b>: em muitas dimensões todos os pontos ficam quase à mesma distância, e atributos irrelevantes estragam a distância. Normaliza e escolhe bem os atributos.</p>
-  <p>Exemplo: os 3 vizinhos de x estão a distâncias 1 (classe B), 2 (B) e 3 (C) — com voto ponderado 1/d, B = 1 + 1/2 = 1,5 e C = 1/3 → <b>B</b>.</p>`,
+  <p><b>Exemplo</b>: os 3 vizinhos mais próximos de x estão a distâncias 1 (classe B), 2 (B) e 3 (C).</p>
+  <ul><li><b>Voto uniforme</b>: B tem 2 votos, C tem 1 → B.</li>
+  <li><b>Voto pesado por 1/d</b>: B = 1/1 + 1/2 = 1,5; C = 1/3 ≈ 0,33 → <b>B</b>.</li></ul>
+  <p>Os pesos fazem diferença quando a maioria está longe: com distâncias 1 (B), 4 (C) e 4 (C), a maioria diz C, mas os pesos dizem B (1 contra 0,25 + 0,25 = 0,5).</p>`,
   key: 'kNN: guarda tudo, decide no momento pelos k mais próximos (moda ou média, com pesos 1/d opcionais).' },
 ]);

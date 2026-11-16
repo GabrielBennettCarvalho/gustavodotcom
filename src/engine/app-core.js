@@ -243,13 +243,14 @@ function go(name, extra = {}) { view = Object.assign({ name }, extra); renderVie
 function renderView() {
   fxClose();
   const v = C || view.name === 'sync' ? view.name : 'courses';
-  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'routepick' ? RoutePick() : v === 'brief' ? BriefScreen() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : v === 'formulas' ? Formulas() : v === 'recap' ? Recap() : v === 'prob' ? ProblemPick() : v === 'problem' ? Problem() : Home();
+  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'routepick' ? RoutePick() : v === 'brief' ? BriefScreen() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : v === 'formulas' ? Formulas() : v === 'recap' ? Recap() : v === 'prob' ? ProblemPick() : v === 'problem' ? Problem() : v === 'glab' ? GraphLab() : Home();
   document.documentElement.dataset.course = C && v !== 'courses' && v !== 'sync' ? C.id : '';
   $app.innerHTML = Top() + html;
   document.title = C && v !== 'courses' ? `${C.code} · Estudo IST` : 'Estudo IST';
   if (v === 'quiz') afterQuizRender();
   if (v === 'sync') afterSyncRender();
   if (v === 'problem') afterProblemRender();
+  if (v === 'glab') afterGraphLabRender();
   calcSync();
 }
 const toast = (msg) => { const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); };
@@ -314,7 +315,9 @@ function Home() {
     std.unshift(['route', esc(R.title || 'Percurso do exame'), esc(R.desc || 'O exame, parte a parte: o que sai, a teoria com exemplos e analogias, e exercícios como no exame.'), `${R.stops.length} partes · ${nd} feita${nd === 1 ? '' : 's'}`, glyph('route')]); }
   const card = ([k, t, d, m, g], act = 'mode') => `<button class="mode" data-act="${act}" data-k="${k}"><h3>${g}${t}</h3><p>${d}</p><span class="meta">${m}</span></button>`;
   const api = extraApi();
-  const extras = (C.extras || []).filter(x => !x.hide || !x.hide(api)).map(x => card([x.id, esc(x.title), esc(x.desc), esc(x.meta ? x.meta(api) : ''), glyph(x.icon || 'star')], 'extra')).join('');
+  // labs (app-graph.js) open their own screen; extras start a question session
+  const labs = (C.labs || []).map(x => `<button class="mode lab" data-gl="open" data-k="${esc(x.id)}"><h3>${glyph(x.icon || 'route')}${esc(x.title)}</h3><p>${esc(x.desc)}</p><span class="meta">${esc(x.meta || '')}</span></button>`).join('');
+  const extras = labs + (C.extras || []).filter(x => !x.hide || !x.hide(api)).map(x => card([x.id, esc(x.title), esc(x.desc), esc(x.meta ? x.meta(api) : ''), glyph(x.icon || 'star')], 'extra')).join('');
   // "Para o exame": readiness checklist, past exams, cheat sheet, supplementary questions
   const RS = SKILLS.length ? readySummary() : null; const PG = pastGroups();
   const PBS = pbTypes();

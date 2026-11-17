@@ -31,6 +31,10 @@ src/
     app-plan.js          Hoje: the plan at the top of every course home
     app-calc.js          the calculator panel and its corner button
     app-views.js         quiz, results, library, question bank, other device, events
+    graph.js             graph lab core (window.GRAPH): graphs, seeded random generator, algorithm registry
+    graph-algos.js       graph lab algorithms, as animated steps: Dijkstra, distance vector (Bellman-Ford)
+    graph-sound.js       small synthesized sound effects (window.SFX), mutable
+    app-graph.js         graph lab player (GPLAYER) and the lab screen (view 'glab')
     style.css
   courses/
     ams/
@@ -176,6 +180,28 @@ The end screen also folds out the whole worked solution, every step with its lin
 - A finished type comes back once, with no hints, a week later.
 - A problem left half done (back button, closed tab, refresh) is kept in `S.pbCur` for 3 days and picks up at the same step.
 - Progress is in `S.prob` and travels in the progress key. Never change a published problem or stage id.
+
+## Graph labs (animated algorithms)
+
+A lab is a screen of its own (card in "Só de <curso>") that animates a graph algorithm step by step: the graph,
+the code with the current line lit, an explanation per step and the tables as they fill. "Ver a resolução" plays it;
+"Tu fazes" stops before each step that has a question (tap a node, or type numbers) and keeps a score. Sound effects
+are synthesized (no files) and can be muted.
+
+- Algorithms live in `src/engine/graph-algos.js`, generic: `GRAPH.algo({ id, name, code, run(g, p) => steps })`. A step
+  is a full snapshot (format at the top of `graph.js`): node and edge classes, badges, arrows, packets, tables, sound,
+  and an optional `ask` for practice. New algorithm (BFS, Prim, …) = one more `GRAPH.algo`, no player changes.
+- A course registers labs in its own file with `STUDY.labs(id, [{ id, title, desc, meta, icon, kinds, examples }])`.
+  A kind generates a fresh problem: `make(GRAPH, rnd, opts) => { title, algo, g, p, stmt }` (rnd is seeded;
+  `GRAPH.generate` draws a planar-looking graph; `GRAPH.until` retries until a test passes, e.g. unique shortest paths).
+  An example is a fixed problem (`{ id, label, algo, g, p, stmt }`, e.g. the slides' network). `opts` adds toggles
+  (RC: poisoned reverse) that are merged into `p`.
+- A graph is `{ n: { id: [x, y] }, e: [[a, b, cost, labelPos?]] }` in a 400 × 200 box: the same shape as RC's `d.topo`.
+- A question with `anim: { title, algo, g, p, stmt }` gets "▶ Ver a resolução animada" in its feedback (an overlay player).
+- A lab's `les: { lessonId: { ex, kind } }` links it to the lessons: the lesson ends with "▶ Ver o exemplo animado"
+  (example `ex`), and every question on that lesson offers "Praticar com uma rede nova" (a generated `kind` problem in
+  "Tu fazes", with "Outro problema" at the end). Both open over the page, so a session is never left.
+- Labs keep no progress: generated problems have no ids. RC's lab is `src/courses/rc/lab.js`.
 
 ## Skip, Tudo / Só teoria / Só contas, and theme
 

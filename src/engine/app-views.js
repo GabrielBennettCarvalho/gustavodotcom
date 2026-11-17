@@ -41,6 +41,7 @@ function Feedback(q, it) {
     <div class="verdict">${C.verdict ? `<span class="vtag">${esc(ok ? C.verdict.ok : C.verdict.ko)}</span>` : ''}${ok ? pickOne(['Certo.', 'Exatamente.', 'Na mouche.', 'Isso mesmo.']) : pickOne(['Ainda não.', 'Quase, mas não.', 'Falhou. Bora perceber porquê.'])}</div>
     <p class="explain">${md(q.e)}</p>
     ${wrongNotes}
+    ${q.anim || labLink(q.les) ? `<div class="row anim-row">${q.anim ? `<button class="btn small anim-btn" data-gl="anim" data-id="${esc(q.id)}">▶ Ver a resolução animada</button>` : ''}${labPracticeBtn(q.les)}</div>` : ''}
     ${L ? `<details class="lesson-peek" ${ok ? '' : 'open'}><summary>Teoria: ${esc(L.title)}</summary><div class="lbody lesson">${lessonBody(L, q.card)}</div></details>` : ''}
     <div class="note-box"><label class="eyebrow" for="note-${esc(q.id)}">${toSheet ? 'Para a tua cábula: o que te faltou?' : 'A minha nota sobre esta pergunta'}</label><textarea id="note-${esc(q.id)}" data-act="note" data-id="${esc(q.id)}" placeholder="${toSheet ? 'A fórmula, o passo ou a armadilha que te escapou…' : 'O que queres lembrar…'}">${esc(S.notes[q.id] || '')}</textarea>${toSheet ? `<span class="cab-tip">Fica na tua cábula, em “${esc(SKBYID[skillOf(q)].label)}”.</span>` : ''}</div>
     ${SKBYID[skillOf(q)] ? `<span class="src">Tipo de problema: ${esc(SKBYID[skillOf(q)].label)}</span>` : ''}
@@ -56,7 +57,7 @@ const codeBlock = c => `<pre class="codeblk">${esc(c)}</pre>`;
 // k: only card k of the lesson (the diagram and the key line belong to the last card)
 function lessonBody(L, k) { const cs = lessonCards(L), one = k && cs.length > 1 && cs[k - 1] !== undefined, last = !one || k === cs.length;
   const h = one ? cs[k - 1] : (L.html || ''), body = L.trusted ? fxify(h) : md(h);
-  return `${body}${L.d && last ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key && last ? `<p class="key">${L.trusted ? fxify(L.key) : md(L.key)}</p>` : ''}`; }
+  return `${body}${L.d && last ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key && last ? `<p class="key">${L.trusted ? fxify(L.key) : md(L.key)}</p>` : ''}${last ? labLessonBtn(L.id) : ''}`; }
 /* The cheat sheet while solving (open-book courses only). Opening it is free, as in the exam: it never counts as a hint.
    Not in Aprender, which is for learning, and not after answering, when the theory is already there. */
 const sheetNotes = s => BANK.filter(q => skillOf(q) === s.id && S.notes[q.id]).map(q => `<li>${noteMd(S.notes[q.id])}</li>`).join('');

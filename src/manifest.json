@@ -7,10 +7,14 @@
     "engine/registry.js",
     "engine/progress-key.js",
     "engine/calc.js",
+    "engine/graph.js",
+    "engine/graph-algos.js",
+    "engine/graph-sound.js",
     "engine/app-core.js",
     "engine/app-problems.js",
     "engine/app-plan.js",
     "engine/app-calc.js",
+    "engine/app-graph.js",
     "engine/app-views.js"
   ],
   "courses": {
@@ -75,7 +79,8 @@
         "questions/cong.js",
         "questions/ip.js",
         "questions/route.js",
-        "questions/exam.js"
+        "questions/exam.js",
+        "lab.js"
       ]
     },
     "ml": {

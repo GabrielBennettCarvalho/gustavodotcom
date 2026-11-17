@@ -196,6 +196,8 @@ STUDY.questions('rc', [
   o: ['1024', '512', '65 536', '256'], a: 0,
   e: '2 × 2¹⁶ = 131 072 portos públicos. / 128 = **1024** estações.' },
 { id: 'rcx-42', t: 'exam', l: 4, les: 'r-cti', reserved: 'exam', src: 'Exame 2023/24, Parte II.3',
+  anim: { title: 'Más notícias: x–y passa de 4 para 60', algo: 'dv', g: LAB_XYZ, p: { dest: 'x', start: 'stable', change: { a: 'x', b: 'y', c: 60 } },
+    stmt: 'O exemplo dos slides: a ligação x–y passa de 4 para 60. Vê quantas rondas demora até y e z voltarem a acertar o caminho para x.' },
   q: 'Rede com vetor-distância, estável. Uma ligação no caminho de A para X fica indisponível. O nó A descobre imediatamente o novo caminho para X?',
   o: ['Não: as distâncias sobem aos poucos (contagem até ao infinito)', 'Sim: o vetor-distância propaga as falhas numa só ronda', 'Sim, porque cada nó conhece o mapa completo da rede', 'Não: depois de uma falha, A nunca mais chega a X'], a: 0,
   e: 'Más notícias viajam devagar no DV: é preciso várias trocas até os valores convergirem.' },

@@ -3,6 +3,12 @@ const LS_TOPO = { topo: { n: { u: [10, 100], v: [130, 20], w: [270, 20], x: [130
 const DV_TOPO = { topo: { n: { X: [200, 10], W: [20, 190], Y: [380, 190], Z: [200, 120] },
   e: [['X', 'W', '1'], ['X', 'Z', '1'], ['X', 'Y', '5'], ['Y', 'Z', '1'], ['Y', 'W', '4'], ['Z', 'W', '3']] } };
 const DV_TOPO_FAIL = { topo: Object.assign({}, DV_TOPO.topo, { x: ['X-W'] }) };
+// slides T04, "Mudanças no custo da ligação": good news travel fast, bad news (4 → 60) count to infinity (also in lab.js)
+const LAB_XYZ = { n: { x: [40, 170], y: [200, 30], z: [360, 170] }, e: [['x', 'y', 4], ['y', 'z', 1], ['x', 'z', 50]] };
+// "Ver a resolução animada" in the feedback (graph lab player, src/engine/app-graph.js)
+const LS_ANIM = { title: 'Dijkstra a partir de u', algo: 'dijkstra', g: LS_TOPO.topo, p: { src: 'u' } };
+const DV_ANIM = { title: 'Vetor-distância até W', algo: 'dv', g: DV_TOPO.topo, p: { dest: 'W' } };
+const DV_ANIM_FAIL = { title: 'A ligação X–W falha', algo: 'dv', g: DV_TOPO.topo, p: { dest: 'W', start: 'stable', change: { a: 'X', b: 'W', c: null } } };
 
 STUDY.questions('rc', [
 /* ===== ENCAMINHAMENTO ===== */
@@ -76,15 +82,15 @@ STUDY.questions('rc', [
   e: 'Sub-caminhos de caminhos mais curtos são mais curtos. Aqui B-C-D custa 3, mas B-E-D também custa 3: B pode escolher qualquer um. O que é certo é o **custo**.' },
 
 /* --- nível 3: Dijkstra e Bellman-Ford --- */
-{ id: 'rt-30', t: 'route', l: 3, les: 'r-ls', calc: true, ch: 'dijkstra', step: '1/3', d: LS_TOPO,
+{ id: 'rt-30', t: 'route', l: 3, les: 'r-ls', calc: true, ch: 'dijkstra', step: '1/3', d: LS_TOPO, anim: LS_ANIM,
   q: 'Dijkstra a partir de u na rede do desenho (exemplo dos slides). Passo 1: qual é o primeiro nó a entrar no conjunto N\' (depois de u), e com que custo?',
   o: ['x, com custo 1', 'v, com custo 2', 'w, com custo 5', 'y, com custo 2'], a: 0,
   e: 'Vizinhos de u: v (2), x (1), w (5). Entra o de **menor** distância: **x (1)**. Depois atualiza-se: D(v) = min(2, 1+2) = 2, D(w) = min(5, 1+3) = 4, D(y) = 1+1 = 2.' },
-{ id: 'rt-31', t: 'route', l: 3, les: 'r-ls', calc: true, ch: 'dijkstra', step: '2/3', d: LS_TOPO,
+{ id: 'rt-31', t: 'route', l: 3, les: 'r-ls', calc: true, ch: 'dijkstra', step: '2/3', d: LS_TOPO, anim: LS_ANIM,
   q: 'Dijkstra a partir de u na rede do desenho. depois de x, entram v e y (ambos com 2). Qual é então a distância final de u a w, e por onde?',
   o: ['3, via x-y-w', '4, via x-w', '5, ligação direta', '5, via v-w'], a: 0,
   e: 'Quando y entra (2), atualiza w: D(w) = min(4, 2 + 1) = **3**, pelo caminho **u-x-y-w**.' },
-{ id: 'rt-32', t: 'route', l: 3, les: 'r-ls', calc: true, ch: 'dijkstra', step: '3/3', d: LS_TOPO,
+{ id: 'rt-32', t: 'route', l: 3, les: 'r-ls', calc: true, ch: 'dijkstra', step: '3/3', d: LS_TOPO, anim: LS_ANIM,
   q: 'Dijkstra a partir de u na rede do desenho: qual é o custo de u a z, e qual o próximo salto de u na sua tabela para z?',
   o: ['Custo 4, próximo salto x', 'Custo 4, próximo salto y', 'Custo 8, próximo salto w', 'Custo 6, próximo salto v'], a: 0,
   e: 'z via y: D(y) + 2 = **4** (via w seria 3 + 5 = 8). Caminho u-x-y-z → na tabela de u, o **próximo salto** é **x**.',
@@ -93,19 +99,19 @@ STUDY.questions('rc', [
   q: 'X tem dois vizinhos: A (custo 2) e B (custo 7). A anuncia distância 5 a Z; B anuncia 1. Qual é DX(Z), e por onde?',
   o: ['7, via A', '8, via B', '1, via B', '3, via A'], a: 0,
   e: 'DX(Z) = min{ c(X,A) + DA(Z), c(X,B) + DB(Z) } = min{ 2 + 5, 7 + 1 } = **7 via A**.' },
-{ id: 'rt-34', t: 'route', l: 3, les: 'r-dv', calc: true, ch: 'dv-2223', step: '1/4', d: DV_TOPO, src: 'Exame 2022/23, Parte III.2.3',
+{ id: 'rt-34', t: 'route', l: 3, les: 'r-dv', calc: true, ch: 'dv-2223', step: '1/4', d: DV_TOPO, anim: DV_ANIM, src: 'Exame 2022/23, Parte III.2.3',
   q: 'Rede com vetor-distância (desenho). Sabendo que DX(W) = 1 e DZ(W) = 2, aplica Bellman-Ford: qual é DY(W), e por onde?',
   o: ['3, via Z', '4, ligação direta', '6, via X', '2, via Z'], a: 0,
   e: 'DY(W) = min{ c(Y,X) + DX(W), c(Y,Z) + DZ(W), c(Y,W) } = min{ 5 + 1, 1 + 2, 4 } = **3, via Z**.' },
-{ id: 'rt-35', t: 'route', l: 3, les: 'r-dv', calc: true, ch: 'dv-2223', step: '2/4', d: DV_TOPO,
+{ id: 'rt-35', t: 'route', l: 3, les: 'r-dv', calc: true, ch: 'dv-2223', step: '2/4', d: DV_TOPO, anim: DV_ANIM,
   q: 'Rede do desenho, com vetor-distância estável. Que estimativas tem X para chegar a W através de cada vizinho (Y, Z, W)?',
   o: ['via Y: 8; via Z: 3; via W: 1', 'via Y: 5; via Z: 1; via W: 1', 'via Y: 8; via Z: 2; via W: 1', 'via Y: 9; via Z: 3; via W: 0'], a: 0,
   e: 'Via Y: 5 + DY(W) = 5 + 3 = 8. Via Z: 1 + DZ(W) = 1 + 2 = 3. Via W: 1. X usa a ligação direta (1).' },
-{ id: 'rt-36', t: 'route', l: 3, les: 'r-cti', calc: true, ch: 'dv-2223', step: '3/4', d: DV_TOPO_FAIL,
+{ id: 'rt-36', t: 'route', l: 3, les: 'r-cti', calc: true, ch: 'dv-2223', step: '3/4', d: DV_TOPO_FAIL, anim: DV_ANIM_FAIL,
   q: 'A ligação X–W falha. Logo a seguir, X recalcula com os vetores antigos dos vizinhos (DY(W) = 3, DZ(W) = 2). Que estimativa obtém, e porque é um problema?',
   o: ['3 via Z, mas Z passava por X: forma-se um ciclo', '8 via Y, e está correto logo à primeira', '∞: X fica sem caminho até ao fim', '4 via Z, e está correto logo à primeira'], a: 0,
   e: 'min{5 + 3, 1 + 2} = 3 via Z. Mas Z chegava a W **por X** (custo 2 = 1 + 1). Até os vetores convergirem, X e Z apontam um para o outro: **contagem até ao infinito** (aqui pára depressa porque Z tem a ligação direta de custo 3).' },
-{ id: 'rt-37', t: 'route', l: 4, les: 'r-cti', calc: true, ch: 'dv-2223', step: '4/4', d: DV_TOPO_FAIL,
+{ id: 'rt-37', t: 'route', l: 4, les: 'r-cti', calc: true, ch: 'dv-2223', step: '4/4', d: DV_TOPO_FAIL, anim: DV_ANIM_FAIL,
   q: 'Rede do desenho, depois de a ligação X–W falhar. Depois de o protocolo estabilizar, qual é DX(W) e o caminho de X até W?',
   o: ['4, X → Z → W', '3, X → Z → W', '8, X → Y → W', '9, X → Y → Z → W'], a: 0,
   e: 'Sem X–W: DZ(W) = min(3 direto, 1 + DY(W)) = 3; DY(W) = min(4, 1 + 3) = 4. DX(W) = min(1 + 3, 5 + 4) = **4 via Z**.' },

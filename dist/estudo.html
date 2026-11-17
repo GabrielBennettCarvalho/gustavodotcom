@@ -544,6 +544,142 @@ body:has(.pb-actions) .calc-fab{bottom:calc(84px + env(safe-area-inset-bottom,0p
 @media (prefers-reduced-motion:reduce){.cl-caret{animation:none}}
 .ses-resume{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;border-color:var(--accent)}
 
+/* ===== graph lab player (app-graph.js) ===== */
+.gp{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+.gp-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.gp .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.gp-score{padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel-2)}
+.gp-stmt{font-family:var(--f-read);font-size:16px;line-height:1.55;margin-top:8px;max-width:70ch}
+.gp-stage{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--accent) 7%,var(--panel)) 0%,var(--panel) 60%),var(--panel)}
+.gp-stage::before{content:"";position:absolute;inset:0;background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:16px 16px;pointer-events:none}
+.gp-svg{position:relative;display:block;width:100%;height:auto;max-height:440px;font-family:var(--f-mono)}
+/* edges */
+.ge-l{stroke:color-mix(in srgb,var(--ink) 30%,transparent);stroke-width:2;stroke-linecap:round;transition:stroke .35s,stroke-width .35s,stroke-dasharray .35s}
+.ge-c rect{fill:var(--panel);stroke:color-mix(in srgb,var(--ink) 18%,transparent);stroke-width:1;transition:fill .3s,stroke .3s}
+.ge-c text{font-size:12.5px;font-weight:700;fill:var(--muted);transition:fill .3s}
+.ge.tree .ge-l{stroke:var(--accent);stroke-width:4.5}
+.ge.tree .ge-c text{fill:var(--accent)}
+.ge.cand .ge-l{stroke:var(--accent);stroke-width:2.6;stroke-dasharray:7 6;opacity:.8}
+.ge.look .ge-l{stroke:var(--token);stroke-width:3.2}
+.ge.look .ge-c text,.ge.win .ge-c text{fill:var(--ink)}
+.ge.win .ge-l{stroke:var(--good);stroke-width:5}
+.ge.win .ge-c rect{stroke:var(--good);fill:var(--good-bg)}
+.ge.lose .ge-l{stroke:var(--bad);stroke-width:2.6;stroke-dasharray:3 6;opacity:.75}
+.ge.loop .ge-l{stroke:var(--bad);stroke-width:5;stroke-dasharray:10 7;animation:gp-march .7s linear infinite}
+.ge.loop .ge-c rect{stroke:var(--bad);fill:var(--bad-bg)}
+.ge.chg .ge-l{stroke:var(--token);stroke-width:5}
+.ge.chg .ge-c rect,.ge-ci.flash rect{stroke:var(--token);fill:color-mix(in srgb,var(--token) 22%,var(--panel))}
+.ge.gone .ge-l{stroke:var(--bad);stroke-width:2;stroke-dasharray:4 7;opacity:.6}
+.ge.gone .ge-c text{fill:var(--bad)}
+.ge-ci.flash{animation:gp-pop .5s ease}
+.ge-ci,.gn-bi{transform-box:fill-box;transform-origin:center}
+@keyframes gp-march{to{stroke-dashoffset:-17}}
+/* next-hop arrows */
+.ar{fill:var(--accent);stroke:var(--panel);stroke-width:1.2}
+.ar.loop{fill:var(--bad)}
+/* nodes */
+.gn{cursor:default}
+.gn-body{transition:transform .25s;animation:gp-in .45s cubic-bezier(.3,1.5,.6,1) backwards;animation-delay:calc(var(--i) * 45ms)}
+.gn-c{fill:var(--panel);stroke:var(--ink);stroke-width:2.2;transition:fill .35s,stroke .35s,stroke-width .35s;filter:drop-shadow(0 2px 3px rgba(20,28,41,.18))}
+.gn-t{font-family:var(--f-display);font-size:13px;font-weight:800;fill:var(--ink);pointer-events:none;transition:fill .3s}
+.gn-halo{fill:none;stroke:var(--token);stroke-width:3;opacity:0;transform-box:fill-box;transform-origin:center}
+.gn.front .gn-c{stroke:var(--accent);stroke-dasharray:5 3.5}
+.gn.done .gn-c{fill:color-mix(in srgb,var(--accent) 20%,var(--panel));stroke:var(--accent);stroke-dasharray:none}
+.gn.src .gn-c,.gn.dest .gn-c{fill:var(--token);stroke:var(--ink);stroke-dasharray:none}
+.gn.src .gn-t,.gn.dest .gn-t{fill:#1B1405}
+.gn.cur .gn-halo{animation:gp-halo 1.3s ease-out infinite}
+.gn.cur .gn-body{transform:scale(1.12)}
+.gn.cur .gn-c{stroke:var(--token);stroke-width:3.2}
+.gn.look .gn-c{stroke:var(--token);stroke-width:3}
+.gn.bad .gn-c{stroke:var(--bad)}
+.gn-b rect{fill:var(--ink);opacity:.88}
+.gn-b text{font-size:11px;font-weight:600;fill:var(--paper)}
+.gn.done .gn-b rect,.gn.src .gn-b rect{fill:var(--accent);opacity:1}
+.gn.done .gn-b text,.gn.src .gn-b text{fill:var(--accent-ink)}
+.gn-bi.bump{animation:gp-pop .45s ease}
+.picking .gn{cursor:pointer}
+.picking .gn:hover .gn-c{stroke:var(--token);stroke-width:3.4}
+.gn.wrong .gn-c{stroke:var(--bad);fill:var(--bad-bg);stroke-width:3.4}
+.gn.wrong .gn-body{animation:gp-shake .35s}
+.gn.right .gn-c{stroke:var(--good);fill:var(--good-bg);stroke-width:3.4}
+@keyframes gp-in{from{opacity:0;transform:scale(.4)}}
+@keyframes gp-halo{0%{opacity:.85;transform:scale(.75)}100%{opacity:0;transform:scale(1.5)}}
+@keyframes gp-pop{0%{transform:scale(1)}40%{transform:scale(1.28)}100%{transform:scale(1)}}
+@keyframes gp-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+/* packets */
+.pk circle{fill:var(--token);stroke:var(--panel);stroke-width:1.5;filter:drop-shadow(0 0 4px color-mix(in srgb,var(--token) 70%,transparent))}
+.pk text{font-size:11px;font-weight:700;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px}
+/* explanation and practice */
+.gp-say{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:10px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--token);min-height:70px}
+.gp-say p{font-family:var(--f-read);font-size:15.5px;line-height:1.5}
+.gp-say.in{animation:gp-slide .3s ease}
+.gp-n{color:var(--muted);font-size:11px}
+@keyframes gp-slide{from{opacity:.35;transform:translateY(3px)}}
+.gp-ask{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:10px;border:1.5px solid var(--accent);background:color-mix(in srgb,var(--accent) 6%,var(--panel))}
+.gp-ask[hidden]{display:none}
+.gp-ask.shake{animation:gp-shake .35s}
+.gp-q p{font-size:15.5px;font-weight:600;margin-top:2px}
+.gp-hintline{font-size:13px;color:var(--muted)}
+.gp-pick{display:flex;flex-wrap:wrap;gap:8px}
+.gp-pick .chip{min-width:44px;justify-content:center;font-family:var(--f-mono)}
+.gp-nums{display:flex;flex-wrap:wrap;gap:10px}
+.gp-nums label{display:flex;align-items:center;gap:6px;padding:4px 4px 4px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.gp-nums input{width:64px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel-2);color:var(--ink);font:600 14px var(--f-mono);text-align:center}
+.gp-nums input.ok{border-color:var(--good);background:var(--good-bg)}
+.gp-nums input.ko{border-color:var(--bad);background:var(--bad-bg)}
+.gp-fb{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.gp-fb:empty{display:none}
+.gp-fb .bad{color:var(--bad)}
+.gp-askfoot{justify-content:flex-end}
+.gp-end h3{font-size:19px;margin:2px 0 4px}
+.gp-end .row{margin-top:10px}
+/* controls */
+.gp-ctl{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.gp-b{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0 8px;border-radius:9px;border:1px solid var(--line);background:var(--panel);cursor:pointer}
+.gp-b svg{width:18px;height:18px}
+.gp-b:hover{background:var(--panel-2)}
+.gp-play{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);min-width:48px}
+.gp-play:hover{background:var(--accent);filter:brightness(1.08)}
+.gp-speed{font-size:13px}
+.gp-scrub{flex:1;min-width:120px;accent-color:var(--token)}
+/* code and tables */
+.gp-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:12px;align-items:start}
+.gp-side{display:flex;flex-direction:column;gap:10px;min-width:0}
+@media (max-width:760px){.gp-cols{grid-template-columns:minmax(0,1fr)}}
+.gp-code,.gp-tb{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:10px 0 8px;min-width:0}
+.gp-code .eyebrow,.gp-tb .eyebrow{padding:0 12px 6px;display:block}
+.gp-code pre{margin:0;overflow-x:auto;font:11.5px/1.7 var(--f-mono)}
+.gp-code .ln{display:block;padding:0 12px 0 0;white-space:pre;border-left:3px solid transparent;transition:background .25s,border-color .25s,color .25s;color:var(--muted)}
+.gp-code .ln i{display:inline-block;width:24px;text-align:right;margin-right:9px;font-style:normal;opacity:.45;user-select:none}
+.gp-code .ln.on{background:color-mix(in srgb,var(--token) 16%,transparent);border-left-color:var(--token);color:var(--ink);font-weight:600}
+.gp-tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:12px;min-width:0}
+.gp-tabs .gp-tb:first-child{grid-column:1/-1}
+.gp-tbw{overflow-x:auto}
+.gp-tb table{border-collapse:collapse;font:12.5px var(--f-mono);min-width:100%}
+.gp-tb th,.gp-tb td{padding:5px 9px;border-top:1px solid var(--line);text-align:center;white-space:nowrap}
+.gp-tb th{font-weight:600;color:var(--muted);font-size:11.5px}
+.gp-tb th:first-child,.gp-tb td:first-child{text-align:left;padding-left:12px}
+.gp-tb td.mk{font-weight:800;color:var(--accent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 55%,transparent);border-radius:4px}
+.gp-tb td.flash{animation:gp-cell 1.2s ease}
+.gp-tb tr.last td{background:color-mix(in srgb,var(--token) 6%,transparent)}
+@keyframes gp-cell{0%{background:color-mix(in srgb,var(--token) 45%,transparent)}100%{background:transparent}}
+/* lab screen and the overlay */
+.glab-pick{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.glab-ex summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--muted);margin-bottom:8px}
+.glab-card h2{font-size:19px}
+.mode.lab{border-color:color-mix(in srgb,var(--token) 55%,var(--line));background:linear-gradient(135deg,color-mix(in srgb,var(--token) 9%,var(--panel)),var(--panel) 60%)}
+.anim-btn{align-self:flex-start;border-color:var(--token);margin:4px 0}
+.anim-row{gap:8px}
+.anim-row .anim-btn{margin:0}
+.lesson .anim-btn{display:inline-flex;margin-top:10px}
+.gmodal{position:fixed;inset:0;z-index:60;background:rgba(10,14,20,.55);backdrop-filter:blur(3px);display:flex;justify-content:center;align-items:flex-start;overflow-y:auto;padding:24px 12px;animation:gp-fade .2s ease}
+.gmodal-card{width:min(980px,100%);background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.gmodal-open{overflow:hidden}
+@keyframes gp-fade{from{opacity:0}}
+@media (max-width:560px){.gp-svg{max-height:none}.gp-b{min-width:34px;height:36px}.gp-scrub{order:9;flex-basis:100%}}
+@media (prefers-reduced-motion:reduce){.gn-body,.gn.cur .gn-halo,.ge.loop .ge-l,.gp-say.in,.gn-bi.bump,.ge-ci.flash,.gp-tb td.flash,.gp-ask.shake{animation:none}}
+
 /* Cores dos temas do AMS */
 :root{ --t-sys:#5452C9; --t-req:#8A55C2; --t-arch:#B88A0B; --t-bpm:#2479B8; --t-bpmn:#238A5E; --t-exam:#C2410C; }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --t-sys:#9C9BFF; --t-req:#C59BF0; --t-arch:#E9C04A; --t-bpm:#6DB8F0; --t-bpmn:#5ACF96; --t-exam:#FF9A62; }}
@@ -3001,16 +3137,18 @@ var qrcode = function() {
      STUDY.lessons(id, [ ... ])                        → lessons (theory)
      STUDY.questions(id, [ ... ])                      → questions
      STUDY.problems(id, [ ... ])                       → key problems, solved by typing the values
+     STUDY.labs(id, [ ... ])                           → graph labs: animated algorithms with a problem generator
    The order of these calls doesn't matter. Each course is wrapped in its own scope by the build. */
 window.STUDY = (() => {
   const courses = {}, order = [];
   const get = id => {
-    if (!courses[id]) { order.push(id); courses[id] = { id, lessons: [], questions: [], problems: [], extras: [] }; }
+    if (!courses[id]) { order.push(id); courses[id] = { id, lessons: [], questions: [], problems: [], labs: [], extras: [] }; }
     return courses[id];
   };
   return {
     courses, order,
-    course(cfg) { const c = get(cfg.id); const { lessons, questions, problems } = c; Object.assign(c, cfg, { lessons, questions, problems }); if (!c.extras) c.extras = []; },
+    course(cfg) { const c = get(cfg.id); const { lessons, questions, problems, labs } = c; Object.assign(c, cfg, { lessons, questions, problems, labs }); if (!c.extras) c.extras = []; },
+    labs(id, arr) { get(id).labs.push(...arr); },
     lessons(id, arr) { get(id).lessons.push(...arr); },
     questions(id, arr) { get(id).questions.push(...arr); },
     problems(id, arr) { get(id).problems.push(...arr); },
@@ -10562,6 +10700,12 @@ const LS_TOPO = { topo: { n: { u: [10, 100], v: [130, 20], w: [270, 20], x: [130
 const DV_TOPO = { topo: { n: { X: [200, 10], W: [20, 190], Y: [380, 190], Z: [200, 120] },
   e: [['X', 'W', '1'], ['X', 'Z', '1'], ['X', 'Y', '5'], ['Y', 'Z', '1'], ['Y', 'W', '4'], ['Z', 'W', '3']] } };
 const DV_TOPO_FAIL = { topo: Object.assign({}, DV_TOPO.topo, { x: ['X-W'] }) };
+// slides T04, "Mudanças no custo da ligação": good news travel fast, bad news (4 → 60) count to infinity (also in lab.js)
+const LAB_XYZ = { n: { x: [40, 170], y: [200, 30], z: [360, 170] }, e: [['x', 'y', 4], ['y', 'z', 1], ['x', 'z', 50]] };
+// "Ver a resolução animada" in the feedback (graph lab player, src/engine/app-graph.js)
+const LS_ANIM = { title: 'Dijkstra a partir de u', algo: 'dijkstra', g: LS_TOPO.topo, p: { src: 'u' } };
+const DV_ANIM = { title: 'Vetor-distância até W', algo: 'dv', g: DV_TOPO.topo, p: { dest: 'W' } };
+const DV_ANIM_FAIL = { title: 'A ligação X–W falha', algo: 'dv', g: DV_TOPO.topo, p: { dest: 'W', start: 'stable', change: { a: 'X', b: 'W', c: null } } };
 
 STUDY.questions('rc', [
 /* ===== ENCAMINHAMENTO ===== */
@@ -10635,15 +10779,15 @@ STUDY.questions('rc', [
   e: 'Sub-caminhos de caminhos mais curtos são mais curtos. Aqui B-C-D custa 3, mas B-E-D também custa 3: B pode escolher qualquer um. O que é certo é o **custo**.' },
 
 /* --- nível 3: Dijkstra e Bellman-Ford --- */
-{ id: 'rt-30', t: 'route', l: 3, les: 'r-ls', calc: true, ch: 'dijkstra', step: '1/3', d: LS_TOPO,
+{ id: 'rt-30', t: 'route', l: 3, les: 'r-ls', calc: true, ch: 'dijkstra', step: '1/3', d: LS_TOPO, anim: LS_ANIM,
   q: 'Dijkstra a partir de u na rede do desenho (exemplo dos slides). Passo 1: qual é o primeiro nó a entrar no conjunto N\' (depois de u), e com que custo?',
   o: ['x, com custo 1', 'v, com custo 2', 'w, com custo 5', 'y, com custo 2'], a: 0,
   e: 'Vizinhos de u: v (2), x (1), w (5). Entra o de **menor** distância: **x (1)**. Depois atualiza-se: D(v) = min(2, 1+2) = 2, D(w) = min(5, 1+3) = 4, D(y) = 1+1 = 2.' },
-{ id: 'rt-31', t: 'route', l: 3, les: 'r-ls', calc: true, ch: 'dijkstra', step: '2/3', d: LS_TOPO,
+{ id: 'rt-31', t: 'route', l: 3, les: 'r-ls', calc: true, ch: 'dijkstra', step: '2/3', d: LS_TOPO, anim: LS_ANIM,
   q: 'Dijkstra a partir de u na rede do desenho. depois de x, entram v e y (ambos com 2). Qual é então a distância final de u a w, e por onde?',
   o: ['3, via x-y-w', '4, via x-w', '5, ligação direta', '5, via v-w'], a: 0,
   e: 'Quando y entra (2), atualiza w: D(w) = min(4, 2 + 1) = **3**, pelo caminho **u-x-y-w**.' },
-{ id: 'rt-32', t: 'route', l: 3, les: 'r-ls', calc: true, ch: 'dijkstra', step: '3/3', d: LS_TOPO,
+{ id: 'rt-32', t: 'route', l: 3, les: 'r-ls', calc: true, ch: 'dijkstra', step: '3/3', d: LS_TOPO, anim: LS_ANIM,
   q: 'Dijkstra a partir de u na rede do desenho: qual é o custo de u a z, e qual o próximo salto de u na sua tabela para z?',
   o: ['Custo 4, próximo salto x', 'Custo 4, próximo salto y', 'Custo 8, próximo salto w', 'Custo 6, próximo salto v'], a: 0,
   e: 'z via y: D(y) + 2 = **4** (via w seria 3 + 5 = 8). Caminho u-x-y-z → na tabela de u, o **próximo salto** é **x**.',
@@ -10652,19 +10796,19 @@ STUDY.questions('rc', [
   q: 'X tem dois vizinhos: A (custo 2) e B (custo 7). A anuncia distância 5 a Z; B anuncia 1. Qual é DX(Z), e por onde?',
   o: ['7, via A', '8, via B', '1, via B', '3, via A'], a: 0,
   e: 'DX(Z) = min{ c(X,A) + DA(Z), c(X,B) + DB(Z) } = min{ 2 + 5, 7 + 1 } = **7 via A**.' },
-{ id: 'rt-34', t: 'route', l: 3, les: 'r-dv', calc: true, ch: 'dv-2223', step: '1/4', d: DV_TOPO, src: 'Exame 2022/23, Parte III.2.3',
+{ id: 'rt-34', t: 'route', l: 3, les: 'r-dv', calc: true, ch: 'dv-2223', step: '1/4', d: DV_TOPO, anim: DV_ANIM, src: 'Exame 2022/23, Parte III.2.3',
   q: 'Rede com vetor-distância (desenho). Sabendo que DX(W) = 1 e DZ(W) = 2, aplica Bellman-Ford: qual é DY(W), e por onde?',
   o: ['3, via Z', '4, ligação direta', '6, via X', '2, via Z'], a: 0,
   e: 'DY(W) = min{ c(Y,X) + DX(W), c(Y,Z) + DZ(W), c(Y,W) } = min{ 5 + 1, 1 + 2, 4 } = **3, via Z**.' },
-{ id: 'rt-35', t: 'route', l: 3, les: 'r-dv', calc: true, ch: 'dv-2223', step: '2/4', d: DV_TOPO,
+{ id: 'rt-35', t: 'route', l: 3, les: 'r-dv', calc: true, ch: 'dv-2223', step: '2/4', d: DV_TOPO, anim: DV_ANIM,
   q: 'Rede do desenho, com vetor-distância estável. Que estimativas tem X para chegar a W através de cada vizinho (Y, Z, W)?',
   o: ['via Y: 8; via Z: 3; via W: 1', 'via Y: 5; via Z: 1; via W: 1', 'via Y: 8; via Z: 2; via W: 1', 'via Y: 9; via Z: 3; via W: 0'], a: 0,
   e: 'Via Y: 5 + DY(W) = 5 + 3 = 8. Via Z: 1 + DZ(W) = 1 + 2 = 3. Via W: 1. X usa a ligação direta (1).' },
-{ id: 'rt-36', t: 'route', l: 3, les: 'r-cti', calc: true, ch: 'dv-2223', step: '3/4', d: DV_TOPO_FAIL,
+{ id: 'rt-36', t: 'route', l: 3, les: 'r-cti', calc: true, ch: 'dv-2223', step: '3/4', d: DV_TOPO_FAIL, anim: DV_ANIM_FAIL,
   q: 'A ligação X–W falha. Logo a seguir, X recalcula com os vetores antigos dos vizinhos (DY(W) = 3, DZ(W) = 2). Que estimativa obtém, e porque é um problema?',
   o: ['3 via Z, mas Z passava por X: forma-se um ciclo', '8 via Y, e está correto logo à primeira', '∞: X fica sem caminho até ao fim', '4 via Z, e está correto logo à primeira'], a: 0,
   e: 'min{5 + 3, 1 + 2} = 3 via Z. Mas Z chegava a W **por X** (custo 2 = 1 + 1). Até os vetores convergirem, X e Z apontam um para o outro: **contagem até ao infinito** (aqui pára depressa porque Z tem a ligação direta de custo 3).' },
-{ id: 'rt-37', t: 'route', l: 4, les: 'r-cti', calc: true, ch: 'dv-2223', step: '4/4', d: DV_TOPO_FAIL,
+{ id: 'rt-37', t: 'route', l: 4, les: 'r-cti', calc: true, ch: 'dv-2223', step: '4/4', d: DV_TOPO_FAIL, anim: DV_ANIM_FAIL,
   q: 'Rede do desenho, depois de a ligação X–W falhar. Depois de o protocolo estabilizar, qual é DX(W) e o caminho de X até W?',
   o: ['4, X → Z → W', '3, X → Z → W', '8, X → Y → W', '9, X → Y → Z → W'], a: 0,
   e: 'Sem X–W: DZ(W) = min(3 direto, 1 + DY(W)) = 3; DY(W) = min(4, 1 + 3) = 4. DX(W) = min(1 + 3, 5 + 4) = **4 via Z**.' },
@@ -10885,6 +11029,8 @@ STUDY.questions('rc', [
   o: ['1024', '512', '65 536', '256'], a: 0,
   e: '2 × 2¹⁶ = 131 072 portos públicos. / 128 = **1024** estações.' },
 { id: 'rcx-42', t: 'exam', l: 4, les: 'r-cti', reserved: 'exam', src: 'Exame 2023/24, Parte II.3',
+  anim: { title: 'Más notícias: x–y passa de 4 para 60', algo: 'dv', g: LAB_XYZ, p: { dest: 'x', start: 'stable', change: { a: 'x', b: 'y', c: 60 } },
+    stmt: 'O exemplo dos slides: a ligação x–y passa de 4 para 60. Vê quantas rondas demora até y e z voltarem a acertar o caminho para x.' },
   q: 'Rede com vetor-distância, estável. Uma ligação no caminho de A para X fica indisponível. O nó A descobre imediatamente o novo caminho para X?',
   o: ['Não: as distâncias sobem aos poucos (contagem até ao infinito)', 'Sim: o vetor-distância propaga as falhas numa só ronda', 'Sim, porque cada nó conhece o mapa completo da rede', 'Não: depois de uma falha, A nunca mais chega a X'], a: 0,
   e: 'Más notícias viajam devagar no DV: é preciso várias trocas até os valores convergirem.' },
@@ -10917,6 +11063,98 @@ STUDY.questions('rc', [
   o: ['Bcc; o SMTP só transporta ASCII de 7 bits', 'Erro do cliente; base64 encripta a imagem', 'Um foi rejeitado; base64 comprime a imagem', 'O To: só mostra um; o IMAP exige base64'], a: 0,
   e: 'RCPT TO = envelope (quem recebe). To: = texto mostrado. O outro estava em **Bcc**. **Base64** converte bytes arbitrários em ASCII seguro para o SMTP.' },
 ]);
+
+/* --- courses/rc/lab.js --- */
+/* ===== RC graph lab: routing algorithms, animated, with a problem generator =====
+   Engine: src/engine/graph.js (graphs, generator), graph-algos.js (dijkstra, dv), app-graph.js (player, lab screen).
+   Each kind's make(GRAPH, rnd, opts) builds a fresh problem from the random generator rnd (seeded).
+   The examples are the networks from the T04 slides and from past exams. LS_TOPO, DV_TOPO and LAB_XYZ come from
+   route.js (questions there use them too). `les` links the routing lessons to the lab: the lesson shows `ex` animated,
+   and every question on that lesson offers a new problem of kind `kind`. */
+
+// slides T04, "Dijkstra: exemplo" and "Bellman Ford: exemplo" (best path from / to R8)
+const LAB_R8 = { n: { R1: [10, 10], R2: [140, 10], R4: [262, 10], R6: [390, 10], R3: [50, 190], R5: [190, 150], R7: [300, 120], R8: [390, 190] },
+  e: [['R1', 'R2', 1], ['R1', 'R3', 4], ['R2', 'R3', 5], ['R2', 'R4', 4], ['R2', 'R5', 1], ['R4', 'R5', 2], ['R4', 'R7', 1], ['R4', 'R6', 4], ['R5', 'R8', 6], ['R3', 'R8', 4], ['R7', 'R8', 1], ['R6', 'R8', 2]] };
+const LAB_POISON = [{ id: 'poison', label: 'Poisoned reverse', title: 'Um nó anuncia ∞ ao vizinho por onde passa a sua rota' }];
+
+// every node has a single shortest path to (or from) s: no ties to explain in a generated problem
+const labUnique = (GR, spec, s) => { const w = GR.sssp(GR.make(spec), s).ways; return Object.keys(spec.n).every(v => w[v] === 1); };
+const labRounds = steps => steps.filter(s => s.sfx === 'send').length;
+const labLoops = steps => steps.some(s => Object.values(s.es || {}).includes('loop'));
+
+STUDY.labs('rc', [{
+  id: 'routing', title: 'Laboratório de encaminhamento', icon: 'route',
+  desc: 'Dijkstra e vetor-distância animados, passo a passo, com o código ao lado. Vê a resolução ou faz tu; o gerador cria sempre redes novas.',
+  meta: 'Dijkstra · vetor-distância · contagem até ao infinito',
+  les: { 'r-ls': { ex: 'uz-ls', kind: 'ls' }, 'r-dv': { ex: 'x2223-dv', kind: 'dv' }, 'r-cti': { ex: 'xyz-bad', kind: 'chg' } },
+  kinds: [
+    { id: 'ls', label: 'Dijkstra',
+      make(GR, r) {
+        let src;
+        const g = GR.until(r, rr => GR.generate(rr, { n: [5, 7], cost: [1, 8] }), spec => { src = r.pick(Object.keys(spec.n)); return labUnique(GR, spec, src); });
+        return { title: `Dijkstra a partir de ${src}`, algo: 'dijkstra', g, p: { src },
+          stmt: `Rede com encaminhamento por **estado da ligação**: todos os nós conhecem o mapa e os custos. Corre o algoritmo de Dijkstra a partir de **${src}**: em cada passo, que nó entra em N' e como ficam D(v) e p(v)? No fim, escreve a tabela de expedição de ${src}.` };
+      } },
+    { id: 'dv', label: 'Vetor-distância',
+      make(GR, r) {
+        let dest;
+        const g = GR.until(r, rr => GR.generate(rr, { n: [4, 6], cost: [1, 7] }), spec => {
+          dest = r.pick(Object.keys(spec.n));
+          return labUnique(GR, spec, dest) && labRounds(GR.run('dv', spec, { dest })) >= 3;
+        });
+        return { title: `Vetor-distância até ${dest}`, algo: 'dv', g, p: { dest },
+          stmt: `Rede com **vetor-distância**. Em t = 0 cada nó só conhece as suas ligações; depois, em cada ronda, todos enviam o seu D aos vizinhos e recalculam ao mesmo tempo, com a equação de Bellman-Ford. Calcula, ronda a ronda, a distância de cada nó até **${dest}** e o próximo salto, até convergir.` };
+      } },
+    { id: 'chg', label: 'Mudança de custo', opts: LAB_POISON,
+      make(GR, r) {
+        // a stable network, then one link changes: mostly bad news that makes a loop, sometimes good news
+        const good = r() < 0.25;
+        let best = null;
+        for (let t = 0; t < 40 && !best; t++) {
+          const spec = GR.generate(r, { n: [4, 6], cost: [1, 6] }), ids = Object.keys(spec.n), dest = r.pick(ids);
+          if (!labUnique(GR, spec, dest)) continue;
+          const g = GR.make(spec), D = GR.sssp(g, dest).D;
+          const used = e => [[e.a, e.b], [e.b, e.a]].some(([x, v]) => x !== dest && e.c + D[v] === D[x]);
+          const cands = r.shuffle(g.edges.filter(e => (good ? !used(e) : used(e))));
+          for (const e of cands) {
+            let c;
+            if (good) { c = 1; if (c >= e.c) continue; }
+            else if (r() < 0.35) { c = null; const rest = GR.make(GR.withCosts(spec, { [e.k]: null })); if (!GR.connected(rest)) continue; }
+            else c = e.c + r.int(8, 18);
+            const change = { a: e.a, b: e.b, c }, steps = GR.run('dv', spec, { dest, start: 'stable', change });
+            const n = labRounds(steps);
+            // good news must change some route (one round of updates at least); bad news must make a loop
+            if (good ? n >= 2 : labLoops(steps) && n >= 3 && n <= 30) { best = { spec, dest, change, was: e.c }; break; }
+          }
+        }
+        if (!best) return this.fallback;
+        const { spec, dest, change, was } = best, what = change.c === null ? '**falha**' : `passa de ${was} para **${change.c}**`;
+        return { title: `Mudança de custo, destino ${dest}`, algo: 'dv', g: spec, p: { dest, start: 'stable', change, asks: 2 },
+          stmt: `Rede com **vetor-distância**, já estável (custos no desenho). A ligação **${change.a}–${change.b}** ${what}. Mostra, ronda a ronda, como mudam as distâncias até **${dest}** até a rede voltar a estabilizar. Forma-se algum ciclo? Liga o **poisoned reverse** e compara.` };
+      },
+      fallback: { title: 'Mudança de custo, destino x', algo: 'dv', g: LAB_XYZ, p: { dest: 'x', start: 'stable', change: { a: 'x', b: 'y', c: 60 }, asks: 2 },
+        stmt: 'Rede com **vetor-distância**, estável. A ligação **x–y** passa de 4 para **60**. Mostra, ronda a ronda, como mudam as distâncias até **x**.' } },
+  ],
+  examples: [
+    { id: 'r8-ls', label: 'Slides: Dijkstra a partir de R8', algo: 'dijkstra', g: LAB_R8, p: { src: 'R8' },
+      stmt: 'O exemplo dos slides: qual o melhor caminho do router **R8** até cada um dos outros routers da rede? Há empates (R4 e R6 com 2, R3 e R5 com 4): a ordem entre eles não muda os custos.' },
+    { id: 'r8-dv', label: 'Slides: Bellman-Ford até R8', algo: 'dv', g: LAB_R8, p: { dest: 'R8' },
+      stmt: 'O mesmo exemplo, agora com vetor-distância: qual o melhor caminho de cada router até **R8**? Compara com o Dijkstra: os custos são os mesmos, mas aqui cada nó só fica a saber o próximo salto.' },
+    { id: 'uz-ls', label: 'Slides: rede u…z', algo: 'dijkstra', g: LS_TOPO.topo, p: { src: 'u' },
+      stmt: 'A rede de seis nós dos slides: Dijkstra a partir de **u**. Qual é o custo até z, e qual o próximo salto de u para lá?' },
+    { id: 'xyz-bad', label: 'Slides: más notícias (4 → 60)', algo: 'dv', g: LAB_XYZ, opts: LAB_POISON,
+      p: { dest: 'x', start: 'stable', change: { a: 'x', b: 'y', c: 60 }, asks: 2 },
+      stmt: 'O exemplo dos slides: a ligação **x–y** passa de 4 para **60**. y passa a ir por z, e z ia por y: forma-se um ciclo e os D sobem 1 ou 2 por ronda. "As más notícias propagam-se devagar." Liga o **poisoned reverse** e compara.' },
+    { id: 'xyz-good', label: 'Slides: boas notícias (4 → 1)', algo: 'dv', g: LAB_XYZ,
+      p: { dest: 'x', start: 'stable', change: { a: 'x', b: 'y', c: 1 }, asks: 2 },
+      stmt: 'A ligação **x–y** passa de 4 para **1**. y nota logo, avisa z, e em poucas rondas está tudo estável: "as boas notícias propagam-se depressa".' },
+    { id: 'x2223-dv', label: 'Exame 2022/23: Bellman-Ford até W', algo: 'dv', g: DV_TOPO.topo, p: { dest: 'W' },
+      stmt: 'Exame 2022/23, Parte III.2.3: rede com vetor-distância, destino **W**. Em t = 0 cada nó só conhece as suas ligações. Calcula, ronda a ronda, D(X), D(Y) e D(Z) até W, e por onde passa cada um.' },
+    { id: 'x2223', label: 'Exame 2022/23: falha de X–W', algo: 'dv', g: DV_TOPO.topo, opts: LAB_POISON,
+      p: { dest: 'W', start: 'stable', change: { a: 'X', b: 'W', c: null }, asks: 2 },
+      stmt: 'Exame 2022/23, Parte III.2.3: rede estável com vetor-distância, destino **W**. A ligação **X–W** falha. Que estimativa calcula X logo a seguir, e porque é um problema? Qual é o caminho final de X até W?' },
+  ],
+}]);
 
 })();
 /* ===== course: ml ===== */
@@ -21027,6 +21265,422 @@ function fracBefore(src, p) {
 ROOT.CALC = { parse, run, render, show, ser, de, CHUNK, exitText, fracBefore };
 })();
 
+/* ===== Graph lab, core (window.GRAPH) =====
+   Generic weighted, undirected graphs for algorithm animations. Any course can use it; the algorithms register
+   themselves with GRAPH.algo (see graph-algos.js) and the player (app-graph.js) draws their steps.
+
+   Graph spec (the same shape as RC's `d.topo`, so a question's diagram can be animated as is):
+     { n: { u: [x, y], ... }, e: [['u', 'v', 2], ...], W: 400, H: 200 }   costs may be numbers or numeric strings
+   Algorithm: GRAPH.algo({ id, name, code: [lines], run(g, p) => steps })
+     A step is a full snapshot, so the player can jump anywhere:
+       { line: i | [i, j],          code lines to highlight
+         say: 'text',               the explanation (**bold** and `code` allowed)
+         ns: { id: cls },           node classes: src, done, cur, front, look, dest, bad
+         nl: { id: 'text' },        badge under each node (distances)
+         es: { 'a|b': cls },        edge classes: tree, cand, look, win, lose, loop, chg
+         ec: { 'a|b': cost },       edge costs that differ from the graph (a cost change)
+         ar: [[from, to, cls]],     small arrows along edges (next hops)
+         pk: [[from, to, label]],   packets that travel along an edge when the step opens
+         tb: [{ t, h, r, hl }],     tables (hl: [[row, col]] cells to flash; row -1 = whole last row)
+         sfx: 'pop' | ...,          sound when the step opens (graph-sound.js)
+         ask: { k: 'node', q, ans: [ids], hint, why }        practice: tap a node
+              { k: 'nums', q, items: [{ l, ans }], hint, why } practice: type numbers (∞ allowed) }  */
+const GRAPH = (() => {
+  const INF = Infinity;
+  const key = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
+  const num = c => (c === null || c === undefined || c === '' || c === '∞' ? INF : +c);
+  const fmt = v => (v === INF ? '∞' : String(v));
+  // natural order: R2 before R10, a before b
+  const cmp = (a, b) => a.localeCompare(b, 'pt', { numeric: true });
+
+  function make(spec) {
+    const pos = {}, edges = [], adj = {};
+    Object.entries(spec.n).forEach(([id, p]) => { pos[id] = [+p[0], +p[1]]; adj[id] = []; });
+    (spec.e || []).forEach(([a, b, c, f]) => {
+      const e = { a, b, c: num(c), f: f ?? null, k: key(a, b) };   // f: where the cost label sits (null: the player picks)
+      edges.push(e); adj[a].push({ v: b, e }); adj[b].push({ v: a, e });
+    });
+    const nodes = Object.keys(pos).sort(cmp);
+    Object.values(adj).forEach(l => l.sort((x, y) => cmp(x.v, y.v)));
+    const xs = nodes.map(id => pos[id][0]), ys = nodes.map(id => pos[id][1]);
+    return {
+      nodes, pos, edges, adj,
+      W: spec.W || Math.max(400, ...xs), H: spec.H || Math.max(200, ...ys),
+      edge: (a, b) => edges.find(e => e.k === key(a, b)),
+      cost: (a, b) => { const e = edges.find(x => x.k === key(a, b)); return e ? e.c : INF; },
+      nb: id => adj[id],
+    };
+  }
+  // the spec of a graph with some costs changed (null = the link is gone)
+  function withCosts(spec, ch) {
+    return Object.assign({}, spec, { e: spec.e.map(([a, b, c, f]) => { const k = key(a, b); return [a, b, k in ch ? ch[k] : c, f]; }).filter(e => e[2] !== null && num(e[2]) !== INF) });
+  }
+
+  /* --- seeded randomness, so a problem can be shown again from its seed --- */
+  function rng(seed) {
+    let s = (seed >>> 0) || 1;
+    const r = () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    r.int = (a, b) => a + Math.floor(r() * (b - a + 1));
+    r.pick = arr => arr[Math.floor(r() * arr.length)];
+    r.shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    return r;
+  }
+  const newSeed = () => Math.floor(Math.random() * 2 ** 31);
+
+  /* --- shortest paths (to check a generated problem; the animated version is in graph-algos.js) --- */
+  function sssp(g, s) {
+    const D = {}, ways = {}, done = new Set();
+    g.nodes.forEach(v => { D[v] = INF; ways[v] = 0; }); D[s] = 0; ways[s] = 1;
+    while (done.size < g.nodes.length) {
+      const w = g.nodes.filter(v => !done.has(v)).sort((a, b) => D[a] - D[b] || cmp(a, b))[0];
+      if (D[w] === INF) break; done.add(w);
+      g.nb(w).forEach(({ v, e }) => { if (done.has(v)) return; const d = D[w] + e.c;
+        if (d < D[v]) { D[v] = d; ways[v] = ways[w]; } else if (d === D[v]) ways[v] += ways[w]; });
+    }
+    return { D, ways };
+  }
+  const connected = g => { const seen = new Set([g.nodes[0]]), st = [g.nodes[0]];
+    while (st.length) g.nb(st.pop()).forEach(({ v }) => { if (!seen.has(v)) { seen.add(v); st.push(v); } });
+    return seen.size === g.nodes.length; };
+
+  /* --- random graphs that look drawn by hand: nodes on a jittered grid, no crossing links --- */
+  const NAMES = {
+    letters: n => 'uvwxyz'.length >= n ? 'uvwxyz'.slice(0, n).split('') : 'abcdefghij'.slice(0, n).split(''),
+    upper: n => 'ABCDEFGHIJ'.slice(0, n).split(''),
+    R: n => Array.from({ length: n }, (_, i) => `R${i + 1}`),
+  };
+  function cross(p1, p2, p3, p4) {
+    const d = (a, b, c) => (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+    const d1 = d(p3, p4, p1), d2 = d(p3, p4, p2), d3 = d(p1, p2, p3), d4 = d(p1, p2, p4);
+    return ((d1 > 0) !== (d2 > 0)) && ((d3 > 0) !== (d4 > 0)) && d1 && d2 && d3 && d4;
+  }
+  function segDist(p, a, b) {
+    const dx = b[0] - a[0], dy = b[1] - a[1], t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy)));
+    return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
+  }
+  // opts: { n: [min, max], names: 'letters' | 'upper' | 'R' | 'any', cost: [min, max], extra: [min, max], maxDeg }
+  function generate(r, opts = {}) {
+    // two rows, like the slides: every column gets one node, the rest go to random free cells; the jitter keeps
+    // it from looking like a ladder, and a node may drift towards the middle band
+    const n = r.int(...(opts.n || [5, 7])), W = 400, H = 200, cols = Math.min(5, Math.ceil(n / 2) + (n % 2 ? 0 : r.int(0, 1)));
+    const cells = Array.from({ length: cols }, (_, c) => c + cols * r.int(0, 1));
+    r.shuffle(Array.from({ length: cols * 2 }, (_, i) => i).filter(i => !cells.includes(i))).slice(0, n - cols).forEach(i => cells.push(i));
+    const cw = W / (cols - 1 || 1);
+    // only a node alone in its column may drift to the middle: two nodes stacked closely make a short, steep link
+    const alone = c => cells.filter(i => i % cols === c).length === 1;
+    const pts = cells.map(i => { const cx = i % cols, cy = Math.floor(i / cols), mid = alone(cx) && r() < 0.3;
+      return [Math.round(Math.max(0, Math.min(W, cx * cw + (r() - 0.5) * 0.3 * cw))), Math.round(mid ? H / 2 + (r() - 0.5) * 30 : cy ? H - r() * 22 : r() * 22)]; });
+    pts.forEach((p, i) => { if (pts.slice(0, i).some(q => Math.hypot(p[0] - q[0], p[1] - q[1]) < 66)) p[1] = p[1] < H / 2 ? H - r() * 12 : r() * 12; });
+    pts.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const style = opts.names === 'any' || !opts.names ? r.pick(['letters', 'upper', 'R']) : opts.names;
+    const ids = NAMES[style](n), P = {}; ids.forEach((id, i) => { P[id] = pts[i]; });
+    const pairs = [];
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) pairs.push([ids[i], ids[j], Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1])]);
+    pairs.sort((a, b) => a[2] - b[2]);
+    const E = [], deg = {}, maxDeg = opts.maxDeg || 4; ids.forEach(id => { deg[id] = 0; });
+    const ok = ([a, b]) => deg[a] < maxDeg && deg[b] < maxDeg
+      && !E.some(([c, d]) => c !== a && c !== b && d !== a && d !== b && cross(P[a], P[b], P[c], P[d]))
+      && !ids.some(o => o !== a && o !== b && segDist(P[o], P[a], P[b]) < 26);
+    // spanning tree first (Kruskal on distance), so it is always connected
+    const root = {}; ids.forEach(id => { root[id] = id; }); const find = x => (root[x] === x ? x : (root[x] = find(root[x])));
+    pairs.forEach(p => { if (find(p[0]) !== find(p[1]) && ok(p)) { root[find(p[0])] = find(p[1]); E.push(p); deg[p[0]]++; deg[p[1]]++; } });
+    const want = r.int(...(opts.extra || [2, 3]));
+    // extra links make cycles (without them there is nothing to relax): short ones first, a random skip for variety,
+    // then a second pass without skipping in case the first fell short
+    for (const pass of [0.65, 1]) for (const p of pairs) {
+      if (E.length >= n - 1 + want) break;
+      if (!E.includes(p) && ok(p) && r() < pass) { E.push(p); deg[p[0]]++; deg[p[1]]++; }
+    }
+    const [c0, c1] = opts.cost || [1, 9];
+    return { n: P, e: E.map(([a, b]) => [a, b, r.int(c0, c1)]), W, H };
+  }
+  // tries make(r) until test(spec) passes (a generator that wants e.g. unique shortest paths)
+  function until(r, makeOne, test, tries = 60) {
+    let s; for (let i = 0; i < tries; i++) { s = makeOne(r); if (!test || test(s)) return s; }
+    return s;
+  }
+
+  const algos = {};
+  const algo = def => { algos[def.id] = def; return def; };
+  function run(id, spec, p) { const a = algos[id]; if (!a) throw new Error(`unknown graph algorithm ${id}`); return a.run(make(spec), p || {}); }
+
+  return { INF, key, num, fmt, cmp, make, withCosts, rng, newSeed, sssp, connected, generate, until, algos, algo, run };
+})();
+
+/* ===== Graph lab, algorithms =====
+   Each algorithm turns a graph into a list of steps (format in graph.js). Steps are full snapshots, written for
+   students: every step says what happened and why, in Portuguese. New algorithm: GRAPH.algo({ id, name, code, run }).
+   `code` is a list of lines, or a function of the parameters (a variant changes a line). */
+(() => {
+  const { INF, key, fmt, cmp } = GRAPH;
+  const join = ids => ids.every(id => id.length === 1) ? ids.join('') : ids.join(', ');
+  const list = a => a.length < 2 ? a.join('') : `${a.slice(0, -1).join(', ')} e ${a[a.length - 1]}`;
+
+  /* ---------- Dijkstra (link state) ---------- */
+  GRAPH.algo({
+    id: 'dijkstra', name: 'Dijkstra',
+    code: [
+      'def dijkstra(G, s):',
+      '    D = {v: inf for v in G}; p = {}',
+      '    D[s] = 0',
+      "    N = set()               # N': nós resolvidos",
+      '    while N != G.nodes:',
+      '        # o mais perto, dos que faltam resolver',
+      '        w = min(G.nodes - N, key=D)',
+      '        N.add(w)',
+      '        for v in G.neighbours(w) - N:',
+      '            if D[w] + c(w, v) < D[v]:',
+      '                D[v] = D[w] + c(w, v)',
+      '                p[v] = w',
+      '    return D, p    # p: o caminho de volta a s',
+    ],
+    run(g, { src }) {
+      const s = src || g.nodes[0], D = {}, p = {}, N = [], steps = [], others = g.nodes.filter(v => v !== s);
+      g.nodes.forEach(v => { D[v] = INF; }); D[s] = 0;
+      const rows = [], marks = [];
+      const table = () => ({ t: 'Tabela do Dijkstra', h: ['Passo', "N'", ...others.map(v => `D(${v}),p(${v})`)], r: rows.map(r => r.slice()), mk: marks.slice() });
+      const pickNext = () => g.nodes.filter(v => !N.includes(v)).sort((a, b) => D[a] - D[b] || cmp(a, b));
+      const snap = (o = {}) => {
+        const ns = {}, nl = {}, es = {};
+        g.nodes.forEach(v => { ns[v] = [v === s ? 'src' : '', N.includes(v) ? 'done' : D[v] < INF ? 'front' : ''].filter(Boolean).join(' ');
+          nl[v] = D[v] === INF ? '∞' : p[v] ? `${D[v]}, ${p[v]}` : String(D[v]); });
+        Object.entries(p).forEach(([v, w]) => { es[key(v, w)] = N.includes(v) ? 'tree' : 'cand'; });
+        Object.entries(o.ns || {}).forEach(([v, c]) => { ns[v] = `${ns[v]} ${c}`.trim(); });
+        return Object.assign({}, o, { ns, nl, es: Object.assign(es, o.es || {}), tb: o.tb || [table()] });
+      };
+      const addRow = () => {
+        const next = pickNext()[0];
+        rows.push([String(rows.length), join(N), ...others.map(v => N.includes(v) ? '' : D[v] === INF ? '∞' : `${D[v]},${p[v]}`)]);
+        if (next) marks.push([rows.length - 1, 2 + others.indexOf(next)]);
+      };
+      steps.push(snap({ line: [1, 2, 3], sfx: 'tick',
+        say: `Começa em **${s}**: D(${s}) = 0 e todos os outros a ∞, porque ainda não se conhece caminho nenhum. N' (os nós resolvidos) está vazio.` }));
+
+      while (N.length < g.nodes.length) {
+        const cand = pickNext(), w = cand[0];
+        if (D[w] === INF) break;
+        const tied = cand.filter(v => D[v] === D[w]);
+        N.push(w);
+        const first = w === s;
+        const why = first ? `Ninguém tem D menor que ${s} (0): ${s} entra em N'.`
+          : `Fora de N', o menor D é o de **${w}** (${D[w]}). Entra em N': nenhum caminho por nós mais longe pode descer abaixo disso.`
+            + (tied.length > 1 ? ` Há empate com ${list(tied.filter(v => v !== w))}: escolho ${w} pela ordem alfabética, mas qualquer um dava o mesmo custo.` : '');
+        const nbrs = g.nb(w).filter(({ v }) => !N.includes(v));
+        const ask = first ? null : { k: 'node', q: "Que nó entra agora em N'?", ans: tied,
+          hint: "É o que tem o menor D entre os que ainda não estão resolvidos (os números debaixo dos nós).", why };
+        if (!nbrs.length) {
+          addRow();
+          steps.push(snap({ line: [5, 6, 7], sfx: 'pop', ask, ns: { [w]: 'cur' }, say: `${why} Não tem vizinhos por resolver; fecha-se a linha ${rows.length - 1} da tabela.`, tb: [Object.assign(table(), { hl: [[rows.length - 1, -1]] })] }));
+          continue;
+        }
+        steps.push(snap({ line: [5, 6, 7], sfx: 'pop', ask, ns: { [w]: 'cur' }, say: why }));
+        const nask = { k: 'nums', q: `**${w}** entrou em N'. Que D fica em cada vizinho por resolver?`,
+          items: nbrs.map(({ v, e }) => ({ l: `D(${v})`, ans: Math.min(D[v], D[w] + e.c) })),
+          hint: `D(v) = min(D(v), D(${w}) + c(${w}, v)). O D(${w}) é ${D[w]}; os custos estão nas ligações.` };
+        nbrs.forEach(({ v, e }, i) => {
+          const via = D[w] + e.c, old = D[v], better = via < old, last = i === nbrs.length - 1;
+          if (better) { D[v] = via; p[v] = w; }
+          if (last) addRow();
+          const say = `Vizinho **${v}**: D(${w}) + c(${w}, ${v}) = ${D[w]} + ${e.c} = ${via}` + (better
+            ? ` < ${fmt(old)} → **D(${v}) = ${via}**, p(${v}) = ${w}.`
+            : ` ≥ ${fmt(old)} → fica D(${v}) = ${old}${p[v] ? ` (p = ${p[v]})` : ''}.`)
+            + (last ? ` Fecha-se a linha ${rows.length - 1} da tabela.` : '');
+          steps.push(snap({ line: better ? [8, 9, 10, 11] : [8, 9], sfx: better ? 'up' : 'tick', ask: i === 0 ? nask : null,
+            ns: { [w]: 'cur', [v]: 'look' }, es: { [e.k]: better ? 'win' : 'lose' }, pk: [[w, v, String(via)]], say,
+            tb: [Object.assign(table(), last ? { hl: [[rows.length - 1, -1]] } : { hl: [] })] }));
+        });
+      }
+
+      // results: the forwarding table of s (first hop) and the professor's summary row
+      const order = N.slice();
+      const hop = v => { let x = v; while (p[x] && p[x] !== s) x = p[x]; return x; };
+      const path = v => { const a = [v]; while (p[a[0]]) a.unshift(p[a[0]]); return a.join('-'); };
+      const fwd = { t: `Tabela de expedição de ${s}`, h: ['Destino', 'Custo', 'Caminho', 'Próximo salto'], r: others.map(v => [v, fmt(D[v]), D[v] < INF ? path(v) : '–', D[v] < INF ? hop(v) : '–']) };
+      const sum = { t: 'Ordem de entrada em N\'', h: ['Nó tratado', ...order], r: [['Custo mínimo', ...order.map(v => (v === s ? '–' : fmt(D[v])))]] };
+      // the farthest node: the practice question about the first hop (any equal-cost first hop is right)
+      const far = others.filter(v => D[v] < INF).sort((a, b) => D[b] - D[a] || cmp(a, b))[0];
+      // every first hop that starts a shortest path is right
+      const back = far ? GRAPH.sssp(g, far).D : {}, hops = far ? g.nb(s).filter(({ v, e }) => e.c + back[v] === D[far]).map(({ v }) => v) : [];
+      steps.push(snap({ line: 12, sfx: 'done', ns: far ? { [far]: 'look' } : {},
+        ask: far ? { k: 'node', q: `Na tabela de expedição de ${s}, qual é o próximo salto para **${far}**?`, ans: hops,
+          hint: `Segue p() de ${far} para trás até chegares a um vizinho de ${s}. Não é o penúltimo nó: é o primeiro depois de ${s}.` } : null,
+        say: `Todos em N'. As ligações a cheio formam a **árvore de caminhos mais curtos** a partir de ${s}. Para a tabela de expedição, segue p() para trás até ao vizinho de ${s}: é esse o **próximo salto**${far ? ` (para ${far}: ${hop(far)})` : ''}.`,
+        tb: [table(), fwd, sum] }));
+      return steps;
+    },
+  });
+
+  /* ---------- Distance vector (Bellman-Ford), towards one destination ----------
+     p: { dest, start: 'zero' | 'stable', change: { a, b, c } (c null = the link fails), poison, asks }
+     Synchronous rounds: in each round every node sends its D to its neighbours, then all recompute at once from
+     what they received. That is how the tables are filled on paper. */
+  const DV_CODE = poison => [
+    '# corre em cada nó x; d é o destino',
+    'D[x] = 0 if x == d else c(x, d)   # ou inf',
+    'repeat:                           # uma ronda',
+    '    for v in nb(x):                # nb: vizinhos',
+    poison ? '        send(v, inf if via[x] == v else D[x])' : '        send(v, D[x])',
+    '    # recebe o D[v] de cada vizinho',
+    '    new = min(c(x, v) + D[v] for v in nb(x))',
+    '    if new != D[x]:',
+    '        D[x], via[x] = new, argmin',
+    'until nenhum D muda               # convergiu',
+    'on change of c(x, v): recompute new',
+  ];
+  GRAPH.algo({
+    id: 'dv', name: 'Vetor-distância (Bellman-Ford)',
+    code: p => DV_CODE(p && p.poison),
+    run(g0, { dest, start = 'zero', change = null, poison = false, asks = 3, maxRounds = 120 }) {
+      let g = g0; const d = dest || g.nodes[g.nodes.length - 1], xs = g.nodes.filter(x => x !== d), steps = [];
+      const D = {}, via = {}; let rows = [], ecost = {}, gone = {};
+      const c = (x, v) => (key(x, v) in ecost ? ecost[key(x, v)] : g.cost(x, v));
+      const nbs = x => g.nb(x).filter(({ v }) => !gone[key(x, v)]).map(({ v }) => v);
+      const adv = (v, x) => (v === d ? 0 : poison && via[v] === x ? INF : D[v]);   // what v tells x
+      const best = (x, from) => {   // from: the advertisements x uses
+        let b = INF, bv = null; const terms = [];
+        nbs(x).forEach(v => { const t = c(x, v) + from(v, x); terms.push([v, c(x, v), from(v, x), t]);
+          if (t < b || (t === b && t < INF && (v === via[x] || (bv !== via[x] && cmp(v, bv) < 0)))) { b = t; bv = v; } });
+        return { b, bv: b === INF ? null : bv, terms };
+      };
+      const formula = (x, r) => `D(${x}) = min{ ${r.terms.map(([v, cv, a]) => `${cv} + ${fmt(a)}`).join(', ')} } = **${fmt(r.b)}**${r.bv ? `, via ${r.bv}` : ''}`;
+      const loops = () => { const bad = new Set();
+        xs.forEach(x => { const seen = []; let y = x; while (y && y !== d && !seen.includes(y)) { seen.push(y); y = via[y]; }
+          if (y && y !== d) { let z = y; do { bad.add(key(z, via[z])); z = via[z]; } while (z !== y); } });
+        return bad; };
+      const cell = x => D[x] === INF ? '∞' : `${D[x]},${via[x]}`;
+      const table = (hl = []) => ({ t: `Distância de cada nó até ${d} (D, via)`, h: ['', ...xs], r: rows.map(r => r.slice()), hl });
+      const snap = (o = {}) => {
+        const ns = {}, nl = {}, es = {}, lp = loops(), ar = [];
+        g.nodes.forEach(x => { ns[x] = x === d ? 'dest' : D[x] === INF ? '' : 'front'; nl[x] = x === d ? 'destino' : fmt(D[x]); });
+        xs.forEach(x => { if (via[x]) { const k = key(x, via[x]); es[k] = lp.has(k) ? 'loop' : 'tree'; ar.push([x, via[x], lp.has(k) ? 'loop' : '']); } });
+        Object.keys(gone).forEach(k => { es[k] = 'gone'; });
+        Object.entries(o.ns || {}).forEach(([v, cl]) => { ns[v] = `${ns[v]} ${cl}`.trim(); });
+        return Object.assign({}, o, { ns, nl, ar, es: Object.assign(es, o.es || {}), ec: Object.assign({}, ecost), tb: o.tb || [table()] });
+      };
+      const vecAsk = (q, list_) => ({ k: 'nums', q, items: list_.map(([x, v]) => ({ l: x, ans: v })),
+        hint: 'Para cada nó x: o mínimo, entre os vizinhos v, de c(x, v) + o valor que v anunciou (os números nos pacotes). Escreve ∞ (ou inf) se não há caminho.' });
+      const round = () => {   // all nodes recompute at once from the previous values
+        const old = Object.assign({}, D), oldVia = Object.assign({}, via), res = {};
+        xs.forEach(x => { res[x] = best(x, (v, y) => (v === d ? 0 : poison && oldVia[v] === y ? INF : old[v])); });
+        return res;
+      };
+
+      // t = 0: each node knows only its links
+      D[d] = 0; xs.forEach(x => { const cx = nbs(x).includes(d) ? c(x, d) : INF; D[x] = cx; via[x] = cx < INF ? d : null; });
+      if (start === 'stable') {   // run silently to convergence: the change scenario starts from a stable network
+        for (let i = 0; i < maxRounds; i++) { const res = round(); let ch = false; xs.forEach(x => { if (res[x].b !== D[x] || res[x].bv !== via[x]) { ch = true; D[x] = res[x].b; via[x] = res[x].bv; } }); if (!ch) break; }
+        rows.push(['estável', ...xs.map(cell)]);
+        steps.push(snap({ line: 9, sfx: 'tick', say: `A rede está **estável**: cada nó já sabe a sua distância até **${d}** e por onde (as setas apontam para o próximo salto).${poison ? ' Está ligado o **poisoned reverse**.' : ''}` }));
+      } else {
+        rows.push(['t = 0', ...xs.map(cell)]);
+        steps.push(snap({ line: 1, sfx: 'tick', say: `t = 0: cada nó só conhece as suas ligações. Quem é vizinho de **${d}** começa com o custo dessa ligação; os outros com ∞.` }));
+      }
+
+      let asked = 0, sawLoop = loops().size > 0;
+      if (change) {
+        const k = key(change.a, change.b), was = c(change.a, change.b), now = change.c === null || change.c === undefined ? INF : +change.c;
+        if (now === INF) gone[k] = true; else ecost[k] = now;
+        const ends = [change.a, change.b].filter(x => x !== d), res = {};
+        ends.forEach(x => { res[x] = best(x, adv); });
+        ends.forEach(x => { D[x] = res[x].b; via[x] = res[x].bv; });
+        rows.push(['muda', ...xs.map(cell)]);
+        const goodNews = now < was;
+        const lp = loops(); sawLoop = lp.size > 0;
+        steps.push(snap({ line: 10, sfx: goodNews ? 'up' : 'bad', es: { [k]: now === INF ? 'gone' : 'chg' },
+          ask: ends.length ? vecAsk(`A ligação ${change.a}–${change.b} ${now === INF ? 'falhou' : `passou de ${was} para ${now}`}. ${list(ends)} nota${ends.length > 1 ? 'm' : ''} logo e recalcula${ends.length > 1 ? 'm' : ''} com os últimos vetores que recebeu. Que D fica?`, ends.map(x => [x, res[x].b])) : null,
+          say: `A ligação **${change.a}–${change.b}** ${now === INF ? '**falhou**' : `passou de ${was} para **${now}**`}${goodNews ? ' (boa notícia)' : ' (má notícia)'}. ${list(ends)} nota${ends.length > 1 ? 'm' : ''} logo e recalcula${ends.length > 1 ? 'm' : ''} com os vetores que já tinha${ends.length > 1 ? 'm' : ''}: ${ends.map(x => formula(x, res[x])).join('; ')}.`
+            + (sawLoop ? ` ⚠ Agora há um **ciclo**: ${[...lp].map(e => e.replace('|', '–')).join(', ')}. Usou-se um caminho que passava pela própria ligação que mudou.` : ''),
+          tb: [table([[rows.length - 1, -1]])] }));
+      }
+
+      let r = 0, converged = false;
+      while (r < maxRounds) {
+        r++;
+        const pk = []; g.nodes.forEach(x => nbs(x).forEach(v => { pk.push([x, v, fmt(adv(x, v))]); }));
+        steps.push(snap({ line: [2, 3, 4], sfx: 'send', pk,
+          say: `Ronda ${r}: cada nó envia o seu D aos vizinhos${poison ? ' (com poisoned reverse, a quem é o seu próximo salto anuncia ∞)' : ''}.` }));
+        const res = round(), changed = xs.filter(x => res[x].b !== D[x] || res[x].bv !== via[x]);
+        const ask = asked < asks ? vecAsk(`Ronda ${r}: com os valores que recebeu, que D calcula cada nó?`, xs.map(x => [x, res[x].b])) : null;
+        if (ask) asked++;
+        if (!changed.length) {
+          rows.push([`ronda ${r}`, ...xs.map(cell)]);
+          steps.push(snap({ line: 9, sfx: 'done', ask,
+            say: change && r === 1 ? 'Ronda 1: mais ninguém mudou de valor. A rede **estabilizou** logo a seguir à mudança.'
+              : `Ronda ${r}: ninguém mudou de valor. **Convergiu**${change ? ` ${r - 1} ronda${r - 1 === 1 ? '' : 's'} depois da mudança` : ` em ${r - 1} ronda${r - 1 === 1 ? '' : 's'}`}.`,
+            tb: [table([[rows.length - 1, -1]])] }));
+          converged = true; break;
+        }
+        changed.forEach((x, i) => {
+          const before = D[x], down = res[x].b < before; D[x] = res[x].b; via[x] = res[x].bv;
+          const last = i === changed.length - 1; if (last) rows.push([`ronda ${r}`, ...xs.map(cell)]);
+          const lp = loops(), fresh = lp.size > 0 && !sawLoop; if (lp.size) sawLoop = true;
+          const es = {}; nbs(x).forEach(v => { const k = key(x, v); es[k] = lp.has(k) ? 'loop' : v === res[x].bv ? 'win' : 'look'; });
+          steps.push(snap({ line: [5, 6, 7, 8], sfx: fresh ? 'bad' : down ? 'up' : 'down', ask: i === 0 ? ask : null, ns: { [x]: 'cur' }, es,
+            say: `**${x}**: ${formula(x, res[x])} (antes: ${fmt(before)}).`
+              + (fresh ? ` ⚠ **Ciclo**: ${[...lp].map(e => e.replace('|', '–')).join(', ')}. Os pacotes para ${d} ficam presos a saltar entre eles, e os D sobem aos poucos: é a **contagem até ao infinito**.` : '')
+              + (last && changed.length < xs.length ? ` Os outros nós calcularam o mesmo que já tinham.` : ''),
+            tb: [table(last ? [[rows.length - 1, -1]] : [])] }));
+        });
+      }
+      const fwd = { t: `Próximo salto de cada nó para ${d}`, h: ['Nó', 'Custo', 'Próximo salto'], r: xs.map(x => [x, fmt(D[x]), via[x] || '–']) };
+      steps.push(snap({ line: 9, sfx: converged ? 'done' : 'bad', tb: [table(), fwd],
+        say: converged
+          ? `Cada nó guarda só o **próximo salto** (a seta) e o custo. Ninguém conhece o caminho inteiro: é isso que distingue o vetor-distância do estado da ligação.${sawLoop && !poison ? ' Experimenta o mesmo cenário com **poisoned reverse** para comparar.' : ''}`
+          : `Não convergiu em ${maxRounds} rondas: sem caminho alternativo, os D sobem para sempre. O RIP corta isto com ∞ = 16.` }));
+      return steps;
+    },
+  });
+})();
+
+/* ===== Small synthesized sound effects (window.SFX) =====
+   No audio files: each effect is a few oscillator notes through Web Audio, kept quiet and short.
+   SFX.play(name); SFX.on (get/set, remembered in localStorage). Silent if Web Audio is missing or the user muted it. */
+const SFX = (() => {
+  const LS = 'estudo-ist-sfx';
+  let on = true; try { on = localStorage.getItem(LS) !== '0'; } catch {}
+  let ctx = null, master = null;
+  const init = () => {
+    if (ctx) return ctx;
+    const A = window.AudioContext || window.webkitAudioContext; if (!A) return null;
+    ctx = new A(); master = ctx.createGain(); master.gain.value = 0.16; master.connect(ctx.destination);
+    return ctx;
+  };
+  // one note: frequency (Hz, or [from, to] for a glide), start offset, length, wave type, volume
+  function note(f, at, len, type = 'sine', vol = 1) {
+    const t = ctx.currentTime + at, o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    if (Array.isArray(f)) { o.frequency.setValueAtTime(f[0], t); o.frequency.exponentialRampToValueAtTime(f[1], t + len); } else o.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + len + 0.02);
+  }
+  function noise(at, len, vol = 0.4, freq = 1800) {
+    const t = ctx.currentTime + at, n = Math.floor(ctx.sampleRate * len), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    f.type = 'bandpass'; f.frequency.setValueAtTime(freq, t); f.frequency.exponentialRampToValueAtTime(freq * 2.2, t + len); f.Q.value = 1.4;
+    g.gain.value = vol; s.buffer = b; s.connect(f); f.connect(g); g.connect(master); s.start(t);
+  }
+  const FX = {
+    tick: () => note(880, 0, 0.05, 'triangle', 0.5),
+    up: () => { note(660, 0, 0.09, 'triangle', 0.7); note(990, 0.06, 0.12, 'triangle', 0.6); },
+    down: () => { note(520, 0, 0.1, 'triangle', 0.6); note(390, 0.07, 0.14, 'triangle', 0.5); },
+    pop: () => { note([420, 840], 0, 0.11, 'sine', 0.9); note(1260, 0.07, 0.1, 'sine', 0.35); },
+    send: () => noise(0, 0.22, 0.5, 1400),
+    good: () => [523, 659, 784].forEach((f, i) => note(f, i * 0.07, 0.18, 'triangle', 0.7)),
+    bad: () => { note([220, 150], 0, 0.22, 'sawtooth', 0.25); note([233, 160], 0.02, 0.22, 'square', 0.12); },
+    done: () => [523, 659, 784, 1047].forEach((f, i) => note(f, i * 0.09, i === 3 ? 0.42 : 0.16, 'triangle', 0.65)),
+    click: () => note(1400, 0, 0.025, 'square', 0.15),
+  };
+  return {
+    get on() { return on; },
+    set on(v) { on = !!v; try { localStorage.setItem(LS, on ? '1' : '0'); } catch {} },
+    play(name) {
+      if (!on || !FX[name]) return;
+      try { if (!init()) return; if (ctx.state === 'suspended') ctx.resume(); FX[name](); } catch {}
+    },
+  };
+})();
+
 /* ===== Estudo IST — engine =====
    Shared by every course: course menu, levels, standard modes
    (Learn, Review, Mock exam, Library) and progress storage.
@@ -21272,13 +21926,14 @@ function go(name, extra = {}) { view = Object.assign({ name }, extra); renderVie
 function renderView() {
   fxClose();
   const v = C || view.name === 'sync' ? view.name : 'courses';
-  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'routepick' ? RoutePick() : v === 'brief' ? BriefScreen() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : v === 'formulas' ? Formulas() : v === 'recap' ? Recap() : v === 'prob' ? ProblemPick() : v === 'problem' ? Problem() : Home();
+  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'routepick' ? RoutePick() : v === 'brief' ? BriefScreen() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : v === 'formulas' ? Formulas() : v === 'recap' ? Recap() : v === 'prob' ? ProblemPick() : v === 'problem' ? Problem() : v === 'glab' ? GraphLab() : Home();
   document.documentElement.dataset.course = C && v !== 'courses' && v !== 'sync' ? C.id : '';
   $app.innerHTML = Top() + html;
   document.title = C && v !== 'courses' ? `${C.code} · Estudo IST` : 'Estudo IST';
   if (v === 'quiz') afterQuizRender();
   if (v === 'sync') afterSyncRender();
   if (v === 'problem') afterProblemRender();
+  if (v === 'glab') afterGraphLabRender();
   calcSync();
 }
 const toast = (msg) => { const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); };
@@ -21343,7 +21998,9 @@ function Home() {
     std.unshift(['route', esc(R.title || 'Percurso do exame'), esc(R.desc || 'O exame, parte a parte: o que sai, a teoria com exemplos e analogias, e exercícios como no exame.'), `${R.stops.length} partes · ${nd} feita${nd === 1 ? '' : 's'}`, glyph('route')]); }
   const card = ([k, t, d, m, g], act = 'mode') => `<button class="mode" data-act="${act}" data-k="${k}"><h3>${g}${t}</h3><p>${d}</p><span class="meta">${m}</span></button>`;
   const api = extraApi();
-  const extras = (C.extras || []).filter(x => !x.hide || !x.hide(api)).map(x => card([x.id, esc(x.title), esc(x.desc), esc(x.meta ? x.meta(api) : ''), glyph(x.icon || 'star')], 'extra')).join('');
+  // labs (app-graph.js) open their own screen; extras start a question session
+  const labs = (C.labs || []).map(x => `<button class="mode lab" data-gl="open" data-k="${esc(x.id)}"><h3>${glyph(x.icon || 'route')}${esc(x.title)}</h3><p>${esc(x.desc)}</p><span class="meta">${esc(x.meta || '')}</span></button>`).join('');
+  const extras = labs + (C.extras || []).filter(x => !x.hide || !x.hide(api)).map(x => card([x.id, esc(x.title), esc(x.desc), esc(x.meta ? x.meta(api) : ''), glyph(x.icon || 'star')], 'extra')).join('');
   // "Para o exame": readiness checklist, past exams, cheat sheet, supplementary questions
   const RS = SKILLS.length ? readySummary() : null; const PG = pastGroups();
   const PBS = pbTypes();
@@ -22257,6 +22914,383 @@ document.addEventListener('copy', ev => {
 });
 document.addEventListener('selectionchange', () => { if (document.activeElement && document.activeElement.id === 'calc-in') calcDraw(); });
 
+/* ===== Graph lab: the animated player and the lab screen =====
+   GPLAYER.mount(el, cfg) draws an algorithm's steps (graph.js / graph-algos.js) and plays them:
+     cfg = { algo, g: graph spec, p: params, mode: 'watch' | 'play', onNew }
+   'watch' plays the solution with explanations; 'play' stops before each step that has an `ask` and lets the
+   student answer it (tap a node, or type numbers), then shows the step. The graph, the code and the tables update
+   in place, so CSS transitions animate every change.
+   GPLAYER.overlay(cfg) opens the same player over the page (used by a question's "ver a resolução animada").
+   Labs: a course registers STUDY.labs(id, [{ id, title, desc, icon, kinds, examples }]); each kind has
+   make(GRAPH, rnd, opts) => { algo, g, p, stmt }; an example is { id, label, kind, algo, g, p, stmt }.
+   The lab screen is the view 'glab'. Its buttons use data-gl, handled here. */
+const GPLAYER = (() => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const R = 17;
+  const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v)); if (parent) parent.appendChild(e); return e; };
+  const lines = x => (x === undefined || x === null ? [] : Array.isArray(x) ? x : [x]);
+  const bump = (node, cls = 'bump') => { node.classList.remove(cls); void node.getBoundingClientRect(); node.classList.add(cls); };
+  const parseNum = s => { s = String(s).trim().toLowerCase(); if (!s) return NaN; if (['∞', 'inf', 'infinito', 'i', 'oo'].includes(s)) return Infinity; return Number(s.replace(',', '.')); };
+  const ICON = {
+    first: '<path d="M7 6v16 M22 6L11 14l11 8z"/>', prev: '<path d="M19 6L9 14l10 8z"/>', next: '<path d="M9 6l10 8-10 8z"/>',
+    last: '<path d="M21 6v16 M6 6l11 8-11 8z"/>', play: '<path d="M8 5l15 9-15 9z"/>', pause: '<path d="M8 6h4v16H8z M16 6h4v16h-4z"/>',
+    snd: '<path d="M5 11h4l6-5v16l-6-5H5z M19 10a5 5 0 0 1 0 8 M21.5 7a9 9 0 0 1 0 14"/>', mute: '<path d="M5 11h4l6-5v16l-6-5H5z M19 11l5 6 M24 11l-5 6"/>',
+  };
+  const ico = k => `<svg viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">${ICON[k]}</g></svg>`;
+
+  function mount(root, cfg) {
+    const A = GRAPH.algos[cfg.algo], g = GRAPH.make(cfg.g), steps = A.run(g, cfg.p || {});
+    // on a phone, squeeze the drawing sideways: it gets taller, so nodes and numbers stay readable
+    const sx = root.clientWidth && root.clientWidth < 520 ? 0.74 : 1;
+    if (sx < 1) { g.nodes.forEach(id => { g.pos[id] = [g.pos[id][0] * sx, g.pos[id][1]]; }); g.W *= sx; }
+    const code = typeof A.code === 'function' ? A.code(cfg.p || {}) : A.code;
+    const st = { i: 0, playing: false, timer: null, speed: 1, mode: cfg.mode || 'watch', answered: {}, score: 0, asked: 0, pending: null, tries: 0 };
+    const pad = { l: 36, t: 30, r: 36, b: 50 };
+    root.innerHTML = `<div class="gp" data-mode="${st.mode}">
+      <div class="gp-top">
+        <div class="seg" role="group" aria-label="Modo">
+          <button data-gp="mode" data-k="watch" aria-pressed="${st.mode === 'watch'}">Ver a resolução</button>
+          <button data-gp="mode" data-k="play" aria-pressed="${st.mode === 'play'}">Tu fazes</button>
+        </div>
+        <span class="spacer"></span>
+        <span class="gp-score mono" ${st.mode === 'play' ? '' : 'hidden'}></span>
+      </div>
+      <div class="gp-stage"><svg class="gp-svg" viewBox="${-pad.l} ${-pad.t} ${g.W + pad.l + pad.r} ${g.H + pad.t + pad.b}" role="img" aria-label="Grafo da rede"></svg></div>
+      <div class="gp-ctl">
+        <button class="gp-b" data-gp="first" title="Início" aria-label="Voltar ao início">${ico('first')}</button>
+        <button class="gp-b" data-gp="prev" title="Passo anterior (←)" aria-label="Passo anterior">${ico('prev')}</button>
+        <button class="gp-b gp-play" data-gp="play" title="Reproduzir (espaço)" aria-label="Reproduzir">${ico('play')}</button>
+        <button class="gp-b" data-gp="next" title="Passo seguinte (→)" aria-label="Passo seguinte">${ico('next')}</button>
+        <button class="gp-b" data-gp="last" title="Fim" aria-label="Ir para o fim">${ico('last')}</button>
+        <input class="gp-scrub" type="range" min="0" max="${steps.length - 1}" value="0" aria-label="Passo">
+        <button class="gp-b gp-speed mono" data-gp="speed" title="Velocidade">1×</button>
+        <button class="gp-b" data-gp="sound" title="Som" aria-label="Som">${ico(SFX.on ? 'snd' : 'mute')}</button>
+      </div>
+      <div class="gp-cols">
+        <div class="gp-side">
+          <div class="gp-say" aria-live="polite"><span class="gp-n mono"></span><p></p></div>
+          <div class="gp-ask" hidden></div>
+        </div>
+        <div class="gp-code"><div class="eyebrow">${esc(A.name)} · código</div><pre>${code.map((l, i) => `<span class="ln" data-i="${i}"><i>${i + 1}</i>${esc(l)}</span>`).join('')}</pre></div>
+      </div>
+      <div class="gp-tabs"></div>
+    </div>`;
+    const $ = s => root.querySelector(s);
+    const svg = $('.gp-svg'), say = $('.gp-say p'), stepN = $('.gp-n'), ask = $('.gp-ask'), scrub = $('.gp-scrub'), tabs = $('.gp-tabs'), score = $('.gp-score');
+
+    /* --- draw the graph once --- */
+    const gE = el('g', { class: 'gp-edges' }, svg), gA = el('g', { class: 'gp-arrows' }, svg), gP = el('g', { class: 'gp-pk' }, svg), gN = el('g', { class: 'gp-nodes' }, svg);
+    const E = {}, N = {};
+    // the cost label goes where it covers no node and no distance badge (under each node), nearest the middle
+    const busy = g.nodes.flatMap(id => [[g.pos[id][0], g.pos[id][1], R + 12], [g.pos[id][0], g.pos[id][1] + R + 15, 22]]);
+    const placed = [];
+    const spot = (x1, y1, x2, y2) => {
+      const fs = [0.5, 0.6, 0.4, 0.68, 0.32, 0.75, 0.25];
+      const room = f => { const x = x1 + (x2 - x1) * f, y = y1 + (y2 - y1) * f; return Math.min(...busy.concat(placed).map(([bx, by, r]) => Math.hypot(bx - x, by - y) - r)); };
+      // the first spot with enough room, or else the one with the most room
+      const f = fs.find(v => room(v) > 10) ?? fs.reduce((a, b) => (room(b) > room(a) ? b : a));
+      placed.push([x1 + (x2 - x1) * f, y1 + (y2 - y1) * f, 12]); return f;
+    };
+    g.edges.forEach(e => {
+      const [x1, y1] = g.pos[e.a], [x2, y2] = g.pos[e.b], grp = el('g', { class: 'ge', 'data-k': e.k }, gE);
+      const ln = el('line', { x1, y1, x2, y2, class: 'ge-l' }, grp);
+      // the translate sits on an outer group: a CSS animation on the inner one would replace it
+      const f = e.f ?? spot(x1, y1, x2, y2), mx = x1 + (x2 - x1) * f, my = y1 + (y2 - y1) * f, lab = el('g', { class: 'ge-ci' }, el('g', { class: 'ge-c', transform: `translate(${mx} ${my})` }, grp));
+      const bg = el('rect', { x: -11, y: -10, width: 22, height: 20, rx: 6 }, lab), tx = el('text', { 'text-anchor': 'middle', y: 4.5 }, lab);
+      tx.textContent = GRAPH.fmt(e.c); E[e.k] = { grp, ln, lab, bg, tx, c: e.c };
+    });
+    g.nodes.forEach((id, i) => {
+      const [x, y] = g.pos[id], grp = el('g', { class: 'gn', 'data-id': id, transform: `translate(${x} ${y})`, style: `--i:${i}` }, gN);
+      el('circle', { r: R + 7, class: 'gn-halo' }, grp);
+      const body = el('g', { class: 'gn-body' }, grp);
+      el('circle', { r: R, class: 'gn-c' }, body);
+      const t = el('text', { class: 'gn-t', 'text-anchor': 'middle', y: 5 }, body); t.textContent = id;
+      const badge = el('g', { class: 'gn-bi' }, el('g', { class: 'gn-b', transform: `translate(0 ${R + 15})` }, grp));
+      const brect = el('rect', { y: -9, height: 18, rx: 9 }, badge), btx = el('text', { 'text-anchor': 'middle', y: 4 }, badge);
+      N[id] = { grp, badge, brect, btx, txt: null };
+    });
+    const setBadge = (id, text, animate) => {
+      const n = N[id]; if (n.txt === text) return; n.txt = text; n.btx.textContent = text;
+      const w = Math.max(22, text.length * 7.4 + 12); n.brect.setAttribute('x', -w / 2); n.brect.setAttribute('width', w);
+      n.badge.style.display = text ? '' : 'none'; if (animate) bump(n.badge);
+    };
+
+    /* --- packets travel along an edge --- */
+    let raf = 0; const flying = [];
+    function launch(pk) {
+      const dur = 750 / st.speed, t0 = performance.now();
+      pk.forEach(([a, b, l]) => {
+        const [x1, y1] = g.pos[a], [x2, y2] = g.pos[b], len = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / len, uy = (y2 - y1) / len;
+        const p = el('g', { class: 'pk' }, gP); el('circle', { r: 5.5 }, p);
+        if (l !== '') { const t = el('text', { 'text-anchor': 'middle', y: -9 }, p); t.textContent = l; }
+        flying.push({ p, x1: x1 + ux * R, y1: y1 + uy * R, x2: x2 - ux * R, y2: y2 - uy * R, t0, dur });
+      });
+      if (!raf) raf = requestAnimationFrame(tick);
+    }
+    function tick(now) {
+      for (let k = flying.length - 1; k >= 0; k--) {
+        const f = flying[k], u = Math.min(1, (now - f.t0) / f.dur), e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+        f.p.setAttribute('transform', `translate(${f.x1 + (f.x2 - f.x1) * e} ${f.y1 + (f.y2 - f.y1) * e})`);
+        f.p.style.opacity = u > 0.85 ? (1 - u) / 0.15 : 1;
+        if (u >= 1) { f.p.remove(); flying.splice(k, 1); }
+      }
+      raf = flying.length && root.isConnected ? requestAnimationFrame(tick) : 0;
+    }
+    const clearPk = () => { flying.splice(0).forEach(f => f.p.remove()); };
+
+    /* --- show step i --- */
+    function render(i, animate = true) {
+      const s = steps[i]; st.i = i;
+      g.nodes.forEach(id => {
+        const cls = `gn ${s.ns && s.ns[id] || ''}`.trim(), n = N[id];
+        if (n.grp.getAttribute('class') !== cls) { n.grp.setAttribute('class', cls); }
+        setBadge(id, (s.nl && s.nl[id]) || '', animate);
+      });
+      g.edges.forEach(e => {
+        const o = E[e.k], cls = `ge ${s.es && s.es[e.k] || ''}`.trim(); if (o.grp.getAttribute('class') !== cls) o.grp.setAttribute('class', cls);
+        const c = s.ec && e.k in s.ec ? s.ec[e.k] : e.c, gone = s.es && s.es[e.k] === 'gone', txt = gone ? '✕' : GRAPH.fmt(c);
+        if (o.tx.textContent !== txt) { o.tx.textContent = txt; const w = Math.max(22, txt.length * 8 + 10); o.bg.setAttribute('x', -w / 2); o.bg.setAttribute('width', w); if (animate) bump(o.lab, 'flash'); }
+      });
+      gA.innerHTML = '';
+      (s.ar || []).forEach(([a, b, cls]) => {
+        const [x1, y1] = g.pos[a], [x2, y2] = g.pos[b], len = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / len, uy = (y2 - y1) / len;
+        // the arrowhead touches the node it points to (the next hop), like a directed edge
+        const sz = 8, tx = x2 - ux * (R + 3), ty = y2 - uy * (R + 3), bx = tx - ux * 2 * sz, by = ty - uy * 2 * sz;
+        el('path', { class: `ar ${cls || ''}`, d: `M${tx} ${ty} L${bx - uy * sz * 0.8} ${by + ux * sz * 0.8} L${bx + uy * sz * 0.8} ${by - ux * sz * 0.8}Z` }, gA);
+      });
+      if (animate) { clearPk(); if (s.pk && s.pk.length) launch(s.pk); }
+      const on = new Set(lines(s.line));
+      root.querySelectorAll('.gp-code .ln').forEach(l => l.classList.toggle('on', on.has(+l.dataset.i)));
+      say.innerHTML = md(s.say || ''); stepN.textContent = `Passo ${i + 1} de ${steps.length}`;
+      if (animate) bump(say.parentNode, 'in');
+      tabs.innerHTML = (s.tb || []).map(table).join('');
+      scrub.value = i;
+      if (animate && s.sfx) SFX.play(s.sfx);
+      if (i === steps.length - 1) { stop(); if (st.mode === 'play' && animate) endCard(); }
+      else if (st.pending === null && !ask.hidden) { ask.hidden = true; ask.innerHTML = ''; }   // left the end card
+    }
+    function table(t) {
+      const hl = new Set((t.hl || []).map(([r, c]) => `${r < 0 ? t.r.length + r : r}:${c}`)), mk = new Set((t.mk || []).map(([r, c]) => `${r}:${c}`));
+      const last = t.r.length - 1;
+      const cell = (v, r, c) => { const cl = [hl.has(`${r}:${c}`) || hl.has(`${r}:-1`) ? 'flash' : '', mk.has(`${r}:${c}`) ? 'mk' : ''].filter(Boolean).join(' ');
+        return `<td${cl ? ` class="${cl}"` : ''}>${esc(v)}</td>`; };
+      return `<div class="gp-tb"><div class="eyebrow">${esc(t.t || '')}</div><div class="gp-tbw"><table><thead><tr>${t.h.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead>
+        <tbody>${t.r.map((row, r) => `<tr${r === last ? ' class="last"' : ''}>${row.map((v, c) => cell(v, r, c)).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+    }
+
+    /* --- moving between steps --- */
+    function goTo(i, animate = true) {
+      i = Math.max(0, Math.min(steps.length - 1, i));
+      closeAsk();
+      if (st.mode === 'play' && i > st.i) {
+        // a jump forward over unanswered questions stops at the first one
+        for (let k = st.i + 1; k <= i; k++) if (steps[k].ask && !(k in st.answered)) { if (k > st.i + 1) render(k - 1, false); return openAsk(k); }
+      }
+      render(i, animate);
+    }
+    function stop() { st.playing = false; clearTimeout(st.timer); $('.gp-play').innerHTML = ico('play'); $('.gp-play').setAttribute('aria-label', 'Reproduzir'); }
+    function play() {
+      if (st.i >= steps.length - 1) render(0);
+      st.playing = true; $('.gp-play').innerHTML = ico('pause'); $('.gp-play').setAttribute('aria-label', 'Pausa'); schedule();
+    }
+    function schedule() {
+      clearTimeout(st.timer);
+      const s = steps[st.i], wait = (s.pk && s.pk.length ? 1900 : 1500) + Math.min(1600, (s.say || '').length * 9);
+      st.timer = setTimeout(() => { if (!root.isConnected || !st.playing) return; goTo(st.i + 1); if (st.playing && !st.pending && st.i < steps.length - 1) schedule(); }, wait / st.speed);
+    }
+
+    /* --- practice: questions before a step --- */
+    function openAsk(k) {
+      stop(); const a = steps[k].ask; st.pending = k; st.tries = 0;
+      if (!(k in st.answered)) st.asked++;
+      updScore();
+      const body = a.k === 'node'
+        ? `<p class="gp-hintline">Toca no nó, no desenho ou aqui:</p><div class="gp-pick">${g.nodes.map(id => `<button class="chip" data-gp="pick" data-id="${esc(id)}">${esc(id)}</button>`).join('')}</div>`
+        : `<div class="gp-nums">${a.items.map((it, j) => `<label><span class="mono">${esc(it.l)}</span><input data-j="${j}" inputmode="text" autocomplete="off" spellcheck="false"></label>`).join('')}</div>
+           <div class="row"><button class="btn primary small" data-gp="check">Verificar</button><span class="muted" style="font-size:12.5px">∞: escreve inf</span></div>`;
+      ask.innerHTML = `<div class="gp-q"><span class="eyebrow">Tu fazes</span><p>${md(a.q)}</p></div>${body}<div class="gp-fb" aria-live="polite"></div>
+        <div class="row gp-askfoot"><button class="btn ghost small" data-gp="reveal">Não sei: mostrar</button></div>`;
+      ask.hidden = false; root.querySelector('.gp').classList.toggle('picking', a.k === 'node');
+      const f = ask.querySelector('input'); if (f) f.focus({ preventScroll: true });
+      ask.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+    function closeAsk() { if (st.pending === null) return; st.pending = null; ask.hidden = true; ask.innerHTML = ''; root.querySelector('.gp').classList.remove('picking'); g.nodes.forEach(id => N[id].grp.classList.remove('wrong', 'right')); }
+    function answer(ok, k, firstTry) {
+      st.answered[k] = ok && firstTry; if (ok && firstTry) st.score++;
+      updScore();
+      const keepPlaying = true;
+      closeAsk(); render(k);
+      if (ok) SFX.play('good');
+      if (keepPlaying && k < steps.length - 1) { st.playing = true; $('.gp-play').innerHTML = ico('pause'); schedule(); }
+    }
+    function check(val) {
+      const k = st.pending, a = steps[k].ask, fb = ask.querySelector('.gp-fb');
+      let ok;
+      if (a.k === 'node') {
+        ok = a.ans.includes(val);
+        const n = N[val]; if (n) { n.grp.classList.remove('wrong', 'right'); bump(n.grp, ok ? 'right' : 'wrong'); }
+      } else {
+        const ins = [...ask.querySelectorAll('input')], vals = ins.map(x => parseNum(x.value));
+        if (vals.some(v => Number.isNaN(v))) { fb.innerHTML = '<p class="bad">Preenche todos os valores (∞ escreve-se inf).</p>'; return; }
+        const good = a.items.map((it, j) => vals[j] === it.ans);
+        ins.forEach((x, j) => { x.classList.toggle('ok', good[j]); x.classList.toggle('ko', !good[j]); });
+        ok = good.every(Boolean);
+      }
+      if (ok) { answer(true, k, st.tries === 0); return; }
+      st.tries++; SFX.play('bad'); bump(ask, 'shake');
+      if (st.tries === 1) fb.innerHTML = `<p class="bad"><b>Ainda não.</b> ${md(a.hint || 'Tenta outra vez.')}</p>`;
+      else reveal();
+    }
+    function reveal() {
+      const k = st.pending, a = steps[k].ask, fb = ask.querySelector('.gp-fb');
+      const sol = a.k === 'node' ? `**${a.ans.join('** ou **')}**` : a.items.map(it => `${it.l} = **${GRAPH.fmt(it.ans)}**`).join(', ');
+      fb.innerHTML = `<p class="bad">Era ${md(sol)}.</p><button class="btn small" data-gp="cont">Continuar</button>`;
+      ask.querySelectorAll('.gp-pick button, .gp-nums input, [data-gp="check"], [data-gp="reveal"]').forEach(b => { b.disabled = true; });
+      if (a.k === 'node') a.ans.forEach(id => N[id] && N[id].grp.classList.add('right'));
+      else ask.querySelectorAll('.gp-nums input').forEach((x, j) => { x.value = GRAPH.fmt(a.items[j].ans); });
+    }
+    function updScore() { score.hidden = st.mode !== 'play'; score.textContent = `${st.score}/${st.asked} à primeira`; }
+    function endCard() {
+      const pct = st.asked ? st.score / st.asked : 1;
+      ask.innerHTML = `<div class="gp-end"><span class="eyebrow">Fim</span><h3>${st.asked ? `Acertaste ${st.score} de ${st.asked} à primeira.` : 'Chegaste ao fim.'}</h3>
+        <p class="muted">${pct === 1 ? 'Limpo. Experimenta outro problema, ou passa a ver só o fim.' : 'Revê os passos onde falhaste (◀) e tenta outro problema.'}</p>
+        <div class="row">${cfg.onNew ? '<button class="btn primary small" data-gp="new">Outro problema</button>' : ''}<button class="btn small" data-gp="again">Repetir este</button></div></div>`;
+      ask.hidden = false; st.pending = null;
+    }
+    function setMode(m) {
+      st.mode = m; st.answered = {}; st.score = 0; st.asked = 0; closeAsk(); stop();
+      root.querySelector('.gp').dataset.mode = m; root.querySelectorAll('[data-gp="mode"]').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === m));
+      updScore(); render(0); if (m === 'play') play();
+    }
+
+    /* --- events --- */
+    root.addEventListener('click', ev => {
+      const n = ev.target.closest('.gn'); if (n && st.pending !== null && steps[st.pending].ask.k === 'node' && !ask.querySelector('[data-gp="cont"]')) { check(n.dataset.id); return; }
+      const b = ev.target.closest('[data-gp]'); if (!b || b.disabled) return;
+      SFX.play('click');
+      switch (b.dataset.gp) {
+        case 'mode': setMode(b.dataset.k); break;
+        case 'play': st.playing ? stop() : (st.pending !== null ? null : play()); break;
+        case 'next': stop(); if (st.pending === null) goTo(st.i + 1); break;
+        case 'prev': stop(); closeAsk(); render(Math.max(0, st.i - 1)); break;
+        case 'first': stop(); closeAsk(); render(0); break;
+        case 'last': stop(); goTo(steps.length - 1, true); break;
+        case 'speed': { const sp = [1, 2, 4, 0.5]; st.speed = sp[(sp.indexOf(st.speed) + 1) % sp.length]; b.textContent = `${st.speed}×`.replace('0.5', '½'); break; }
+        case 'sound': SFX.on = !SFX.on; b.innerHTML = ico(SFX.on ? 'snd' : 'mute'); break;
+        case 'pick': check(b.dataset.id); break;
+        case 'check': check(); break;
+        case 'reveal': st.tries = 2; reveal(); SFX.play('bad'); break;
+        case 'cont': answer(false, st.pending, false); break;
+        case 'again': setMode(st.mode); break;
+        case 'new': cfg.onNew && cfg.onNew(st.mode); break;
+      }
+    });
+    root.addEventListener('keydown', ev => { if (ev.key === 'Enter' && ev.target.matches('.gp-nums input')) { ev.preventDefault(); check(); } });
+    scrub.addEventListener('input', () => { stop(); closeAsk(); render(+scrub.value, false); });
+    const onKey = ev => {
+      if (!root.isConnected) { document.removeEventListener('keydown', onKey); return; }
+      if (ev.target.closest('input, textarea, select') || ev.altKey || ev.ctrlKey || ev.metaKey) return;
+      if (ev.key === 'ArrowRight') { ev.preventDefault(); stop(); if (st.pending === null) goTo(st.i + 1); }
+      else if (ev.key === 'ArrowLeft') { ev.preventDefault(); stop(); closeAsk(); render(Math.max(0, st.i - 1)); }
+      else if (ev.key === ' ' && !ev.target.closest('button')) { ev.preventDefault(); st.playing ? stop() : st.pending === null && play(); }
+    };
+    document.addEventListener('keydown', onKey);
+
+    updScore(); render(0, false);
+    if (st.mode === 'play') setTimeout(() => root.isConnected && play(), 500);
+    return { steps, get mode() { return st.mode; }, stop, destroy() { stop(); clearPk(); document.removeEventListener('keydown', onKey); } };
+  }
+
+  /* --- over the page (from a lesson or a question's feedback), so a session is never left ---
+     cfg.next: a function that makes a fresh problem; the end card then offers "Outro problema" */
+  function overlay(cfg) {
+    const wrap = document.createElement('div'); wrap.className = 'gmodal'; wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true');
+    wrap.innerHTML = `<div class="gmodal-card"><div class="row gmodal-head"><h3></h3><span class="spacer"></span><button class="btn small" data-close aria-label="Fechar">Fechar ✕</button></div><p class="gp-stmt"></p><div class="gmodal-body"></div></div>`;
+    document.body.appendChild(wrap); document.body.classList.add('gmodal-open');
+    let ctl;
+    const show = (c, mode) => {
+      wrap.querySelector('h3').textContent = c.title || 'Resolução animada';
+      const st = wrap.querySelector('.gp-stmt'); st.innerHTML = c.stmt ? md(c.stmt) : ''; st.hidden = !c.stmt;
+      if (ctl) ctl.destroy();
+      ctl = mount(wrap.querySelector('.gmodal-body'), Object.assign({}, c, { mode: mode || c.mode, onNew: cfg.next ? m => show(cfg.next(), m) : null }));
+      wrap.scrollTop = 0;
+    };
+    show(cfg);
+    const close = () => { ctl.destroy(); wrap.remove(); document.body.classList.remove('gmodal-open'); document.removeEventListener('keydown', esc_); };
+    const esc_ = ev => { if (ev.key === 'Escape') close(); };
+    wrap.addEventListener('click', ev => { if (ev.target === wrap || ev.target.closest('[data-close]')) close(); });
+    document.addEventListener('keydown', esc_);
+    wrap.querySelector('[data-close]').focus();
+  }
+  return { mount, overlay };
+})();
+
+/* ---------- the lab screen (view 'glab') ---------- */
+let glabCtl = null;
+const courseLabs = () => (C && C.labs) || [];
+function glabProblem(lab, v) {
+  if (v.ex) { const x = (lab.examples || []).find(e => e.id === v.ex); if (x) return Object.assign({ title: x.label }, x, { p: Object.assign({}, x.p, v.opt) }); }
+  const kind = lab.kinds.find(k => k.id === v.kind) || lab.kinds[0];
+  const made = kind.make(GRAPH, GRAPH.rng(v.seed), v.opt || {});
+  return Object.assign({ title: kind.label }, made, { p: Object.assign({}, made.p, v.opt) });
+}
+/* Links from lessons and questions: a lab maps lesson ids to { ex, kind } (lab.les). A lesson shows its example
+   animated; a question on that lesson offers a fresh generated problem of that kind. Both open over the page. */
+function labLink(lesId) {
+  for (const lab of courseLabs()) { const m = lab.les && lesId && lab.les[lesId]; if (m) return { lab, m }; }
+  return null;
+}
+function labLessonBtn(lesId) {
+  const L = labLink(lesId); return L && L.m.ex ? `<button class="btn small anim-btn" data-gl="lesEx" data-les="${esc(lesId)}">▶ Ver o exemplo animado</button>` : '';
+}
+function labPracticeBtn(lesId) {
+  const L = labLink(lesId); return L && L.m.kind ? `<button class="btn small anim-btn" data-gl="lesGo" data-les="${esc(lesId)}">Praticar com uma rede nova</button>` : '';
+}
+function GraphLab() {
+  const lab = courseLabs().find(l => l.id === view.lab); if (!lab) return Home();
+  if (!view.kind && !view.ex) view.kind = lab.kinds[0].id;
+  if (!view.seed) view.seed = GRAPH.newSeed();
+  view.opt = view.opt || {};
+  const kind = lab.kinds.find(k => k.id === view.kind);
+  const opts = (view.ex ? ((lab.examples || []).find(e => e.id === view.ex) || {}).opts : kind && kind.opts) || [];
+  const P = glabProblem(lab, view);
+  return `<section class="hero glab-hero"><span class="eyebrow">Só de ${esc(C.code)} · laboratório</span><h1>${esc(lab.title)}</h1><p>${esc(lab.desc || '')}</p></section>
+    <div class="glab-pick">
+      <div class="row glab-kinds" role="group" aria-label="Tipo de problema">${lab.kinds.map(k => `<button class="chip" data-gl="kind" data-k="${esc(k.id)}" aria-pressed="${!view.ex && view.kind === k.id}">${esc(k.label)}</button>`).join('')}</div>
+      ${(lab.examples || []).length ? `<details class="glab-ex" ${view.ex ? 'open' : ''}><summary>Exemplos das aulas e dos exames</summary><div class="row">${lab.examples.map(x => `<button class="chip" data-gl="ex" data-k="${esc(x.id)}" aria-pressed="${view.ex === x.id}">${esc(x.label)}</button>`).join('')}</div></details>` : ''}
+    </div>
+    <article class="card glab-card">
+      <div class="row"><h2>${esc(P.title)}</h2><span class="spacer"></span>
+        ${opts.map(o => `<button class="chip" data-gl="opt" data-k="${esc(o.id)}" aria-pressed="${!!view.opt[o.id]}" title="${esc(o.title || '')}">${esc(o.label)}</button>`).join('')}
+        ${view.ex ? '' : '<button class="btn small" data-gl="new">Novo problema ↻</button>'}</div>
+      <p class="gp-stmt">${md(P.stmt || '')}</p>
+      <div id="glabMount"></div>
+    </article>`;
+}
+function afterGraphLabRender() {
+  const m = document.getElementById('glabMount'); if (!m) return;
+  const lab = courseLabs().find(l => l.id === view.lab), P = glabProblem(lab, view);
+  if (glabCtl) glabCtl.destroy();
+  glabCtl = GPLAYER.mount(m, Object.assign({}, P, { mode: view.mode || 'watch',
+    onNew: view.ex ? null : mode => { view.seed = GRAPH.newSeed(); view.mode = mode; renderView(); } }));
+}
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-gl]'); if (!b) return;
+  const mode = glabCtl ? glabCtl.mode : view.mode;
+  switch (b.dataset.gl) {
+    case 'open': go('glab', { lab: b.dataset.k }); break;
+    case 'kind': view.kind = b.dataset.k; view.ex = null; view.seed = GRAPH.newSeed(); view.mode = mode; view.opt = {}; renderView(); break;
+    case 'ex': view.ex = b.dataset.k; view.mode = mode; view.opt = {}; renderView(); break;
+    case 'new': view.seed = GRAPH.newSeed(); view.mode = mode; renderView(); break;
+    case 'opt': view.opt = Object.assign({}, view.opt, { [b.dataset.k]: !view.opt[b.dataset.k] }); view.mode = mode; renderView(); break;
+    case 'anim': { const q = BYID[b.dataset.id]; if (q && q.anim) GPLAYER.overlay(Object.assign({ title: 'Resolução animada' }, q.anim)); break; }
+    case 'lesEx': { const L = labLink(b.dataset.les); if (L) GPLAYER.overlay(Object.assign(glabProblem(L.lab, { ex: L.m.ex }), { mode: 'watch' })); break; }
+    case 'lesGo': { const L = labLink(b.dataset.les); if (!L) break;
+      const next = () => glabProblem(L.lab, { kind: L.m.kind, seed: GRAPH.newSeed() });
+      GPLAYER.overlay(Object.assign(next(), { mode: 'play', next })); break; }
+  }
+});
+
 let tick = null;
 function startTimer() { clearInterval(tick); tick = setInterval(() => { if (!ses || ses.ended) { clearInterval(tick); return; } const left = ses.timeLimit - Math.floor((Date.now() - ses.startedAt) / 1000); const el = document.getElementById('timer'); if (el) { el.textContent = fmt(Math.max(0, left)); el.classList.toggle('hot', left <= 120); } if (left <= 0) finish(); }, 250); }
 const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -22300,6 +23334,7 @@ function Feedback(q, it) {
     <div class="verdict">${C.verdict ? `<span class="vtag">${esc(ok ? C.verdict.ok : C.verdict.ko)}</span>` : ''}${ok ? pickOne(['Certo.', 'Exatamente.', 'Na mouche.', 'Isso mesmo.']) : pickOne(['Ainda não.', 'Quase, mas não.', 'Falhou. Bora perceber porquê.'])}</div>
     <p class="explain">${md(q.e)}</p>
     ${wrongNotes}
+    ${q.anim || labLink(q.les) ? `<div class="row anim-row">${q.anim ? `<button class="btn small anim-btn" data-gl="anim" data-id="${esc(q.id)}">▶ Ver a resolução animada</button>` : ''}${labPracticeBtn(q.les)}</div>` : ''}
     ${L ? `<details class="lesson-peek" ${ok ? '' : 'open'}><summary>Teoria: ${esc(L.title)}</summary><div class="lbody lesson">${lessonBody(L, q.card)}</div></details>` : ''}
     <div class="note-box"><label class="eyebrow" for="note-${esc(q.id)}">${toSheet ? 'Para a tua cábula: o que te faltou?' : 'A minha nota sobre esta pergunta'}</label><textarea id="note-${esc(q.id)}" data-act="note" data-id="${esc(q.id)}" placeholder="${toSheet ? 'A fórmula, o passo ou a armadilha que te escapou…' : 'Escreve aqui o truque para não voltares a errar…'}">${esc(S.notes[q.id] || '')}</textarea>${toSheet ? `<span class="cab-tip">Fica na tua cábula, em “${esc(SKBYID[skillOf(q)].label)}”, para levares para o exame.</span>` : ''}</div>
     ${SKBYID[skillOf(q)] ? `<span class="src">Tipo de problema: ${esc(SKBYID[skillOf(q)].label)}</span>` : ''}
@@ -22315,7 +23350,7 @@ const codeBlock = c => `<pre class="codeblk">${esc(c)}</pre>`;
 // k: only card k of the lesson (the diagram and the key line belong to the last card)
 function lessonBody(L, k) { const cs = lessonCards(L), one = k && cs.length > 1 && cs[k - 1] !== undefined, last = !one || k === cs.length;
   const h = one ? cs[k - 1] : (L.html || ''), body = L.trusted ? fxify(h) : md(h);
-  return `${body}${L.d && last ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key && last ? `<p class="key">${L.trusted ? fxify(L.key) : md(L.key)}</p>` : ''}`; }
+  return `${body}${L.d && last ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key && last ? `<p class="key">${L.trusted ? fxify(L.key) : md(L.key)}</p>` : ''}${last ? labLessonBtn(L.id) : ''}`; }
 /* The cheat sheet while solving (open-book courses only). Opening it is free, as in the exam: it never counts as a hint.
    Not in Aprender, which is for learning, and not after answering, when the theory is already there. */
 const sheetNotes = s => BANK.filter(q => skillOf(q) === s.id && S.notes[q.id]).map(q => `<li>${noteMd(S.notes[q.id])}</li>`).join('');

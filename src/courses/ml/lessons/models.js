@@ -20,7 +20,10 @@ STUDY.lessons('ml', [
   html: `<p>Truque: transforma primeiro cada entrada com funções fixas φ<sub>j</sub>(x) e faz regressão linear sobre elas: y(x, w) = Σ<sub>j</sub> w<sub>j</sub> φ<sub>j</sub>(x). O modelo é <b>linear nos pesos</b>, por isso a solução continua a ser w = (ΦᵀΦ)⁻¹Φᵀt, só que agora com a matriz de design Φ.</p>
   <ul><li>Polinomial: φ<sub>j</sub>(x) = x<sup>j</sup> → y = w₀ + w₁x + w₂x² + w₃x³.</li>
   <li>Gaussianas (RBF): φ<sub>j</sub>(x) = exp(−‖x − μ<sub>j</sub>‖² / (2s²)).</li>
-  <li>Nos exames aparece primeiro uma função que transforma o vetor num número, por exemplo a norma: φ(x) = ‖x‖₂ ou ‖x‖<sub>∞</sub> = max |x<sub>i</sub>|.</li></ul>
+  <li>Nos exames aparece primeiro uma função que transforma o vetor x num número, quase sempre uma <b>norma</b>. Para x = (3, −4):
+  <ul><li>‖x‖₁ = soma dos valores absolutos: |3| + |−4| = <b>7</b>.</li>
+  <li>‖x‖₂ = o comprimento do vetor: √(3² + (−4)²) = √25 = <b>5</b>.</li>
+  <li>‖x‖<sub>∞</sub> = o maior valor absoluto: max(|3|, |−4|) = <b>4</b>.</li></ul></li></ul>
   <!--card--><p><b>Receita da matriz de design</b> (polinómio de grau 3): para cada exemplo calcula u = φ(x) e escreve a linha [1, u, u², u³].</p>
   <p><b>Exemplo</b>: pontos x₁ = (0, −4) e x₂ = (3, 0), φ(x) = ‖x‖<sub>∞</sub> (o maior valor absoluto) e polinómio de grau 3.</p>
   <ol><li>u₁ = max(|0|, |−4|) = 4 → linha [1, 4, 4², 4³] = <b>[1, 4, 16, 64]</b>.</li>

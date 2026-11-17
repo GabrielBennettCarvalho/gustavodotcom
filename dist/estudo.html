@@ -325,6 +325,7 @@ textarea.key{min-height:84px;word-break:break-all}
 .skill .sk-meta{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px;align-items:center}
 .skill .sk-prog{font-size:11px;color:var(--muted);flex:none}
 .seen{font-family:var(--f-mono);font-size:10.5px;padding:1px 5px;border-radius:4px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.sheet-item .row{flex-wrap:wrap}.sheet-item .row>.no-print{display:flex;flex-wrap:wrap;gap:3px;justify-content:flex-end;min-width:0}
 .badge.kind{border-color:var(--token);color:var(--token)}
 .seg button:disabled{opacity:.45;cursor:not-allowed}
 .sheet-topic{margin:18px 0 8px;font-size:17px}
@@ -11313,7 +11314,7 @@ STUDY.course({
       sheet: '<ul><li>Euclidiana {f:d2}</li><li>Manhattan {f:d1}</li><li>Hamming = nº de posições diferentes</li><li>Cosseno, uma semelhança e não uma distância (maior = mais parecidos): {f:cos}</li></ul><p>Classificar: os k mais próximos votam (uniforme, ou com peso 1/d). Regressão: média dos k valores.</p><p><b>Armadilhas:</b> normalizar os atributos antes; em leave-one-out o ponto deixado de fora não é vizinho de si próprio.</p>' },
     { id: 'lr-fit', t: 'linreg', les: ['lr-ls', 'lr-basis'], label: 'Regressão linear com funções base: pesos, previsões e erro',
       seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
-      sheet: '<p>Matriz de design Φ: uma linha por exemplo, [1, φ(x), φ(x)², …]. Sem funções base cada linha é [1, x₁, x₂, …] e os slides chamam-lhe X; as fórmulas são as mesmas.</p><p><b>{f:ls}</b> (ridge: {f:ridge}). Previsão ŷ = wᵀφ(x).</p><ul><li>MAE = (1/N)Σ|t − ŷ|</li><li>{f:mse}</li><li>RMSE = √MSE</li></ul><p>Inversa 2 × 2: [[a, b], [c, d]]⁻¹ = (1/(ad − bc))·[[d, −b], [−c, a]].</p><p><b>Armadilhas:</b> esquecer a coluna de 1 (bias); aplicar φ (por exemplo ‖x‖₁) antes de elevar ao grau.</p>' },
+      sheet: '<p>Matriz de design Φ: uma linha por exemplo, [1, φ(x), φ(x)², …]. Sem funções base cada linha é [1, x₁, x₂, …] e os slides chamam-lhe X; as fórmulas são as mesmas.</p><p>Normas que aparecem como φ(x) (transformam o vetor x num número). Para x = (3, −4):</p><ul><li>‖x‖₁ = soma dos valores absolutos = |3| + |−4| = 7 (Manhattan)</li><li>‖x‖₂ = comprimento = √(3² + (−4)²) = 5 (euclidiana)</li><li>‖x‖<sub>∞</sub> = maior valor absoluto = max(3, 4) = 4 (máximo)</li></ul><p><b>{f:ls}</b> (ridge: {f:ridge}). Previsão ŷ = wᵀφ(x).</p><ul><li>MAE = (1/N)Σ|t − ŷ|</li><li>{f:mse}</li><li>RMSE = √MSE</li></ul><p>Inversa 2 × 2: [[a, b], [c, d]]⁻¹ = (1/(ad − bc))·[[d, −b], [−c, a]].</p><p><b>Armadilhas:</b> esquecer a coluna de 1 (bias); aplicar φ (por exemplo ‖x‖₁) antes de elevar ao grau.</p>' },
     { id: 'pe-update', t: 'percep', les: ['p-rosen'], label: 'Perceptrão: classificar e atualizar os pesos',
       seen: ['Exame 2 2022/23', 'Exame 1 2022/23'],
       sheet: '<p>o = sinal(wᵀx), com x₀ = 1 para o bias. Fronteira: wᵀx = 0.</p><p>Só muda quando erra: <b>{f:rosen}</b>.</p><p>Converge se os dados forem linearmente separáveis (o XOR não é).</p><p><b>Armadilha:</b> esquecer o x₀ = 1 no produto e na atualização.</p>' },
@@ -11799,7 +11800,10 @@ STUDY.lessons('ml', [
   html: `<p>Truque: transforma primeiro cada entrada com funções fixas φ<sub>j</sub>(x) e faz regressão linear sobre elas: y(x, w) = Σ<sub>j</sub> w<sub>j</sub> φ<sub>j</sub>(x). O modelo é <b>linear nos pesos</b>, por isso a solução continua a ser w = (ΦᵀΦ)⁻¹Φᵀt, só que agora com a matriz de design Φ.</p>
   <ul><li>Polinomial: φ<sub>j</sub>(x) = x<sup>j</sup> → y = w₀ + w₁x + w₂x² + w₃x³.</li>
   <li>Gaussianas (RBF): φ<sub>j</sub>(x) = exp(−‖x − μ<sub>j</sub>‖² / (2s²)).</li>
-  <li>Nos exames aparece primeiro uma função que transforma o vetor num número, por exemplo a norma: φ(x) = ‖x‖₂ ou ‖x‖<sub>∞</sub> = max |x<sub>i</sub>|.</li></ul>
+  <li>Nos exames aparece primeiro uma função que transforma o vetor x num número, quase sempre uma <b>norma</b>. Para x = (3, −4):
+  <ul><li>‖x‖₁ = soma dos valores absolutos: |3| + |−4| = <b>7</b>.</li>
+  <li>‖x‖₂ = o comprimento do vetor: √(3² + (−4)²) = √25 = <b>5</b>.</li>
+  <li>‖x‖<sub>∞</sub> = o maior valor absoluto: max(|3|, |−4|) = <b>4</b>.</li></ul></li></ul>
   <!--card--><p><b>Receita da matriz de design</b> (polinómio de grau 3): para cada exemplo calcula u = φ(x) e escreve a linha [1, u, u², u³].</p>
   <p><b>Exemplo</b>: pontos x₁ = (0, −4) e x₂ = (3, 0), φ(x) = ‖x‖<sub>∞</sub> (o maior valor absoluto) e polinómio de grau 3.</p>
   <ol><li>u₁ = max(|0|, |−4|) = 4 → linha [1, 4, 4², 4³] = <b>[1, 4, 16, 64]</b>.</li>

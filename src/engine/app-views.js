@@ -19,7 +19,7 @@ function Quiz() {
   const foot = ses.answered ? (isExam ? '' : `<div class="qfoot next-bar"><button class="btn primary" data-act="next" id="nextBtn">${ses.i >= ses.items.length - 1 ? 'Ver resultado' : 'Seguinte'} →</button><span class="kbd">Enter</span><span class="spacer"></span><button class="btn ghost small" data-act="quit">Terminar ronda</button></div>`)
     : `<div class="qfoot">${multi ? `<button class="btn primary" data-act="confirm" ${ses.picked.size ? '' : 'disabled'}>Confirmar</button>` : ''}${skipBtn}<span class="muted keys" style="font-size:12.5px">Teclas <span class="kbd">1</span>–<span class="kbd">${q.o.length}</span>${multi ? ' marcam, <span class="kbd">Enter</span> confirma' : ''} · <span class="kbd">S</span> ${isExam ? 'branco' : 'salta'}</span><span class="spacer"></span>${isExam ? `<button class="btn ghost small" data-act="finish">Entregar exame</button>` : `<button class="btn ghost small" data-act="quit">Terminar ronda</button>`}</div>`;
   const cabBtn = isExam && openBook() ? `<button class="btn small cab-btn" data-act="cabExam" aria-pressed="${!!ses.cab}">Cábula</button>` : '';
-  return `${cabBtn ? `<div class="cab-bar">${cabBtn}<span class="muted">Exame com consulta: abre a tua cábula quando precisares. O tempo continua a contar.</span></div>` : ''}<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="badge">N${q.l}</span>${KINDS[q.kind] ? `<span class="badge kind">${KINDS[q.kind]}</span>` : ''}${q.calc ? `<span class="badge calc" title="Pergunta com contas">Contas${q.step && !isExam ? ` · ${esc(q.step)}` : ''}</span>` : ''}${prog}${(isExam) ? `<span class="timer" id="timer">${fmt(ses.timeLimit - Math.floor((Date.now() - ses.startedAt) / 1000))}</span>` : ''}<span class="mono muted">${qIndex()}/${qCount()}</span></div>
+  return `${cabBtn ? `<div class="cab-bar">${cabBtn}<span class="muted">O tempo continua a contar.</span></div>` : ''}<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="badge" style="--c:${T.c}"><span class="sw"></span>${T.short}</span><span class="badge">N${q.l}</span>${KINDS[q.kind] ? `<span class="badge kind">${KINDS[q.kind]}</span>` : ''}${q.calc ? `<span class="badge calc" title="Pergunta com contas">Contas${q.step && !isExam ? ` · ${esc(q.step)}` : ''}</span>` : ''}${it.rev && !isExam ? `<span class="badge rev" title="Já falhaste esta pergunta: sai da revisão quando a acertares ${TRAIN_CLEAR} vezes seguidas">↻ A rever</span>` : ''}${prog}${(isExam) ? `<span class="timer" id="timer">${fmt(ses.timeLimit - Math.floor((Date.now() - ses.startedAt) / 1000))}</span>` : ''}<span class="mono muted">${qIndex()}/${qCount()}</span></div>
     <article class="card" id="qcard">
       <span class="eyebrow">${it.recall ? 'Revisão rápida · cartões anteriores' : esc(qTitle(q))}</span>
       <p class="qtext" style="margin-top:6px">${md(q.q)}</p>
@@ -42,7 +42,7 @@ function Feedback(q, it) {
     <p class="explain">${md(q.e)}</p>
     ${wrongNotes}
     ${L ? `<details class="lesson-peek" ${ok ? '' : 'open'}><summary>Teoria: ${esc(L.title)}</summary><div class="lbody lesson">${lessonBody(L, q.card)}</div></details>` : ''}
-    <div class="note-box"><label class="eyebrow" for="note-${esc(q.id)}">${toSheet ? 'Para a tua cábula: o que te faltou?' : 'A minha nota sobre esta pergunta'}</label><textarea id="note-${esc(q.id)}" data-act="note" data-id="${esc(q.id)}" placeholder="${toSheet ? 'A fórmula, o passo ou a armadilha que te escapou…' : 'Escreve aqui o truque para não voltares a errar…'}">${esc(S.notes[q.id] || '')}</textarea>${toSheet ? `<span class="cab-tip">Fica na tua cábula, em “${esc(SKBYID[skillOf(q)].label)}”, para levares para o exame.</span>` : ''}</div>
+    <div class="note-box"><label class="eyebrow" for="note-${esc(q.id)}">${toSheet ? 'Para a tua cábula: o que te faltou?' : 'A minha nota sobre esta pergunta'}</label><textarea id="note-${esc(q.id)}" data-act="note" data-id="${esc(q.id)}" placeholder="${toSheet ? 'A fórmula, o passo ou a armadilha que te escapou…' : 'O que queres lembrar…'}">${esc(S.notes[q.id] || '')}</textarea>${toSheet ? `<span class="cab-tip">Fica na tua cábula, em “${esc(SKBYID[skillOf(q)].label)}”.</span>` : ''}</div>
     ${SKBYID[skillOf(q)] ? `<span class="src">Tipo de problema: ${esc(SKBYID[skillOf(q)].label)}</span>` : ''}
     ${q.src ? `<span class="src">Fonte: ${esc(q.src)}</span>` : ''}
   </div>`;
@@ -62,7 +62,7 @@ function lessonBody(L, k) { const cs = lessonCards(L), one = k && cs.length > 1 
 const sheetNotes = s => BANK.filter(q => skillOf(q) === s.id && S.notes[q.id]).map(q => `<li>${noteMd(S.notes[q.id])}</li>`).join('');
 let cabOpen = '';   // the peek that is open (a question id or 'pb:<problem>'), so it stays open across re-renders
 function cabPeek(sid, key) { const s = SKBYID[sid]; if (!openBook() || !s || !s.sheet) return ''; const n = sheetNotes(s);
-  return `<details class="lesson-peek cab-peek" data-k="${esc(key)}" ${cabOpen === key ? 'open' : ''}><summary>Cábula: ${esc(s.label)}</summary><div class="lbody lesson">${fxify(s.sheet)}${n ? `<ul class="sheet-notes">${n}</ul>` : ''}<p class="cab-tip">Consultar é livre, como no exame: não conta como pista.</p></div></details>`; }
+  return `<details class="lesson-peek cab-peek" data-k="${esc(key)}" ${cabOpen === key ? 'open' : ''}><summary>Cábula: ${esc(s.label)}</summary><div class="lbody lesson">${fxify(s.sheet)}${n ? `<ul class="sheet-notes">${n}</ul>` : ''}</div></details>`; }
 // Every type's entry, by topic. tools: the pin buttons and exam chips of the Cábula screen.
 function sheetItems(sk, tools) {
   return Object.entries(TOPICS).map(([t, T]) => { const rows = sk.filter(s => s.t === t); if (!rows.length) return '';
@@ -74,7 +74,7 @@ function sheetItems(sk, tools) {
 // The mock exam's sheet: the student's own, or every type while they have none yet
 function cabExam() { const mine = partSkills().filter(sheetMine), sk = mine.length ? mine : partSkills();
   return `<section class="card cab-exam" aria-label="A tua cábula"><div class="row"><span class="eyebrow">${mine.length ? 'A tua cábula' : 'Cábula: todos os tipos'}</span><span class="spacer"></span><button class="btn ghost small" data-act="cabExam">Fechar</button></div>
-    ${mine.length ? '' : '<p class="cab-tip">Ainda não tens cábula tua (junta os tipos onde falhas). Por agora vês os resumos de todos.</p>'}${sheetItems(sk, false)}</section>`; }
+    ${mine.length ? '' : '<p class="cab-tip">Ainda não tens cábula: vês os resumos de todos os tipos.</p>'}${sheetItems(sk, false)}</section>`; }
 function afterQuizRender() { const n = document.getElementById('nextBtn'); if (n) n.focus({ preventScroll: true }); }
 
 function choose(oi) {
@@ -215,7 +215,7 @@ function Ready() {
       <span class="st" title="${STATE[r.state][1]}" aria-label="${STATE[r.state][1]}">${STATE[r.state][0]}</span>
       <div class="sk-main"><b>${esc(s.label)}</b><span class="sk-meta">${(s.seen || []).length ? `saiu em ${s.seen.length} de ${nPast()}` : s.core ? 'matéria de base' : 'ainda não saiu'} ${seenChips(s)}</span></div>
       <span class="sk-prog mono">${r.ok}/${r.total}${r.pend ? ` · ${r.pend} por rever` : ''}</span>
-      <button class="btn small${r.state === 'ready' ? '' : ' primary'}" data-act="skill" data-k="${esc(s.id)}">${r.state === 'ready' ? 'Rever' : 'Treinar'}</button></div>`).join('')}</div></div>`; }).join('');
+      <button class="btn small${r.state === 'ready' ? '' : ' primary'}" data-act="skill" data-k="${esc(s.id)}">${r.state === 'ready' ? 'Rever' : r.total - r.ok <= SKILL_FOCUS ? `Fazer ${r.total - r.ok}` : 'Treinar'}</button></div>`).join('')}</div></div>`; }).join('');
   return `<div class="qhead">${BACK}<span class="eyebrow">Prontidão para o exame</span></div>
     <div class="result-grid" style="margin-bottom:10px"><div class="kpi"><b>${Math.round(RS.pct * 100)}%</b><span>pronto (pesa o que sai mais)</span></div><div class="kpi"><b>${n('ready')}</b><span>prontos</span></div><div class="kpi"><b>${n('training')}</b><span>a treinar</span></div><div class="kpi"><b>${n('todo')}</b><span>por começar</span></div></div>
     <p class="muted" style="font-size:13.5px">Os tipos de problema que saem nos exames, por tema, do mais frequente para o menos. Um tipo fica <b>pronto</b> quando acertaste todas as perguntas dele e nenhuma está por rever. Conta tudo, com e sem contas.</p>
@@ -310,7 +310,7 @@ document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && fxBtn) {
 function Notes() {
   const ids = Object.keys(S.notes).filter(k => S.notes[k] && BYID[k]);
   return `<div class="qhead"><button class="btn small" data-act="home" aria-label="Voltar ao início">←</button><span class="eyebrow">As minhas notas</span></div>
-  ${ids.length ? ids.map(id => { const q = BYID[id]; return `<div class="review-item" style="margin-bottom:10px"><span class="badge" style="--c:${TOPICS[q.t].c};align-self:flex-start"><span class="sw"></span>${TOPICS[q.t].short} · N${q.l}</span><p class="q">${md(q.q)}</p><p class="a">Resposta: <b>${(Array.isArray(q.a) ? q.a : [q.a]).map(i => md(q.o[i])).join(' · ')}</b></p><p class="x" style="color:var(--ink)">📝 ${noteMd(S.notes[id])}</p></div>`; }).join('') : '<p class="muted">Ainda não escreveste notas. Depois de responderes a uma pergunta, aparece uma caixa para guardares o teu truque.</p>'}`;
+  ${ids.length ? ids.map(id => { const q = BYID[id]; return `<div class="review-item" style="margin-bottom:10px"><span class="badge" style="--c:${TOPICS[q.t].c};align-self:flex-start"><span class="sw"></span>${TOPICS[q.t].short} · N${q.l}</span><p class="q">${md(q.q)}</p><p class="a">Resposta: <b>${(Array.isArray(q.a) ? q.a : [q.a]).map(i => md(q.o[i])).join(' · ')}</b></p><p class="x" style="color:var(--ink)">📝 ${noteMd(S.notes[id])}</p></div>`; }).join('') : '<p class="muted">Ainda não escreveste notas.</p>'}`;
 }
 
 /* ---------- BANK / IMPORT ---------- */
@@ -388,7 +388,7 @@ function Sync() {
         <button class="btn primary" data-act="copyKey">${glyph('copy')} Copiar ${onWeb ? 'link' : 'chave'}</button>
         ${navigator.share ? `<button class="btn" data-act="shareKey">${glyph('share')} Partilhar</button>` : ''}
       </div>
-    </article>` : `<article class="card stack"><h3>${glyph('qr')} Levar daqui</h3><p class="muted">Ainda não há progresso neste dispositivo. Responde a algumas perguntas e volta aqui.</p></article>`;
+    </article>` : `<article class="card stack"><h3>${glyph('qr')} Levar daqui</h3><p class="muted">Ainda não há progresso neste dispositivo.</p></article>`;
   return `<div class="qhead"><button class="btn small" data-act="${back}" aria-label="Voltar">←</button><span class="eyebrow">Outro dispositivo</span></div>
     <section class="hero"><h1>Continua noutro dispositivo.</h1>
       <p>O progresso fica guardado só neste browser. Para o passares, gera aqui uma chave e abre-a no outro dispositivo. Não há contas e nada é enviado para servidores.</p></section>

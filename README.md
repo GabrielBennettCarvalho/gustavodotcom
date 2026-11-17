@@ -108,7 +108,9 @@ A lesson with no markers works as before: the whole text, then its two easiest q
 
 - **Prontidão**: a checklist of the course's `skills` (exam problem types). A type is *pronto* when every one of its
   questions was answered right and none is waiting in review. The course home shows the summary and the type to train next
-  (the first one not ready yet, in course order).
+  (the first one not ready yet, in course order). A type with 8 or fewer questions left (`SKILL_FOCUS`) trains only those,
+  mistakes first, from the checklist and from the plan; in AMS, a plan level task with fewer than 10 left does the same.
+  In any session but the mock exam, a question waiting in review carries an "A rever" badge.
 - **Priority / supplementary**: in a course with `skills`, levels, mastery and the mock exam use only priority questions:
   those whose type has `seen` exams, or whose `src` names an exam. The rest go to "Suplementares". Aprender and Revisão use all.
 - **Exames anteriores**: questions grouped by the exam in their `src` ("Exame 1 2024/25, 6.b" → "Exame 1 2024/25"),

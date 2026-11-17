@@ -177,10 +177,17 @@ const skillQs = k => BANK.filter(q => skillOf(q) === k && !isReserved(q) && q.or
 const partSkills = () => { const pt = partTopics(); return SKILLS.filter(s => pt.includes(s.t)); };
 // The past exams that count now: the chosen part's, or the whole course's
 const pastList = () => { const p = (C.parts || []).find(x => x.id === S.settings.part); return (p && p.past) || C.past || []; };
+// waiting in review: a training or exam mistake not yet answered right enough times in a row
+const isPending = id => { const s = peek(id); return !!((s.w && s.box < TRAIN_CLEAR) || (s.ew && s.eb < EXAM_CLEAR)); };
+// What a type still needs before it is ready (mistakes first, then by level and step). With SKILL_FOCUS or fewer, its
+// session is just these: going through a whole round to fix one question is a waste.
+const SKILL_FOCUS = 8;
+const skillLeft = k => skillQs(k).filter(q => isPending(q.id) || !peek(q.id).c)
+  .sort((a, b) => isPending(b.id) - isPending(a.id) || a.l - b.l || String(a.ch || '').localeCompare(String(b.ch || '')) || parseInt(a.step || 0) - parseInt(b.step || 0));
 // ready: every question of the type answered right and none waiting in review
 function readiness(k) {
   const qs = skillQs(k); let ok = 0, pend = 0, tried = 0;
-  qs.forEach(q => { const s = peek(q.id); const p = (s.w && s.box < TRAIN_CLEAR) || (s.ew && s.eb < EXAM_CLEAR);
+  qs.forEach(q => { const s = peek(q.id); const p = isPending(q.id);
     if (s.c || s.w || s.ew) tried++; if (p) pend++; else if (s.c) ok++; });
   const state = !qs.length ? 'none' : ok === qs.length ? 'ready' : tried ? 'training' : 'todo';
   return { total: qs.length, ok, pend, state, pct: qs.length ? ok / qs.length : 0 };
@@ -212,6 +219,8 @@ function mastery(level, topics = activeTopics(), m = calcMode()) {
   const qs = BANK.filter(q => q.l === level && topics.includes(q.t) && shown(q, m) && !isReserved(q) && isCore(q)); if (!qs.length) return { pct: 0, done: 0, total: 0 };
   const done = qs.filter(q => peek(q.id).c > 0).length; return { pct: done / qs.length, done, total: qs.length };
 }
+// the questions mastery() still counts as not done
+const levelLeft = (level, topics = activeTopics(), m = calcMode()) => BANK.filter(q => q.l === level && topics.includes(q.t) && shown(q, m) && !isReserved(q) && isCore(q) && !(peek(q.id).c > 0));
 // Unlocked in mode m: the previous level shown in m is UNLOCK done; a level with nothing shown in m doesn't block
 // (in "Só contas" level 1 usually has no calculations, so level 2 opens straight away).
 function unlockedIn(level, m) { if (level === 1) return true; const p = mastery(level - 1, activeTopics(), m); return p.total ? p.pct >= UNLOCK : unlockedIn(level - 1, m); }
@@ -484,7 +493,10 @@ function start(mode, opts = {}) {
   let items = [], title = '', timeLimit = 0;
   const pool = trainPool();
   if (mode !== 'route' && !BANK.some(inTopics)) { toast('Escolhe pelo menos um tema.'); return; }
-  if (mode === 'level') { const L = opts.level; items = pick(pool.filter(q => q.l === L), 10).map(makeItem); title = `Nível ${L} · ${LEVELS[L - 1].t}`; }
+  if (mode === 'level') { const L = opts.level, lp = pool.filter(q => q.l === L);
+    // from the plan, with fewer than a round left to finish the level: just those
+    const left = levelLeft(L);
+    items = (opts.planKey && left.length && left.length < 10 ? left : pick(lp, 10)).map(makeItem); title = `Nível ${L} · ${LEVELS[L - 1].t}`; }
   if (mode === 'review') { items = reviewPool().slice(0, 12).map(makeItem); title = 'Revisão · erros de treino'; if (!items.length) { toast('Ainda não tens erros de treino para rever.'); return; } }
   if (mode === 'skipped') { items = skippedPool().slice(0, 12).map(makeItem); title = 'Revisão · saltadas'; if (!items.length) { toast('Não tens perguntas saltadas.'); return; } }
   if (mode === 'reviewExam') { items = examReviewPool().slice(0, 12).map(makeItem); title = 'Revisão · erros de exame'; if (!items.length) { toast('Ainda não tens erros de exame para rever.'); return; } }
@@ -497,11 +509,15 @@ function start(mode, opts = {}) {
     const s = SKBYID[opts.k]; if (!s) return; title = s.label;
     // a problem in steps comes whole, even when its other steps belong to other types (forward → backprop)
     const qs = skillQs(s.id), single = qs.filter(q => !q.ch), by = {}, chs = new Set(qs.filter(q => q.ch).map(q => q.ch));
+    // only a few left before the type is ready: just those (mistakes first), not a whole round of questions already right
+    const left = skillLeft(s.id);
+    if (left.length && left.length <= SKILL_FOCUS) { items = left.map(makeItem); title = `${s.label} · ${left.length === 1 ? 'a que falta' : `as ${left.length} que faltam`}`; }
+    else {
     BANK.filter(q => chs.has(q.ch) && !isReserved(q)).forEach(q => (by[q.ch] = by[q.ch] || []).push(q));
     const chains = Object.values(by).map(a => a.sort((x, y) => parseInt(x.step) - parseInt(y.step)));
     const done = a => a.filter(q => peek(q.id).c > 0 && !(peek(q.id).w && peek(q.id).box < TRAIN_CLEAR)).length / a.length;
     const chain = chains.map(a => [done(a) + Math.random() * 0.3, a]).sort((x, y) => x[0] - y[0]).map(x => x[1])[0] || [];
-    items = [...pick(single, chain.length ? 6 : 8).sort((a, b) => a.l - b.l), ...chain].map(makeItem);
+    items = [...pick(single, chain.length ? 6 : 8).sort((a, b) => a.l - b.l), ...chain].map(makeItem); }
   }
   if (mode === 'past') {
     const g = pastGroups().find(x => x.key === opts.key); if (!g) return; title = g.key;
@@ -518,6 +534,8 @@ function start(mode, opts = {}) {
   if (mode === 'route') { const x = (C.route.stops || []).find(s => s.id === opts.stop); if (!x) return; items = routeItems(x); title = `${x.part ? x.part + ' · ' : ''}${x.title}`; }
   if (mode === 'retry') { items = opts.ids.map(id => BYID[id]).filter(Boolean).map(makeItem); title = 'Repetir erros'; }
   if (!items.length) { toast('Não há perguntas para estes filtros.'); return; }
+  // flag the questions waiting in review, so the student knows which one they are fixing (never in the mock exam)
+  if (mode !== 'exam') items.forEach(it => { if (it.kind === 'q' && isPending(it.id)) it.rev = true; });
   ses = { mode, title, items, i: 0, planKey: opts.planKey || null, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, stop: opts.stop, nextWasOpen: !!opts.level && opts.level < LEVELS.length && unlocked(opts.level + 1), topic: opts.topic, skill: mode === 'skill' ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
   if (timeLimit) startTimer();
   sesKeep(); go(viewOf(items[0]));

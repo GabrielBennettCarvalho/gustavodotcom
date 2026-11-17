@@ -279,6 +279,7 @@ textarea.key{min-height:84px;word-break:break-all}
 .btn.skip:hover{color:var(--ink)}
 .progress i.sk{background:repeating-linear-gradient(90deg,var(--muted) 0 3px,transparent 3px 6px)}
 .badge.calc{border-style:dashed;color:var(--muted)}
+.badge.rev{border-color:var(--bad);color:var(--bad)}
 .codeblk{margin:12px 0 0;padding:10px 12px;border-radius:8px;background:var(--panel-2);border:1px solid var(--line);font:13px/1.55 var(--f-mono);overflow-x:auto;white-space:pre;color:var(--ink)}
 .lesson .codeblk{font-size:13px}
 .lesson code,.explain code{font-size:.88em}
@@ -405,7 +406,6 @@ textarea.key{min-height:84px;word-break:break-all}
 .plan-pace{font-size:13.5px;color:var(--muted)}
 .plan-set{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
 .plan-set input[type=date]{font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
-.plan-note{font-size:12px;color:var(--muted);margin-top:-4px}
 .explore>summary{margin-top:6px}
 @media (max-width:560px){.plan-item{flex-wrap:wrap}.pi-t{margin-left:32px;padding-top:0}}
 

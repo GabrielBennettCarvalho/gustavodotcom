@@ -13,7 +13,7 @@ function Quiz() {
   const skipBtn = `<button class="btn small skip" data-act="skip" title="${isExam ? 'Deixar em branco (não desconta)' : 'Saltar: fica na lista Saltadas para fazeres depois'}">${isExam ? 'Deixar em branco' : 'Saltar'} ⤼</button>`;
   const opts = it.order.map((oi, pos) => { let cls = ''; const isRight = multi ? q.a.includes(oi) : q.a === oi; const chosen = ses.picked.has(oi);
     if (ses.answered && !isExam) { if (isRight) cls = 'right'; else if (chosen) cls = 'wrong'; } else if (chosen) cls = 'sel';
-    return `<button class="opt ${cls}" data-act="opt" data-oi="${oi}" ${ses.answered ? 'disabled' : ''}><span class="k">${multi ? (chosen ? '✓' : pos + 1) : pos + 1}</span><span class="txt">${md(q.o[oi])}</span></button>`; }).join('');
+    return `<button class="opt ${cls}" data-act="opt" data-oi="${oi}" ${ses.answered ? 'disabled' : ''}><span class="k">${multi ? (chosen ? '✓' : pos + 1) : pos + 1}</span><span class="txt">${md(q.o[oi], true)}</span></button>`; }).join('');
   let fb = '';
   if (ses.answered && !isExam) fb = Feedback(q, it);
   const foot = ses.answered ? (isExam ? '' : `<div class="qfoot next-bar"><button class="btn primary" data-act="next" id="nextBtn">${ses.i >= ses.items.length - 1 ? 'Ver resultado' : 'Seguinte'} →</button><span class="kbd">Enter</span><span class="spacer"></span><button class="btn ghost small" data-act="quit">Terminar ronda</button></div>`)
@@ -274,11 +274,13 @@ function Formulas() {
 // The card beside a formula: to the right of the content when there is room, under the formula otherwise, and as a
 // sheet at the bottom of a phone screen.
 function fxOpen(b) {
-  const id = b.dataset.fx, F = C && C.formulas && C.formulas[id]; if (!F) return;
+  const gl = b.dataset.gl, id = b.dataset.fx, F = gl ? (C && C.glossary && C.glossary[gl] !== undefined ? { name: gl } : null) : C && C.formulas && C.formulas[id]; if (!F) return;
   if (fxBtn === b) { fxClose(); return; }
   fxClose(); fxBtn = b; b.setAttribute('aria-expanded', 'true');
   const c = document.createElement('div'); c.id = 'fxcard'; c.className = 'fx-card'; c.setAttribute('role', 'dialog'); c.setAttribute('aria-label', F.name);
-  c.innerHTML = `<div class="row"><span class="eyebrow">${esc(F.name)}</span><span class="spacer"></span><button type="button" class="btn ghost small" data-fxx aria-label="Fechar">✕</button></div>
+  const head = `<div class="row"><span class="eyebrow">${esc(F.name)}</span><span class="spacer"></span><button type="button" class="btn ghost small" data-fxx aria-label="Fechar">✕</button></div>`;
+  c.innerHTML = gl ? `${head}<p style="margin-top:6px">${md(C.glossary[gl], true)}</p>`
+    : `${head}
     <p class="fx-f">${esc(F.f)}</p>${fxLegend(F)}${F.note ? `<p class="muted fx-note">${md(F.note)}</p>` : ''}${view.name !== 'formulas' ? `<button type="button" class="btn ghost small" data-fxall="${esc(id)}">Ver no formulário →</button>` : ''}`;
   document.body.appendChild(c); fxPlace(); c.querySelector('[data-fxx]').focus({ preventScroll: true });
 }

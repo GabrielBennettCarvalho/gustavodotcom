@@ -27,14 +27,33 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 // {f:id|text} shows the text as written there (a variant, or the formula with that problem's indices) with the same card
 const fxTag = (id, txt) => { const F = C && C.formulas && C.formulas[id];
   return F ? `<button type="button" class="fx" data-fx="${esc(id)}" aria-haspopup="dialog" title="O que quer dizer cada símbolo">${txt !== undefined ? txt : esc(F.f)}</button>` : txt !== undefined ? txt : `{f:${esc(id)}}`; };
-const fxify = h => String(h ?? '').replace(/\{f:([a-z0-9-]+)(?:\|([^}]*))?\}/g, (_, id, txt) => fxTag(id, txt));
+const fxRaw = h => String(h ?? '').replace(/\{f:([a-z0-9-]+)(?:\|([^}]*))?\}/g, (_, id, txt) => fxTag(id, txt));
+/* Glossary: a course can list abbreviations in C.glossary = { RMSE: 'what it stands for and means', … }. In rendered text the
+   first time each one appears is underlined like a formula, and a tap opens a card with its meaning (fxOpen). Text inside
+   buttons, links and code is left alone, so never a button inside a button. */
+let glCache = { id: null, re: null };
+function glossify(h) {
+  const G = C && C.glossary; if (!G || !h) return h;
+  if (glCache.id !== C.id) { const keys = Object.keys(G).sort((a, b) => b.length - a.length).map(k => esc(k).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    glCache = { id: C.id, re: keys.length ? new RegExp(`(?<![\\wÀ-ÿ-])(${keys.join('|')})(?![\\wÀ-ÿ-])`, 'g') : null }; }
+  if (!glCache.re) return h;
+  const seen = new Set(); let inside = 0;
+  return String(h).split(/(<[^>]+>)/).map(part => {
+    if (part[0] === '<') { if (/^<(button|a|code)[\s>]/i.test(part)) inside++; else if (/^<\/(button|a|code)>/i.test(part)) inside = Math.max(0, inside - 1); return part; }
+    if (inside) return part;
+    return part.replace(glCache.re, m => { if (seen.has(m)) return m; seen.add(m);
+      return `<button type="button" class="fx gl" data-gl="${m}" aria-haspopup="dialog" title="O que quer dizer">${m}</button>`; });
+  }).join('');
+}
+const fxify = h => glossify(fxRaw(h));
 let fxBtn = null;   // the formula whose card is open
 function fxClose() { const c = document.getElementById('fxcard'); if (c) c.remove(); if (fxBtn) fxBtn.setAttribute('aria-expanded', 'false'); fxBtn = null; }
 // light markup for text fields: **bold**, `code`, line breaks, {f:id} formulas
 // keep a short vector or matrix on one line, so "(0,02; −0,2; 0)" or "[[1, 0], [0, 1]]" never splits; short enough for a phone
 const keepMath = s => s.replace(/\[\[[^\n\[\]]*(?:\], \[[^\n\[\]]*)*\]\]|\([^()\n]{1,24}\)|\[[^\[\]\n]{1,24}\]/g, m => m.length <= (m[1] === '[' ? 36 : 26) ? m.replace(/ /g, ' ') : m)
   .replace(/ = ([−-]?\d+(?:,\d+)?|[A-Za-zÀ-ÿ]{1,4})(?=[\s.,;:)]|$)/gm, ' = $1');   // "η = 0,1" and "b[2] = 0" stay whole
-const md = s => fxify(keepMath(esc(s)).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code class="mono">$1</code>').replace(/\n/g, '<br>'));
+// plain: no glossary links (text that sits inside a button, such as an answer option)
+const md = (s, plain) => { const h = fxRaw(keepMath(esc(s)).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code class="mono">$1</code>').replace(/\n/g, '<br>')); return plain ? h : glossify(h); };
 // Students paste notes from chatbots with LaTeX (\(y_2 = 0\), \rightarrow, \frac{a}{b}): show them as plain Unicode maths.
 const TEX_SYM = { rightarrow: '→', to: '→', Rightarrow: '⇒', implies: '⇒', leftarrow: '←', Leftarrow: '⇐', leftrightarrow: '↔', iff: '⇔', mapsto: '↦',
   times: '×', cdot: '·', div: '÷', pm: '±', mp: '∓', leq: '≤', le: '≤', geq: '≥', ge: '≥', neq: '≠', ne: '≠', approx: '≈', sim: '∼', equiv: '≡', propto: '∝',

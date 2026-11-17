@@ -4,17 +4,18 @@ STUDY.lessons('ml', [
 { id: 'lr-ls', t: 'linreg', title: 'Regressão linear e mínimos quadrados',
   html: `<p>Traçar a reta que passa “o mais perto possível” de uma nuvem de pontos. O modelo é y(x, w) = w₀ + w₁x₁ + … + w<sub>D</sub>x<sub>D</sub> = wᵀx, com x₀ = 1 para o bias w₀.</p>
   <p>“O mais perto possível” = minimizar a <b>soma dos quadrados dos erros</b>: E(w) = ½ Σ<sub>k</sub> (t<sub>k</sub> − wᵀx<sub>k</sub>)² (o MSE é a mesma coisa a dividir por N).</p>
-  <!--card--><p>Junta os exemplos numa <b>matriz de design</b> X (uma linha por exemplo, a primeira coluna toda a 1) e os alvos num vetor t. Igualando o gradiente a zero, obtém-se a solução fechada:</p>
-  <p style="text-align:center"><b>{f:ls|w = (XᵀX)⁻¹ Xᵀ t}</b> &nbsp; = X<sup>†</sup> t (X<sup>†</sup>: pseudo-inversa de Moore-Penrose)</p>
-  <p>Se XᵀX não tem inversa (atributos que são combinações lineares de outros, ou menos exemplos do que parâmetros), usa-se a pseudo-inversa ou regularização.</p>
+  <!--card--><p>Junta os exemplos numa <b>matriz de design</b> Φ (uma linha por exemplo, a primeira coluna toda a 1) e os alvos num vetor t. Igualando o gradiente a zero, obtém-se a solução fechada:</p>
+  <p style="text-align:center"><b>{f:ls|w = (ΦᵀΦ)⁻¹ Φᵀ t}</b> &nbsp; = Φ<sup>†</sup> t (Φ<sup>†</sup>: pseudo-inversa de Moore-Penrose)</p>
+  <p>Sem funções base, cada linha de Φ é só [1, x₁, x₂, …], e os slides chamam-lhe X: w = (XᵀX)⁻¹Xᵀt, a mesma fórmula. Com funções base (lição seguinte), cada linha é [1, φ(x), φ(x)², …].</p>
+  <p>Se ΦᵀΦ não tem inversa (atributos que são combinações lineares de outros, ou menos exemplos do que parâmetros), usa-se a pseudo-inversa ou regularização.</p>
   <!--card--><p><b>Exemplo</b>: ajustar y = w₀ + w₁x aos pontos (1, 1), (2, 3), (3, 4).</p>
-  <ol><li><b>Matriz de design</b> (uma linha [1, x] por ponto) e alvos: X = [[1, 1], [1, 2], [1, 3]], t = (1, 3, 4).</li>
-  <li><b>XᵀX</b> = [[3, 6], [6, 14]] (3 pontos, Σx = 6, Σx² = 14). <b>Xᵀt</b> = (Σt, Σxt) = (8, 19).</li>
-  <li><b>Inversa 2 × 2</b>: det = 3·14 − 6·6 = 6; (XᵀX)⁻¹ = (1/6)·[[14, −6], [−6, 3]].</li>
+  <ol><li><b>Matriz de design</b> (uma linha [1, x] por ponto) e alvos: Φ = [[1, 1], [1, 2], [1, 3]], t = (1, 3, 4).</li>
+  <li><b>ΦᵀΦ</b> = [[3, 6], [6, 14]] (3 pontos, Σx = 6, Σx² = 14). <b>Φᵀt</b> = (Σt, Σxt) = (8, 19).</li>
+  <li><b>Inversa 2 × 2</b>: det = 3·14 − 6·6 = 6; (ΦᵀΦ)⁻¹ = (1/6)·[[14, −6], [−6, 3]].</li>
   <li><b>w</b> = (1/6)·(14·8 − 6·19, −6·8 + 3·19) = (1/6)·(−2, 9) = (−0,333; 1,5).</li></ol>
   <p>Reta: <b>y = −0,333 + 1,5x</b>.</p>
   <p>Medidas de erro no treino: MAE = (1/N) Σ |t − y|; {f:mse|MSE = (1/N) Σ (t − y)²}; RMSE = √MSE.</p>`,
-  key: 'w = (XᵀX)⁻¹Xᵀt. A matriz de design tem uma linha por exemplo e a coluna de 1s do bias.' },
+  key: 'w = (ΦᵀΦ)⁻¹Φᵀt. A matriz de design Φ tem uma linha por exemplo e a coluna de 1s do bias (sem funções base, os slides chamam-lhe X).' },
 { id: 'lr-basis', t: 'linreg', title: 'Funções base: regressão “não linear” que continua linear',
   html: `<p>Truque: transforma primeiro cada entrada com funções fixas φ<sub>j</sub>(x) e faz regressão linear sobre elas: y(x, w) = Σ<sub>j</sub> w<sub>j</sub> φ<sub>j</sub>(x). O modelo é <b>linear nos pesos</b>, por isso a solução continua a ser w = (ΦᵀΦ)⁻¹Φᵀt, só que agora com a matriz de design Φ.</p>
   <ul><li>Polinomial: φ<sub>j</sub>(x) = x<sup>j</sup> → y = w₀ + w₁x + w₂x² + w₃x³.</li>

@@ -11313,7 +11313,7 @@ STUDY.course({
       sheet: '<ul><li>Euclidiana {f:d2}</li><li>Manhattan {f:d1}</li><li>Hamming = nº de posições diferentes</li><li>Cosseno, uma semelhança e não uma distância (maior = mais parecidos): {f:cos}</li></ul><p>Classificar: os k mais próximos votam (uniforme, ou com peso 1/d). Regressão: média dos k valores.</p><p><b>Armadilhas:</b> normalizar os atributos antes; em leave-one-out o ponto deixado de fora não é vizinho de si próprio.</p>' },
     { id: 'lr-fit', t: 'linreg', les: ['lr-ls', 'lr-basis'], label: 'Regressão linear com funções base: pesos, previsões e erro',
       seen: ['Exame 1 2025/26', 'Exame 1 2024/25', 'Exame 1 2022/23', 'Exame 2 2021/22', 'Exame 1 2021/22'],
-      sheet: '<p>Matriz de design Φ: uma linha por exemplo, [1, φ(x), φ(x)², …].</p><p><b>{f:ls}</b> (ridge: {f:ridge}). Previsão ŷ = wᵀφ(x).</p><ul><li>MAE = (1/N)Σ|t − ŷ|</li><li>{f:mse}</li><li>RMSE = √MSE</li></ul><p>Inversa 2 × 2: [[a, b], [c, d]]⁻¹ = (1/(ad − bc))·[[d, −b], [−c, a]].</p><p><b>Armadilhas:</b> esquecer a coluna de 1 (bias); aplicar φ (por exemplo ‖x‖₁) antes de elevar ao grau.</p>' },
+      sheet: '<p>Matriz de design Φ: uma linha por exemplo, [1, φ(x), φ(x)², …]. Sem funções base cada linha é [1, x₁, x₂, …] e os slides chamam-lhe X; as fórmulas são as mesmas.</p><p><b>{f:ls}</b> (ridge: {f:ridge}). Previsão ŷ = wᵀφ(x).</p><ul><li>MAE = (1/N)Σ|t − ŷ|</li><li>{f:mse}</li><li>RMSE = √MSE</li></ul><p>Inversa 2 × 2: [[a, b], [c, d]]⁻¹ = (1/(ad − bc))·[[d, −b], [−c, a]].</p><p><b>Armadilhas:</b> esquecer a coluna de 1 (bias); aplicar φ (por exemplo ‖x‖₁) antes de elevar ao grau.</p>' },
     { id: 'pe-update', t: 'percep', les: ['p-rosen'], label: 'Perceptrão: classificar e atualizar os pesos',
       seen: ['Exame 2 2022/23', 'Exame 1 2022/23'],
       sheet: '<p>o = sinal(wᵀx), com x₀ = 1 para o bias. Fronteira: wᵀx = 0.</p><p>Só muda quando erra: <b>{f:rosen}</b>.</p><p>Converge se os dados forem linearmente separáveis (o XOR não é).</p><p><b>Armadilha:</b> esquecer o x₀ = 1 no produto e na atualização.</p>' },
@@ -11354,6 +11354,54 @@ STUDY.course({
       seen: ['Exame 2 2021/22'],
       sheet: '<p>Cada camada multiplica δ por f′. Sigmoide: σ′ ≤ 0,25; com |net| grande satura e f′ ≈ 0.</p><p>Para responder: vê o limite de δ quando net → ±∞.</p><p>Remédios: ReLU, ligações residuais, batch normalization, boa inicialização.</p>' },
   ],
+  // Abbreviations: the first time each one appears in a text it is underlined, and a tap says what it means (README).
+  glossary: {
+    TP: 'True Positive (verdadeiro positivo): o modelo disse positivo e era positivo.',
+    FP: 'False Positive (falso positivo): o modelo disse positivo, mas era negativo. Um “alarme falso”.',
+    FN: 'False Negative (falso negativo): o modelo disse negativo, mas era positivo. Um positivo que escapou.',
+    TN: 'True Negative (verdadeiro negativo): o modelo disse negativo e era negativo.',
+    TPR: 'True Positive Rate = TP/(TP + FN). É o mesmo que recall ou sensibilidade.',
+    FPR: 'False Positive Rate = FP/(FP + TN): dos negativos reais, que fração foi dada como positiva. É 1 − especificidade.',
+    ROC: 'Receiver Operating Characteristic: a curva de TPR contra FPR quando se varia o limiar de decisão.',
+    AUC: 'Area Under the Curve: a área debaixo da curva ROC. 0,5 é um classificador ao acaso; 1 é perfeito.',
+    F1: 'Medida F1: a média harmónica da precisão e da sensibilidade, 2PR/(P + R).',
+    MAP: 'Maximum A Posteriori: escolhe a classe (ou hipótese) com o maior p(x|c)·p(c), ou seja, com o maior posterior. Usa o prior.',
+    ML: 'Maximum Likelihood (máxima verosimilhança): escolhe a classe com o maior p(x|c). Ignora o prior.',
+    NB: 'Naive Bayes: o classificador de Bayes que assume os atributos independentes dentro de cada classe.',
+    IG: 'Information Gain (ganho de informação): quanto a entropia desce ao partir os dados por um atributo. IG = H(antes) − H(depois).',
+    ID3: 'Iterative Dichotomiser 3: o algoritmo que constrói a árvore de cima para baixo, pondo em cada nó o atributo com maior ganho de informação.',
+    CART: 'Classification And Regression Trees: árvores só com divisões binárias, que também servem para regressão.',
+    MSE: 'Mean Squared Error (erro quadrático médio): a média de (t − ŷ)², o erro ao quadrado de cada ponto.',
+    RMSE: 'Root Mean Squared Error: a raiz do MSE, √MSE. Fica nas mesmas unidades que os alvos.',
+    MAE: 'Mean Absolute Error (erro absoluto médio): a média de |t − ŷ|, sem quadrados.',
+    SSE: 'Sum of Squared Errors: a soma dos erros ao quadrado. No k-means, a soma das distâncias quadráticas de cada ponto ao seu centróide.',
+    IQR: 'InterQuartile Range (intervalo interquartil) = Q3 − Q1: a largura da metade central dos dados.',
+    PDF: 'Probability Density Function (função densidade de probabilidade): a curva cuja área dá a probabilidade. A altura pode passar de 1.',
+    kNN: 'k Nearest Neighbours (k vizinhos mais próximos): classifica um ponto pela votação dos k exemplos de treino mais perto.',
+    'k-means': 'Algoritmo de clustering: põe cada ponto no centróide mais perto, move cada centróide para a média dos seus pontos e repete.',
+    EM: 'Expectation-Maximization: o algoritmo das misturas de gaussianas. O passo E calcula as responsabilidades e o passo M atualiza médias, covariâncias e priors.',
+    PCA: 'Principal Component Analysis (análise de componentes principais): roda os eixos para as direções de maior variância, os vetores próprios da covariância.',
+    SVD: 'Singular Value Decomposition: X = UΣVᵀ, a forma como a PCA se calcula na prática.',
+    SVM: 'Support Vector Machine: o classificador que escolhe o hiperplano com a maior margem entre as classes.',
+    RBF: 'Radial Basis Function: uma função que só depende da distância a um centro, como a gaussiana exp(−‖x − μ‖²/(2σ²)).',
+    VC: 'Dimensão de Vapnik-Chervonenkis: uma medida da capacidade de um modelo. Mais parâmetros, maior capacidade e mais risco de overfitting.',
+    DFT: 'Discrete Fourier Transform (transformada de Fourier discreta): separa um sinal de N amostras nas suas frequências.',
+    FFT: 'Fast Fourier Transform: um algoritmo que calcula a DFT em N·log N operações em vez de N².',
+    STFT: 'Short-Time Fourier Transform: a DFT em janelas curtas que deslizam pelo sinal; dá o espectrograma.',
+    MLP: 'Multilayer Perceptron: uma rede neuronal com uma ou mais camadas escondidas.',
+    ReLU: 'Rectified Linear Unit: a ativação max(0, z). Derivada 1 para z > 0 e 0 para z < 0.',
+    SGD: 'Stochastic Gradient Descent (descida do gradiente estocástica): atualiza os pesos depois de cada exemplo, em vez de somar todos.',
+    LMS: 'Least Mean Squares: a regra delta, Δw = η(t − o)x, de uma unidade linear.',
+    ADALINE: 'ADAptive LInear NEuron: o neurónio linear de Widrow e Hoff, treinado com a regra delta (LMS).',
+    XOR: 'Ou exclusivo: dá 1 quando exatamente uma das entradas é 1. Não é linearmente separável.',
+    DNF: 'Disjunctive Normal Form (forma normal disjuntiva): um OU de ANDs. Qualquer função booleana se escreve assim.',
+    CNN: 'Convolutional Neural Network: uma rede com camadas de convolução (filtros que deslizam pela imagem) e pooling.',
+    RNN: 'Recurrent Neural Network: uma rede com um estado que passa de um instante para o seguinte, para sequências.',
+    LSTM: 'Long Short-Term Memory: uma RNN com uma célula de memória e portas, que deixa o gradiente passar por muitos passos.',
+    BPTT: 'Backpropagation Through Time: o backprop numa RNN desenrolada no tempo.',
+    RMSProp: 'Root Mean Square Propagation: um otimizador que divide η pela média móvel dos gradientes ao quadrado, por parâmetro.',
+    'tf-idf': 'term frequency × inverse document frequency: o peso de um termo num documento. Sobe com as vezes que aparece e desce se aparece em muitos documentos.',
+  },
   // The formulas, with what each symbol means. Text writes {f:id}; a tap on the formula opens its card (README).
   formulas: {
     entropy: { t: 'dt', name: 'Entropia', f: 'H(S) = −Σ pᵢ log₂ pᵢ',
@@ -11388,7 +11436,8 @@ STUDY.course({
     cos: { t: 'knn', name: 'Semelhança do cosseno', f: 'cos(x, y) = xᵀy/(‖x‖‖y‖)',
       legend: [['xᵀy', 'o produto interno: Σ xᵢyᵢ'], ['‖x‖', 'o comprimento de x: √Σ xᵢ²']], note: 'Mede o ângulo, não a distância: 1 = mesma direção.' },
     ls: { t: 'linreg', name: 'Mínimos quadrados', f: 'w = (ΦᵀΦ)⁻¹Φᵀt = Φ†t',
-      legend: [['Φ', 'a matriz de design: uma linha por exemplo, [1, φ(x), φ(x)², …]'], ['X', 'a matriz de design sem funções base: cada linha é [1, x₁, x₂, …]'], ['Φᵀ', 'a transposta de Φ'], ['(·)⁻¹', 'a inversa da matriz'], ['t', 'o vetor dos alvos'], ['w', 'os pesos; o primeiro é o bias'], ['Φ†', 'a pseudo-inversa, (ΦᵀΦ)⁻¹Φᵀ']] },
+      legend: [['Φ', 'a matriz de design: uma linha por exemplo, [1, φ(x), φ(x)², …] (o 1 é o bias)'], ['Φᵀ', 'a transposta de Φ'], ['(·)⁻¹', 'a inversa da matriz'], ['t', 'o vetor dos alvos'], ['w', 'os pesos; o primeiro é o bias'], ['Φ†', 'a pseudo-inversa, (ΦᵀΦ)⁻¹Φᵀ']],
+      note: 'Sem funções base, cada linha é só [1, x₁, x₂, …] e os slides chamam à matriz X: w = (XᵀX)⁻¹Xᵀt, a mesma fórmula.' },
     ridge: { t: 'linreg', name: 'Regressão ridge', f: 'w = (ΦᵀΦ + λI)⁻¹Φᵀt',
       legend: [['λ', 'a força da regularização: maior λ, pesos menores'], ['I', 'a matriz identidade'], ['Φ, t', 'como nos mínimos quadrados']] },
     mse: { t: 'linreg', name: 'Erro quadrático médio', f: 'MSE = (1/N)Σ(t − ŷ)²',
@@ -11734,17 +11783,18 @@ STUDY.lessons('ml', [
 { id: 'lr-ls', t: 'linreg', title: 'Regressão linear e mínimos quadrados',
   html: `<p>Traçar a reta que passa “o mais perto possível” de uma nuvem de pontos. O modelo é y(x, w) = w₀ + w₁x₁ + … + w<sub>D</sub>x<sub>D</sub> = wᵀx, com x₀ = 1 para o bias w₀.</p>
   <p>“O mais perto possível” = minimizar a <b>soma dos quadrados dos erros</b>: E(w) = ½ Σ<sub>k</sub> (t<sub>k</sub> − wᵀx<sub>k</sub>)² (o MSE é a mesma coisa a dividir por N).</p>
-  <!--card--><p>Junta os exemplos numa <b>matriz de design</b> X (uma linha por exemplo, a primeira coluna toda a 1) e os alvos num vetor t. Igualando o gradiente a zero, obtém-se a solução fechada:</p>
-  <p style="text-align:center"><b>{f:ls|w = (XᵀX)⁻¹ Xᵀ t}</b> &nbsp; = X<sup>†</sup> t (X<sup>†</sup>: pseudo-inversa de Moore-Penrose)</p>
-  <p>Se XᵀX não tem inversa (atributos que são combinações lineares de outros, ou menos exemplos do que parâmetros), usa-se a pseudo-inversa ou regularização.</p>
+  <!--card--><p>Junta os exemplos numa <b>matriz de design</b> Φ (uma linha por exemplo, a primeira coluna toda a 1) e os alvos num vetor t. Igualando o gradiente a zero, obtém-se a solução fechada:</p>
+  <p style="text-align:center"><b>{f:ls|w = (ΦᵀΦ)⁻¹ Φᵀ t}</b> &nbsp; = Φ<sup>†</sup> t (Φ<sup>†</sup>: pseudo-inversa de Moore-Penrose)</p>
+  <p>Sem funções base, cada linha de Φ é só [1, x₁, x₂, …], e os slides chamam-lhe X: w = (XᵀX)⁻¹Xᵀt, a mesma fórmula. Com funções base (lição seguinte), cada linha é [1, φ(x), φ(x)², …].</p>
+  <p>Se ΦᵀΦ não tem inversa (atributos que são combinações lineares de outros, ou menos exemplos do que parâmetros), usa-se a pseudo-inversa ou regularização.</p>
   <!--card--><p><b>Exemplo</b>: ajustar y = w₀ + w₁x aos pontos (1, 1), (2, 3), (3, 4).</p>
-  <ol><li><b>Matriz de design</b> (uma linha [1, x] por ponto) e alvos: X = [[1, 1], [1, 2], [1, 3]], t = (1, 3, 4).</li>
-  <li><b>XᵀX</b> = [[3, 6], [6, 14]] (3 pontos, Σx = 6, Σx² = 14). <b>Xᵀt</b> = (Σt, Σxt) = (8, 19).</li>
-  <li><b>Inversa 2 × 2</b>: det = 3·14 − 6·6 = 6; (XᵀX)⁻¹ = (1/6)·[[14, −6], [−6, 3]].</li>
+  <ol><li><b>Matriz de design</b> (uma linha [1, x] por ponto) e alvos: Φ = [[1, 1], [1, 2], [1, 3]], t = (1, 3, 4).</li>
+  <li><b>ΦᵀΦ</b> = [[3, 6], [6, 14]] (3 pontos, Σx = 6, Σx² = 14). <b>Φᵀt</b> = (Σt, Σxt) = (8, 19).</li>
+  <li><b>Inversa 2 × 2</b>: det = 3·14 − 6·6 = 6; (ΦᵀΦ)⁻¹ = (1/6)·[[14, −6], [−6, 3]].</li>
   <li><b>w</b> = (1/6)·(14·8 − 6·19, −6·8 + 3·19) = (1/6)·(−2, 9) = (−0,333; 1,5).</li></ol>
   <p>Reta: <b>y = −0,333 + 1,5x</b>.</p>
   <p>Medidas de erro no treino: MAE = (1/N) Σ |t − y|; {f:mse|MSE = (1/N) Σ (t − y)²}; RMSE = √MSE.</p>`,
-  key: 'w = (XᵀX)⁻¹Xᵀt. A matriz de design tem uma linha por exemplo e a coluna de 1s do bias.' },
+  key: 'w = (ΦᵀΦ)⁻¹Φᵀt. A matriz de design Φ tem uma linha por exemplo e a coluna de 1s do bias (sem funções base, os slides chamam-lhe X).' },
 { id: 'lr-basis', t: 'linreg', title: 'Funções base: regressão “não linear” que continua linear',
   html: `<p>Truque: transforma primeiro cada entrada com funções fixas φ<sub>j</sub>(x) e faz regressão linear sobre elas: y(x, w) = Σ<sub>j</sub> w<sub>j</sub> φ<sub>j</sub>(x). O modelo é <b>linear nos pesos</b>, por isso a solução continua a ser w = (ΦᵀΦ)⁻¹Φᵀt, só que agora com a matriz de design Φ.</p>
   <ul><li>Polinomial: φ<sub>j</sub>(x) = x<sup>j</sup> → y = w₀ + w₁x + w₂x² + w₃x³.</li>
@@ -12415,7 +12465,7 @@ STUDY.questions('ml', [
   o: ['A soma dos quadrados dos erros', 'A soma dos valores absolutos dos pesos', 'O número de exemplos mal classificados', 'A entropia cruzada das previsões'], a: 0,
   e: 'E(w) = ½ Σ (t − wᵀx)²: a **soma dos quadrados** dos resíduos (ou o MSE, que é o mesmo dividido por N).' },
 { id: 'lr-02', t: 'linreg', l: 1, les: 'lr-ls', card: 2,
-  q: 'Na matriz de design X, o que representa cada linha?',
+  q: 'Na matriz de design Φ, o que representa cada linha?',
   o: ['Um exemplo de treino, com o 1 do bias', 'Um atributo ao longo de todos os exemplos', 'Um peso do modelo para cada exemplo', 'O erro de cada exemplo de treino'], a: 0,
   e: 'Uma **linha por exemplo**: [1, x₁, …, x_D] (ou [1, φ₁(x), …] com funções base). A coluna de 1s multiplica o bias w₀.' },
 { id: 'lr-04', t: 'linreg', l: 1, les: 'lr-basis', card: 1,
@@ -12439,14 +12489,14 @@ STUDY.questions('ml', [
   o: ['MAP com prior gaussiano nos pesos', 'ML com ruído uniforme nos dados', 'MAP com prior uniforme nos pesos', 'ML com prior de Laplace nos pesos'], a: 0,
   e: 'Ruído gaussiano → verosimilhança = soma dos quadrados. Um **prior gaussiano** de média 0 nos pesos acrescenta (λ/2)‖w‖²: a solução **MAP** é o ridge. (Prior de Laplace daria o lasso.)' },
 { id: 'lr-09', t: 'linreg', l: 2, les: 'lr-ls', card: 2,
-  q: 'Quando é que XᵀX pode não ter inversa?',
+  q: 'Quando é que ΦᵀΦ pode não ter inversa?',
   o: ['Com atributos linearmente dependentes', 'Quando há muitos exemplos de treino', 'Quando os alvos são todos positivos', 'Quando se inclui a coluna de 1s'], a: 0,
-  e: 'Se uma coluna é combinação linear de outras (ou há menos exemplos do que parâmetros), XᵀX é singular. Usa-se a pseudo-inversa de Moore-Penrose ou regularização (λI torna-a invertível).' },
+  e: 'Se uma coluna é combinação linear de outras (ou há menos exemplos do que parâmetros), ΦᵀΦ é singular. Usa-se a pseudo-inversa de Moore-Penrose ou regularização (λI torna-a invertível).' },
 { id: 'lr-11', t: 'linreg', l: 3, les: 'lr-ls', card: 3, calc: true,
   d: { pts: { p: [{ x: 1, y: 1, c: 1 }, { x: 2, y: 3, c: 1 }, { x: 3, y: 4, c: 1 }], line: [-1 / 3, 1.5, -1], r: [0, 4, -1, 5], ax: ['x', 'y'] } },
-  q: 'Pontos (1, 1), (2, 3), (3, 4). Sabendo que XᵀX = [[3, 6], [6, 14]] e Xᵀt = (8, 19), qual é a reta de mínimos quadrados?',
+  q: 'Pontos (1, 1), (2, 3), (3, 4). Sabendo que ΦᵀΦ = [[3, 6], [6, 14]] e Φᵀt = (8, 19), qual é a reta de mínimos quadrados?',
   o: ['y = −0,333 + 1,5x', 'y = 0,5 + 1,25x', 'y = 0,333 + 1,25x', 'y = −1 + 2x'], a: 0,
-  e: '**Dados:** XᵀX = [[3, 6], [6, 14]] e Xᵀt = (8, 19). Pede-se w = (w₀, w₁) da reta y = w₀ + w₁x.\n**1. Fórmula:** w = (XᵀX)⁻¹ Xᵀt.\n**2. Inversa 2 × 2:** det = 3·14 − 6·6 = 6; (XᵀX)⁻¹ = (1/6)·[[14, −6], [−6, 3]].\n**3. Multiplicar:** w₀ = (14·8 − 6·19)/6 = −2/6 = −0,333; w₁ = (−6·8 + 3·19)/6 = 9/6 = 1,5.\n**Resposta:** **y = −0,333 + 1,5x**.' },
+  e: '**Dados:** ΦᵀΦ = [[3, 6], [6, 14]] e Φᵀt = (8, 19). Pede-se w = (w₀, w₁) da reta y = w₀ + w₁x.\n**1. Fórmula:** w = (ΦᵀΦ)⁻¹ Φᵀt.\n**2. Inversa 2 × 2:** det = 3·14 − 6·6 = 6; (ΦᵀΦ)⁻¹ = (1/6)·[[14, −6], [−6, 3]].\n**3. Multiplicar:** w₀ = (14·8 − 6·19)/6 = −2/6 = −0,333; w₁ = (−6·8 + 3·19)/6 = 9/6 = 1,5.\n**Resposta:** **y = −0,333 + 1,5x**.' },
 { id: 'lr-12', t: 'linreg', l: 3, les: 'lr-basis', card: 2, calc: true,
   q: 'Com φ(x) = ‖x‖∞ e um polinómio de grau 3, qual é a linha da matriz de design para x = (0, −4)?',
   o: ['[1, 4, 16, 64]', '[1, −4, 16, −64]', '[1, 0, 0, 0]', '[0, −4, 16, −64]'], a: 0,
@@ -21710,14 +21760,33 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 // {f:id|text} shows the text as written there (a variant, or the formula with that problem's indices) with the same card
 const fxTag = (id, txt) => { const F = C && C.formulas && C.formulas[id];
   return F ? `<button type="button" class="fx" data-fx="${esc(id)}" aria-haspopup="dialog" title="O que quer dizer cada símbolo">${txt !== undefined ? txt : esc(F.f)}</button>` : txt !== undefined ? txt : `{f:${esc(id)}}`; };
-const fxify = h => String(h ?? '').replace(/\{f:([a-z0-9-]+)(?:\|([^}]*))?\}/g, (_, id, txt) => fxTag(id, txt));
+const fxRaw = h => String(h ?? '').replace(/\{f:([a-z0-9-]+)(?:\|([^}]*))?\}/g, (_, id, txt) => fxTag(id, txt));
+/* Glossary: a course can list abbreviations in C.glossary = { RMSE: 'what it stands for and means', … }. In rendered text the
+   first time each one appears is underlined like a formula, and a tap opens a card with its meaning (fxOpen). Text inside
+   buttons, links and code is left alone, so never a button inside a button. */
+let glCache = { id: null, re: null };
+function glossify(h) {
+  const G = C && C.glossary; if (!G || !h) return h;
+  if (glCache.id !== C.id) { const keys = Object.keys(G).sort((a, b) => b.length - a.length).map(k => esc(k).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    glCache = { id: C.id, re: keys.length ? new RegExp(`(?<![\\wÀ-ÿ-])(${keys.join('|')})(?![\\wÀ-ÿ-])`, 'g') : null }; }
+  if (!glCache.re) return h;
+  const seen = new Set(); let inside = 0;
+  return String(h).split(/(<[^>]+>)/).map(part => {
+    if (part[0] === '<') { if (/^<(button|a|code)[\s>]/i.test(part)) inside++; else if (/^<\/(button|a|code)>/i.test(part)) inside = Math.max(0, inside - 1); return part; }
+    if (inside) return part;
+    return part.replace(glCache.re, m => { if (seen.has(m)) return m; seen.add(m);
+      return `<button type="button" class="fx gl" data-gl="${m}" aria-haspopup="dialog" title="O que quer dizer">${m}</button>`; });
+  }).join('');
+}
+const fxify = h => glossify(fxRaw(h));
 let fxBtn = null;   // the formula whose card is open
 function fxClose() { const c = document.getElementById('fxcard'); if (c) c.remove(); if (fxBtn) fxBtn.setAttribute('aria-expanded', 'false'); fxBtn = null; }
 // light markup for text fields: **bold**, `code`, line breaks, {f:id} formulas
 // keep a short vector or matrix on one line, so "(0,02; −0,2; 0)" or "[[1, 0], [0, 1]]" never splits; short enough for a phone
 const keepMath = s => s.replace(/\[\[[^\n\[\]]*(?:\], \[[^\n\[\]]*)*\]\]|\([^()\n]{1,24}\)|\[[^\[\]\n]{1,24}\]/g, m => m.length <= (m[1] === '[' ? 36 : 26) ? m.replace(/ /g, ' ') : m)
   .replace(/ = ([−-]?\d+(?:,\d+)?|[A-Za-zÀ-ÿ]{1,4})(?=[\s.,;:)]|$)/gm, ' = $1');   // "η = 0,1" and "b[2] = 0" stay whole
-const md = s => fxify(keepMath(esc(s)).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code class="mono">$1</code>').replace(/\n/g, '<br>'));
+// plain: no glossary links (text that sits inside a button, such as an answer option)
+const md = (s, plain) => { const h = fxRaw(keepMath(esc(s)).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code class="mono">$1</code>').replace(/\n/g, '<br>')); return plain ? h : glossify(h); };
 // Students paste notes from chatbots with LaTeX (\(y_2 = 0\), \rightarrow, \frac{a}{b}): show them as plain Unicode maths.
 const TEX_SYM = { rightarrow: '→', to: '→', Rightarrow: '⇒', implies: '⇒', leftarrow: '←', Leftarrow: '⇐', leftrightarrow: '↔', iff: '⇔', mapsto: '↦',
   times: '×', cdot: '·', div: '÷', pm: '±', mp: '∓', leq: '≤', le: '≤', geq: '≥', ge: '≥', neq: '≠', ne: '≠', approx: '≈', sim: '∼', equiv: '≡', propto: '∝',
@@ -23324,7 +23393,7 @@ function Quiz() {
   const skipBtn = `<button class="btn small skip" data-act="skip" title="${isExam ? 'Deixar em branco (não desconta)' : 'Saltar: fica na lista Saltadas para fazeres depois'}">${isExam ? 'Deixar em branco' : 'Saltar'} ⤼</button>`;
   const opts = it.order.map((oi, pos) => { let cls = ''; const isRight = multi ? q.a.includes(oi) : q.a === oi; const chosen = ses.picked.has(oi);
     if (ses.answered && !isExam) { if (isRight) cls = 'right'; else if (chosen) cls = 'wrong'; } else if (chosen) cls = 'sel';
-    return `<button class="opt ${cls}" data-act="opt" data-oi="${oi}" ${ses.answered ? 'disabled' : ''}><span class="k">${multi ? (chosen ? '✓' : pos + 1) : pos + 1}</span><span class="txt">${md(q.o[oi])}</span></button>`; }).join('');
+    return `<button class="opt ${cls}" data-act="opt" data-oi="${oi}" ${ses.answered ? 'disabled' : ''}><span class="k">${multi ? (chosen ? '✓' : pos + 1) : pos + 1}</span><span class="txt">${md(q.o[oi], true)}</span></button>`; }).join('');
   let fb = '';
   if (ses.answered && !isExam) fb = Feedback(q, it);
   const foot = ses.answered ? (isExam ? '' : `<div class="qfoot next-bar"><button class="btn primary" data-act="next" id="nextBtn">${ses.i >= ses.items.length - 1 ? 'Ver resultado' : 'Seguinte'} →</button><span class="kbd">Enter</span><span class="spacer"></span><button class="btn ghost small" data-act="quit">Terminar ronda</button></div>`)
@@ -23585,11 +23654,13 @@ function Formulas() {
 // The card beside a formula: to the right of the content when there is room, under the formula otherwise, and as a
 // sheet at the bottom of a phone screen.
 function fxOpen(b) {
-  const id = b.dataset.fx, F = C && C.formulas && C.formulas[id]; if (!F) return;
+  const gl = b.dataset.gl, id = b.dataset.fx, F = gl ? (C && C.glossary && C.glossary[gl] !== undefined ? { name: gl } : null) : C && C.formulas && C.formulas[id]; if (!F) return;
   if (fxBtn === b) { fxClose(); return; }
   fxClose(); fxBtn = b; b.setAttribute('aria-expanded', 'true');
   const c = document.createElement('div'); c.id = 'fxcard'; c.className = 'fx-card'; c.setAttribute('role', 'dialog'); c.setAttribute('aria-label', F.name);
-  c.innerHTML = `<div class="row"><span class="eyebrow">${esc(F.name)}</span><span class="spacer"></span><button type="button" class="btn ghost small" data-fxx aria-label="Fechar">✕</button></div>
+  const head = `<div class="row"><span class="eyebrow">${esc(F.name)}</span><span class="spacer"></span><button type="button" class="btn ghost small" data-fxx aria-label="Fechar">✕</button></div>`;
+  c.innerHTML = gl ? `${head}<p style="margin-top:6px">${md(C.glossary[gl], true)}</p>`
+    : `${head}
     <p class="fx-f">${esc(F.f)}</p>${fxLegend(F)}${F.note ? `<p class="muted fx-note">${md(F.note)}</p>` : ''}${view.name !== 'formulas' ? `<button type="button" class="btn ghost small" data-fxall="${esc(id)}">Ver no formulário →</button>` : ''}`;
   document.body.appendChild(c); fxPlace(); c.querySelector('[data-fxx]').focus({ preventScroll: true });
 }

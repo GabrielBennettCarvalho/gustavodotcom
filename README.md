@@ -157,6 +157,11 @@ the formula otherwise, at the bottom on a phone. "Para o exame" → Formulário 
 The build fails on an unknown id, and on tags in options, step names or `also` (shown as plain text).
 Write the legend in the notation of the lectures, and say in `note` when the slides write it differently.
 
+**Abbreviations** (glossary): `glossary: { RMSE: 'what it stands for and means', … }` in `course.js`. Nothing to write in the
+text: wherever an abbreviation appears (questions, explanations, lessons, cheat sheets), its first occurrence in each text
+is underlined like a formula and a tap opens a card with the meaning. Answer options are left plain (they are buttons),
+and so is text inside a formula, a link or `code`. Matching is case-sensitive and on whole words.
+
 ## Key problems (Problemas-chave)
 
 The big exam problems, solved by typing the key values (`src/engine/app-problems.js`; content in `STUDY.problems`, see

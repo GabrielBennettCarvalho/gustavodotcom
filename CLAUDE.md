@@ -50,6 +50,7 @@ Full field reference and layout are in README.md. Read it only when you need a d
 - Lessons are trusted HTML. Question text only supports `**bold**`, `` `code` `` and line breaks, so write
   math with Unicode (Σ, σ, ∂, ŷ, ², ₁).
 - Never separate formulas with " · " (it reads as a product): put each one in its own `<li>` or sentence.
+- An abbreviation (RMSE, MAP, TP…) goes in the course's `glossary`; the app explains it on tap wherever it appears.
 - A formula with symbols a student may not know goes in the course's `formulas` with a legend, and text points at it with
   `{f:id}` or `{f:id|own wording}` (README, Formulário). Never inside an option.
 

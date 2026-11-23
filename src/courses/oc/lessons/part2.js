@@ -1,7 +1,7 @@
 /* ===== OC lessons for the 2nd test: virtual memory (extra), processor, pipelining, hazards, branches. =====
    The "adv" lessons (VLIW, multicore, I/O, RAID) are written from past exams only, until the slides arrive. */
 const PIPE = rows => `<div class="diagram">${OCD.render({ pipe: rows })}</div>`;
-const NOSLIDES = '<p class="muted" style="font-size:13px">Resumo feito a partir dos exames anteriores; será completado com os slides.</p>';
+const NOSLIDES = '<p class="muted" style="font-size:13px">Resumo feito a partir dos exames anteriores e das fichas; será completado com os slides.</p>';
 STUDY.lessons('oc', [
 /* ---------------- VIRTUAL MEMORY: exam recipes ---------------- */
 { id: 'v-multi', t: 'vm', title: 'Tabelas multinível: quantos níveis e quantas páginas',
@@ -270,35 +270,66 @@ STUDY.lessons('oc', [
   <p><b>Precisa</b>: trata-se a exceção da instrução mais antiga, como se fosse a única. <b>Imprecisa</b>: para-se o pipeline e deixa-se o handler decidir; simplifica o hardware e complica o software, e é inviável em pipelines com multiple issue e execução fora de ordem.</p>`,
   key: 'Exceção é interna; interrupção é externa. Precisa: completa as anteriores, descarta as seguintes.' },
 
-/* ---------------- ADVANCED: from past exams only ---------------- */
+/* ---------------- ADVANCED: ILP from slides 14; the rest from past exams and problem sets ---------------- */
 { id: 'a-vliw', t: 'adv', title: 'VLIW e superescalar',
-  html: `<p>Para ter <b>CPI abaixo de 1</b> é preciso emitir mais do que uma instrução por ciclo.</p>
+  html: `<p>Há duas formas de aumentar o paralelismo entre instruções (ILP):</p>
+  <ul><li><b>Pipeline mais profundo</b>: menos trabalho por andar, período mais curto.</li>
+  <li><b>Multiple issue</b>: replicam-se andares e emitem-se várias instruções por ciclo. O CPI fica abaixo de 1, por isso usa-se o <b>IPC</b> (instruções por ciclo) = 1 / CPI.</li></ul>
+  <p>Um processador 4-way tem IPC de pico 4 (CPI 0,25). Na prática as dependências baixam este valor.</p>
   <div class="tbl-wrap"><table><tr><th></th><th>VLIW (static)</th><th>Superescalar (dynamic)</th></tr>
-  <tr><td>Quem decide o paralelismo</td><td>o <b>compilador</b></td><td>o <b>hardware</b></td></tr><tr><td>Ordem</td><td>em ordem</td><td>pode executar fora de ordem</td></tr></table></div>
-  <p>Exemplo de VLIW dual-issue, com pares &lt;ALU, load/store&gt; e &lt;ALU, salto&gt;. As duas instruções de um pacote <b>leem os valores antigos</b>, porque arrancam ao mesmo tempo:</p>
+  <tr><td>Quem decide o paralelismo</td><td>o <b>compilador</b>, que agrupa as instruções em pacotes</td><td>o <b>hardware</b>, em cada ciclo</td></tr>
+  <tr><td>Hazards</td><td>o compilador evita-os; preenche com <code>nop</code></td><td>o CPU resolve-os em execução</td></tr>
+  <tr><td>Ordem</td><td>em ordem</td><td>pode executar fora de ordem</td></tr></table></div>
+  <p><b>RISC-V dual-issue estático</b>: cada pacote leva uma instrução ALU/salto e uma load/store. As duas instruções de um pacote <b>leem os valores antigos</b>, porque arrancam ao mesmo tempo:</p>
   <div class="tbl-wrap"><table><tr><td><code>Loop: &lt; addi x6, x6, 4 ; lw x5, 0(x6) &gt;<br>&lt; add x7, x7, x5 ; blt x6, x8, Loop &gt;</code></td></tr></table></div>
-  <p>Aqui o <code>lw</code> lê o x6 anterior ao <code>addi</code>, tal como no código original. Dois pacotes em vez de quatro instruções.</p>
-  <p>Regras a verificar: cada pacote tem um par permitido; quem usa um resultado vai num pacote <b>posterior</b>; depois de um load, respeita-se a bolha de load-use.</p>
-  ${NOSLIDES}`,
-  key: 'VLIW: compilador decide. Superescalar: hardware decide. CPI pode ser menor que 1.' },
+  <p>Aqui o <code>lw</code> lê o x6 anterior ao <code>addi</code>, tal como no código original. São dois pacotes em vez de quatro instruções. Este é o agrupamento que os exames pedem.</p>
+  <p>Hazards novos com dois por ciclo:</p>
+  <ul><li>Um resultado da ALU <b>não serve ao load/store do mesmo pacote</b>, nem com forwarding: <code>add x5, …</code> e <code>lw x8, 0(x5)</code> vão em pacotes diferentes.</li>
+  <li>O load continua com 1 ciclo de latência, mas agora isso pode custar <b>duas</b> instruções.</li></ul>
+  <p>Exemplo dos slides, a contar ciclos (<code>ld</code>, <code>add</code>, <code>sd</code>, <code>addi</code>, <code>blt</code>):</p>
+  <ul><li>Ciclo 1: <code>ld x31, 0(x20)</code>.</li>
+  <li>Ciclo 2: <code>addi x20, x20, -8</code>. O <code>add</code> ainda não pode, por causa da latência do load.</li>
+  <li>Ciclo 3: <code>add x31, x31, x21</code>.</li>
+  <li>Ciclo 4: <code>blt</code> e <code>sd x31, 8(x20)</code>. O offset passa a 8 porque o x20 já foi decrementado.</li></ul>
+  <p>São 5 instruções em 4 ciclos: <b>IPC = 1,25</b>, contra um pico de 2.</p>
+  <p>Nos exercícios de exame que pedem só o agrupamento (com scheduling ideal), basta que quem usa um resultado vá num pacote posterior. A latência do load conta quando se pedem ciclos.</p>`,
+  key: 'VLIW: o compilador agrupa. Superescalar: o hardware decide. IPC = 1 / CPI, pode passar de 1.' },
 { id: 'a-unroll', t: 'adv', title: 'Desenrolar ciclos',
   html: `<p><b>Loop unrolling</b>: repete-se o corpo do ciclo para fazer menos saltos e criar mais oportunidades de escalonamento.</p>
   <p>Ao desenrolar por 2:</p>
   <ul><li>O salto fica <b>só no fim</b>: um por cada duas iterações originais.</li>
   <li>Junta-se o incremento do ponteiro: dois <code>addi x, x, 4</code> viram um <code>addi x, x, 8</code>, e ajustam-se os offsets.</li>
-  <li>Usam-se registos novos para os valores temporários, para evitar dependências falsas.</li></ul>
+  <li>Usa-se um <b>registo diferente em cada cópia</b> (register renaming).</li></ul>
+  <p>Porquê registos novos? Se todas as cópias usassem o x31, a segunda cópia não podia escrever no x31 antes de a primeira o usar. Isso é uma <b>antidependência</b> (ou dependência de nome): só se reutiliza o nome do registo, não há dados a passar. Mudar o nome elimina-a. Uma dependência <b>verdadeira</b> (um <code>add</code> que usa o valor do <code>lw</code>) não se elimina assim.</p>
   <p>Exemplo: de <code>lw, add, addi, bne</code> para:</p>
   <div class="tbl-wrap"><table><tr><td><code>Loop: lw s2, 0(s5)<br>lw s3, 4(s5)<br>add s1, s1, s2<br>addi s5, s5, 8<br>add s1, s1, s3<br>bne s5, s6, Loop</code></td></tr></table></div>
   <p>Sem forwarding e com salto em D, isto dá 9 ciclos para as 2 iterações, contra 18 no código original. O ponteiro pode ser acertado cedo porque os <code>lw</code> já leram.</p>
-  ${NOSLIDES}`,
-  key: 'Desenrolar corta saltos e permite fundir os incrementos do ponteiro.' },
+  <p>No dual-issue dos slides, desenrolar 4 vezes dá 14 instruções em 8 ciclos: <b>IPC = 1,75</b>, contra 1,25 sem desenrolar. O preço: <b>mais registos e código maior</b>.</p>`,
+  key: 'Desenrolar corta saltos; registos novos eliminam antidependências. Paga-se em registos e código.' },
+{ id: 'a-dyn', t: 'adv', title: 'Escalonamento dinâmico e especulação',
+  html: `<p>Um <b>superescalar</b> decide em cada ciclo se emite 0, 1, 2 ou mais instruções. O compilador pode ajudar a reordenar, mas o CPU garante que o resultado é o do código original.</p>
+  <p><b>Execução fora de ordem</b>: uma instrução que espera não trava as seguintes que não dependem dela. Mas os resultados são escritos nos registos (<b>commit</b>) <b>por ordem</b>.</p>
+  <div class="tbl-wrap"><table><tr><td><code>ld   x31, 20(x21)<br>add  x1, x31, x2<br>sub  x23, x23, x3<br>andi x5, x23, 20</code></td></tr></table></div>
+  <p>Se o <code>ld</code> demora (miss na cache), o <code>add</code> espera por ele, mas o <code>sub</code> e o <code>andi</code> não dependem do x31 e podem avançar.</p>
+  <ul><li><b>Estações de reserva</b>: guardam as instruções emitidas até terem os operandos.</li>
+  <li><b>Reorder buffer</b>: guarda os resultados até poderem ser escritos por ordem. Pode também fornecer operandos às instruções que esperam.</li></ul>
+  <p>Os operandos são copiados para a estação de reserva, por isso o registo pode ser reescrito logo: estas estruturas fazem <b>register renaming</b> em hardware.</p>
+  <p><b>Especulação</b>: adivinha-se (o resultado de um salto, o endereço ou valor de um load), executa-se logo, e confirma-se depois. Se acertou, faz-se commit. Se falhou, <b>descartam-se os resultados</b> e segue-se o caminho certo. Nada especulativo faz commit antes de a dúvida ficar resolvida.</p>
+  <p>Uma instrução especulativa pode causar uma exceção (um load posto antes do teste de ponteiro nulo). Na especulação dinâmica, a exceção fica <b>guardada até ao commit</b>, que pode nunca acontecer. Na estática, a ISA pode ter suporte para adiar exceções.</p>
+  <p><b>Porque não deixar tudo ao compilador?</b> Há stalls imprevisíveis (misses na cache), saltos que só se conhecem em execução, e cada implementação da ISA tem latências diferentes.</p>
+  <p><b>Limites</b>: dependências verdadeiras, aliasing de ponteiros, janela de instruções limitada e atrasos de memória. Esta complexidade gasta muita energia, por isso hoje preferem-se <b>vários cores mais simples</b>.</p>`,
+  key: 'Executa fora de ordem, faz commit por ordem. Especula e, se errar, descarta.' },
 { id: 'a-mp', t: 'adv', title: 'Multiprocessadores: UMA, NUMA e coerência',
   html: `<ul><li><b>UMA</b>: todos os processadores acedem à memória com o <b>mesmo tempo</b>.</li>
   <li><b>NUMA</b>: memória partilhada, mas <b>fisicamente distribuída</b>: o tempo depende da zona acedida.</li>
   <li><b>Message passing</b>: cada um tem a sua memória e comunica por mensagens.</li></ul>
   <p>Com caches privadas é preciso <b>coerência</b>: todas as caches veem o valor mais recente de cada bloco. A <b>consistência</b> define <b>quando</b> os valores se tornam visíveis aos outros.</p>
   <p><b>Snooping com invalidação</b>: quando um core escreve num bloco partilhado, envia um sinal no barramento e as outras cópias são invalidadas.</p>
-  <p><b>Multithreading fine-grain</b>: troca de thread a cada ciclo. Instruções vizinhas no pipeline são de threads diferentes, por isso reduz a necessidade de forwarding.</p>
+  <p>Exemplo: P1 faz <code>A = 1; if (B == 0) X++;</code> e P2 faz <code>B = 1; if (A == 0) X++;</code>, tudo a 0 no início. Se cada processador faz os acessos pela ordem do programa e cada escrita fica logo visível ao outro, quem lê por último já vê um 1, e X fica 0 ou 1. Se uma escrita pode ficar atrasada (por exemplo num buffer), os dois podem ler 0 e X chega a <b>2</b>.</p>
+  <p>Multithreading, num core com várias unidades funcionais:</p>
+  <ul><li><b>Coarse-grain</b>: só troca de thread num stall longo (por exemplo um miss).</li>
+  <li><b>Fine-grain</b>: troca de thread a cada ciclo. Instruções vizinhas no pipeline são de threads diferentes, por isso reduz a necessidade de forwarding. Em cada ciclo só emite de <b>uma</b> thread.</li>
+  <li><b>SMT</b> (simultaneous multithreading): no mesmo ciclo pode emitir instruções de <b>várias</b> threads, e assim desperdiça menos slots.</li></ul>
   ${NOSLIDES}`,
   key: 'UMA: tempo igual. NUMA: depende da região. Escrita partilhada invalida as outras cópias.' },
 { id: 'a-par', t: 'adv', title: 'Paralelizar: dividir o trabalho e medir o speedup',
@@ -307,15 +338,19 @@ STUDY.lessons('oc', [
   <p>Exemplo: soma de 1000 elementos em 10 threads, cada soma T, <code>synch</code> 11T. Sequencial = 1000T. Paralelo: 100T (somas) + 11T (synch) + 9T (a thread 0 junta as outras 9 somas) = 120T. Speedup = 1000/120 ≈ <b>8</b>.</p>
   <p>Mau balanceamento: 400 números por 4 processos, um com o dobro dos outros: x + x + x + 2x = 400, x = 80, o mais lento faz 160. Speedup = 400/160 = <b>2,5</b>.</p>
   <p><b>Caches</b>: cada thread deve trabalhar numa zona contínua e sua, para reduzir o tráfego de coerência. Acumula numa variável <b>local</b> e só escreve o resultado na variável partilhada no fim.</p>
+  <p><b>Barramento partilhado</b>: as transferências entre as caches e a memória passam uma de cada vez. Se uma iteração demora 65 ns num core, dos quais 25 ns são transferências, com muitos cores o cálculo divide-se mas os 25 ns não. No máximo sai uma iteração a cada 25 ns: speedup ≤ 65 / 25 = <b>2,6</b>, mesmo com 4 cores.</p>
   ${NOSLIDES}`,
   key: 'Speedup = sequencial / (thread mais lenta + sincronização + parte sequencial).' },
 { id: 'a-io', t: 'adv', title: 'Entradas/saídas: polling, interrupções e DMA',
   html: `<ul><li><b>Polling</b>: o CPU verifica periodicamente o estado do dispositivo. Razoável em controladores simples, com pouca carga e CPU disponível.</li>
-  <li><b>Interrupções</b>: o dispositivo avisa o CPU quando precisa dele.</li>
-  <li><b>DMA</b> (Direct Memory Access): um controlador transfere blocos entre o dispositivo e a memória <b>sem intervenção contínua do CPU</b>, que só é avisado no fim.</li></ul>
+  <li><b>Interrupções</b>: o dispositivo avisa o CPU quando precisa dele. Servem quando a resposta tem de ser imediata.</li>
+  <li><b>DMA</b> (Direct Memory Access): um controlador transfere blocos entre o dispositivo e a memória <b>sem intervenção contínua do CPU</b>, que só é avisado no fim. Compensa com muitos dados por transferência (disco, placa gráfica), não com um rato.</li></ul>
+  <p>Exemplo: um termóstato pode fazer polling, porque a temperatura muda devagar. Um piloto automático precisa de interrupções: um sensor que deteta uma mudança não pode esperar pela próxima verificação.</p>
+  <p>Ao atender uma interrupção, guarda-se o registo Status e desativam-se as de <b>prioridade mais baixa</b>, para não interromperem o tratamento da atual. Ao repor o Status no fim, as pendentes são atendidas.</p>
   <p>O DMA escreve na memória, por isso <b>pode alterar posições guardadas em cache</b>: há um problema de coerência.</p>
   <p>Em geral, um processo em modo utilizador não acede diretamente ao I/O: passa pelo sistema operativo.</p>
-  <p>Num disco magnético o tempo de acesso soma seek (colocar a cabeça), latência rotacional, transferência e controlador.</p>
+  <p>Num disco magnético o tempo de acesso soma seek (colocar a cabeça), latência rotacional, transferência e controlador. A <b>latência rotacional média é meia volta</b>: a 15 000 rpm, uma volta dura 60 / 15 000 = 4 ms, logo a média é 2 ms.</p>
+  <p><b>Gargalo</b>: o débito de I/O é o do elo mais fraco. Exemplo: o CPU aguenta 2 × 10⁹ / 250 000 = 8000 operações/s, e cada disco 112 MB/s / 64 KB = 1750 leituras/s. Com 4 discos em RAID 0 (7000/s) o disco limita; com 5 (8750/s) já não.</p>
   ${NOSLIDES}`,
   key: 'Polling pergunta, interrupção avisa, DMA transfere sem ocupar o CPU.' },
 { id: 'a-raid', t: 'adv', title: 'RAID e fiabilidade',

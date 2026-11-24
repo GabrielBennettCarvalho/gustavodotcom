@@ -100,7 +100,10 @@ window.PROGRESS_KEY = (() => {
     const T = (S.prob && S.prob.t) || {};
     if (Object.keys(T).length) o.pt = Object.fromEntries(Object.entries(T).map(([k, t]) => [k, [t.stage | 0, t.done ? 1 : 0, t.due ? toDay(t.due) + 1 : 0, days(t.last)]]));
     if (S.prob && S.prob.con && Object.keys(S.prob.con).length) o.pc = S.prob.con;
-    if (S.pace && (S.pace.n || S.pace.pbn)) o.pa = [Math.round(S.pace.s), S.pace.n, Math.round(S.pace.pb * 100) / 100, S.pace.pbn];
+    // pace: [old single pace, its samples, key problem ratio, samples, theory s, samples, calculation s, samples, reading ratio, samples]
+    // (the last six were added later: an older key has only four, and an older app reads only those)
+    const P = S.pace, r2 = v => Math.round((v || 0) * 100) / 100;
+    if (P && (P.n || P.pbn || P.qn || P.hn || P.ln)) o.pa = [Math.round(P.s || 0), P.n || 0, r2(P.pb), P.pbn || 0, Math.round(P.q || 0), P.qn || 0, Math.round(P.h || 0), P.hn || 0, r2(P.lr), P.ln || 0];
     if (S.today && S.today.d) o.td = [S.today.d, Math.round(S.today.ms / 60000), S.today.did || []];
     if (S.settings && S.settings.minDay && S.settings.minDay !== 30) o.md = S.settings.minDay;
     return Object.keys(o).length ? JSON.stringify(o) : '';
@@ -110,7 +113,8 @@ window.PROGRESS_KEY = (() => {
     if (o.sl) x.seenL = days(o.sl);
     if (o.pt) x.probT = Object.fromEntries(Object.entries(o.pt).map(([k, [stage, done, due, last]]) => [k, { stage, done: !!done, due: due ? fromDay(due - 1) : 0, last: days(last) }]));
     if (o.pc) x.probCon = o.pc;
-    if (o.pa) x.pace = { s: o.pa[0], n: o.pa[1], pb: o.pa[2], pbn: o.pa[3] };
+    if (o.pa) { const a = o.pa; x.pace = { s: a[0], n: a[1], pb: a[2], pbn: a[3] };
+      if (a.length >= 10) Object.assign(x.pace, { q: a[4], qn: a[5], h: a[6], hn: a[7], lr: a[8], ln: a[9] }); }
     if (o.td) x.today = { d: o.td[0], ms: o.td[1] * 60000, did: o.td[2] || [] };
     if (o.md) x.minDay = o.md;
     return x;
@@ -194,7 +198,8 @@ window.PROGRESS_KEY = (() => {
     const latest = t => Math.max(0, ...Object.values((t && t.last) || {}));
     for (const [k, t] of Object.entries(X.probT || {})) if (!L.prob.t[k] || latest(t) > latest(L.prob.t[k]) + 864e5 / 2) { L.prob.t[k] = t; report.problems = (report.problems || 0) + 1; }
     for (const [k, v] of Object.entries(X.probCon || {})) if (!(k in L.prob.con)) L.prob.con[k] = v;
-    if (X.pace && (!L.pace || X.pace.n + X.pace.pbn > (L.pace.n || 0) + (L.pace.pbn || 0))) L.pace = X.pace;
+    { const n = P => P ? (P.n || 0) + (P.pbn || 0) + (P.qn || 0) + (P.hn || 0) + (P.ln || 0) : 0;
+      if (X.pace && (!L.pace || n(X.pace) > n(L.pace))) L.pace = X.pace; }
     if (X.today) { const t = L.today; if (!t || t.d < X.today.d) L.today = X.today; else if (t.d === X.today.d) { t.ms = Math.max(t.ms, X.today.ms); X.today.did.forEach(k => { if (!t.did.includes(k)) t.did.push(k); }); } }
     if (X.minDay && (!L.settings.minDay || L.settings.minDay === 30)) L.settings.minDay = X.minDay;
   }

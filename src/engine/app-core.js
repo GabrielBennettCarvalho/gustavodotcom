@@ -198,18 +198,30 @@ const partSkills = () => { const pt = partTopics(); return SKILLS.filter(s => pt
 const pastList = () => { const p = (C.parts || []).find(x => x.id === S.settings.part); return (p && p.past) || C.past || []; };
 // waiting in review: a training or exam mistake not yet answered right enough times in a row
 const isPending = id => { const s = peek(id); return !!((s.w && s.box < TRAIN_CLEAR) || (s.ew && s.eb < EXAM_CLEAR)); };
-// What a type still needs before it is ready (mistakes first, then by level and step). With SKILL_FOCUS or fewer, its
-// session is just these: going through a whole round to fix one question is a waste.
+/* Ready, for a type: no mistake waiting in review, every past-exam question right, and at least READY_PCT of its
+   questions right (READY_MIN at least; all of them when it has fewer). Not every question: a type with 30 questions
+   is learnt well before the 30th, and the past-exam ones, the real thing, are never skipped. */
+const READY_PCT = 0.6, READY_MIN = 6;
+const isPast = q => !!pastKey(q.src);
+const skillNeed = qs => Math.min(qs.length, Math.max(qs.filter(isPast).length, READY_MIN, Math.ceil(READY_PCT * qs.length)));
+// What a type still needs before it is ready: its mistakes first, then its past-exam questions not done and as many
+// others as it takes, by level and step. With SKILL_FOCUS or fewer, its session is just these: going through a whole
+// round to fix one question is a waste.
 const SKILL_FOCUS = 8;
-const skillLeft = k => skillQs(k).filter(q => isPending(q.id) || !peek(q.id).c)
-  .sort((a, b) => isPending(b.id) - isPending(a.id) || a.l - b.l || String(a.ch || '').localeCompare(String(b.ch || '')) || parseInt(a.step || 0) - parseInt(b.step || 0));
-// ready: every question of the type answered right and none waiting in review
+const byLevel = (a, b) => a.l - b.l || String(a.ch || '').localeCompare(String(b.ch || '')) || parseInt(a.step || 0) - parseInt(b.step || 0);
+function skillLeft(k) {
+  const qs = skillQs(k), fresh = q => !isPending(q.id) && !peek(q.id).c;
+  const pend = qs.filter(q => isPending(q.id)), past = qs.filter(q => isPast(q) && fresh(q)), ok = qs.filter(q => !isPending(q.id) && peek(q.id).c).length;
+  const more = Math.max(0, skillNeed(qs) - ok - pend.length - past.length);
+  const rest = qs.filter(q => !isPast(q) && fresh(q)).sort(byLevel).slice(0, more);
+  return [...pend.sort(byLevel), ...[...past, ...rest].sort(byLevel)];
+}
 function readiness(k) {
-  const qs = skillQs(k); let ok = 0, pend = 0, tried = 0;
+  const qs = skillQs(k), need = skillNeed(qs), left = skillLeft(k).length; let ok = 0, pend = 0, tried = 0;
   qs.forEach(q => { const s = peek(q.id); const p = isPending(q.id);
     if (s.c || s.w || s.ew) tried++; if (p) pend++; else if (s.c) ok++; });
-  const state = !qs.length ? 'none' : ok === qs.length ? 'ready' : tried ? 'training' : 'todo';
-  return { total: qs.length, ok, pend, state, pct: qs.length ? ok / qs.length : 0 };
+  const state = !qs.length ? 'none' : !left ? 'ready' : tried ? 'training' : 'todo';
+  return { total: qs.length, need, left, done: need - Math.min(need, left), ok, pend, state, pct: need ? 1 - Math.min(need, left) / need : 0 };
 }
 // Readiness of the part, weighted by how often each type came up; and the type to train next
 // Open-book exam (C.exam.book): the cheat sheet opens while practising and in the mock exam, as the real sheet would
@@ -522,7 +534,9 @@ function skillRound(s) {
   const chains = Object.values(by).map(a => a.sort((x, y) => parseInt(x.step) - parseInt(y.step)));
   const done = a => a.filter(q => peek(q.id).c > 0 && !(peek(q.id).w && peek(q.id).box < TRAIN_CLEAR)).length / a.length;
   const chain = chains.map(a => [done(a) + Math.random() * 0.3, a]).sort((x, y) => x[0] - y[0]).map(x => x[1])[0] || [];
-  return { qs: [...pick(single, chain.length ? 6 : 8).sort((a, b) => a.l - b.l), ...chain], title: s.label };
+  // the questions it still needs come first; the round is filled with others (practice never hurts)
+  const nS = chain.length ? 6 : 8, want = left.filter(q => !q.ch).slice(0, nS);
+  return { qs: [...want, ...pick(single.filter(q => !want.includes(q)), nS - want.length)].sort((a, b) => a.l - b.l).concat(chain), title: s.label };
 }
 function start(mode, opts = {}) {
   let items = [], title = '', timeLimit = 0;
@@ -561,7 +575,7 @@ function start(mode, opts = {}) {
   if (!items.length) { toast('Não há perguntas para estes filtros.'); return; }
   // flag the questions waiting in review, so the student knows which one they are fixing (never in the mock exam)
   if (mode !== 'exam') items.forEach(it => { if (it.kind === 'q' && isPending(it.id)) it.rev = true; });
-  ses = { mode, title, items, i: 0, planKey: opts.planKey || null, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, stop: opts.stop, nextWasOpen: !!opts.level && opts.level < LEVELS.length && unlocked(opts.level + 1), topic: opts.topic, skill: mode === 'skill' || (mode === 'learn' && opts.k) ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
+  ses = { mode, title, items, i: 0, planKey: opts.planKey || null, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), itemAt: Date.now(), level: opts.level, stop: opts.stop, nextWasOpen: !!opts.level && opts.level < LEVELS.length && unlocked(opts.level + 1), topic: opts.topic, skill: mode === 'skill' || (mode === 'learn' && opts.k) ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
   if (timeLimit) startTimer();
   sesKeep(); go(viewOf(items[0]));
 }

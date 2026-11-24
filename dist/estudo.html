@@ -22360,6 +22360,19 @@ function learnItems(L) {
 }
 // work units of a lesson in Aprender (a question = 1, reading the lesson = 2), for the times in the plan
 const learnUnits = L => 2 + learnItems(L).filter(x => x.kind === 'q').length;
+// One round of an exam problem type: a few single questions (weakest first), then one whole problem in steps.
+// Only a few left before the type is ready: just those (mistakes first), not a whole round of questions already right.
+function skillRound(s) {
+  const left = skillLeft(s.id);
+  if (left.length && left.length <= SKILL_FOCUS) return { qs: left, title: `${s.label} · ${left.length === 1 ? 'a que falta' : `as ${left.length} que faltam`}` };
+  // a problem in steps comes whole, even when its other steps belong to other types (forward → backprop)
+  const qs = skillQs(s.id), single = qs.filter(q => !q.ch), by = {}, chs = new Set(qs.filter(q => q.ch).map(q => q.ch));
+  BANK.filter(q => chs.has(q.ch) && !isReserved(q)).forEach(q => (by[q.ch] = by[q.ch] || []).push(q));
+  const chains = Object.values(by).map(a => a.sort((x, y) => parseInt(x.step) - parseInt(y.step)));
+  const done = a => a.filter(q => peek(q.id).c > 0 && !(peek(q.id).w && peek(q.id).box < TRAIN_CLEAR)).length / a.length;
+  const chain = chains.map(a => [done(a) + Math.random() * 0.3, a]).sort((x, y) => x[0] - y[0]).map(x => x[1])[0] || [];
+  return { qs: [...pick(single, chain.length ? 6 : 8).sort((a, b) => a.l - b.l), ...chain], title: s.label };
+}
 function start(mode, opts = {}) {
   let items = [], title = '', timeLimit = 0;
   const pool = trainPool();
@@ -22375,21 +22388,8 @@ function start(mode, opts = {}) {
   if (mode === 'extra') { const x = (C.extras || []).find(e => e.id === opts.extra); if (!x) return; items = (x.questions(extraApi()) || []).map(makeItem); title = x.title; }
   if (mode === 'exam') { items = buildExam().map(makeItem); title = 'Exame simulado'; timeLimit = examCfg().min * 60; }
   if (mode === 'supp') { items = pick(suppPool(), 10).sort((a, b) => a.l - b.l).map(makeItem); title = 'Suplementares'; }
-  if (mode === 'skill') {
-    // one exam problem type: a few single questions (weakest first), then one whole problem in steps
-    const s = SKBYID[opts.k]; if (!s) return; title = s.label;
-    // a problem in steps comes whole, even when its other steps belong to other types (forward → backprop)
-    const qs = skillQs(s.id), single = qs.filter(q => !q.ch), by = {}, chs = new Set(qs.filter(q => q.ch).map(q => q.ch));
-    // only a few left before the type is ready: just those (mistakes first), not a whole round of questions already right
-    const left = skillLeft(s.id);
-    if (left.length && left.length <= SKILL_FOCUS) { items = left.map(makeItem); title = `${s.label} · ${left.length === 1 ? 'a que falta' : `as ${left.length} que faltam`}`; }
-    else {
-    BANK.filter(q => chs.has(q.ch) && !isReserved(q)).forEach(q => (by[q.ch] = by[q.ch] || []).push(q));
-    const chains = Object.values(by).map(a => a.sort((x, y) => parseInt(x.step) - parseInt(y.step)));
-    const done = a => a.filter(q => peek(q.id).c > 0 && !(peek(q.id).w && peek(q.id).box < TRAIN_CLEAR)).length / a.length;
-    const chain = chains.map(a => [done(a) + Math.random() * 0.3, a]).sort((x, y) => x[0] - y[0]).map(x => x[1])[0] || [];
-    items = [...pick(single, chain.length ? 6 : 8).sort((a, b) => a.l - b.l), ...chain].map(makeItem); }
-  }
+  if (mode === 'skill') { const s = SKBYID[opts.k]; if (!s) return; const R = skillRound(s); items = R.qs.map(makeItem); title = R.title; }
+  if (mode === 'near') { items = (opts.ids || []).filter(id => BYID[id]).map(id => makeItem(BYID[id])); title = 'Acabar o que está quase'; }
   if (mode === 'past') {
     const g = pastGroups().find(x => x.key === opts.key); if (!g) return; title = g.key;
     items = g.qs.map(makeItem);
@@ -22401,13 +22401,16 @@ function start(mode, opts = {}) {
       const li = learnItems(l);
       if (calcMode() === 'math' && !li.some(x => x.kind === 'q')) return;
       items.push(...li); });
+    // from the plan, a type's theory and its training in one task: the questions follow the lessons
+    if (opts.k && SKBYID[opts.k]) { const had = new Set(items.filter(x => x.kind === 'q').map(x => x.id));
+      items.push(...skillRound(SKBYID[opts.k]).qs.filter(q => !had.has(q.id)).map(makeItem)); }
   }
   if (mode === 'route') { const x = (C.route.stops || []).find(s => s.id === opts.stop); if (!x) return; items = routeItems(x); title = `${x.part ? x.part + ' · ' : ''}${x.title}`; }
   if (mode === 'retry') { items = opts.ids.map(id => BYID[id]).filter(Boolean).map(makeItem); title = 'Repetir erros'; }
   if (!items.length) { toast('Não há perguntas para estes filtros.'); return; }
   // flag the questions waiting in review, so the student knows which one they are fixing (never in the mock exam)
   if (mode !== 'exam') items.forEach(it => { if (it.kind === 'q' && isPending(it.id)) it.rev = true; });
-  ses = { mode, title, items, i: 0, planKey: opts.planKey || null, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, stop: opts.stop, nextWasOpen: !!opts.level && opts.level < LEVELS.length && unlocked(opts.level + 1), topic: opts.topic, skill: mode === 'skill' ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
+  ses = { mode, title, items, i: 0, planKey: opts.planKey || null, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, stop: opts.stop, nextWasOpen: !!opts.level && opts.level < LEVELS.length && unlocked(opts.level + 1), topic: opts.topic, skill: mode === 'skill' || (mode === 'learn' && opts.k) ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
   if (timeLimit) startTimer();
   sesKeep(); go(viewOf(items[0]));
 }
@@ -22664,17 +22667,24 @@ document.addEventListener('keydown', ev => {
 /* ---------- TODAY'S PLAN ("Hoje") ----------
    One answer to "what do I do now?", for every course. The app lists the work left, in the order the course teaches it,
    and fills today with it:
-   1. mistakes waiting in review (fixed while fresh);
-   2. per exam problem type not ready yet, in course order (topic order, then C.skills order): its theory if unseen,
-      then its key problem or its questions; a topic's lessons outside every type come after that topic's types;
-      a course without types (AMS) goes topic by topic, then level by level;
+   1. mistakes waiting in review (fixed while fresh), then a round from the plan left half way ("Continuar: …", which
+      resumes it and stands for its type's task), a key problem left half way, and the types one to NEAR_MAX questions
+      from ready, together in one task;
+   2. per exam problem type not ready yet, in course order (topic order, then C.skills order): its theory and its
+      questions as one task when the theory fits in one sitting ("Aprender e treinar"); otherwise the lessons first and
+      the training once they are all seen; a key problem stays its own task; a topic's lessons outside every type come
+      after that topic's types; a course without types (AMS) goes topic by topic, then level by level;
    3. when everything is ready, the mock exam.
+   A day starts at most NEW_DAY new types (more when the days left need it); then the day is done, and "Fazer mais um
+   pouco" opens a few more.
    With the test date and the minutes per day, the work left is spread over the days left; what doesn't fit is cut from
    the bottom (lessons outside every type, then the types that came up least) and the student is told what was cut.
    Times are ranges that start wide and narrow to the student's own pace, measured from their sessions:
    S.pace = { s: seconds per unit (a question = 1, a lesson = 2), n: samples, pb: key-problem time / nominal, pbn }.
    S.today = { d: 'YYYY-MM-DD', ms: time studied today, did: [plan keys done today] }. */
 const PLAN_UNIT = 45, PLAN_MIN = [15, 30, 45, 60], LEARN_MAX = 3;   // at most 3 lessons in one sitting
+const NEAR_MAX = 3, NEAR_Q = 12;   // types this close to ready go together in one task, up to NEAR_Q questions
+const NEW_DAY = 3;                 // new types started in a day, more only when the days left ask for it
 const todayStr = () => new Date().toLocaleDateString('sv');
 const planToday = () => { if (!S.today || S.today.d !== todayStr()) S.today = { d: todayStr(), ms: 0, did: [] }; return S.today; };
 const paceS = () => (S.pace && S.pace.n ? S.pace.s : PLAN_UNIT);
@@ -22691,6 +22701,7 @@ function minRange(m) {
   const lo = Math.max(1, r(m * a)), hi = Math.max(lo + 1, r(m * b));
   return `${lo}–${hi} min`;
 }
+const nL = n => n === 1 ? '1 lição' : `${n} lições`, nQ = n => n === 1 ? '1 pergunta' : `${n} perguntas`;
 const hoursText = m => m < 90 ? `${Math.round(m / 5) * 5 || 5} min` : `${String(Math.round(m / 30) / 2).replace('.', ',')} h`;
 
 // Every task left, in order. full: the whole remaining work of each type (for the pace), not just today's piece.
@@ -22703,9 +22714,16 @@ function planAll() {
   const half = (C.problems || []).find(p => pbSaved(p) && partTopics().includes(p.t));
   if (half) { const K = pbSaved(half), left = K.st.filter(x => x[0] === 'todo').length / K.st.length;
     T.push({ key: 'pb:' + half.id, kind: 'pb', skill: half.skill, w: 1e9, id: half.id, label: `Acabar o problema: ${half.short || half.title}`, why: 'Continuas no passo onde paraste.', min: Math.max(2, pbNominal(half) * left * ((S.pace && S.pace.pbn) ? S.pace.pb : 1)), full: 0 }); }
+  // a round started from the plan and left half way comes back as itself (its type's task may have changed meanwhile:
+  // with the lessons seen, "Aprender e treinar" becomes "Treinar"), so it is resumed and never started over
+  const K = sesSaved(), rs = K && K.planKey ? K : null;
+  if (rs) { const nq = rs.items.filter(x => x.kind === 'q').length, done = rs.results.length;
+    T.push({ key: rs.planKey, kind: 'resume', skill: rs.skill || null, w: 1e9, rnew: rs.planKey.startsWith('learn') ? rs.skill || rs.planKey : null, label: `Continuar: ${rs.title.replace(/^(Aprender e treinar|Aprender|Treinar): /, '')}`,
+      why: `Ficou a meio: ${done} de ${nQ(nq)} feita${done === 1 ? '' : 's'}. Continuas onde paraste.`, units: Math.max(1, rs.items.slice(rs.i).filter(x => x.kind === 'q').length), full: 0 }); }
   // the last days before an open-book exam: the sheet they take is worth a look and a print
   const dl = daysLeft();
   if (openBook() && SKILLS.length && dl !== null && dl >= 0 && dl <= 3) T.push({ key: 'sheet', kind: 'sheet', label: 'Rever e imprimir a tua cábula', why: `O exame é ${dl === 0 ? 'hoje e é ' : ''}com consulta.`, min: 10, full: 0 });
+  const nFront = T.length;
   if (SKILLS.length) {
     const nExams = pastList().length || pastGroups().length;
     const steps = readySummary().rows.filter(x => x.r.state !== 'ready').map(x => ({ at: skillAt(x.s), x })), TK = Object.keys(TOPICS);
@@ -22717,16 +22735,33 @@ function planAll() {
         return; }
       const { s, r, w } = st.x;
       const why = (s.seen || []).length ? `Saiu em ${s.seen.length} de ${nExams} exames.` : 'Matéria de base.';
-      const L = unseen(s.les || []);
-      const B = learnBatch(L);
-      if (L.length) T.push({ key: 'learn:' + s.id, kind: 'learn', skill: s.id, w, t: s.t, les: B, label: `Aprender: ${s.label}`, why: `${L.length === 1 ? '1 lição' : `${L.length} lições`} por ver.`, units: lesUnits(B), full: lesUnits(L) });
-      const p = (C.problems || []).find(x => x.skill === s.id), ps = p && pbStatus(p);
-      const left = r.total - r.ok;
+      const L = unseen(s.les || []), B = learnBatch(L);
+      const p = (C.problems || []).find(x => x.skill === s.id), ps = p && pbStatus(p), pbDue = !!(p && ps.due);
+      const left = r.total - r.ok, round = left <= SKILL_FOCUS ? left : 10;
+      const pbT = () => ({ key: 'pb:' + p.id, kind: 'pb', skill: s.id, w, id: p.id, label: `Problema-chave: ${p.short || p.title}`, why, min: pbNominal(p) * ((S.pace && S.pace.pbn) ? S.pace.pb : 1), full: left });
+      if (L.length && B.length === L.length && !pbDue && !(half && p && p.id === half.id)) {
+        // the whole theory fits in one sitting: lessons and training are one task, one session
+        T.push({ key: 'learn:' + s.id, kind: 'learn', train: true, skill: s.id, w, t: s.t, les: B, label: `Aprender e treinar: ${s.label}`,
+          why: `${nL(L.length)} e ${left <= SKILL_FOCUS ? nQ(left) : 'uma ronda de perguntas'}. ${why}`, units: lesUnits(B) + round, full: lesUnits(L) + left });
+        return; }
+      if (L.length) {
+        // more theory than one sitting: the lessons first; the training waits until they are all seen (its work still counts)
+        const later = B.length < L.length;
+        T.push({ key: 'learn:' + s.id, kind: 'learn', skill: s.id, w, t: s.t, les: B, label: `Aprender: ${s.label}`,
+          why: `${nL(L.length)} por ver${later ? `, ${B.length} de cada vez. Depois, as perguntas` : ''}.`, units: lesUnits(B), full: lesUnits(L) + (later ? left : 0), xmin: later && pbDue ? taskMin(pbT()) : 0 });
+        if (later) return; }
       if (half && p && p.id === half.id) return;   // already first in the plan
-      if (p && ps.due) T.push({ key: 'pb:' + p.id, kind: 'pb', skill: s.id, w, id: p.id, label: `Problema-chave: ${p.short || p.title}`, why, min: pbNominal(p) * ((S.pace && S.pace.pbn) ? S.pace.pb : 1), full: left });
-      else if (left <= SKILL_FOCUS) T.push({ key: 'skill:' + s.id, kind: 'skill', skill: s.id, w, label: `Treinar: ${s.label}`, why: `${why} ${left === 1 ? 'Falta 1 pergunta.' : `Faltam ${left} perguntas.`}`, units: left, full: left });
-      else T.push({ key: 'skill:' + s.id, kind: 'skill', skill: s.id, w, label: `Treinar: ${s.label}`, why, units: 10, full: left });
+      if (pbDue) T.push(pbT());
+      else T.push({ key: 'skill:' + s.id, kind: 'skill', skill: s.id, w, label: `Treinar: ${s.label}`, why: left <= SKILL_FOCUS ? `${why} ${left === 1 ? 'Falta 1 pergunta.' : `Faltam ${left} perguntas.`}` : why, units: round, full: left, left });
     });
+    // types one to NEAR_MAX questions from ready: one task, right after the mistakes, instead of a line each
+    const near = T.filter(t => t.kind === 'skill' && t.left <= NEAR_MAX), take = []; let nq = 0;
+    near.forEach(t => { if (nq + t.left <= NEAR_Q) { take.push(t); nq += t.left; } });
+    if (take.length >= 2) {
+      const ids = take.flatMap(t => skillLeft(t.skill).map(q => q.id));
+      take.forEach(t => T.splice(T.indexOf(t), 1));
+      T.splice(nFront, 0, { key: 'near:' + take[0].skill, kind: 'near', ids, label: 'Acabar o que está quase', why: `${nQ(ids.length)} de ${take.length} tipos quase prontos.`, units: ids.length, full: ids.length });
+    }
     if (!T.length) T.push({ key: 'exam', kind: 'exam', label: 'Exame simulado', why: 'Todos os tipos estão prontos.', units: examCfg().n, full: 0 });
   } else {
     Object.keys(TOPICS).filter(k => pt.includes(k)).forEach(k => { const L = unseen(LESSONS.filter(l => l.t === k).map(l => l.id)), B = learnBatch(L);
@@ -22735,12 +22770,16 @@ function planAll() {
     if (left) T.splice(Math.min(T.length, rv || re ? 2 : 1), 0, { key: 'level:' + tl, kind: 'level', level: tl, label: `Nível ${tl} · ${LEVELS[tl - 1].t}`, why: tl < LEVELS.length ? `O nível ${tl + 1} abre com ${Math.round(UNLOCK * 100)}% deste.` : 'O último nível.', units: Math.min(left, 10), full: BANK.filter(q => !isReserved(q) && inTopics(q) && !peek(q.id).c).length, w: 1 });
     if (!T.length) T.push({ key: 'exam', kind: 'exam', label: 'Exame simulado', why: 'Está tudo feito.', units: examCfg().n, full: 0 });
   }
-  return T;
+  // the saved round stands for its own task and for its type's, whose work it carries for the pace
+  if (!rs) return T;
+  const mine = t => t.kind !== 'resume' && (t.key === rs.planKey || (rs.skill && t.skill === rs.skill && t.kind !== 'pb')), R = T.find(t => t.kind === 'resume');
+  R.full = T.filter(mine).reduce((a, t) => a + t.full, 0); R.skill = R.full ? rs.skill : null;
+  return T.filter(t => !mine(t));
 }
 // The pace: work left against days left. Returns what to cut (lowest-weight types first) when it doesn't fit.
 function planPace(T) {
   const d = daysLeft(), per = S.settings.minDay || 30;
-  const work = t => t.kind === 'pb' ? taskMin(t) + t.full * paceS() / 60 : t.full * paceS() / 60;
+  const work = t => (t.xmin || 0) + (t.kind === 'pb' ? taskMin(t) : 0) + t.full * paceS() / 60;
   const total = T.reduce((a, t) => a + work(t), 0);
   if (d === null || d < 1) return { d, total, per, cut: [] };
   const budget = d * per; let need = total; const cut = [];
@@ -22748,18 +22787,35 @@ function planPace(T) {
   Object.entries(bySkill).sort((a, b) => a[1].w - b[1].w).forEach(([k, v]) => { if (need > budget) { need -= v.m; cut.push(Object.assign({ k }, v)); } });
   return { d, total, per, cut, need: total / d };
 }
+// A new type: its theory (any lesson task), or a type with nothing tried yet. Its id, so a type's lessons and its
+// key problem count once.
+const newOf = t => t.kind === 'resume' ? t.rnew : t.kind === 'learn' ? (t.skill || t.base || t.t) : t.skill && t.kind !== 'near' && readiness(t.skill).state === 'todo' ? t.skill : null;
 function planFor(more) {
   const all = planAll(), P = planPace(all), cut = new Set(P.cut.map(c => c.k)), td = planToday();
   const left = more ? (S.settings.minDay || 30) : (S.settings.minDay || 30) - td.ms / 60000;
   const pool = all.filter(t => !td.did.includes(t.key) && !cut.has(planGroup(t))), list = []; let m = 0;
-  for (const t of pool) { const x = taskMin(t); if (list.length && m + x > left) break; list.push(t); m += x; if (m >= left) break; }
-  return { all, P, list: left > 0 ? list : [], min: m, done: left <= 0, next: pool[0], spent: td.ms / 60000 };
+  // New types a day: NEW_DAY, or what the days left need. Theory done today counts; "Fazer mais um pouco" opens a few more.
+  const newLeft = new Set(pool.map(newOf).filter(Boolean)).size, perDay = P.d > 0 ? Math.max(NEW_DAY, Math.ceil(newLeft / P.d)) : NEW_DAY;
+  const newToday = td.did.filter(k => k.startsWith('learn')).length, room = more ? perDay : perDay - newToday, taken = new Set();
+  // a skipped new type is skipped all the way down: its key problem never comes before its lessons
+  const held = new Set();
+  for (const t of pool) {
+    const n = newOf(t);
+    if (n && (held.has(n) || (!taken.has(n) && taken.size >= room))) { held.add(n); continue; }
+    const x = taskMin(t); if (list.length && m + x > left) break;
+    if (n) taken.add(n); list.push(t); m += x; if (m >= left) break; }
+  // the time is not up but the new types are: today's plan is done (the student can still ask for more)
+  return { all, P, list: left > 0 ? list : [], min: m, done: left <= 0 || !list.length, next: pool[0], spent: td.ms / 60000 };
 }
 function planRun(i, more) {
   const t = planFor(more).list[i] || planFor(true).list[i]; if (!t) { toast('Nada no plano agora.'); return; }
+  // the same task left half way: carry on from where it stopped, never start it over
+  const K = sesSaved(); if (K && K.planKey === t.key) { sesResume(); return; }
   const o = { planKey: t.key };
+  if (t.kind === 'resume') { sesResume(); return; }
   if (t.kind === 'review' || t.kind === 'reviewExam' || t.kind === 'exam') start(t.kind, o);
-  else if (t.kind === 'learn') start('learn', Object.assign(o, { topic: t.t, les: t.les, title: t.label }));
+  else if (t.kind === 'learn') start('learn', Object.assign(o, { topic: t.t, les: t.les, title: t.label, k: t.train ? t.skill : undefined }));
+  else if (t.kind === 'near') start('near', Object.assign(o, { ids: t.ids }));
   else if (t.kind === 'skill') start('skill', Object.assign(o, { k: t.skill }));
   else if (t.kind === 'level') start('level', Object.assign(o, { level: t.level }));
   else if (t.kind === 'pb') pbStart(t.id, t.key);

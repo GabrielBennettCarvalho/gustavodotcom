@@ -130,9 +130,17 @@ A lesson with no markers works as before: the whole text, then its two easiest q
 ## Today's plan (Hoje)
 
 The top of every course's home (`src/engine/app-plan.js`). It answers "what do I do now?": mistakes in review first, then each
-exam problem type not ready yet, in the order the course teaches them (topic order, then the order of `skills`; its theory if unseen, up to 3 lessons or about 12 minutes at a time, then
-its key problem or its questions). A topic's lessons that belong to no type (APRE's Dados) come after that topic's types. A key problem left half done comes right after the mistakes. Courses without `skills` go
-topic by topic and level by level. With everything ready, it offers the mock exam.
+exam problem type not ready yet, in the order the course teaches them (topic order, then the order of `skills`). A topic's lessons that belong to no type (APRE's Dados) come after that topic's types. Courses without `skills` go
+topic by topic and level by level. With everything ready, it offers the mock exam. Few lines, one per real piece of work:
+
+- **Aprender e treinar:** when a type's unseen theory fits in one sitting (up to 3 lessons, about 12 minutes), its lessons and
+  its questions are one task and one session. Longer theory goes first in batches, and the training waits until it is all seen.
+  A key problem stays a task of its own.
+- **Acabar o que está quase:** the types 1 to 3 questions from ready share one task (up to 12 questions), right after the mistakes.
+- **Left half way:** a round started from the plan and left half way shows as "Continuar: …" right after the mistakes and resumes
+  where it stopped (the "Ronda a meio" strip above the plan stays too). A key problem left half done also comes right after the mistakes.
+- **New types a day:** at most 3, or more when the days left need it (new types left ÷ days left). Then the day is done even with
+  minutes left, and "Fazer mais um pouco" opens a few more.
 
 - **Pace:** with the test date and the minutes per day (15, 30, 45 or 60), the work left is spread over the days left.
   When it doesn't fit, the lessons outside every type are cut first, then the types that came up least, and the card says which.

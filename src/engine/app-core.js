@@ -511,6 +511,19 @@ function learnItems(L) {
 }
 // work units of a lesson in Aprender (a question = 1, reading the lesson = 2), for the times in the plan
 const learnUnits = L => 2 + learnItems(L).filter(x => x.kind === 'q').length;
+// One round of an exam problem type: a few single questions (weakest first), then one whole problem in steps.
+// Only a few left before the type is ready: just those (mistakes first), not a whole round of questions already right.
+function skillRound(s) {
+  const left = skillLeft(s.id);
+  if (left.length && left.length <= SKILL_FOCUS) return { qs: left, title: `${s.label} · ${left.length === 1 ? 'a que falta' : `as ${left.length} que faltam`}` };
+  // a problem in steps comes whole, even when its other steps belong to other types (forward → backprop)
+  const qs = skillQs(s.id), single = qs.filter(q => !q.ch), by = {}, chs = new Set(qs.filter(q => q.ch).map(q => q.ch));
+  BANK.filter(q => chs.has(q.ch) && !isReserved(q)).forEach(q => (by[q.ch] = by[q.ch] || []).push(q));
+  const chains = Object.values(by).map(a => a.sort((x, y) => parseInt(x.step) - parseInt(y.step)));
+  const done = a => a.filter(q => peek(q.id).c > 0 && !(peek(q.id).w && peek(q.id).box < TRAIN_CLEAR)).length / a.length;
+  const chain = chains.map(a => [done(a) + Math.random() * 0.3, a]).sort((x, y) => x[0] - y[0]).map(x => x[1])[0] || [];
+  return { qs: [...pick(single, chain.length ? 6 : 8).sort((a, b) => a.l - b.l), ...chain], title: s.label };
+}
 function start(mode, opts = {}) {
   let items = [], title = '', timeLimit = 0;
   const pool = trainPool();
@@ -526,21 +539,8 @@ function start(mode, opts = {}) {
   if (mode === 'extra') { const x = (C.extras || []).find(e => e.id === opts.extra); if (!x) return; items = (x.questions(extraApi()) || []).map(makeItem); title = x.title; }
   if (mode === 'exam') { items = buildExam().map(makeItem); title = 'Exame simulado'; timeLimit = examCfg().min * 60; }
   if (mode === 'supp') { items = pick(suppPool(), 10).sort((a, b) => a.l - b.l).map(makeItem); title = 'Suplementares'; }
-  if (mode === 'skill') {
-    // one exam problem type: a few single questions (weakest first), then one whole problem in steps
-    const s = SKBYID[opts.k]; if (!s) return; title = s.label;
-    // a problem in steps comes whole, even when its other steps belong to other types (forward → backprop)
-    const qs = skillQs(s.id), single = qs.filter(q => !q.ch), by = {}, chs = new Set(qs.filter(q => q.ch).map(q => q.ch));
-    // only a few left before the type is ready: just those (mistakes first), not a whole round of questions already right
-    const left = skillLeft(s.id);
-    if (left.length && left.length <= SKILL_FOCUS) { items = left.map(makeItem); title = `${s.label} · ${left.length === 1 ? 'a que falta' : `as ${left.length} que faltam`}`; }
-    else {
-    BANK.filter(q => chs.has(q.ch) && !isReserved(q)).forEach(q => (by[q.ch] = by[q.ch] || []).push(q));
-    const chains = Object.values(by).map(a => a.sort((x, y) => parseInt(x.step) - parseInt(y.step)));
-    const done = a => a.filter(q => peek(q.id).c > 0 && !(peek(q.id).w && peek(q.id).box < TRAIN_CLEAR)).length / a.length;
-    const chain = chains.map(a => [done(a) + Math.random() * 0.3, a]).sort((x, y) => x[0] - y[0]).map(x => x[1])[0] || [];
-    items = [...pick(single, chain.length ? 6 : 8).sort((a, b) => a.l - b.l), ...chain].map(makeItem); }
-  }
+  if (mode === 'skill') { const s = SKBYID[opts.k]; if (!s) return; const R = skillRound(s); items = R.qs.map(makeItem); title = R.title; }
+  if (mode === 'near') { items = (opts.ids || []).filter(id => BYID[id]).map(id => makeItem(BYID[id])); title = 'Acabar o que está quase'; }
   if (mode === 'past') {
     const g = pastGroups().find(x => x.key === opts.key); if (!g) return; title = g.key;
     items = g.qs.map(makeItem);
@@ -552,13 +552,16 @@ function start(mode, opts = {}) {
       const li = learnItems(l);
       if (calcMode() === 'math' && !li.some(x => x.kind === 'q')) return;
       items.push(...li); });
+    // from the plan, a type's theory and its training in one task: the questions follow the lessons
+    if (opts.k && SKBYID[opts.k]) { const had = new Set(items.filter(x => x.kind === 'q').map(x => x.id));
+      items.push(...skillRound(SKBYID[opts.k]).qs.filter(q => !had.has(q.id)).map(makeItem)); }
   }
   if (mode === 'route') { const x = (C.route.stops || []).find(s => s.id === opts.stop); if (!x) return; items = routeItems(x); title = `${x.part ? x.part + ' · ' : ''}${x.title}`; }
   if (mode === 'retry') { items = opts.ids.map(id => BYID[id]).filter(Boolean).map(makeItem); title = 'Repetir erros'; }
   if (!items.length) { toast('Não há perguntas para estes filtros.'); return; }
   // flag the questions waiting in review, so the student knows which one they are fixing (never in the mock exam)
   if (mode !== 'exam') items.forEach(it => { if (it.kind === 'q' && isPending(it.id)) it.rev = true; });
-  ses = { mode, title, items, i: 0, planKey: opts.planKey || null, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, stop: opts.stop, nextWasOpen: !!opts.level && opts.level < LEVELS.length && unlocked(opts.level + 1), topic: opts.topic, skill: mode === 'skill' ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
+  ses = { mode, title, items, i: 0, planKey: opts.planKey || null, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, stop: opts.stop, nextWasOpen: !!opts.level && opts.level < LEVELS.length && unlocked(opts.level + 1), topic: opts.topic, skill: mode === 'skill' || (mode === 'learn' && opts.k) ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };
   if (timeLimit) startTimer();
   sesKeep(); go(viewOf(items[0]));
 }

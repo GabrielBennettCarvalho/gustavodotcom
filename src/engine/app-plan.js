@@ -135,10 +135,11 @@ function planAll() {
       if (np && !left) return;   // what it still needs has calculations: it waits for paper
       const sc = np ? ' sem contas' : '';
       if (pbDue) T.push(pbT());
-      else T.push({ key: 'skill:' + s.id, kind: 'skill', skill: s.id, w, label: `Treinar: ${s.label}`, why: left <= SKILL_FOCUS ? `${why} ${left === 1 ? `Falta 1 pergunta${sc}.` : `Faltam ${left} perguntas${sc}.`}` : np ? `${why} Só as perguntas sem contas.` : why, sec: rq, fq: lq, fl: 0, left });
+      else T.push({ key: 'skill:' + s.id, kind: 'skill', skill: s.id, w, label: `Treinar: ${s.label}`, why: left <= SKILL_FOCUS ? `${why} ${left === 1 ? `Falta 1 pergunta${sc}.` : `Faltam ${left} perguntas${sc}.`}` : np ? `${why} Só as perguntas sem contas.` : why, sec: rq, fq: lq, fl: 0, left, need: r.left });
     });
-    // types one to NEAR_MAX questions from ready: one task, right after the mistakes, instead of a line each
-    const near = T.filter(t => t.kind === 'skill' && t.left <= NEAR_MAX), take = []; let nq = 0;
+    // types one to NEAR_MAX questions from ready: one task, right after the mistakes, instead of a line each.
+    // need: what the type really needs (left is only what can be done now, without calculations).
+    const near = T.filter(t => t.kind === 'skill' && t.need <= NEAR_MAX), take = []; let nq = 0;
     near.forEach(t => { if (nq + t.left <= NEAR_Q) { take.push(t); nq += t.left; } });
     if (take.length >= 2) {
       const ids = take.flatMap(t => skillLeftNow(t.skill).map(q => q.id));

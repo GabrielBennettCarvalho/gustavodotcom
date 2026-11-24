@@ -31,13 +31,15 @@ function minRange(m) {
 const hoursText = m => m < 90 ? `${Math.round(m / 5) * 5 || 5} min` : `${String(Math.round(m / 30) / 2).replace('.', ',')} h`;
 
 // Every task left, in order. full: the whole remaining work of each type (for the pace), not just today's piece.
+// Without calculations (noCalcNow: "Sem papel" or "Só teoria"): the review pools already leave them out; the types
+// train only their questions without them, and key problems and the mock exam wait for paper.
 function planAll() {
-  const T = [], rv = reviewPool().length, re = examReviewPool().length, pt = partTopics();
+  const T = [], rv = reviewPool().length, re = examReviewPool().length, pt = partTopics(), np = noCalcNow();
   if (rv) T.push({ key: 'review', kind: 'review', label: `Rever ${rv} erro${rv === 1 ? '' : 's'}`, why: '', units: Math.min(rv, 12), full: rv });
   if (re) T.push({ key: 'reviewExam', kind: 'reviewExam', label: `Rever ${re} erro${re === 1 ? '' : 's'} do exame simulado`, why: `Saem quando os acertares ${EXAM_CLEAR} vezes seguidas.`, units: Math.min(re, 12), full: re });
   const unseen = ids => ids.filter(id => LBYID[id] && !(S.seenL || {})[id]);
   // a key problem left half done comes right after the mistakes: finishing it costs less than starting anything else
-  const half = (C.problems || []).find(p => pbSaved(p) && partTopics().includes(p.t));
+  const half = !np && (C.problems || []).find(p => pbSaved(p) && partTopics().includes(p.t));
   if (half) { const K = pbSaved(half), left = K.st.filter(x => x[0] === 'todo').length / K.st.length;
     T.push({ key: 'pb:' + half.id, kind: 'pb', skill: half.skill, w: 1e9, id: half.id, label: `Acabar o problema: ${half.short || half.title}`, why: 'Continuas no passo onde paraste.', min: Math.max(2, pbNominal(half) * left * ((S.pace && S.pace.pbn) ? S.pace.pb : 1)), full: 0 }); }
   // the last days before an open-book exam: the sheet they take is worth a look and a print
@@ -58,20 +60,24 @@ function planAll() {
       const B = learnBatch(L);
       if (L.length) T.push({ key: 'learn:' + s.id, kind: 'learn', skill: s.id, w, t: s.t, les: B, label: `Aprender: ${s.label}`, why: `${L.length === 1 ? '1 lição' : `${L.length} lições`} por ver.`, units: lesUnits(B), full: lesUnits(L) });
       const p = (C.problems || []).find(x => x.skill === s.id), ps = p && pbStatus(p);
-      const left = r.total - r.ok;
+      const left = np ? skillLeft(s.id).filter(q => !q.calc).length : r.total - r.ok;
       if (half && p && p.id === half.id) return;   // already first in the plan
+      if (np) { if (left) T.push({ key: 'skill:' + s.id, kind: 'skill', skill: s.id, w, label: `Treinar: ${s.label}`, why: `${why} ${left === 1 ? 'Falta 1 pergunta' : `Faltam ${left} perguntas`} sem contas.`, units: left <= SKILL_FOCUS ? left : 10, full: left });
+        return; }   // nothing left without calculations: it waits for paper
       if (p && ps.due) T.push({ key: 'pb:' + p.id, kind: 'pb', skill: s.id, w, id: p.id, label: `Problema-chave: ${p.short || p.title}`, why, min: pbNominal(p) * ((S.pace && S.pace.pbn) ? S.pace.pb : 1), full: left });
       else if (left <= SKILL_FOCUS) T.push({ key: 'skill:' + s.id, kind: 'skill', skill: s.id, w, label: `Treinar: ${s.label}`, why: `${why} ${left === 1 ? 'Falta 1 pergunta.' : `Faltam ${left} perguntas.`}`, units: left, full: left });
       else T.push({ key: 'skill:' + s.id, kind: 'skill', skill: s.id, w, label: `Treinar: ${s.label}`, why, units: 10, full: left });
     });
-    if (!T.length) T.push({ key: 'exam', kind: 'exam', label: 'Exame simulado', why: 'Todos os tipos estão prontos.', units: examCfg().n, full: 0 });
+    if (!T.length && !np) T.push({ key: 'exam', kind: 'exam', label: 'Exame simulado', why: 'Todos os tipos estão prontos.', units: examCfg().n, full: 0 });
   } else {
     Object.keys(TOPICS).filter(k => pt.includes(k)).forEach(k => { const L = unseen(LESSONS.filter(l => l.t === k).map(l => l.id)), B = learnBatch(L);
       if (L.length) T.push({ key: 'learn:' + k, kind: 'learn', t: k, les: B, label: `Aprender: ${TOPICS[k].label || TOPICS[k].short}`, why: L.length > B.length ? `${B.length === 1 ? 'A próxima' : `As próximas ${B.length}`} de ${L.length} lições por ver.` : `${L.length} ${L.length === 1 ? 'lição' : 'lições'} por ver.`, units: lesUnits(B), full: lesUnits(L), w: 1 }); });
     const tl = topLevel(), m = mastery(tl), left = m.total - m.done;
     if (left) T.splice(Math.min(T.length, rv || re ? 2 : 1), 0, { key: 'level:' + tl, kind: 'level', level: tl, label: `Nível ${tl} · ${LEVELS[tl - 1].t}`, why: tl < LEVELS.length ? `O nível ${tl + 1} abre com ${Math.round(UNLOCK * 100)}% deste.` : 'O último nível.', units: Math.min(left, 10), full: BANK.filter(q => !isReserved(q) && inTopics(q) && !peek(q.id).c).length, w: 1 });
-    if (!T.length) T.push({ key: 'exam', kind: 'exam', label: 'Exame simulado', why: 'Está tudo feito.', units: examCfg().n, full: 0 });
+    if (!T.length && !np) T.push({ key: 'exam', kind: 'exam', label: 'Exame simulado', why: 'Está tudo feito.', units: examCfg().n, full: 0 });
   }
+  // a task done without paper leaves its calculations behind: its own key, so they still show up today with paper
+  if (np) T.forEach(t => { if (['review', 'reviewExam', 'skill', 'level'].includes(t.kind)) t.key += ':np'; });
   return T;
 }
 // The pace: work left against days left. Returns what to cut (lowest-weight types first) when it doesn't fit.
@@ -86,7 +92,7 @@ function planPace(T) {
   return { d, total, per, cut, need: total / d };
 }
 function planFor(more) {
-  const all = planAll(), P = planPace(all), cut = new Set(P.cut.map(c => c.k)), td = planToday();
+  const all = planAll(), P = planPace(noCalcNow() ? withPaper(planAll) : all), cut = new Set(P.cut.map(c => c.k)), td = planToday();
   const left = more ? (S.settings.minDay || 30) : (S.settings.minDay || 30) - td.ms / 60000;
   const pool = all.filter(t => !td.did.includes(t.key) && !cut.has(planGroup(t))), list = []; let m = 0;
   for (const t of pool) { const x = taskMin(t); if (list.length && m + x > left) break; list.push(t); m += x; if (m >= left) break; }
@@ -129,9 +135,13 @@ function PlanCard() {
   if (p.done && !view.planMore) return `<section class="plan-card done"><div class="row"><h2>Hoje ✓</h2><span class="spacer"></span><span class="mono muted">${Math.round(p.spent)} min feitos</span></div>
       <p>Plano de hoje feito.${p.next ? ` Amanhã começas por <b>${esc(p.next.label)}</b>.` : ''}</p>
       <div class="row"><button class="btn" data-act="planMore">Fazer mais um pouco</button></div>${rcStrip('recap')}<p class="plan-pace">${pace}</p>${set}</section>`;
+  const np = noCalcNow(), npBtn = hasCalc() ? `<button class="btn small np-tog" data-act="noPaper" aria-pressed="${np}" title="Para quando não tens papel nem caneta: no autocarro, numa passadeira. Fica ligado neste aparelho.">${glyph('pen')}Sem papel</button>` : '';
+  const npWhy = noPaper() ? 'Sem papel' : 'Só teoria';   // which one turned the calculations off
+  const npNote = np ? `<p class="plan-np">${p.list.length ? `${npWhy}: só o que se faz a ler e a clicar.` : `${npWhy}, não sobra nada para hoje: o que falta precisa de contas.`} ${(C.problems || []).length ? 'As contas e os problemas-chave esperam' : 'As contas esperam'} por papel, e o ritmo continua a contá-las.</p>` : '';
+  if (np && !p.list.length) return `<section class="plan-card"><div class="row"><h2>Hoje</h2><span class="spacer"></span>${npBtn}</div>${npNote}${rcStrip('warm')}${rcStrip('recap')}<p class="plan-pace">${pace}</p>${set}</section>`;
   const items = p.list.map((t, i) => `<li><button class="plan-item" data-act="planGo" data-i="${i}"><span class="pi-n mono">${i + 1}</span><span class="pi-main"><b>${esc(t.label)}</b>${t.why ? `<span class="muted">${esc(t.why)}</span>` : ''}</span><span class="pi-t mono">${minRange(taskMin(t))}</span></button></li>`).join('');
-  return `<section class="plan-card"><div class="row"><h2>Hoje</h2><span class="spacer"></span><span class="mono muted">${minRange(p.min)}</span></div>
-    ${rcStrip('warm')}
+  return `<section class="plan-card"><div class="row"><h2>Hoje</h2><span class="spacer"></span>${npBtn}<span class="mono muted">${minRange(p.min)}</span></div>
+    ${npNote}${rcStrip('warm')}
     <ol class="plan-list">${items}</ol>
     <div class="row"><button class="btn primary" data-act="planGo" data-i="0">Começar →</button>${p.spent >= 1 ? `<span class="muted" style="font-size:13px">${Math.round(p.spent)} min feitos hoje</span>` : ''}</div>${rcStrip('recap')}
     <p class="plan-pace">${pace}</p>${set}</section>`;

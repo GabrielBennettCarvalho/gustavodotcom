@@ -218,6 +218,13 @@ are synthesized (no files) and can be muted.
   but a level never locks again when you switch: a level passed with theory only (or with everything) stays open,
   and a level with nothing shown in the current mode doesn't block the next one. The old `noCalc: true` setting
   becomes "Só teoria".
+- **Sem papel** (a button on the Hoje card, in courses with `calc: true` questions): for the bus or a treadmill. It
+  is "Só teoria" saved per device for every course (`estudo-ist-nopaper`), not in the progress key; picking
+  Tudo / Só teoria / Só contas turns it off. With either one on, the plan changes too: a type trains only its
+  questions without calculations (the steps without them come as single questions), key problems and the mock exam
+  wait for paper, and tasks done this way are logged apart (`…:np`), so their calculations still show up the same day
+  with paper. The pace still counts the calculations, so days without them never shrink the work left. The button
+  shows either one; turning it off turns both off.
 - The top bar cycles the colour theme (auto / claro / escuro), saved per device. Total XP is the sum of all courses.
 
 ## Calculator

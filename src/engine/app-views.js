@@ -144,7 +144,7 @@ function finish() {
     ses.penalty = pen; ses.grade = Math.max(0, Math.round((ok - pen) / tot * 200) / 10); ses.rawGrade = Math.round(ok / tot * 200) / 10; const g = ses.results.filter(r => r.ok).reduce((a, r) => a + XP[BYID[r.id].l], 0); S.xp += g; ses.xp = g; }
   if (ses.mode === 'route' && ses.stop) { if (!S.route) S.route = {}; S.route[ses.stop] = Date.now(); }
   S.rounds++; S.sessions.push({ m: ses.mode, d: Date.now(), n: ses.results.length, ok: ses.results.filter(r => r.ok).length }); if (S.sessions.length > 400) S.sessions = S.sessions.slice(-400);
-  { const nl = new Set(ses.items.slice(0, ses.i + 1).filter(x => x.kind === 'lesson').map(x => x.id)).size, key = ses.planKey || (ses.mode === 'skill' ? 'skill:' + ses.skill : ses.mode === 'level' ? 'level:' + ses.level : ses.mode === 'route' ? 'route:' + ses.stop : ses.mode);
+  { const nl = new Set(ses.items.slice(0, ses.i + 1).filter(x => x.kind === 'lesson').map(x => x.id)).size, key = ses.planKey || (ses.mode === 'skill' ? 'skill:' + ses.skill : ses.mode === 'level' ? 'level:' + ses.level : ses.mode === 'route' ? 'route:' + ses.stop : ses.mode) + (!ses.planKey && noCalcNow() && ['skill', 'level', 'review', 'reviewExam'].includes(ses.mode) ? ':np' : '');   // as the plan names it without paper
     planLog(key, Date.now() - ses.startedAt, ses.results.length + 2 * nl, 0, ses.mode === 'exam'); }
   save(); go('results');
 }
@@ -452,7 +452,9 @@ document.addEventListener('click', async ev => {
     case 'extra': start('extra', { extra: b.dataset.k }); break;
     case 'startReview': start(b.dataset.k); break;
     case 'topic': { const k = b.dataset.k; const set = new Set(S.settings.topics); set.has(k) ? set.delete(k) : set.add(k); if (!partTopics().some(t => set.has(t))) { toast('Tem de ficar pelo menos um tema.'); return; } S.settings.topics = Object.keys(TOPICS).filter(t => set.has(t)); save(); renderView(); break; }
-    case 'calcMode': S.settings.calcMode = b.dataset.k; save(); renderView(); break;
+    case 'calcMode': S.settings.calcMode = b.dataset.k; setNoPaper(false); save(); renderView(); break;
+    // the button shows "no calculations now", whichever turned it on; off turns both off
+    case 'noPaper': if (noCalcNow()) { setNoPaper(false); if (S.settings.calcMode === 'theory') { S.settings.calcMode = 'all'; save(); } } else setNoPaper(true); renderView(); break;
     case 'part': S.settings.part = b.dataset.k; S.settings.topics = Object.keys(TOPICS); save(); renderView(); break;
     case 'skill': start('skill', { k: b.dataset.k }); break;
     case 'pastx': start('past', { key: b.dataset.k }); break;

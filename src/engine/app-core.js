@@ -165,7 +165,19 @@ const ZERO = { c: 0, w: 0, box: 0, ew: 0, eb: 0, last: 0 };
 const st = id => { const s = S.stats[id] || (S.stats[id] = { ...ZERO }); for (const k in ZERO) if (s[k] === undefined) s[k] = 0; return s; };
 const peek = id => Object.assign({}, ZERO, S.stats[id]);
 // calcMode: 'all' everything · 'theory' hides calc questions ("Só teoria") · 'math' only calc questions ("Só contas")
-const calcMode = () => hasCalc() ? S.settings.calcMode : 'all';
+/* "Sem papel": on the bus or a treadmill, no pen at hand. It is "Só teoria" kept on this device only, for every course,
+   outside the progress key: the same student has paper at the desk and not on the bus.
+   Without calculations (either one), the Hoje plan changes too: no key problems, no mock exam, types train only their
+   questions without calculations. The pace still counts them all. */
+const LS_NOPAPER = 'estudo-ist-nopaper';
+let noPaperDev = ls_get_raw(LS_NOPAPER) === '1', paperForce = 0;
+const noPaper = () => noPaperDev && hasCalc();
+function setNoPaper(on) { noPaperDev = !!on; try { localStorage.setItem(LS_NOPAPER, on ? '1' : '0'); } catch {} }
+// f with everything shown: the plan's pace counts the calculations even when they are hidden now
+function withPaper(f) { paperForce++; try { return f(); } finally { paperForce--; } }
+const calcMode = () => !hasCalc() || paperForce ? 'all' : noPaper() ? 'theory' : S.settings.calcMode;
+// no calculations right now: "Sem papel" on this device, or "Só teoria" chosen
+const noCalcNow = () => calcMode() === 'theory';
 const shown = (q, m = calcMode()) => m === 'all' || (m === 'theory' ? !q.calc : !!q.calc);
 // Parts (C.parts): 1.º teste, 2.º teste… Picking one limits every mode to its topics; 'all' is the whole course.
 const partTopics = () => { const p = (C.parts || []).find(x => x.id === S.settings.part); return p ? p.topics : Object.keys(TOPICS); };
@@ -409,7 +421,7 @@ function Home() {
 function calcSwitch() {
   const opts = [['all', 'Tudo', 'Teoria e contas, misturadas'], ['theory', 'Só teoria', 'Esconde as perguntas com contas'], ['math', 'Só contas', 'Só as perguntas com contas, como nos problemas do exame']];
   const cur = calcMode(), pool = BANK.filter(q => !isReserved(q) && activeTopics().includes(q.t) && isCore(q));
-  return `<div class="seg" role="group" aria-label="Que perguntas mostrar">${opts.map(([k, t, d]) =>
+  return `${noPaper() ? '<span class="muted" style="font-size:13px">Sem papel ligado: escolher aqui desliga-o.</span>' : ''}<div class="seg" role="group" aria-label="Que perguntas mostrar">${opts.map(([k, t, d]) =>
     `<button data-act="calcMode" data-k="${k}" aria-pressed="${cur === k}" title="${d}">${t} <span class="mono">${pool.filter(q => shown(q, k)).length}</span></button>`).join('')}</div>`;
 }
 function glyph(k) {
@@ -530,9 +542,10 @@ function start(mode, opts = {}) {
     // one exam problem type: a few single questions (weakest first), then one whole problem in steps
     const s = SKBYID[opts.k]; if (!s) return; title = s.label;
     // a problem in steps comes whole, even when its other steps belong to other types (forward → backprop)
-    const qs = skillQs(s.id), single = qs.filter(q => !q.ch), by = {}, chs = new Set(qs.filter(q => q.ch).map(q => q.ch));
+    // without paper: no calculations, and the steps without them come as single questions (each step stands alone)
+    const np = noCalcNow(), qs = skillQs(s.id).filter(q => !np || !q.calc), single = qs.filter(q => np || !q.ch), by = {}, chs = new Set(np ? [] : qs.filter(q => q.ch).map(q => q.ch));
     // only a few left before the type is ready: just those (mistakes first), not a whole round of questions already right
-    const left = skillLeft(s.id);
+    const left = skillLeft(s.id).filter(q => !np || !q.calc);
     if (left.length && left.length <= SKILL_FOCUS) { items = left.map(makeItem); title = `${s.label} · ${left.length === 1 ? 'a que falta' : `as ${left.length} que faltam`}`; }
     else {
     BANK.filter(q => chs.has(q.ch) && !isReserved(q)).forEach(q => (by[q.ch] = by[q.ch] || []).push(q));
@@ -555,7 +568,7 @@ function start(mode, opts = {}) {
   }
   if (mode === 'route') { const x = (C.route.stops || []).find(s => s.id === opts.stop); if (!x) return; items = routeItems(x); title = `${x.part ? x.part + ' · ' : ''}${x.title}`; }
   if (mode === 'retry') { items = opts.ids.map(id => BYID[id]).filter(Boolean).map(makeItem); title = 'Repetir erros'; }
-  if (!items.length) { toast('Não há perguntas para estes filtros.'); return; }
+  if (!items.length) { toast(noCalcNow() ? 'O que falta aqui precisa de contas. Desliga "Sem papel" quando tiveres papel.' : 'Não há perguntas para estes filtros.'); return; }
   // flag the questions waiting in review, so the student knows which one they are fixing (never in the mock exam)
   if (mode !== 'exam') items.forEach(it => { if (it.kind === 'q' && isPending(it.id)) it.rev = true; });
   ses = { mode, title, items, i: 0, planKey: opts.planKey || null, results: [], picked: new Set(), answered: false, xp: 0, timeLimit, startedAt: Date.now(), level: opts.level, stop: opts.stop, nextWasOpen: !!opts.level && opts.level < LEVELS.length && unlocked(opts.level + 1), topic: opts.topic, skill: mode === 'skill' ? opts.k : null, examGrading: mode === 'reviewExam' || !!opts.examGrading, ended: false };

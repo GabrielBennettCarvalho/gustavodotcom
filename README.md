@@ -110,8 +110,10 @@ A lesson with no markers works as before: the whole text, then its two easiest q
 
 ## For the exam: readiness, priority, past exams, cheat sheet
 
-- **Prontidão**: a checklist of the course's `skills` (exam problem types). A type is *pronto* when every one of its
-  questions was answered right and none is waiting in review. The course home shows the summary and the type to train next
+- **Prontidão**: a checklist of the course's `skills` (exam problem types). A type is *pronto* when none of its
+  questions is waiting in review, every past-exam one (`src` naming an exam) was answered right, and at least 60% of
+  all of them were (at least 6; all when it has fewer): `READY_PCT`, `READY_MIN`. The checklist counts against that
+  number, not the whole bank, and a round puts the questions still needed first, then fills up with others. The course home shows the summary and the type to train next
   (the first one not ready yet, in course order). A type with 8 or fewer questions left (`SKILL_FOCUS`) trains only those,
   mistakes first, from the checklist and from the plan; in AMS, a plan level task with fewer than 10 left does the same.
   In any session but the mock exam, a question waiting in review carries an "A rever" badge.
@@ -130,13 +132,28 @@ A lesson with no markers works as before: the whole text, then its two easiest q
 ## Today's plan (Hoje)
 
 The top of every course's home (`src/engine/app-plan.js`). It answers "what do I do now?": mistakes in review first, then each
-exam problem type not ready yet, in the order the course teaches them (topic order, then the order of `skills`; its theory if unseen, up to 3 lessons or about 12 minutes at a time, then
-its key problem or its questions). A topic's lessons that belong to no type (APRE's Dados) come after that topic's types. A key problem left half done comes right after the mistakes. Courses without `skills` go
-topic by topic and level by level. With everything ready, it offers the mock exam.
+exam problem type not ready yet, in the order the course teaches them (topic order, then the order of `skills`). A topic's lessons that belong to no type (APRE's Dados) come after that topic's types. Courses without `skills` go
+topic by topic and level by level. With everything ready, it offers the mock exam. Few lines, one per real piece of work:
+
+- **Aprender e treinar:** when a type's unseen theory fits in one sitting (up to 3 lessons, about 12 minutes), its lessons and
+  its questions are one task and one session. Longer theory goes first in batches, and the training waits until it is all seen.
+  A key problem stays a task of its own.
+- **Acabar o que está quase:** the types 1 to 3 questions from ready share one task (up to 12 questions), right after the mistakes.
+- **Left half way:** a round started from the plan and left half way shows as "Continuar: …" right after the mistakes and resumes
+  where it stopped (the "Ronda a meio" strip above the plan stays too). A key problem left half done also comes right after the mistakes.
+- **New types a day:** at most 3, or more when the days left need it (new types left ÷ days left). Then the day is done even with
+  minutes left, and "Fazer mais um pouco" opens a few more.
 
 - **Pace:** with the test date and the minutes per day (15, 30, 45 or 60), the work left is spread over the days left.
-  When it doesn't fit, the lessons outside every type are cut first, then the types that came up least, and the card says which.
-- **Times:** shown as ranges. They start wide and narrow to the student's own pace, measured from their sessions (`S.pace`).
+  When it doesn't fit, nothing is dropped: the lessons outside every type, then the types that came up least, move to the
+  end of the plan (done if there is time left), and the card says which and the minutes a day that would fit everything.
+  Base types (in no past exam) never move, since the types after them build on them.
+- **Work left:** counted in seconds from the student's own pace (`S.pace`), timed on every answer and lesson card (not
+  in the mock exam or the daily review): a theory question (40 s until measured), a calculation, code or step question
+  (until measured, the real exam's pace: `exam.min` ÷ `exam.n`), and reading (words ÷ 2 per second, scaled to the
+  student). On top of the questions left: the mistakes they will bring (each answered right 2 more times, at the
+  student's own error rate, 30% until 20 answers) and one mock exam with its review.
+- **Times:** shown as ranges, the total and the minutes per day too. They start wide and narrow once 10 answers are timed.
 - **Today:** time studied and tasks done today are in `S.today`; lessons seen are in `S.seenL`. Both travel in the progress key.
 - **Explorar:** everything else on the home (levels, topics, modes, past exams, settings) is folded under it.
 - **Daily review** (`app-plan.js`, end of file): two optional strips on the plan card, never in the plan list, never in

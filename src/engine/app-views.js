@@ -104,8 +104,14 @@ function skip() {
   if (ses.mode !== 'exam') { if (!S.skipped) S.skipped = {}; S.skipped[it.id] = Date.now(); save(); }
   ses.answered = true; next();
 }
+// The time on each card and answer feeds the student's pace (not the mock exam, which has a clock, nor the daily
+// review, whose questions are already known). A skipped question says nothing.
+const PACE_OFF = ['exam', 'warm', 'recap'];
 function next() {
   if (!ses) return;
+  { const it = curItem(), r = ses.results[ses.results.length - 1];
+    if (ses.itemAt && !PACE_OFF.includes(ses.mode) && it && (it.kind === 'lesson' || (ses.answered && r && r.item === it && !r.skipped))) planSample(it, Date.now() - ses.itemAt); }
+  ses.itemAt = Date.now();
   if (ses.i >= ses.items.length - 1) { finish(); return; }
   ses.i++; ses.picked = new Set(); ses.answered = false; sesKeep();
   go(viewOf(curItem()));
@@ -125,7 +131,7 @@ function sesResume() {
   const K = sesSaved(); if (!K) { S.sesCur = null; save(); renderView(); return; }
   clearInterval(tick);
   ses = { mode: K.mode, title: K.title, items: K.items, i: K.i, results: K.results, xp: K.xp || 0, planKey: K.planKey, level: K.level, stop: K.stop, topic: K.topic,
-    skill: K.skill, examGrading: K.examGrading, picked: new Set(), answered: false, timeLimit: 0, startedAt: Date.now() - Math.max(0, K.at - K.t0), nextWasOpen: false, ended: false };
+    skill: K.skill, examGrading: K.examGrading, picked: new Set(), answered: false, timeLimit: 0, startedAt: Date.now() - Math.max(0, K.at - K.t0), itemAt: Date.now(), nextWasOpen: false, ended: false };
   if (K.answered) { if (ses.i >= ses.items.length - 1) { finish(); return; } ses.i++; }
   sesKeep(); go(viewOf(curItem()));
 }
@@ -176,7 +182,7 @@ function Results() {
       <div><div class="score-big">${big}</div><p class="muted">${sub}</p></div>
       <div class="result-grid"><div class="kpi"><b>+${ses.xp}</b><span>XP ganho</span></div><div class="kpi"><b>${wrong.length}</b><span>para rever</span></div>${ses.mode === 'exam' ? (ses.items.length - tot ? `<div class="kpi"><b>${ses.items.length - tot}</b><span>em branco</span></div>` : '') : skipped.length ? `<div class="kpi"><b>${skipped.length}</b><span>saltadas</span></div>` : ''}<div class="kpi"><b>${topLevel()}</b><span>nível mais alto aberto</span></div></div>
       ${nowUnlocked ? `<p class="key" style="margin:0">Nível ${lvl + 1} desbloqueado. O token avançou.</p>` : ''}
-      ${ses.skill && SKBYID[ses.skill] ? (r_ => `<p class="muted" style="margin:0">${esc(SKBYID[ses.skill].label)}: <b style="color:var(--ink)">${STATE[r_.state] ? STATE[r_.state][1] : ''}</b> · ${r_.ok}/${r_.total} perguntas${r_.pend ? `, ${r_.pend} por rever` : ''}.</p>`)(readiness(ses.skill)) : ''}
+      ${ses.skill && SKBYID[ses.skill] ? (r_ => `<p class="muted" style="margin:0">${esc(SKBYID[ses.skill].label)}: <b style="color:var(--ink)">${STATE[r_.state] ? STATE[r_.state][1] : ''}</b> · ${r_.done}/${r_.need} perguntas${r_.pend ? `, ${r_.pend} por rever` : ''}.</p>`)(readiness(ses.skill)) : ''}
       <div class="row">${planNextBtn(!!ses.planKey)}${wrong.length ? `<button class="btn${ses.planKey ? '' : ' primary'}" data-act="retryWrong">${wrong.length === 1 ? 'Repetir a errada' : `Repetir as ${wrong.length} erradas`}</button>` : ''}${skipped.length ? `<button class="btn${wrong.length || ses.planKey ? '' : ' primary'}" data-act="retrySkipped">${skipped.length === 1 ? `Tentar a ${ses.mode === 'exam' ? 'que ficou em branco' : 'saltada'} agora` : `Tentar as ${skipped.length} ${ses.mode === 'exam' ? 'em branco' : 'saltadas'} agora`}</button>` : ''}${ses.mode === 'route' ? routeNextBtn() : ''}${lvl ? `<button class="btn" data-act="level" data-n="${nowUnlocked ? lvl + 1 : lvl}">${nowUnlocked ? `Ir para o nível ${lvl + 1}` : `Outra ronda do nível ${lvl}`}</button>` : ''}${ses.skill ? `<button class="btn" data-act="skill" data-k="${esc(ses.skill)}">Outra ronda deste tipo</button><button class="btn" data-act="mode" data-k="ready">Checklist</button>` : ''}<button class="btn" data-act="home">Início</button></div>
     </article>
     ${wrong.length ? `<div class="section"><h2>O que falhaste, explicado</h2>${list}</div>` : `<div class="section"><p class="muted">Sem erros nesta ronda.</p></div>`}`;
@@ -215,8 +221,8 @@ function Ready() {
     return `<div class="section"><div class="section-h"><h2>${esc(T.label)}</h2></div><div class="skill-list">${rows.map(({ s, r }) => `<div class="skill ${r.state}" style="--c:${T.c}">
       <span class="st" title="${STATE[r.state][1]}" aria-label="${STATE[r.state][1]}">${STATE[r.state][0]}</span>
       <div class="sk-main"><b>${esc(s.label)}</b><span class="sk-meta">${(s.seen || []).length ? `saiu em ${s.seen.length} de ${nPast()}` : s.core ? 'matéria de base' : 'ainda não saiu'} ${seenChips(s)}</span></div>
-      <span class="sk-prog mono">${r.ok}/${r.total}${r.pend ? ` · ${r.pend} por rever` : ''}</span>
-      <button class="btn small${r.state === 'ready' ? '' : ' primary'}" data-act="skill" data-k="${esc(s.id)}">${r.state === 'ready' ? 'Rever' : r.total - r.ok <= SKILL_FOCUS ? `Fazer ${r.total - r.ok}` : 'Treinar'}</button></div>`).join('')}</div></div>`; }).join('');
+      <span class="sk-prog mono" title="Pronto com ${r.need} das ${r.total} perguntas: todas as de exames anteriores e mais algumas">${r.done}/${r.need}${r.pend ? ` · ${r.pend} por rever` : ''}</span>
+      <button class="btn small${r.state === 'ready' ? '' : ' primary'}" data-act="skill" data-k="${esc(s.id)}">${r.state === 'ready' ? 'Rever' : r.left <= SKILL_FOCUS ? `Fazer ${r.left}` : 'Treinar'}</button></div>`).join('')}</div></div>`; }).join('');
   return `<div class="qhead">${BACK}<span class="eyebrow">Prontidão para o exame</span></div>
     <div class="result-grid" style="margin-bottom:10px"><div class="kpi"><b>${Math.round(RS.pct * 100)}%</b><span>pronto (pesa o que sai mais)</span></div><div class="kpi"><b>${n('ready')}</b><span>prontos</span></div><div class="kpi"><b>${n('training')}</b><span>a treinar</span></div><div class="kpi"><b>${n('todo')}</b><span>por começar</span></div></div>
     <p class="muted" style="font-size:13.5px">Os tipos de problema que saem nos exames, por tema, do mais frequente para o menos. Um tipo fica <b>pronto</b> quando acertaste todas as perguntas dele e nenhuma está por rever. Conta tudo, com e sem contas.</p>

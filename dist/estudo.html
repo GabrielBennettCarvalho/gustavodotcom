@@ -22715,8 +22715,8 @@ document.addEventListener('keydown', ev => {
       the training once they are all seen; a key problem stays its own task; a topic's lessons outside every type come
       after that topic's types; a course without types (AMS) goes topic by topic, then level by level;
    3. when everything is ready, the mock exam.
-   A day starts at most NEW_DAY new types (more when the days left need it); then the day is done, and "Fazer mais um
-   pouco" opens a few more.
+   New types come NEW_DAY at a time (more when the days left need it), so the list never jumps across many topics; with
+   those done and minutes left, the next ones come. The day ends when its minutes do ("Fazer mais um pouco" then opens more).
    With the test date and the minutes per day, the work left is spread over the days left. Nothing is ever dropped: what
    doesn't fit moves to the end of the plan (lessons outside every type, then the types that came up least), and the
    card says what and which minutes a day would fit it all. Base types (in no past exam) never move: the rest builds on them.
@@ -22731,7 +22731,7 @@ document.addEventListener('keydown', ev => {
 const PLAN_UNIT = 45, PLAN_MIN = [15, 30, 45, 60], LEARN_MAX = 3;   // at most 3 lessons in one sitting
 const PLAN_Q = 40, LES_WPS = 2, ERR0 = 0.3;   // a theory question 40 s; reading 2 words a second; 30% wrong until measured
 const NEAR_MAX = 3, NEAR_Q = 12;   // types this close to ready go together in one task, up to NEAR_Q questions
-const NEW_DAY = 3;                 // new types started in a day, more only when the days left ask for it
+const NEW_DAY = 3;                 // new types shown at once, more only when the days left ask for it
 const todayStr = () => new Date().toLocaleDateString('sv');
 const planToday = () => { if (!S.today || S.today.d !== todayStr()) S.today = { d: todayStr(), ms: 0, did: [] }; return S.today; };
 const paceObj = () => { if (!S.pace) S.pace = { s: PLAN_UNIT, n: 0, pb: 1, pbn: 0 }; const P = S.pace;
@@ -22896,9 +22896,10 @@ function planFor(more) {
   // what doesn't fit goes after everything else, in course order, so it is still done if there is time
   const open = all.filter(t => !td.did.includes(t.key)), isLater = t => later.has(planGroup(t));
   const pool = [...open.filter(t => !isLater(t)), ...open.filter(isLater)], list = []; let m = 0;
-  // New types a day: NEW_DAY, or what the days left need. Theory done today counts; "Fazer mais um pouco" opens a few more.
+  // New types in batches of NEW_DAY (or what the days left need): the theory done today uses up the batch, and once it
+  // is all done the next batch opens, as long as today's minutes last. The minutes chosen end the day, never the batch.
   const newLeft = new Set(pool.map(newOf).filter(Boolean)).size, perDay = P.d > 0 ? Math.max(NEW_DAY, Math.ceil(newLeft / P.d)) : NEW_DAY;
-  const newToday = td.did.filter(k => k.startsWith('learn')).length, room = more ? perDay : perDay - newToday, taken = new Set();
+  const newToday = td.did.filter(k => k.startsWith('learn')).length, room = perDay - newToday % perDay, taken = new Set();
   // a skipped new type is skipped all the way down: its key problem never comes before its lessons
   const held = new Set();
   for (const t of pool) {
@@ -22906,7 +22907,6 @@ function planFor(more) {
     if (n && (held.has(n) || (!taken.has(n) && taken.size >= room))) { held.add(n); continue; }
     const x = taskMin(t); if (list.length && m + x > left) break;
     if (n) taken.add(n); list.push(t); m += x; if (m >= left) break; }
-  // the time is not up but the new types are: today's plan is done (the student can still ask for more)
   return { all, P, list: left > 0 ? list : [], min: m, done: left <= 0 || !list.length, next: pool[0], spent: td.ms / 60000 };
 }
 function planRun(i, more) {

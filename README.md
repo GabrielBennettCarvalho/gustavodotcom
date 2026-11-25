@@ -141,8 +141,9 @@ topic by topic and level by level. With everything ready, it offers the mock exa
 - **Acabar o que está quase:** the types 1 to 3 questions from ready share one task (up to 12 questions), right after the mistakes.
 - **Left half way:** a round started from the plan and left half way shows as "Continuar: …" right after the mistakes and resumes
   where it stopped (the "Ronda a meio" strip above the plan stays too). A key problem left half done also comes right after the mistakes.
-- **New types a day:** at most 3, or more when the days left need it (new types left ÷ days left). Then the day is done even with
-  minutes left, and "Fazer mais um pouco" opens a few more.
+- **New types, a few at a time:** the list holds at most 3 new types (more when the days left need it: new types left ÷ days
+  left). With those done and minutes left, the next 3 come; the day ends only when its minutes do, and "Fazer mais um
+  pouco" then opens more.
 
 - **Pace:** with the test date and the minutes per day (15, 30, 45 or 60), the work left is spread over the days left.
   When it doesn't fit, nothing is dropped: the lessons outside every type, then the types that came up least, move to the

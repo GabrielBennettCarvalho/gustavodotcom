@@ -172,11 +172,12 @@ STUDY.lessons('oc', [
   <div class="tbl-wrap"><table><tr><th>Nome</th><th>De → para</th><th>Serve para</th></tr>
   <tr><td><b>ALU-ALU</b></td><td>EX/MEM → X</td><td>ALU seguida de quem usa o valor em X</td></tr>
   <tr><td><b>MEM-ALU</b></td><td>MEM/WB → X</td><td>load (depois de 1 bolha), ou ALU a 2 de distância</td></tr>
-  <tr><td><b>ALU-MEM</b></td><td>→ M</td><td>ALU seguida de <code>sw</code> que guarda esse valor</td></tr>
+  <tr><td><b>ALU-MEM</b></td><td>MEM/WB → M</td><td>ALU seguida de <code>sw</code> que guarda esse valor</td></tr>
   <tr><td><b>MEM-MEM</b></td><td>MEM/WB → M</td><td><code>lw</code> seguido de <code>sw</code> que copia o valor</td></tr></table></div>
   ${PIPE([['add x1, x2, x3', 'FDXMW'], ['sub x4, x1, x5', '.FDXMW'], ['and x6, x1, x7', '..FDXMW']])}
   <p>Com full forwarding, instruções ALU encadeadas não têm bolhas e o CPI fica 1.</p>
   <p>Se dois produtores estiverem no pipeline, encaminha-se o <b>mais recente</b>. Atenção: forwarding <b>tem custo em hardware</b> e pode aumentar o período. Pode haver um slowdown mesmo poupando ciclos.</p>
+  <p>ALU-MEM e MEM-MEM saem os dois de MEM/WB, mas de campos diferentes: o resultado da ALU num caso, o valor lido da memória no outro. Por isso são caminhos distintos e um enunciado pode dar só um deles.</p>
   <p>Ter só ALU-ALU significa que uma ALU a distância 2 ainda precisa de 1 bolha, porque não existe MEM → X.</p>`,
   key: 'ALU-ALU resolve o caso seguido. Atenção a que caminhos o enunciado dá.' },
 { id: 'h-load', t: 'haz', title: 'O load-use: a bolha que o forwarding não apaga',

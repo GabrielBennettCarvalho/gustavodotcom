@@ -26,3 +26,31 @@
 .dg.oc .p-W{fill:color-mix(in srgb,var(--sheet) 82%,#0E7C8C)}
 .dg.oc .p-s{fill:color-mix(in srgb,var(--sheet) 72%,#C2392F);stroke-dasharray:3 2}
 .part-row{margin-top:10px}
+
+/* Reordering lab (lab.js): rows dragged by pointer (mouse or touch), ↑ ↓ for the keyboard */
+.rq{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+.rq-cfg{font-size:14px;color:var(--muted)}
+.rq-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.rq-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);touch-action:pan-y;user-select:none;cursor:grab;transition:border-color .15s,background .15s}
+.rq-row.drag{cursor:grabbing;position:relative;z-index:2;border-color:var(--accent);box-shadow:var(--shadow);transition:none}
+.rq-row.fixed{cursor:default;opacity:.85;border-style:dashed}
+.rq-row.bad{border-color:var(--bad);background:var(--bad-bg)}
+.rq-row.tip{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--panel-2))}
+.rq-grip{width:28px;align-self:stretch;display:flex;align-items:center;justify-content:center;margin:-6px 0 -6px -8px;color:var(--muted);font-size:14px;letter-spacing:-2px;flex:none;touch-action:none}
+.rq-lbl{width:44px;flex:none;color:var(--muted);font-size:13px}
+.rq-code{flex:1;font-size:14px;white-space:pre;overflow:hidden;text-overflow:ellipsis;background:none;padding:0}
+.rq-mv{display:flex;gap:2px;flex:none}
+.rq-mv .btn{min-width:34px;padding:4px 8px}
+.rq-last{font-size:12px}
+.rq-act{flex-wrap:wrap}
+.rq-tries{font-size:12.5px}
+.rq-fb{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel)}
+.rq-fb:empty{display:none}
+.rq-fb.ok{border-color:var(--good)}
+.rq-fb.ko{border-color:var(--bad)}
+.rq-fb .good{color:var(--good)}
+.rq-fb .bad{color:var(--bad)}
+.rq-fb .diagram{overflow-x:auto}
+.rq-why{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14.5px}
+.rq-sol{margin:0;padding-left:22px;font-size:14px}
+@media (max-width:560px){.rq-lbl{width:auto}.rq-lbl:empty{display:none}.rq-code{font-size:13px}}

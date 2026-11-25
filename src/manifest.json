@@ -58,7 +58,8 @@
         "questions/haz.js",
         "questions/ctl.js",
         "questions/adv.js",
-        "questions/exam2.js"
+        "questions/exam2.js",
+        "lab.js"
       ]
     },
     "rc": {

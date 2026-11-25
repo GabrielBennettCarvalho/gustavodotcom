@@ -225,6 +225,20 @@ are synthesized (no files) and can be muted.
   (example `ex`), and every question on that lesson offers "Praticar com uma rede nova" (a generated `kind` problem in
   "Tu fazes", with "Outro problema" at the end). Both open over the page, so a session is never left.
 - Labs keep no progress: generated problems have no ids. RC's lab is `src/courses/rc/lab.js`.
+- A lab that is not a graph brings its own player: `mount(el, problem) => { mode, destroy }`, plus `exBtn` and
+  `practiceBtn` for the labels of its lesson and question links. The lab screen, the links and the overlay use it in
+  place of the graph player; `kinds`, `examples` and `les` work the same.
+
+### OC: reordering in the pipeline (`src/courses/oc/lab.js`)
+
+The student drags lines of code (or uses ↑ ↓) and presses Verificar. A model of the 5-stage pipeline (`OCPIPE`) judges
+any order, with nothing written per problem: which dependence it breaks (register read/written either way, both
+writing, two memory accesses with a store that may hit the same word, the closing branch), the cycles and the reason
+for each bubble, and the best order (all valid orders are tried). With `consts`, an `addi r, r, k` may cross a lw/sw
+based on r and the offset adjusts itself. Forwarding is `'full'`, `'none'` or a list of paths (ALU-ALU, MEM-ALU,
+ALU-MEM, MEM-MEM, into D); branches resolve in D or X. 3 tries, then "Ver uma solução"; "Pista" shows where the bubbles
+are, then one move that helps. Kinds generate straight-line code or a loop body; the examples are the lesson's and
+three past exams' (their cycle counts match the official answers). The lesson `h-sched` and its questions link to it.
 
 ## Skip, Tudo / Só teoria / Só contas, and theme
 

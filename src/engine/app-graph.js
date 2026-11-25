@@ -7,6 +7,9 @@
    GPLAYER.overlay(cfg) opens the same player over the page (used by a question's "ver a resolução animada").
    Labs: a course registers STUDY.labs(id, [{ id, title, desc, icon, kinds, examples }]); each kind has
    make(GRAPH, rnd, opts) => { algo, g, p, stmt }; an example is { id, label, kind, algo, g, p, stmt }.
+   A lab that is not a graph brings its own player: mount(el, problem) => { mode, destroy } (problem = what its
+   make returns, plus onNew), and the labels of its links, exBtn and practiceBtn (OC's reordering lab).
+   The lab screen, the lesson links and the overlay then use it instead of GPLAYER.mount.
    The lab screen is the view 'glab'. Its buttons use data-gl, handled here. */
 const GPLAYER = (() => {
   const NS = 'http://www.w3.org/2000/svg';
@@ -296,7 +299,7 @@ const GPLAYER = (() => {
       wrap.querySelector('h3').textContent = c.title || 'Resolução animada';
       const st = wrap.querySelector('.gp-stmt'); st.innerHTML = c.stmt ? md(c.stmt) : ''; st.hidden = !c.stmt;
       if (ctl) ctl.destroy();
-      ctl = mount(wrap.querySelector('.gmodal-body'), Object.assign({}, c, { mode: mode || c.mode, onNew: cfg.next ? m => show(cfg.next(), m) : null }));
+      ctl = (cfg.mount || mount)(wrap.querySelector('.gmodal-body'), Object.assign({}, c, { mode: mode || c.mode, onNew: cfg.next ? m => show(cfg.next(), m) : null }));
       wrap.scrollTop = 0;
     };
     show(cfg);
@@ -325,10 +328,10 @@ function labLink(lesId) {
   return null;
 }
 function labLessonBtn(lesId) {
-  const L = labLink(lesId); return L && L.m.ex ? `<button class="btn small anim-btn" data-gl="lesEx" data-les="${esc(lesId)}">▶ Ver o exemplo animado</button>` : '';
+  const L = labLink(lesId); return L && L.m.ex ? `<button class="btn small anim-btn" data-gl="lesEx" data-les="${esc(lesId)}">${esc(L.lab.exBtn || '▶ Ver o exemplo animado')}</button>` : '';
 }
 function labPracticeBtn(lesId) {
-  const L = labLink(lesId); return L && L.m.kind ? `<button class="btn small anim-btn" data-gl="lesGo" data-les="${esc(lesId)}">Praticar com uma rede nova</button>` : '';
+  const L = labLink(lesId); return L && L.m.kind ? `<button class="btn small anim-btn" data-gl="lesGo" data-les="${esc(lesId)}">${esc(L.lab.practiceBtn || 'Praticar com uma rede nova')}</button>` : '';
 }
 function GraphLab() {
   const lab = courseLabs().find(l => l.id === view.lab); if (!lab) return Home();
@@ -355,7 +358,7 @@ function afterGraphLabRender() {
   const m = document.getElementById('glabMount'); if (!m) return;
   const lab = courseLabs().find(l => l.id === view.lab), P = glabProblem(lab, view);
   if (glabCtl) glabCtl.destroy();
-  glabCtl = GPLAYER.mount(m, Object.assign({}, P, { mode: view.mode || 'watch',
+  glabCtl = (lab.mount || GPLAYER.mount)(m, Object.assign({}, P, { mode: view.mode || 'watch',
     onNew: view.ex ? null : mode => { view.seed = GRAPH.newSeed(); view.mode = mode; renderView(); } }));
 }
 document.addEventListener('click', ev => {
@@ -368,9 +371,9 @@ document.addEventListener('click', ev => {
     case 'new': view.seed = GRAPH.newSeed(); view.mode = mode; renderView(); break;
     case 'opt': view.opt = Object.assign({}, view.opt, { [b.dataset.k]: !view.opt[b.dataset.k] }); view.mode = mode; renderView(); break;
     case 'anim': { const q = BYID[b.dataset.id]; if (q && q.anim) GPLAYER.overlay(Object.assign({ title: 'Resolução animada' }, q.anim)); break; }
-    case 'lesEx': { const L = labLink(b.dataset.les); if (L) GPLAYER.overlay(Object.assign(glabProblem(L.lab, { ex: L.m.ex }), { mode: 'watch' })); break; }
+    case 'lesEx': { const L = labLink(b.dataset.les); if (L) GPLAYER.overlay(Object.assign(glabProblem(L.lab, { ex: L.m.ex }), { mode: 'watch', mount: L.lab.mount })); break; }
     case 'lesGo': { const L = labLink(b.dataset.les); if (!L) break;
       const next = () => glabProblem(L.lab, { kind: L.m.kind, seed: GRAPH.newSeed() });
-      GPLAYER.overlay(Object.assign(next(), { mode: 'play', next })); break; }
+      GPLAYER.overlay(Object.assign(next(), { mode: 'play', next, mount: L.lab.mount })); break; }
   }
 });

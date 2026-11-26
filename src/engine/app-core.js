@@ -171,7 +171,8 @@ const peek = id => Object.assign({}, ZERO, S.stats[id]);
    questions without calculations. The pace still counts them all. */
 const LS_NOPAPER = 'estudo-ist-nopaper';
 let noPaperDev = ls_get_raw(LS_NOPAPER) === '1', paperForce = 0;
-const noPaper = () => noPaperDev && hasCalc();
+// a course with diagrams to draw on paper (app-build.js) has the switch too, even without calculations
+const noPaper = () => noPaperDev && (hasCalc() || bdAll().length > 0);
 function setNoPaper(on) { noPaperDev = !!on; try { localStorage.setItem(LS_NOPAPER, on ? '1' : '0'); } catch {} }
 // f with everything shown: the plan's pace counts the calculations even when they are hidden now
 function withPaper(f) { paperForce++; try { return f(); } finally { paperForce--; } }
@@ -180,11 +181,15 @@ const calcMode = () => !hasCalc() || paperForce ? 'all' : noPaper() ? 'theory' :
 const noCalcNow = () => calcMode() === 'theory';
 const shown = (q, m = calcMode()) => m === 'all' || (m === 'theory' ? !q.calc : !!q.calc);
 // Parts (C.parts): 1.º teste, 2.º teste… Picking one limits every mode to its topics; 'all' is the whole course.
-const partTopics = () => { const p = (C.parts || []).find(x => x.id === S.settings.part); return p ? p.topics : Object.keys(TOPICS); };
+const curPart = () => (C.parts || []).find(x => x.id === S.settings.part) || null;
+const partTopics = () => { const p = curPart(); return p ? p.topics : Object.keys(TOPICS); };
+// what the student is preparing for: "o 2.º teste" with a part chosen, "o exame" otherwise
+const forWhat = () => { const p = curPart(); return p ? `o ${p.label}` : 'o exame'; };
 const activeTopics = () => { const pt = partTopics(); return S.settings.topics.filter(k => pt.includes(k)); };
 const inTopics = q => activeTopics().includes(q.t) && shown(q);
 const hasCalc = () => BANK.some(q => q.calc);
-const examCfg = () => Object.assign({ n: EXAM_N, min: EXAM_MIN, penalty: null, desc: '' }, C && C.exam);
+// a part (1.º teste, 2.º teste…) can have its own rules: parts[].exam overrides the course's exam
+const examCfg = () => Object.assign({ n: EXAM_N, min: EXAM_MIN, penalty: null, desc: '' }, C && C.exam, curPart() && curPart().exam);
 const isReserved = q => q.reserved === 'exam';
 const fresh = q => { const s = peek(q.id); return !s.c && !s.w && !s.ew; };
 
@@ -231,12 +236,16 @@ function skillLeft(k, noCalc) {
 }
 // what it needs that can be done now: without calculations, only the questions without them (the rest waits for paper)
 const skillLeftNow = k => { const np = noCalcNow(); return skillLeft(k, np).filter(q => !np || !q.calc); };
+// A type with diagram exercises (app-build.js) is ready only when they are done too; each one weighs BD_W questions.
+const BD_W = 5;
 function readiness(k) {
   const qs = skillQs(k), need = skillNeed(qs), left = skillLeft(k).length; let ok = 0, pend = 0, tried = 0;
   qs.forEach(q => { const s = peek(q.id); const p = isPending(q.id);
     if (s.c || s.w || s.ew) tried++; if (p) pend++; else if (s.c) ok++; });
-  const state = !qs.length ? 'none' : !left ? 'ready' : tried ? 'training' : 'todo';
-  return { total: qs.length, need, left, done: need - Math.min(need, left), ok, pend, state, pct: need ? 1 - Math.min(need, left) / need : 0 };
+  const B = bdNeed(k), bd = B.filter(bdDone).length, bdLeft = B.length - bd, bdTried = B.some(bdTouched);
+  const state = !qs.length && !B.length ? 'none' : !left && !bdLeft ? 'ready' : tried || bdTried ? 'training' : 'todo';
+  const W = need + B.length * BD_W;
+  return { total: qs.length + B.length, need, left, done: need - Math.min(need, left), ok, pend, state, bn: B.length, bd, bdLeft, pct: W ? (need - Math.min(need, left) + bd * BD_W) / W : 0 };
 }
 // Readiness of the part, weighted by how often each type came up; and the type to train next
 // Open-book exam (C.exam.book): the cheat sheet opens while practising and in the mock exam, as the real sheet would
@@ -297,8 +306,9 @@ let ses = null; // active session
 function go(name, extra = {}) { view = Object.assign({ name }, extra); renderView(); window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' }); }
 function renderView() {
   fxClose();
+  if (view.name !== 'build' && bdCtl) { bdCtl.destroy(); bdCtl = null; }   // leaving a diagram exercise keeps it where it stopped
   const v = C || view.name === 'sync' ? view.name : 'courses';
-  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'routepick' ? RoutePick() : v === 'brief' ? BriefScreen() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : v === 'formulas' ? Formulas() : v === 'recap' ? Recap() : v === 'prob' ? ProblemPick() : v === 'problem' ? Problem() : v === 'glab' ? GraphLab() : Home();
+  const html = v === 'courses' ? Courses() : v === 'home' ? Home() : v === 'quiz' ? Quiz() : v === 'lesson' ? LessonScreen() : v === 'results' ? Results() : v === 'library' ? Library() : v === 'reader' ? Reader() : v === 'bank' ? Bank() : v === 'notes' ? Notes() : v === 'learnpick' ? LearnPick() : v === 'reviewpick' ? ReviewPick() : v === 'routepick' ? RoutePick() : v === 'brief' ? BriefScreen() : v === 'sync' ? Sync() : v === 'ready' ? Ready() : v === 'past' ? Past() : v === 'sheet' ? Sheet() : v === 'formulas' ? Formulas() : v === 'recap' ? Recap() : v === 'prob' ? ProblemPick() : v === 'problem' ? Problem() : v === 'glab' ? GraphLab() : v === 'builds' ? BuildList() : v === 'build' ? BuildScreen() : Home();
   document.documentElement.dataset.course = C && v !== 'courses' && v !== 'sync' ? C.id : '';
   $app.innerHTML = Top() + html;
   document.title = C && v !== 'courses' ? `${C.code} · Estudo IST` : 'Estudo IST';
@@ -306,6 +316,7 @@ function renderView() {
   if (v === 'sync') afterSyncRender();
   if (v === 'problem') afterProblemRender();
   if (v === 'glab') afterGraphLabRender();
+  if (v === 'build') afterBuildRender();
   calcSync();
 }
 const toast = (msg) => { const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); };
@@ -343,7 +354,10 @@ function Courses() {
 }
 
 /* ---------- HOME (of a course) ---------- */
-function daysLeft() { if (!S.settings.testDate) return null; const d = new Date(S.settings.testDate + 'T09:00:00'); const n = Math.ceil((d - new Date()) / 864e5); return isNaN(n) ? null : n; }
+// Each part has its own test date (settings.partDates[partId]); 'Tudo' and courses without parts use settings.testDate.
+const testDate = () => { const p = curPart(); return p ? ((S.settings.partDates || {})[p.id] || '') : S.settings.testDate; };
+function setTestDate(v) { const p = curPart(); if (p) { S.settings.partDates = Object.assign({}, S.settings.partDates, { [p.id]: v }); } else S.settings.testDate = v; }
+function daysLeft() { const t = testDate(); if (!t) return null; const d = new Date(t + 'T09:00:00'); const n = Math.ceil((d - new Date()) / 864e5); return isNaN(n) ? null : n; }
 const extraApi = () => ({ pool: trainPool(), pick, topLevel, peek, inTopics, LEVELS, BANK });
 // Folded home sections remember being open, so a re-render (a toggle inside them) does not close them
 const folds = {};
@@ -375,8 +389,9 @@ function Home() {
   const extras = labs + (C.extras || []).filter(x => !x.hide || !x.hide(api)).map(x => card([x.id, esc(x.title), esc(x.desc), esc(x.meta ? x.meta(api) : ''), glyph(x.icon || 'star')], 'extra')).join('');
   // "Para o exame": readiness checklist, past exams, cheat sheet, supplementary questions
   const RS = SKILLS.length ? readySummary() : null; const PG = pastGroups();
-  const PBS = pbTypes();
+  const PBS = pbTypes(), BDS = bdPartList();
   const prep = [
+    BDS.length ? ['builds', 'Oficina de diagramas', 'Do texto ao diagrama: constróis peça a peça, no dia seguinte desenhas sozinho no papel e corriges com a grelha.', `${BDS.filter(bdDone).length}/${BDS.length} pronto${BDS.length === 1 ? '' : 's'}`, glyph('pen')] : null,
     PBS.length ? ['prob', 'Problemas-chave', 'Os grandes problemas do exame, feitos por ti: escreves os valores, pedes pistas se encravares, e o que já sabes passa a vir feito.', `${PBS.filter(p => S.prob.t[p.id] && S.prob.t[p.id].done).length}/${PBS.length} pronto${PBS.length === 1 ? '' : 's'}`, glyph('star')] : null,
     RS && RS.rows.length ? ['ready', 'Prontidão', 'A checklist dos tipos de problema que saem nos exames, com o teu estado em cada um.', `${RS.ready}/${RS.rows.length} tipos prontos`, glyph('flag')] : null,
     PG.length ? ['past', 'Exames anteriores', 'Cada exame, pela ordem original, com as perguntas reescritas aqui. Os problemas grandes vêm por partes.', `${PG.length} exame${PG.length === 1 ? '' : 's'}`, glyph('clock')] : null,
@@ -385,7 +400,7 @@ function Home() {
     nSupp ? ['supp', 'Suplementares', 'Perguntas sobre matéria que ainda não saiu nos exames. Para ir mais fundo, depois do resto.', `${nSupp} perguntas`, glyph('plus')] : null,
   ].filter(Boolean);
   const readyCard = RS && RS.rows.length ? `<div class="ready-card">
-      <div class="row"><h2>Prontidão para o exame</h2><span class="spacer"></span><span class="mono muted" style="font-size:12px">${RS.ready} de ${RS.rows.length} tipos prontos</span></div>
+      <div class="row"><h2>Prontidão para ${esc(forWhat())}</h2><span class="spacer"></span><span class="mono muted" style="font-size:12px">${RS.ready} de ${RS.rows.length} tipos prontos</span></div>
       <div class="ready-bar" aria-hidden="true">${RS.rows.map(x => `<i class="${x.r.state}" style="flex:${x.w}" title="${esc(x.s.label)}"></i>`).join('')}</div>
       <p class="muted" style="font-size:13.5px">${Math.round(RS.pct * 100)}% pronto, a contar mais o que sai mais vezes.</p>
       <div class="row"><button class="btn small" data-act="mode" data-k="ready">Ver a checklist</button></div>
@@ -414,7 +429,7 @@ function Home() {
       <div class="chips">${topicsChips}</div>
     </div>
     <div class="section"><div class="section-h"><h2>Modos</h2></div><div class="modes">${std.map(c => card(c)).join('')}</div></div>
-    ${prep.length ? `<div class="section"><div class="section-h"><h2>Para o exame</h2></div><div class="modes">${prep.map(c => card(c)).join('')}</div></div>` : ''}
+    ${prep.length ? `<div class="section"><div class="section-h"><h2>Para ${esc(forWhat())}</h2></div><div class="modes">${prep.map(c => card(c)).join('')}</div></div>` : ''}
     ${extras ? `<div class="section"><div class="section-h"><h2>Só de ${esc(C.code)}</h2></div><div class="modes">${extras}</div></div>` : ''}
     <details class="section fold" id="fold-mastery" ${folds['fold-mastery'] ? 'open' : ''}><summary class="section-h"><h2>Domínio</h2><span class="muted" style="font-size:13px">perguntas acertadas pelo menos uma vez</span></summary>${mt}</details>
     <details class="section fold" id="fold-settings" ${folds['fold-settings'] || view.confirmReset ? 'open' : ''}>

@@ -35,14 +35,18 @@ src/
     graph-algos.js       graph lab algorithms, as animated steps: Dijkstra, distance vector (Bellman-Ford)
     graph-sound.js       small synthesized sound effects (window.SFX), mutable
     app-graph.js         graph lab player (GPLAYER) and the lab screen (view 'glab')
+    app-build.js         diagram workshop (Oficina de diagramas): building a diagram from a statement (views 'builds', 'build')
     style.css
   courses/
     ams/
-      course.js          name, topics, colours, extras (diagram detective)
-      theme.css          topic colours
+      course.js          name, topics, colours, parts (1.º and 2.º teste), skills, glossary, extras (diagram detective)
+      theme.css          topic colours and UML fills
       render.js          BPMN/ArchiMate drawing (only AMS uses it)
-      lessons/*.js
-      questions/*.js
+      render-uml.js      UML drawing: use case, class, state machine and sequence diagrams (UML.render; d.only/d.hi for builds)
+      cases.js           the 2nd test's past cases (MAP 2 TK, Exame 1 GoKnow), shared by lessons, questions and builds
+      lessons/*.js       base.js and exam.js: 1st test; uml.js and exam2.js: 2nd test
+      questions/*.js     sys…exam: 1st test; uml, uc, cls, stm, seq, exam2, uml-notation: 2nd test
+      builds.js          the diagram workshop exercises (Oficina de diagramas)
       ids.json           written by the build; never edit by hand
     oc/                  Organização de Computadores (same layout; render.js draws address fields, tables and pipeline diagrams)
     rc/                  Redes de Computadores (render.js draws space-time diagrams, topologies, addresses)
@@ -102,7 +106,8 @@ A lesson with no markers works as before: the whole text, then its two easiest q
    It can live in its own file that calls `STUDY.course({ id, route: {...} })` after course.js.
    `group: { id, title, eyebrow, desc }` puts the course in its own section below the main ones (IEco uses it for HACS,
    outside the main LEIC plan); `when` replaces the "3.º ano · 1.º sem." line on its card.
-   For the exam (see ML): `parts` (`[{ id, label, topics, note, past }]`, one per test; a part with no topics shows as "em breve"; `past` lists that test's past exams),
+   For the exam (see ML): `parts` (`[{ id, label, topics, note, past, exam }]`, one per test; a part with no topics shows as "em breve"; `past` lists that test's past exams;
+   `exam` overrides the course's mock exam rules while that part is chosen, see AMS; each part has its own test date, `settings.partDates`, and the readiness says "Prontidão para o 2.º teste"),
    `past` (the past exams the questions come from, newest first, as written at the start of `src`) and `skills`
    (`[{ id, t, label, les: [lessons], seen: [past exams], sheet: 'HTML for the cheat sheet' }]`; `core: true` makes a
    type priority even when it never came up on its own, for base matter such as OC's bits or virtual memory).
@@ -204,6 +209,37 @@ The end screen also folds out the whole worked solution, every step with its lin
 - A problem left half done (back button, closed tab, refresh) is kept in `S.pbCur` for 3 days and picks up at the same step.
 - Progress is in `S.prob` and travels in the progress key. Never change a published problem or stage id.
 
+## Diagram workshop (Oficina de diagramas)
+
+For exams that ask to *draw* a diagram from a statement (AMS 2nd test: use cases, class, state machine, sequence). Engine
+`src/engine/app-build.js`, content `STUDY.builds(id, [...])` (AMS: `src/courses/ams/builds.js`). The method, "do texto ao
+diagrama", is three turns spaced in days:
+
+1. **Construir** (stage 0): the statement is read decision by decision. Each part is one decision and the diagram grows
+   with each one resolved; tapping a piece of the diagram lights the sentences it comes from. Wrong choices get their
+   own reason (`why`); after a wrong try "Ver a resposta" is offered. Ends with "Fazer já no papel" or tomorrow.
+2. **No papel** (stage 1, due the next day): the statement alone and a timer (`min`); the student draws on paper, then
+   marks a rubric (one line per part, `rub`, weighted by `pts`) against the full solution: Tenho / Em parte / Falta.
+   75% (`BD_PASS`) or more finishes it and brings it back once on paper a week later; less goes back to Construir.
+3. "Ver resolvido" (watch) plays the decisions with their answers, as a worked example, from the list, from the lessons
+   in `les` and when stuck on paper. No progress.
+
+A build: `{ id, t, skill, title, short, src, pts, min, ask, uod, d, given, parts, les, extra }`. `uod` is a list of
+sentences `{ id, n, t }` (or headings `{ h }`), where `[[text|spanId]]` marks a span. `d` is the whole solution, drawn by
+the course's render with `d.only` (pieces shown so far) and `d.hi` (just added); every piece has an id and the render marks
+it `data-el` (sub-pieces: `Class:a` attributes, `edge:m` multiplicities). `given` is drawn from the start (a test that says
+"completa"). A part: `{ id, kind, phase, ask, e, el, from, rub, pts, why }` with `kind`:
+`spans` (tap the answers in the statement: `ans`, `opt` count either way), `pick` (several: `o`, `a`, `opt`), `one`
+(`o`, `a`, or a list of accepted), `rows` (one choice per row: `rows: [{ lb, o, a, why }]`, e.g. both multiplicities).
+The build checks that every `el` is a piece of `d`, every span and sentence exists, and warns about pieces no part adds.
+
+- **Plan**: a type's build is a task of its own ("Construir: …", "No papel: …", "Rever no papel: …") after its theory and
+  training; one at a time per type; a turn left half way comes first ("Acabar: …", kept in `S.bdCur` for 3 days).
+  "Sem papel" also shows in a course with builds and holds the paper turns. The pace counts every turn still ahead.
+- **Readiness**: a type is ready only when its builds (all but `extra: true`) are done on paper; each weighs 5 questions
+  (`BD_W`). The checklist shows ✎ done/total.
+- **Progress**: `S.bld = { id: { stage, done, due, last, best } }`, in the progress key extras (`bd`).
+
 ## Graph labs (animated algorithms)
 
 A lab is a screen of its own (card in "Só de <curso>") that animates a graph algorithm step by step: the graph,
@@ -299,7 +335,7 @@ shows "Ronda a meio" with Continuar / Descartar (not for the mock exam, which ha
 
 The **Outro dispositivo** screen packs it into a key
 (link + QR on the site, text in the local file) that another device merges in; nothing is ever overwritten.
-Besides the answers, notes, XP and test date, it carries the lessons seen, the key problems, the pace and today's plan,
+Besides the answers, notes, XP and test date, it carries the lessons seen, the key problems, the diagram exercises, each test's date, the pace and today's plan,
 in a block at the end that older copies of the app skip. Format details are at the top of `src/engine/progress-key.js`.
 
 ## Rules that must not be broken

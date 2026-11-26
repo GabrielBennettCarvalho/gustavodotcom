@@ -57,7 +57,7 @@ const codeBlock = c => `<pre class="codeblk">${esc(c)}</pre>`;
 // k: only card k of the lesson (the diagram and the key line belong to the last card)
 function lessonBody(L, k) { const cs = lessonCards(L), one = k && cs.length > 1 && cs[k - 1] !== undefined, last = !one || k === cs.length;
   const h = one ? cs[k - 1] : (L.html || ''), body = L.trusted ? fxify(h) : md(h);
-  return `${body}${L.d && last ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key && last ? `<p class="key">${L.trusted ? fxify(L.key) : md(L.key)}</p>` : ''}${last ? labLessonBtn(L.id) : ''}`; }
+  return `${body}${L.d && last ? `<div class="diagram">${renderD(L.d)}</div>` : ''}${L.key && last ? `<p class="key">${L.trusted ? fxify(L.key) : md(L.key)}</p>` : ''}${last ? labLessonBtn(L.id) + bdLessonBtn(L.id) : ''}`; }
 /* The cheat sheet while solving (open-book courses only). Opening it is free, as in the exam: it never counts as a hint.
    Not in Aprender, which is for learning, and not after answering, when the theory is already there. */
 const sheetNotes = s => BANK.filter(q => skillOf(q) === s.id && S.notes[q.id]).map(q => `<li>${noteMd(S.notes[q.id])}</li>`).join('');
@@ -221,11 +221,11 @@ function Ready() {
     return `<div class="section"><div class="section-h"><h2>${esc(T.label)}</h2></div><div class="skill-list">${rows.map(({ s, r }) => `<div class="skill ${r.state}" style="--c:${T.c}">
       <span class="st" title="${STATE[r.state][1]}" aria-label="${STATE[r.state][1]}">${STATE[r.state][0]}</span>
       <div class="sk-main"><b>${esc(s.label)}</b><span class="sk-meta">${(s.seen || []).length ? `saiu em ${s.seen.length} de ${nPast()}` : s.core ? 'matéria de base' : 'ainda não saiu'} ${seenChips(s)}</span></div>
-      <span class="sk-prog mono" title="Pronto com ${r.need} das ${r.total} perguntas: todas as de exames anteriores e mais algumas">${r.done}/${r.need}${r.pend ? ` · ${r.pend} por rever` : ''}</span>
-      <button class="btn small${r.state === 'ready' ? '' : ' primary'}" data-act="skill" data-k="${esc(s.id)}">${r.state === 'ready' ? 'Rever' : r.left <= SKILL_FOCUS ? `Fazer ${r.left}` : 'Treinar'}</button></div>`).join('')}</div></div>`; }).join('');
-  return `<div class="qhead">${BACK}<span class="eyebrow">Prontidão para o exame</span></div>
+      <span class="sk-prog mono" title="Pronto com ${r.need} perguntas (todas as de exames anteriores e mais algumas)${r.bn ? ` e ${r.bn} diagrama${r.bn === 1 ? '' : 's'} feito${r.bn === 1 ? '' : 's'} no papel` : ''}">${r.need ? `${r.done}/${r.need}` : ''}${r.bn ? `${r.need ? ' · ' : ''}✎ ${r.bd}/${r.bn}` : ''}${r.pend ? ` · ${r.pend} por rever` : ''}</span>
+      <button class="btn small${r.state === 'ready' ? '' : ' primary'}" ${r.state !== 'ready' && !r.left && r.bdLeft ? 'data-act="mode" data-k="builds"' : `data-act="skill" data-k="${esc(s.id)}"`}>${r.state === 'ready' ? 'Rever' : !r.left && r.bdLeft ? 'Diagramas' : r.left <= SKILL_FOCUS ? `Fazer ${r.left}` : 'Treinar'}</button></div>`).join('')}</div></div>`; }).join('');
+  return `<div class="qhead">${BACK}<span class="eyebrow">Prontidão para ${esc(forWhat())}</span></div>
     <div class="result-grid" style="margin-bottom:10px"><div class="kpi"><b>${Math.round(RS.pct * 100)}%</b><span>pronto (pesa o que sai mais)</span></div><div class="kpi"><b>${n('ready')}</b><span>prontos</span></div><div class="kpi"><b>${n('training')}</b><span>a treinar</span></div><div class="kpi"><b>${n('todo')}</b><span>por começar</span></div></div>
-    <p class="muted" style="font-size:13.5px">Os tipos de problema que saem nos exames, por tema, do mais frequente para o menos. Um tipo fica <b>pronto</b> quando acertaste todas as perguntas dele e nenhuma está por rever. Conta tudo, com e sem contas.</p>
+    <p class="muted" style="font-size:13.5px">Os tipos de problema que saem nos exames, por tema, do mais frequente para o menos. Um tipo fica <b>pronto</b> quando acertaste as perguntas que conta (todas as de exames anteriores) e nenhuma está por rever${bdPartList().length ? ', e quando passaste no papel os seus exercícios da Oficina de diagramas (✎)' : ''}. Conta tudo, com e sem contas.</p>
     ${groups}`;
 }
 function Past() {
@@ -432,7 +432,7 @@ function mergeKey() {
   const rep = KEY.merge(G, view.incoming, id => blank(REG.courses[id].topics));
   if (C) openCourse(C.id); else { const first = Object.keys(view.incoming.courses)[0]; if (first) openCourse(first); }
   save();
-  toast(`Feito: ${rep.added} pergunta(s) novas, ${rep.updated} atualizadas${rep.notes ? `, ${rep.notes} nota(s)` : ''}${rep.lessons ? `, ${rep.lessons} lição(ões) vistas` : ''}${rep.problems ? `, ${rep.problems} problema(s)-chave` : ''}.`);
+  toast(`Feito: ${rep.added} pergunta(s) novas, ${rep.updated} atualizadas${rep.notes ? `, ${rep.notes} nota(s)` : ''}${rep.lessons ? `, ${rep.lessons} lição(ões) vistas` : ''}${rep.problems ? `, ${rep.problems} problema(s)-chave` : ''}${rep.builds ? `, ${rep.builds} diagrama(s)` : ''}.`);
   go(C ? 'home' : 'courses');
 }
 
@@ -470,7 +470,7 @@ document.addEventListener('click', async ev => {
     case 'cabExam': if (ses) { ses.cab = !ses.cab; renderView(); if (ses.cab) { const c = document.querySelector('.cab-exam'); if (c) c.scrollIntoView({ block: 'start' }); } } break;
     case 'level': { const n = +b.dataset.n; if (!unlocked(n)) { toast(`Bloqueado: precisas de ${Math.round(UNLOCK * 100)}% do nível ${n - 1} (ou ativa “Desbloquear todos”).`); return; } start('level', { level: n }); break; }
     case 'routeStop': start('route', { stop: b.dataset.k }); break;
-    case 'mode': { const k = b.dataset.k; if (k === 'route') { ses = null; go('routepick'); } else if (k === 'learn') go('learnpick'); else if (k === 'library') go('library'); else if (k === 'review') go('reviewpick'); else if (['ready', 'past', 'sheet', 'prob', 'formulas'].includes(k)) go(k); else start(k); break; }
+    case 'mode': { const k = b.dataset.k; if (k === 'builds') { go('builds'); break; } if (k === 'route') { ses = null; go('routepick'); } else if (k === 'learn') go('learnpick'); else if (k === 'library') go('library'); else if (k === 'review') go('reviewpick'); else if (['ready', 'past', 'sheet', 'prob', 'formulas'].includes(k)) go(k); else start(k); break; }
     case 'learn': start('learn', { topic: b.dataset.k }); break;
     case 'library': go('library'); break;
     case 'read': go('reader', { id: b.dataset.id }); break;
@@ -515,7 +515,7 @@ document.addEventListener('change', ev => {
   if (t.id === 'includeNotes') { view.notes = t.checked; renderView(); return; }
   if (t.id === 'unlockAll') { S.settings.unlockAll = t.checked; save(); renderView(); }
   if (t.id === 'calcPad') { S.settings.calc = t.checked; save(); renderView(); if (t.checked) toast('A calculadora está no canto do ecrã.'); }
-  if (t.id === 'testDate') { S.settings.testDate = t.value; save(); renderView(); }
+  if (t.id === 'testDate') { setTestDate(t.value); save(); renderView(); }
   if (t.id === 'importFile' && t.files && t.files[0]) { const r = new FileReader(); r.onload = () => doImport(String(r.result || '')); r.readAsText(t.files[0]); }
 });
 let noteTimer = null;

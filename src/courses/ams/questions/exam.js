@@ -1,7 +1,7 @@
 (() => {
 const FALHA4 = ['A — excesso: relação a mais', 'B — excesso: conceito a mais', 'C — erro: relação de tipo errado', 'D — erro: conceito de tipo errado'];
 const FALHA6 = [...FALHA4, 'E — omissão: relação em falta', 'F — omissão: conceito(s) em falta'];
-const SRC = 'Teste modelo AMS 2026 · solução oficial';
+const SRC = 'Teste modelo AMS 2026';   // the official solution ("solução oficial") is what the explanations follow
 
 /* ---------- model test diagrams ---------- */
 const Q3 = { kind: 'archimate', w: 540, h: 250, alt: 'Teste modelo Q3: responsabilidades', nodes: [

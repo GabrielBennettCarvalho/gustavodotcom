@@ -23,7 +23,8 @@
      if extras (bit2), after every course:
        varint m, m × (str id, str json)   the newer state: lessons seen, key problems, pace and today's plan
        json = { sl: { lessonId: day }, pt: { typeId: [stage, done, dueDay, { stageId: day }] }, pc: { concept: 0|1 },
-                pa: [s, n, pb, pbn], td: [date, minutes, [plan keys]], md: minutes per day }
+                pa: [s, n, pb, pbn], td: [date, minutes, [plan keys]], md: minutes per day,
+                pd: { partId: 'YYYY-MM-DD' } (each test's date), bd: { buildId: [stage, done, dueDay + 1, lastDay, best %] } }
        It sits at the end so that an older copy of the app, which stops reading before it, still reads the rest.
    Columns (not rows) because similar bytes side by side compress much better. */
 window.PROGRESS_KEY = (() => {
@@ -106,6 +107,9 @@ window.PROGRESS_KEY = (() => {
     if (P && (P.n || P.pbn || P.qn || P.hn || P.ln)) o.pa = [Math.round(P.s || 0), P.n || 0, r2(P.pb), P.pbn || 0, Math.round(P.q || 0), P.qn || 0, Math.round(P.h || 0), P.hn || 0, r2(P.lr), P.ln || 0];
     if (S.today && S.today.d) o.td = [S.today.d, Math.round(S.today.ms / 60000), S.today.did || []];
     if (S.settings && S.settings.minDay && S.settings.minDay !== 30) o.md = S.settings.minDay;
+    const PD = (S.settings && S.settings.partDates) || {}; if (Object.values(PD).some(Boolean)) o.pd = Object.fromEntries(Object.entries(PD).filter(x => x[1]));
+    // diagram workshop (app-build.js): stage, done, next due day, last day, best score on paper
+    const B = S.bld || {}; if (Object.keys(B).length) o.bd = Object.fromEntries(Object.entries(B).map(([k, b]) => [k, [b.stage | 0, b.done ? 1 : 0, b.due ? toDay(b.due) + 1 : 0, toDay(b.last), b.best | 0]]));
     return Object.keys(o).length ? JSON.stringify(o) : '';
   }
   function extIn(j) {
@@ -117,6 +121,8 @@ window.PROGRESS_KEY = (() => {
       if (a.length >= 10) Object.assign(x.pace, { q: a[4], qn: a[5], h: a[6], hn: a[7], lr: a[8], ln: a[9] }); }
     if (o.td) x.today = { d: o.td[0], ms: o.td[1] * 60000, did: o.td[2] || [] };
     if (o.md) x.minDay = o.md;
+    if (o.pd) x.partDates = o.pd;
+    if (o.bd) x.bld = Object.fromEntries(Object.entries(o.bd).map(([k, [stage, done, due, last, best]]) => [k, { stage, done: !!done, due: due ? fromDay(due - 1) : 0, last: last ? fromDay(last) : 0, best: best || 0 }]));
     return x;
   }
 
@@ -202,6 +208,9 @@ window.PROGRESS_KEY = (() => {
       if (X.pace && (!L.pace || n(X.pace) > n(L.pace))) L.pace = X.pace; }
     if (X.today) { const t = L.today; if (!t || t.d < X.today.d) L.today = X.today; else if (t.d === X.today.d) { t.ms = Math.max(t.ms, X.today.ms); X.today.did.forEach(k => { if (!t.did.includes(k)) t.did.push(k); }); } }
     if (X.minDay && (!L.settings.minDay || L.settings.minDay === 30)) L.settings.minDay = X.minDay;
+    if (X.partDates) { L.settings.partDates = L.settings.partDates || {}; for (const [k, v] of Object.entries(X.partDates)) if (!L.settings.partDates[k]) L.settings.partDates[k] = v; }
+    // a diagram exercise: the side that worked on it last wins
+    if (X.bld) { L.bld = L.bld || {}; for (const [k, b] of Object.entries(X.bld)) if (!L.bld[k] || (b.last || 0) > (L.bld[k].last || 0) + 864e5 / 2) { L.bld[k] = b; report.builds = (report.builds || 0) + 1; } }
   }
 
   /* --- what a key contains, for the confirmation screen --- */

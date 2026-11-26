@@ -1,4 +1,11 @@
 /* Cores dos temas do AMS */
-:root{ --t-sys:#5452C9; --t-req:#8A55C2; --t-arch:#B88A0B; --t-bpm:#2479B8; --t-bpmn:#238A5E; --t-exam:#C2410C; }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --t-sys:#9C9BFF; --t-req:#C59BF0; --t-arch:#E9C04A; --t-bpm:#6DB8F0; --t-bpmn:#5ACF96; --t-exam:#FF9A62; }}
-:root[data-theme="dark"]{ --t-sys:#9C9BFF; --t-req:#C59BF0; --t-arch:#E9C04A; --t-bpm:#6DB8F0; --t-bpmn:#5ACF96; --t-exam:#FF9A62; }
+:root{ --t-sys:#5452C9; --t-req:#8A55C2; --t-arch:#B88A0B; --t-bpm:#2479B8; --t-bpmn:#238A5E; --t-exam:#C2410C;
+  --t-uml:#0E7C86; --t-uc:#B4367A; --t-cls:#7A5A00; --t-stm:#3F6FD8; --t-seq:#5B8A1F; --t-exam2:#B4471C; }
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --t-sys:#9C9BFF; --t-req:#C59BF0; --t-arch:#E9C04A; --t-bpm:#6DB8F0; --t-bpmn:#5ACF96; --t-exam:#FF9A62;
+  --t-uml:#4FD1DB; --t-uc:#F27CBC; --t-cls:#E0B84A; --t-stm:#8CB0FF; --t-seq:#A6D96A; --t-exam2:#FF9466; }}
+:root[data-theme="dark"]{ --t-sys:#9C9BFF; --t-req:#C59BF0; --t-arch:#E9C04A; --t-bpm:#6DB8F0; --t-bpmn:#5ACF96; --t-exam:#FF9A62;
+  --t-uml:#4FD1DB; --t-uc:#F27CBC; --t-cls:#E0B84A; --t-stm:#8CB0FF; --t-seq:#A6D96A; --t-exam2:#FF9466; }
+/* UML fills (the diagram sheet stays paper-light in both themes) */
+.dg .u-cls{fill:#FFF8E4}
+.dg .u-enum{fill:#EAF4E2}
+.dg .u-st{fill:#FBF0DC}

@@ -15,6 +15,7 @@
     "engine/app-plan.js",
     "engine/app-calc.js",
     "engine/app-graph.js",
+    "engine/app-build.js",
     "engine/app-views.js"
   ],
   "courses": {
@@ -24,15 +25,27 @@
       ],
       "files": [
         "render.js",
+        "render-uml.js",
         "course.js",
+        "cases.js",
         "lessons/base.js",
         "lessons/exam.js",
+        "lessons/uml.js",
+        "lessons/exam2.js",
         "questions/sys.js",
         "questions/req.js",
         "questions/arch.js",
         "questions/bpm.js",
         "questions/bpmn.js",
-        "questions/exam.js"
+        "questions/exam.js",
+        "questions/uml.js",
+        "questions/uc.js",
+        "questions/cls.js",
+        "questions/stm.js",
+        "questions/seq.js",
+        "questions/exam2.js",
+        "questions/uml-notation.js",
+        "builds.js"
       ]
     },
     "oc": {

@@ -92,6 +92,10 @@ function planAll() {
   const unseen = ids => ids.filter(id => LBYID[id] && !(S.seenL || {})[id]);
   // a key problem left half done comes right after the mistakes: finishing it costs less than starting anything else
   const half = !np && (C.problems || []).find(p => pbSaved(p) && partTopics().includes(p.t));
+  // a diagram exercise left half way (app-build.js) comes back the same way, where it stopped
+  const hb = bdAll().find(b => bdSaved(b) && pt.includes(b.t) && !((np || noPaper()) && S.bdCur.mode === 'paper'));
+  if (hb) { const K = S.bdCur, left = K.res.filter(x => x[0] === 'todo').length / K.res.length;
+    T.push({ key: K.key || `bd:${hb.id}:h`, kind: 'build', skill: hb.skill, w: 1e9, id: hb.id, mode: K.mode, label: `Acabar: ${bdLabel(hb, bdStatus(hb))}`, why: 'Continuas onde paraste.', min: Math.max(2, bdMin(hb, K.mode === 'paper' ? 1 : 0) * (K.mode === 'paper' ? 0.6 : left)), fq: 0, fl: 0 }); }
   if (half) { const K = pbSaved(half), left = K.st.filter(x => x[0] === 'todo').length / K.st.length;
     T.push({ key: 'pb:' + half.id, kind: 'pb', skill: half.skill, w: 1e9, id: half.id, label: `Acabar o problema: ${half.short || half.title}`, why: 'Continuas no passo onde paraste.', min: Math.max(2, pbNominal(half) * left * ((S.pace && S.pace.pbn) ? S.pace.pb : 1)), fq: 0, fl: 0 }); }
   // a round started from the plan and left half way comes back as itself (its type's task may have changed meanwhile:
@@ -119,11 +123,14 @@ function planAll() {
       const p = (C.problems || []).find(x => x.skill === s.id), ps = p && pbStatus(p), pbDue = !np && !!(p && ps.due);
       // without calculations, only the questions it needs that have none (the others wait for paper)
       const LQ = skillLeftNow(s.id), left = LQ.length, round = left <= SKILL_FOCUS ? left : 10, lq = qSec(LQ), rq = qSec(LQ.slice(0, round));
+      // its diagram exercise (Oficina de diagramas), when one is due; the one left half way is already up front
+      let bt = bdTaskFor(s.id, w, np || noPaper()); if (bt && hb && bt.id === hb.id) bt = null;
       const pbT = () => ({ key: 'pb:' + p.id, kind: 'pb', skill: s.id, w, id: p.id, label: `Problema-chave: ${p.short || p.title}`, why, min: pbNominal(p) * ((S.pace && S.pace.pbn) ? S.pace.pb : 1), fq: lq, fl: 0 });
       if (L.length && B.length === L.length && left && !pbDue && !(half && p && p.id === half.id)) {
         // the whole theory fits in one sitting: lessons and training are one task, one session
         T.push({ key: 'learn:' + s.id, kind: 'learn', train: true, skill: s.id, w, t: s.t, les: B, label: `Aprender e treinar: ${s.label}`,
           why: `${nL(L.length)} e ${left <= SKILL_FOCUS ? nQ(left) : 'uma ronda de perguntas'}. ${why}`, sec: secOf(lesSec(B)) + rq, fl: lesSec(L).fl, fq: lesSec(L).fq + lq });
+        if (bt) T.push(bt);
         return; }
       if (L.length) {
         // more theory than one sitting: the lessons first; the training waits until they are all seen (its work still counts)
@@ -132,10 +139,11 @@ function planAll() {
           why: `${nL(L.length)} por ver${later ? `, ${B.length} de cada vez. Depois, as perguntas` : ''}.`, sec: secOf(lesSec(B)), fl: lesSec(L).fl, fq: lesSec(L).fq + (later ? lq : 0), xmin: later && pbDue ? taskMin(pbT()) : 0 });
         if (later) return; }
       if (half && p && p.id === half.id) return;   // already first in the plan
-      if (np && !left) return;   // what it still needs has calculations: it waits for paper
+      if (np && !left) { if (bt) T.push(bt); return; }   // what it still needs has calculations: it waits for paper
       const sc = np ? ' sem contas' : '';
       if (pbDue) T.push(pbT());
-      else T.push({ key: 'skill:' + s.id, kind: 'skill', skill: s.id, w, label: `Treinar: ${s.label}`, why: left <= SKILL_FOCUS ? `${why} ${left === 1 ? `Falta 1 pergunta${sc}.` : `Faltam ${left} perguntas${sc}.`}` : np ? `${why} Só as perguntas sem contas.` : why, sec: rq, fq: lq, fl: 0, left, need: r.left });
+      else if (left) T.push({ key: 'skill:' + s.id, kind: 'skill', skill: s.id, w, label: `Treinar: ${s.label}`, why: left <= SKILL_FOCUS ? `${why} ${left === 1 ? `Falta 1 pergunta${sc}.` : `Faltam ${left} perguntas${sc}.`}` : np ? `${why} Só as perguntas sem contas.` : why, sec: rq, fq: lq, fl: 0, left, need: r.left });
+      if (bt) T.push(bt);
     });
     // types one to NEAR_MAX questions from ready: one task, right after the mistakes, instead of a line each.
     // need: what the type really needs (left is only what can be done now, without calculations).
@@ -167,10 +175,12 @@ function planAll() {
 function planPace(T) {
   const d = daysLeft(), per = S.settings.minDay || 30;
   // minutes: reading, the questions with the mistakes they will bring back, a key problem's own time
-  const err = errRate(), work = t => (t.xmin || 0) + (t.kind === 'pb' || t.kind === 'exam' ? taskMin(t) : 0) + (t.fl + t.fq * (t.rep ? 1 : 1 + err * TRAIN_CLEAR)) / 60;
+  const err = errRate(), work = t => (t.xmin || 0) + (t.kind === 'pb' || t.kind === 'exam' || t.kind === 'build' ? taskMin(t) : 0) + (t.fl + t.fq * (t.rep ? 1 : 1 + err * TRAIN_CLEAR)) / 60;
   // one mock exam and its review, unless the plan already holds it
   const X = examCfg(), mock = !T.some(t => t.kind === 'exam') && X && X.min ? X.min + X.n * err * EXAM_CLEAR * paceH() / 60 : 0;
-  const total = T.reduce((a, t) => a + work(t), 0) + mock;
+  // the diagram exercises' turns still ahead that are not in the list yet (the paper turn of tomorrow, the next exercise)
+  const bdAhead = Math.max(0, partSkills().reduce((a, s) => a + bdWorkLeft(s.id), 0) - T.filter(t => t.kind === 'build').reduce((a, t) => a + taskMin(t), 0));
+  const total = T.reduce((a, t) => a + work(t), 0) + mock + bdAhead;
   if (d === null || d < 1) return { d, total, per, later: [] };
   const budget = d * per; let need = total; const later = [];
   // a base type (in no past exam) stays in its place: the types after it build on it
@@ -215,6 +225,7 @@ function planRun(i, more) {
   else if (t.kind === 'skill') start('skill', Object.assign(o, { k: t.skill }));
   else if (t.kind === 'level') start('level', Object.assign(o, { level: t.level }));
   else if (t.kind === 'pb') pbStart(t.id, t.key);
+  else if (t.kind === 'build') bdStart(t.id, t.key, t.mode);
   else if (t.kind === 'sheet') { planLog(t.key, 0, 0, 0, true); save(); go('sheet'); }
 }
 // After a session: time studied today, what was done, and the student's pace.
@@ -234,16 +245,16 @@ function laterNames(later) {
 function PlanCard() {
   const p = planFor(!!view.planMore), P = p.P, per = S.settings.minDay || 30;
   const seg = `<span class="seg" role="group" aria-label="Minutos por dia">${PLAN_MIN.map(m => `<button data-act="minDay" data-k="${m}" aria-pressed="${per === m}">${m}</button>`).join('')}</span>`;
-  const set = `<div class="plan-set"><label for="testDate">Teste</label><input type="date" id="testDate" data-act="testDate" value="${esc(S.settings.testDate)}">${seg}<span>min por dia</span></div>`;
+  const set = `<div class="plan-set"><label for="testDate">${curPart() ? esc(curPart().label.replace(/^./, c => c.toUpperCase())) : 'Teste'}</label><input type="date" id="testDate" data-act="testDate" value="${esc(testDate())}">${seg}<span>min por dia</span></div>`;
   let pace;
   if (P.d === null) pace = 'Diz quando é o teste e a app reparte o que falta pelos dias que tens.';
   else if (P.d < 1) pace = P.d === 0 ? 'O teste é hoje.' : 'O teste já passou. Muda a data se houver outro.';
   else if (P.later.length) { const L = laterNames(P.later);
     pace = `Faltam ${P.d} dia${P.d === 1 ? '' : 's'} e cerca de ${hoursRange(P.total)} de trabalho: precisavas de ${perDayRange(P.need)} por dia. Com ${per} min, fica para o fim o que sai menos: ${L.slice(0, 3).join('; ')}${L.length > 3 ? ` e mais ${L.length - 3}` : ''}.${P.fit ? ` Com ${P.fit} min por dia dá para tudo.` : ''}`; }
   else pace = `Faltam ${P.d} dia${P.d === 1 ? '' : 's'} e cerca de ${hoursRange(P.total)} de trabalho: chegam ${perDayRange(P.need)} por dia.`;
-  const np = noCalcNow(), npBtn = hasCalc() ? `<button class="btn small np-tog" data-act="noPaper" aria-pressed="${np}" title="Para quando não tens papel nem caneta: no autocarro, numa passadeira. Fica ligado neste aparelho.">${glyph('pen')}Sem papel</button>` : '';
+  const np = noCalcNow() || (noPaper() && !hasCalc()), npBtn = hasCalc() || bdPartList().length ? `<button class="btn small np-tog" data-act="noPaper" aria-pressed="${np}" title="Para quando não tens papel nem caneta: no autocarro, numa passadeira. Fica ligado neste aparelho.">${glyph('pen')}Sem papel</button>` : '';
   const npWhy = noPaper() ? 'Sem papel' : 'Só teoria';   // which one turned the calculations off
-  const npNote = np ? `<p class="plan-np">${p.next ? `${npWhy}: só o que se faz a ler e a clicar.` : `${npWhy}, não sobra nada: o que falta precisa de contas.`} ${(C.problems || []).length ? 'As contas e os problemas-chave esperam' : 'As contas esperam'} por papel, e o ritmo continua a contá-las.</p>` : '';
+  const npNote = np ? `<p class="plan-np">${p.next ? `${npWhy}: só o que se faz a ler e a clicar.` : `${npWhy}, não sobra nada: o que falta precisa de ${hasCalc() ? 'contas' : 'papel'}.`} ${(C.problems || []).length ? 'As contas e os problemas-chave esperam' : hasCalc() ? 'As contas esperam' : 'Os diagramas no papel esperam'} por papel, e o ritmo continua a contá-las.</p>` : '';
   // nothing left without calculations: not "done", it waits for paper (and the button is right there)
   if (np && !p.next) return `<section class="plan-card"><div class="row"><h2>Hoje</h2><span class="spacer"></span>${npBtn}</div>${npNote}${rcStrip('warm')}${rcStrip('recap')}<p class="plan-pace">${pace}</p>${set}</section>`;
   if (p.done && !view.planMore) return `<section class="plan-card done"><div class="row"><h2>Hoje ✓</h2><span class="spacer"></span>${npBtn}<span class="mono muted">${Math.round(p.spent)} min feitos</span></div>

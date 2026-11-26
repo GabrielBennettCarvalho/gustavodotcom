@@ -68,6 +68,37 @@ for (const id of REG.order) {
       }
     }
   }
+  // diagram exercises (Oficina de diagramas): every part answerable, every piece it adds drawn in the solution
+  const bdIds = new Set(), spanRe = /\[\[([^|\]]+)\|([^\]]+)\]\]/g;
+  for (const b of c.builds || []) {
+    const btag = `${id}/build ${b.id}`;
+    if (bdIds.has(b.id)) err(`${btag}: duplicate id`); bdIds.add(b.id);
+    if (!c.topics[b.t]) err(`${btag}: unknown topic "${b.t}"`); if (b.skill && !SK.has(b.skill)) err(`${btag}: skill "${b.skill}" does not exist`);
+    if (!b.title || !b.d || !(b.parts || []).length || !(b.uod || []).length) { err(`${btag}: needs title, uod, d and parts`); continue; }
+    (b.les || []).forEach(l => { if (!L.has(l)) err(`${btag}: lesson "${l}" does not exist`); });
+    // the pieces of the solution: every object with an id inside d (nodes, edges, lifelines, messages…)
+    const pieces = new Set(); const walk = v => { if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === 'object') { if (typeof v.id === 'string') pieces.add(v.id); Object.values(v).forEach(walk); } }; walk(b.d);
+    const has = x => pieces.has(x) || pieces.has(String(x).split(':')[0]);
+    if (c.render) { try { if (!String(c.render(Object.assign({}, b.d, { only: b.given || [], hi: [] }))).includes('<svg') || !String(c.render(b.d)).includes('<svg')) err(`${btag}: empty diagram`); } catch (e) { err(`${btag}: diagram fails (${e.message})`); } }
+    (b.given || []).forEach(x => { if (!has(x)) err(`${btag}: given "${x}" is not in the diagram`); });
+    const sents = new Set(b.uod.map(s => s.id).filter(Boolean)), spans = new Set(); b.uod.forEach(s => { if (s.t) for (const m of s.t.matchAll(spanRe)) { if (spans.has(m[2])) err(`${btag}: span "${m[2]}" twice`); spans.add(m[2]); } });
+    const pIds = new Set(), used = new Set(b.given || []);
+    for (const p of b.parts) {
+      const t = `${btag}/${p.id}`; if (!p.id || pIds.has(p.id)) err(`${t}: needs a unique id`); pIds.add(p.id);
+      if (!p.ask || !p.e) err(`${t}: needs ask and e`);
+      (p.el || []).forEach(x => { if (!has(x)) err(`${t}: el "${x}" is not in the diagram`); used.add(x); });
+      (p.from || []).forEach(x => { if (!sents.has(x)) err(`${t}: sentence "${x}" does not exist`); });
+      const inR = (a, n) => Number.isInteger(a) && a >= 0 && a < n;
+      if (p.kind === 'spans') { if (!(p.ans || []).length) err(`${t}: spans needs ans`); [...(p.ans || []), ...(p.opt || [])].forEach(x => { if (!spans.has(x)) err(`${t}: span "${x}" is not in the statement`); }); }
+      else if (p.kind === 'pick') { if (!(p.o || []).length || !(p.a || []).length || p.a.some(a => !inR(a, p.o.length))) err(`${t}: pick needs o and a (indexes)`); }
+      else if (p.kind === 'one') { const a = Array.isArray(p.a) ? p.a : [p.a]; if (!(p.o || []).length || a.some(x => !inR(x, p.o.length))) err(`${t}: one needs o and a (index)`); }
+      else if (p.kind === 'rows') { if (!(p.rows || []).length || p.rows.some(r => !(r.o || []).length || (Array.isArray(r.a) ? r.a : [r.a]).some(x => !inR(x, r.o.length)))) err(`${t}: rows need o and a`); }
+      else err(`${t}: kind must be spans, pick, one or rows`);
+    }
+    // every piece of the solution is added by some part (or given), so the diagram ends complete
+    const usedBase = new Set([...used].map(x => String(x).split(':')[0]));
+    const loose = [...pieces].filter(x => !usedBase.has(x) && !used.has(x)); if (loose.length && !b.loose) console.log(`WARN ${btag}: pieces no part adds: ${loose.join(', ')}`);
+  }
   // formulas with a legend: {f:id} or {f:id|text} must name a formula of the course. Not in options, step names or
   // "also": those are shown as plain text or are buttons themselves.
   const FX = c.formulas || {};
@@ -107,6 +138,6 @@ for (const id of REG.order) {
   const skOf = q => q.k !== undefined ? q.k : lesSk[q.les];
   const core = q => !SK.size || /^(exame|teste|map|mini|repescagem)/i.test(q.src || '') || !!(SK.get(skOf(q)) && (SK.get(skOf(q)).core || (SK.get(skOf(q)).seen || []).length));
   const pr = SK.size ? `, ${SK.size} problem types, ${c.questions.filter(core).length} priority / ${c.questions.filter(q => !core(q)).length} supplementary` : '';
-  console.log(`${id}: ${c.lessons.length} lessons, ${c.questions.length} questions (${res} reserved for the exam), ${c.extras.length} extra(s)${(c.problems || []).length ? `, ${c.problems.length} key problem(s)` : ''}${pr}${added.length ? `, +${added.length} new ids` : ''}`);
+  console.log(`${id}: ${c.lessons.length} lessons, ${c.questions.length} questions (${res} reserved for the exam), ${c.extras.length} extra(s)${(c.problems || []).length ? `, ${c.problems.length} key problem(s)` : ''}${(c.builds || []).length ? `, ${c.builds.length} diagram exercise(s)` : ''}${pr}${added.length ? `, +${added.length} new ids` : ''}`);
 }
 process.exit(errs ? 1 : 0);

@@ -23,6 +23,8 @@ Full field reference and layout are in README.md. Read it only when you need a d
 - `src/engine/app-plan.js`: Hoje, the plan at the top of every course home (README explains how it picks tasks).
 - `src/engine/app-problems.js`: Problemas-chave, typed exam problems (README has the fields). Content: `src/courses/<id>/problems.js`.
 - `src/engine/calc.js` + `app-calc.js`: the calculator (maths and natural display; the panel). README, Calculator.
+- `src/engine/app-build.js`: Oficina de diagramas, diagrams built from a statement in three turns (README, Diagram workshop).
+  Content: `STUDY.builds` in `src/courses/<id>/builds.js`; AMS draws UML with `src/courses/ams/render-uml.js`.
 - `src/engine/graph*.js` + `app-graph.js`: graph labs, animated algorithms with a problem generator (README, Graph labs).
   Content: `STUDY.labs` in `src/courses/<id>/lab.js`.
 - `src/engine/progress-key.js`: the cross-device progress key. Its format is versioned: change it with care.
@@ -51,6 +53,9 @@ Full field reference and layout are in README.md. Read it only when you need a d
   math with Unicode (Σ, σ, ∂, ŷ, ², ₁).
 - Never separate formulas with " · " (it reads as a product): put each one in its own `<li>` or sentence.
 - An abbreviation (RMSE, MAP, TP…) goes in the course's `glossary`; the app explains it on tap wherever it appears.
+- A diagram the exam asks to draw gets a build (Oficina de diagramas): one part per decision, each with its `rub` line for
+  the paper rubric and `why` for its wrong choices, and every piece of the solution added by some part. Never change a
+  published build's `id` (progress is kept by it). AMS: a new past test of a part goes in that part's `past` and in `past`.
 - A formula with symbols a student may not know goes in the course's `formulas` with a legend, and text points at it with
   `{f:id}` or `{f:id|own wording}` (README, Formulário). Never inside an option.
 

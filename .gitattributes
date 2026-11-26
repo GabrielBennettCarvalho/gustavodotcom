@@ -1,0 +1,6 @@
+# Text files are stored with LF in the repository, whatever machine commits them.
+# Windows checkouts still get CRLF (core.autocrlf); git normalizes them back on commit.
+* text=auto
+*.png binary
+*.jpg binary
+*.pdf binary

@@ -30,7 +30,7 @@ const fxTag = (id, txt) => { const F = C && C.formulas && C.formulas[id];
 const fxRaw = h => String(h ?? '').replace(/\{f:([a-z0-9-]+)(?:\|([^}]*))?\}/g, (_, id, txt) => fxTag(id, txt));
 /* Glossary: a course can list abbreviations in C.glossary = { RMSE: 'what it stands for and means', … }. In rendered text the
    first time each one appears is underlined like a formula, and a tap opens a card with its meaning (fxOpen). Text inside
-   buttons, links and code is left alone, so never a button inside a button. */
+   buttons, links, code and inline SVG diagrams is left alone, so never a button inside a button or inside a drawing. */
 let glCache = { id: null, re: null };
 function glossify(h) {
   const G = C && C.glossary; if (!G || !h) return h;
@@ -39,7 +39,7 @@ function glossify(h) {
   if (!glCache.re) return h;
   const seen = new Set(); let inside = 0;
   return String(h).split(/(<[^>]+>)/).map(part => {
-    if (part[0] === '<') { if (/^<(button|a|code)[\s>]/i.test(part)) inside++; else if (/^<\/(button|a|code)>/i.test(part)) inside = Math.max(0, inside - 1); return part; }
+    if (part[0] === '<') { if (/^<(button|a|code|svg)[\s>]/i.test(part)) inside++; else if (/^<\/(button|a|code|svg)>/i.test(part)) inside = Math.max(0, inside - 1); return part; }
     if (inside) return part;
     return part.replace(glCache.re, m => { if (seen.has(m)) return m; seen.add(m);
       return `<button type="button" class="fx gl" data-gl="${m}" aria-haspopup="dialog" title="O que quer dizer">${m}</button>`; });

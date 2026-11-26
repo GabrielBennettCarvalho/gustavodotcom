@@ -18,7 +18,7 @@ STUDY.questions('ams', [
   e: 'Uma **constraint** restringe a solução, o processo ou o ambiente permitidos. Aqui limita a tecnologia por obrigação contratual.' },
 { id: 'req-05', t: 'req', l: 1, les: 'req-vv',
   q: 'Validation responde à pergunta…',
-  o: ['“Estamos a construir bem o sistema?”', '“Estamos a construir o sistema certo?”', '“O código compila?”', '“Os requisitos estão numerados?”'], a: 1,
+  o: ['“Estamos a construir bem o sistema?”', '“Estamos a construir o sistema certo?”', '“O código compila sem erros nem avisos?”', '“Os requisitos estão numerados?”'], a: 1,
   e: '**Validation** = o sistema certo (face aos propósitos e ao uso pretendido). **Verification** = o sistema bem feito (face aos requisitos e regras acordadas).' },
 { id: 'req-06', t: 'req', l: 2, les: 'req-basics',
   q: 'Numa entrevista, um gestor diz: “Os doentes faltam muito às consultas.” Isto é…',

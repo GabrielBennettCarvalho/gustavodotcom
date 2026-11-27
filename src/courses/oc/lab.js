@@ -154,24 +154,13 @@ const OCPIPE = (() => {
     })();
     return { order: bestO, cycles: bestC };
   }
-  // one move that helps most from this order: [instruction, the one it goes before], or null
-  function oneMove(X, order) {
-    const c0 = sim(X, order).cycles; let bestM = null, bc = c0;
-    for (let from = 0; from < order.length; from++) for (let to = 0; to < order.length; to++) {
-      if (to === from || to === from + 1) continue;
-      const o = order.slice(); const [k] = o.splice(from, 1); o.splice(to > from ? to - 1 : to, 0, k);
-      if (broken(X, o)) continue; const c = sim(X, o).cycles;
-      if (c < bc) { bc = c; bestM = { k, before: order[to] === undefined ? null : order[to], c }; }
-    }
-    return bestM;
-  }
   // the pipeline diagram of an order (OC's own renderer), with the next iteration's fetch for a loop
   function diagram(X, order) {
     const S = sim(X, order), rows = S.T.map(t => [textIn(X, order, t.k), '.'.repeat(t.F - 1) + 'F' + '-'.repeat(t.D - t.F - 1) + 'D' + '-'.repeat(t.X - t.D - 1) + 'XMW']);
     if (S.loop) rows.push([`${X.ins[order[0]].text}  (seguinte)`, '.'.repeat(S.next - 1) + 'F']);
     return OCD.render({ pipe: rows });
   }
-  return { parse, analyze, broken, textIn, sim, best, oneMove, diagram, paths };
+  return { parse, analyze, broken, textIn, sim, best, diagram, paths };
 })();
 
 /* ---------- words: what a broken dependence or a bubble means, for any code ---------- */
@@ -199,23 +188,45 @@ const OCL = {
 
 /* ---------- the player: drag the lines, Verificar, hints, tries ---------- */
 const OC_TRIES = 3;
+let ocPipeOn = false;   // "Pipeline" shown beside the code: remembered while the page is open
+// cfg.order: the order to start from (a question's pad, reopened); cfg.onOrder(order) hears every change; cfg.lineNo:
+// the number of the first line, to show the original line numbers (the exams refer to them).
 function ocReorderMount(root, cfg) {
-  const X = OCPIPE.analyze(cfg), st = { order: X.orig.slice(), tries: 0, hints: 0, done: false, shown: false };
+  const X = OCPIPE.analyze(cfg);
+  const okStart = o => Array.isArray(o) && o.length === X.n && X.orig.every(k => o.includes(k)) && (!X.ins[X.n - 1].br || o[X.n - 1] === X.n - 1);
+  const st = { order: okStart(cfg.order) ? cfg.order.slice() : X.orig.slice(), tries: 0, hints: 0, done: false, shown: false };
   const fixed = k => X.ins[k].br && k === X.n - 1;
+  const text = k => OCPIPE.textIn(X, st.order, k);
   root.innerHTML = `<div class="rq">
     <p class="rq-cfg">${ocEsc(OCL.cfg(X))}. Original: <b>${X.simOrig.cycles} ciclos</b>${X.simOrig.loop ? ' por iteração' : ''}.</p>
-    <ol class="rq-list" aria-label="Código: arrasta as linhas para as reordenar"></ol>
-    <div class="row rq-act"><button class="btn primary" data-rq="check">Verificar</button><button class="btn" data-rq="hint">Pista</button><button class="btn ghost" data-rq="reset">Repor</button>
+    <div class="rq-body"><ol class="rq-list" aria-label="Código: arrasta as linhas para as reordenar"></ol><div class="rq-pipe" aria-label="O pipeline desta ordem, ciclo a ciclo"></div></div>
+    <div class="rq-pipe-sm"></div>
+    <div class="row rq-act"><button class="btn primary" data-rq="check">Verificar</button><button class="btn" data-rq="hint">Pista</button><button class="btn ghost" data-rq="pipe" aria-pressed="false" title="O pipeline ao lado do código, a mudar com a ordem">Pipeline</button><button class="btn ghost" data-rq="reset">Repor</button>
       <span class="spacer"></span><span class="mono muted rq-tries"></span></div>
     <div class="rq-fb" aria-live="polite"></div></div>`;
   const list = root.querySelector('.rq-list'), fb = root.querySelector('.rq-fb');
   const draw = () => {
     list.innerHTML = st.order.map((k, i) => `<li class="rq-row${fixed(k) ? ' fixed' : ''}" data-k="${k}">
-      <span class="rq-grip" aria-hidden="true">${fixed(k) ? '' : '⋮⋮'}</span>${X.label ? `<span class="rq-lbl mono">${i === 0 ? ocEsc(X.label) + ':' : ''}</span>` : ''}
-      <code class="mono rq-code">${ocEsc(OCPIPE.textIn(X, st.order, k))}</code>
+      <span class="rq-grip" aria-hidden="true">${fixed(k) ? '' : '⋮⋮'}</span>${cfg.lineNo ? `<span class="rq-n mono" title="Linha original">${k + cfg.lineNo}</span>` : ''}${X.label ? `<span class="rq-lbl mono">${i === 0 ? ocEsc(X.label) + ':' : ''}</span>` : ''}
+      <code class="mono rq-code">${ocEsc(text(k))}</code>
       <span class="rq-mv">${fixed(k) ? '<span class="muted rq-last">fica em último</span>' : `<button class="btn ghost small" data-rq="up" data-k="${k}" aria-label="Subir">↑</button><button class="btn ghost small" data-rq="down" data-k="${k}" aria-label="Descer">↓</button>`}</span></li>`).join('');
-    root.querySelector('.rq-tries').textContent = `Tentativas: ${Math.min(st.tries, OC_TRIES)} de ${OC_TRIES}`;
+    const tr = root.querySelector('.rq-tries'); if (tr) tr.textContent = `Tentativas: ${Math.min(st.tries, OC_TRIES)} de ${OC_TRIES}`;
+    drawPipe();
+    if (cfg.onOrder) cfg.onOrder(st.order.slice());
   };
+  // The pipeline of the order as it stands (timing only: whether the order is valid is still for Verificar to say).
+  // Wide screens: a strip of stages on each code line's row. Narrow: the usual diagram under the code.
+  function drawPipe() {
+    const box = root.querySelector('.rq'), side = root.querySelector('.rq-pipe'), sm = root.querySelector('.rq-pipe-sm');
+    box.classList.toggle('piped', ocPipeOn); root.querySelector('[data-rq="pipe"]').setAttribute('aria-pressed', ocPipeOn);
+    if (!ocPipeOn) { side.innerHTML = ''; sm.innerHTML = ''; return; }
+    const S = OCPIPE.sim(X, st.order), n = S.loop ? S.next : S.T[S.T.length - 1].W;
+    const strip = t => '.'.repeat(t.F - 1) + 'F' + '-'.repeat(t.D - t.F - 1) + 'D' + '-'.repeat(t.X - t.D - 1) + 'XMW';
+    const cells = (str, extra) => [...Array(n)].map((_, c) => { const ch = str[c] || '.'; return `<i class="${ch === '.' ? '' : ch === '-' ? 'st' : 's' + ch}">${ch === '.' ? '' : ch === '-' ? '–' : ch}</i>`; }).join('') + (extra || '');
+    side.innerHTML = `<div class="rq-pr rq-ph">${[...Array(n)].map((_, c) => `<i>${c + 1}</i>`).join('')}</div>${S.T.map(t => `<div class="rq-pr">${cells(strip(t))}</div>`).join('')}
+      <div class="rq-ptot">${S.loop ? `${S.cycles} ciclos: a iteração seguinte entra no ciclo ${S.next}` : `${S.cycles} ciclos`}${S.bubbles ? `, ${S.bubbles} bolha${S.bubbles === 1 ? '' : 's'}` : ''}</div>`;
+    sm.innerHTML = `<div class="diagram">${OCPIPE.diagram(X, st.order)}</div><p class="rq-ptot">${S.cycles} ciclos${S.bubbles ? `, ${S.bubbles} bolha${S.bubbles === 1 ? '' : 's'}` : ''}</p>`;
+  }
   const say = (html, cls) => { fb.className = 'rq-fb' + (cls ? ' ' + cls : ''); fb.innerHTML = html; };
   const mark = (ks, cls) => list.querySelectorAll('.rq-row').forEach(li => li.classList.toggle(cls, ks.includes(+li.dataset.k)));
   const nextBtn = () => cfg.onNew ? '<button class="btn" data-rq="new">Outro problema ↻</button>' : '';
@@ -233,23 +244,36 @@ function ocReorderMount(root, cfg) {
     st.tries++; draw();
     say(`<p><b>Válida: ${S.cycles} ciclos.</b> ${S.cycles < X.simOrig.cycles ? `Melhor do que o original (${X.simOrig.cycles}), mas` : 'Ainda'} dá para ${opt}.</p>${body}${st.tries >= OC_TRIES && !st.shown ? '<div class="row"><button class="btn" data-rq="sol">Ver uma solução</button></div>' : ''}`, 'mid');
   }
+  // Pistas, each one telling a little more: 1. where the bubbles are; 2. a question about what could fill the first one,
+  // and how many instructions could; 3. which instruction to move (never where to, nor what it gives).
+  // The moves considered: one instruction taken to just before the first one that waits, if that keeps the result
+  // and takes cycles off.
+  function fillers(S) {
+    const s0 = S.stalls[0]; if (!s0) return [];
+    const at = st.order.indexOf(s0.k), c0 = S.cycles, out = [];
+    st.order.forEach((k, from) => { if (from === at || fixed(k)) return;
+      const o = st.order.slice(); o.splice(from, 1); o.splice(from < at ? at - 1 : at, 0, k);
+      if (!OCPIPE.broken(X, o) && OCPIPE.sim(X, o).cycles < c0) out.push(k); });
+    return out;
+  }
   function hint() {
-    st.hints++;
     const e = OCPIPE.broken(X, st.order);
     if (e) { mark([e.a, e.b], 'bad'); say(`<p><b>Pista:</b> antes de contar ciclos, a ordem tem de dar o mesmo resultado. ${OCL.broke(X, e, st.order)}</p>`, 'hint'); return; }
     const S = OCPIPE.sim(X, st.order);
-    if (S.cycles <= X.best.cycles) { say(`<p><b>Pista:</b> esta ordem já tem o mínimo, ${S.cycles} ciclos. Carrega em Verificar.</p>`, 'hint'); return; }
-    if (st.hints === 1 || !S.stalls.length) {
-      say(`<p><b>Pista:</b> com esta ordem, ${S.cycles} ciclos. ${S.stalls.length ? 'As bolhas estão aqui:' : 'Não há bolhas de dados: o que sobra é o salto.'}</p>${S.stalls.length ? `<ul class="rq-why">${OCL.stalls(X, st.order)}</ul><p class="muted">Procura uma instrução que não dependa de nenhuma das duas para pôr entre elas.</p>` : ''}`, 'hint');
-      return; }
-    const M = OCPIPE.oneMove(X, st.order);
-    if (M) { mark([M.k], 'tip');
-      say(`<p><b>Pista:</b> experimenta pôr o ${OCL.c(OCPIPE.textIn(X, st.order, M.k))} ${M.before !== null ? `logo antes do ${OCL.c(OCPIPE.textIn(X, st.order, M.before))}` : 'no fim'}: fica com ${M.c} ciclos.</p>`, 'hint'); }
-    else say(`<p><b>Pista:</b> nenhuma troca de uma só instrução ajuda daqui. Tenta mexer duas: afasta cada <code class="mono">lw</code> de quem usa o valor dele.</p>`, 'hint');
+    if (S.cycles <= X.best.cycles) { say(`<p><b>Pista:</b> esta ordem já tem o mínimo. Carrega em Verificar.</p>`, 'hint'); return; }
+    st.hints = Math.min(3, st.hints + 1);
+    const s0 = S.stalls[0], F = fillers(S), w = s0 && s0.why[0];
+    if (st.hints === 1 || !s0) {
+      say(`<p><b>Pista 1 de 3:</b> ${s0 ? 'as bolhas estão aqui:' : 'não há bolhas de dados: o que sobra é o salto.'}</p>${s0 ? `<ul class="rq-why">${OCL.stalls(X, st.order)}</ul>` : ''}`, 'hint'); return; }
+    const me = OCL.c(OCPIPE.textIn(X, st.order, s0.k)), from = OCL.c(OCPIPE.textIn(X, st.order, w.from)), r = OCL.c(X.nameOf(w.r));
+    if (st.hints === 2 || !F.length) {
+      say(`<p><b>Pista 2 de 3:</b> o ${me} espera pelo ${r} do ${from}. Que instrução podia ir para entre os dois sem ler nem escrever o que eles usam?${F.length ? ` Há ${F.length === 1 ? 'uma' : F.length} que dá${F.length === 1 ? '' : 'm'}.` : ' Daqui, mexer uma só não chega: tenta afastar primeiro outro par.'}</p>`, 'hint'); return; }
+    mark([F[0]], 'tip');
+    say(`<p><b>Pista 3 de 3:</b> experimenta mexer o ${OCL.c(OCPIPE.textIn(X, st.order, F[0]))}.</p>`, 'hint');
   }
   // drag: the row follows the pointer and swaps with its neighbours as it passes their middle (mouse and touch).
   // The moves are listened on the window, so a fast drag or a lost pointer capture still lands where it should.
-  let drag = null;
+  let drag = null, drag0 = null;
   const rowsNow = () => [...list.querySelectorAll('.rq-row')];
   const mid = el => { const r = el.getBoundingClientRect(); return r.top + r.height / 2; };
   const follow = y => {
@@ -261,20 +285,22 @@ function ocReorderMount(root, cfg) {
       else break;
     }
     li.style.transform = `translateY(${Math.round(y - mid(li))}px)`;
+    if (ocPipeOn) { const o = rowsNow().map(r => +r.dataset.k); if (o.some((k, i) => k !== st.order[i])) { st.order = o; drawPipe(); } }
   };
   const move = ev => { if (drag && ev.pointerId === drag.id) { ev.preventDefault(); follow(ev.clientY); } };
   const drop = ev => {
     if (!drag || ev.pointerId !== drag.id) return;
     drag.li.classList.remove('drag'); drag.li.style.transform = ''; drag = null;
     window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', drop); window.removeEventListener('pointercancel', drop);
-    const o = rowsNow().map(li => +li.dataset.k); if (o.some((k, i) => k !== st.order[i])) { st.order = o; draw(); say(''); }
+    const o = rowsNow().map(li => +li.dataset.k), moved = drag0.some((k, i) => k !== o[i]);
+    st.order = o; if (moved) { draw(); say(''); }
   };
   // a mouse drags from anywhere on the row; a finger only from the grip, so the page still scrolls over the code
   const down = ev => {
     const li = ev.target.closest('.rq-row'); if (!li || li.classList.contains('fixed') || ev.target.closest('button') || ev.button > 0) return;
     if (ev.pointerType !== 'mouse' && !ev.target.closest('.rq-grip')) return;
     ev.preventDefault(); try { li.setPointerCapture(ev.pointerId); } catch (e) { /* a synthetic or lost pointer: the window still hears it */ }
-    drag = { li, id: ev.pointerId }; li.classList.add('drag');
+    drag = { li, id: ev.pointerId }; drag0 = st.order.slice(); li.classList.add('drag');
     window.addEventListener('pointermove', move, { passive: false }); window.addEventListener('pointerup', drop); window.addEventListener('pointercancel', drop);
   };
   list.addEventListener('pointerdown', down);
@@ -286,6 +312,7 @@ function ocReorderMount(root, cfg) {
     else if (a === 'check') check();
     else if (a === 'hint') hint();
     else if (a === 'reset') { st.order = X.orig.slice(); draw(); say(''); }
+    else if (a === 'pipe') { ocPipeOn = !ocPipeOn; drawPipe(); }
     else if (a === 'sol') solution();
     else if (a === 'new' && cfg.onNew) cfg.onNew('play');
   };
@@ -341,11 +368,22 @@ const ocReorderExamples = [
     stmt: 'Reordena o corpo do ciclo para o melhor desempenho. Podes alterar constantes (os offsets acertam-se sozinhos).' },
 ];
 
+// A question's own code (question field lab: { id: 'reorder', cfg, from, to }: lines from..to of q.code, 0-based, end
+// excluded; the whole code by default). The line numbers show when the code numbers its lines ("# linha n").
+function ocReorderFromQuestion(q) {
+  const all = String(q.code || '').split('\n'), from = q.lab.from || 0, to = q.lab.to || all.length;
+  const lines = all.slice(from, to).filter(l => l.replace(/#.*/, '').trim());
+  if (!lines.length) return null;
+  try { OCPIPE.analyze({ lines, cfg: q.lab.cfg }); } catch (e) { return null; }
+  return { title: 'O código da pergunta', lines, cfg: q.lab.cfg || {}, lineNo: /#\s*linha/.test(q.code) ? from + 1 : 0, whole: from === 0 && to === all.length, stmt: '' };
+}
+
 STUDY.labs('oc', [{
   id: 'reorder', title: 'Reordenar no pipeline', icon: 'route',
   desc: 'Arrasta as linhas do código para tirar bolhas e carrega em Verificar: vês se a ordem é válida, os ciclos e o diagrama do pipeline. Com pistas e 3 tentativas.',
   meta: 'load-use · dependências · offsets',
   mount: ocReorderMount, exBtn: '▶ Reordenar este exemplo', practiceBtn: 'Praticar com um troço novo',
+  fromQuestion: ocReorderFromQuestion, padBtn: '⋮⋮ Reordenar este código aqui',
   les: { 'h-sched': { ex: 'aula', kind: 'line' } },
   kinds: [
     { id: 'line', label: 'Troço sem saltos', make: (GR, r) => ocReorderMake(GR, r, false) },

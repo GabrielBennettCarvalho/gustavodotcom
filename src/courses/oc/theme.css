@@ -28,22 +28,49 @@
 .part-row{margin-top:10px}
 
 /* Reordering lab (lab.js): rows dragged by pointer (mouse or touch), ↑ ↓ for the keyboard */
-.rq{display:flex;flex-direction:column;gap:12px;margin-top:8px}
-.rq-cfg{font-size:14px;color:var(--muted)}
-.rq-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
-.rq-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);touch-action:pan-y;user-select:none;cursor:grab;transition:border-color .15s,background .15s}
-.rq-row.drag{cursor:grabbing;position:relative;z-index:2;border-color:var(--accent);box-shadow:var(--shadow);transition:none}
-.rq-row.fixed{cursor:default;opacity:.85;border-style:dashed}
-.rq-row.bad{border-color:var(--bad);background:var(--bad-bg)}
-.rq-row.tip{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--panel-2))}
-.rq-grip{width:28px;align-self:stretch;display:flex;align-items:center;justify-content:center;margin:-6px 0 -6px -8px;color:var(--muted);font-size:14px;letter-spacing:-2px;flex:none;touch-action:none}
-.rq-lbl{width:44px;flex:none;color:var(--muted);font-size:13px}
-.rq-code{flex:1;font-size:14px;white-space:pre;overflow:hidden;text-overflow:ellipsis;background:none;padding:0}
-.rq-mv{display:flex;gap:2px;flex:none}
-.rq-mv .btn{min-width:34px;padding:4px 8px}
-.rq-last{font-size:12px}
+.rq{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.rq-cfg{font-size:13.5px;color:var(--muted)}
+/* the code as one block, like .codeblk: a line per instruction, the grip and arrows faint until the pointer is on it */
+.rq-list{list-style:none;margin:0;padding:4px 0;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);font:13px/1.55 var(--f-mono)}
+.rq-row{display:flex;align-items:center;gap:6px;min-height:28px;padding:0 4px 0 0;touch-action:pan-y;user-select:none;cursor:grab;transition:background .12s}
+.rq-row:hover{background:color-mix(in srgb,var(--ink) 5%,transparent)}
+.rq-row.drag{cursor:grabbing;position:relative;z-index:2;background:var(--panel);box-shadow:0 2px 10px rgba(0,0,0,.25);outline:1px solid var(--accent);transition:none}
+.rq-row.fixed{cursor:default;color:var(--muted)}
+.rq-row.bad{background:var(--bad-bg);box-shadow:inset 3px 0 var(--bad)}
+.rq-row.tip{background:color-mix(in srgb,var(--accent) 12%,transparent);box-shadow:inset 3px 0 var(--accent)}
+.rq-grip{width:22px;align-self:stretch;display:flex;align-items:center;justify-content:center;color:var(--muted);opacity:.5;font-size:12px;letter-spacing:-2px;flex:none;touch-action:none}
+.rq-row:hover .rq-grip{opacity:1}
+.rq-lbl{width:40px;flex:none;color:var(--muted)}
+.rq-n{flex:none;min-width:18px;text-align:right;color:var(--muted);font-size:11.5px;opacity:.8}
+.rq-code{flex:1;font:inherit;white-space:pre;overflow:hidden;text-overflow:ellipsis;background:none;padding:0;border:0}
+.rq-mv{display:flex;gap:0;flex:none;opacity:.35;transition:opacity .12s}
+.rq-row:hover .rq-mv,.rq-mv:focus-within{opacity:1}
+.rq-mv .btn{min-width:24px;height:24px;padding:0;font-size:12px;line-height:1;border:0;background:none}
+.rq-mv .btn:hover{background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.rq-last{font:11.5px var(--f-body);padding-right:6px}
+/* the pipeline beside the code: one strip per code line, the same row height, scrolling sideways when long */
+.rq-body{display:flex;gap:6px;align-items:flex-start}
+.rq-body .rq-list{flex:1 1 auto;min-width:0}
+.rq-pipe{display:none}
+.rq.piped .rq-pipe{display:block;flex:0 1 auto;min-width:0;overflow-x:auto;padding:4px 6px 6px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2)}
+.rq.piped .rq-list{padding-top:22px}
+.rq-pr{display:flex;height:28px;align-items:center;gap:2px}
+.rq-pr i{flex:none;width:20px;height:22px;display:grid;place-items:center;border-radius:4px;font:700 11px var(--f-mono);font-style:normal;color:var(--ink)}
+.rq-ph{height:18px}
+.rq-ph i{height:18px;font-weight:400;font-size:10px;color:var(--muted)}
+.rq-pr .sF{background:color-mix(in srgb,#2F6FDB 38%,var(--panel-2))}
+.rq-pr .sD{background:color-mix(in srgb,#7A4FD0 38%,var(--panel-2))}
+.rq-pr .sX{background:color-mix(in srgb,#13A06F 38%,var(--panel-2))}
+.rq-pr .sM{background:color-mix(in srgb,#D69A1C 38%,var(--panel-2))}
+.rq-pr .sW{background:color-mix(in srgb,#0E7C8C 38%,var(--panel-2))}
+.rq-pr .st{background:color-mix(in srgb,#C2392F 30%,var(--panel-2));color:var(--bad)}
+.rq-ptot{font:12px var(--f-body);color:var(--muted);padding:4px 2px 0;white-space:nowrap}
+.rq-pipe-sm{display:none}
+.rq-act [data-rq="pipe"][aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.q-pad{margin-top:10px}
+.q-pad .rq{margin-top:0}
 .rq-act{flex-wrap:wrap}
-.rq-tries{font-size:12.5px}
+.rq-tries{font-size:12px}
 .rq-fb{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel)}
 .rq-fb:empty{display:none}
 .rq-fb.ok{border-color:var(--good)}
@@ -53,4 +80,6 @@
 .rq-fb .diagram{overflow-x:auto}
 .rq-why{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14.5px}
 .rq-sol{margin:0;padding-left:22px;font-size:14px}
-@media (max-width:560px){.rq-lbl{width:auto}.rq-lbl:empty{display:none}.rq-code{font-size:13px}}
+/* a finger needs the grip and the arrows a bit bigger, and always visible (there is no hover) */
+@media (max-width:560px){.rq.piped .rq-pipe{display:none}.rq.piped .rq-list{padding-top:4px}.rq.piped .rq-pipe-sm{display:block}.rq-pipe-sm .diagram{margin-top:0}}
+@media (max-width:560px),(hover:none){.rq-row{min-height:34px}.rq-pr{height:34px}.rq-ph{height:18px}.rq-grip{width:30px;opacity:.8}.rq-mv{opacity:.8}.rq-mv .btn{min-width:30px;height:30px;font-size:13px}.rq-lbl{width:auto}.rq-lbl:empty{display:none}}

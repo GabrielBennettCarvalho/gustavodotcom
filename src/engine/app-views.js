@@ -26,6 +26,7 @@ function Quiz() {
       ${multi ? '<div class="multi-note">Seleciona todas as corretas</div>' : ''}
       ${q.ctx && LBYID[q.ctx] ? `<details class="lesson-peek" style="margin-top:12px"><summary>Ler o caso: ${esc(LBYID[q.ctx].title)}</summary><div class="lbody lesson">${lessonBody(LBYID[q.ctx])}</div></details>` : ''}
       ${q.code ? codeBlock(q.code) : ''}
+      ${q.lab && !isExam ? labQPad(q) : ''}
       ${q.d ? `<div class="diagram">${renderD(q.d)}</div>` : ''}
       ${!isExam && !ses.answered && ses.mode !== 'learn' ? cabPeek(skillOf(q), q.id) : ''}
       <div class="opts" role="group" aria-label="Opções">${opts}</div>
@@ -76,7 +77,7 @@ function sheetItems(sk, tools) {
 function cabExam() { const mine = partSkills().filter(sheetMine), sk = mine.length ? mine : partSkills();
   return `<section class="card cab-exam" aria-label="A tua cábula"><div class="row"><span class="eyebrow">${mine.length ? 'A tua cábula' : 'Cábula: todos os tipos'}</span><span class="spacer"></span><button class="btn ghost small" data-act="cabExam">Fechar</button></div>
     ${mine.length ? '' : '<p class="cab-tip">Ainda não tens cábula: vês os resumos de todos os tipos.</p>'}${sheetItems(sk, false)}</section>`; }
-function afterQuizRender() { const n = document.getElementById('nextBtn'); if (n) n.focus({ preventScroll: true }); }
+function afterQuizRender() { labQPadRestore(); const n = document.getElementById('nextBtn'); if (n) n.focus({ preventScroll: true }); }
 
 function choose(oi) {
   if (!ses || ses.answered) return; const q = BYID[curItem().id];

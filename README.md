@@ -272,9 +272,17 @@ any order, with nothing written per problem: which dependence it breaks (registe
 writing, two memory accesses with a store that may hit the same word, the closing branch), the cycles and the reason
 for each bubble, and the best order (all valid orders are tried). With `consts`, an `addi r, r, k` may cross a lw/sw
 based on r and the offset adjusts itself. Forwarding is `'full'`, `'none'` or a list of paths (ALU-ALU, MEM-ALU,
-ALU-MEM, MEM-MEM, into D); branches resolve in D or X. 3 tries, then "Ver uma solução"; "Pista" shows where the bubbles
-are, then one move that helps. Kinds generate straight-line code or a loop body; the examples are the lesson's and
+ALU-MEM, MEM-MEM, into D); branches resolve in D or X. 3 tries, then "Ver uma solução". "Pista" tells a little more
+each time and never solves it: 1. where the bubbles are; 2. a question about what could fill the first one, and how
+many instructions could; 3. which instruction to move (not where, nor what it gives). "Pipeline" (off until pressed,
+remembered while the page is open) draws each line's F D X M W beside it, redrawn as the order changes, even while
+dragging; on a phone, the usual diagram under the code. It shows timing only: validity is still Verificar's. Kinds generate straight-line code or a loop body; the examples are the lesson's and
 three past exams' (their cycle counts match the official answers). The lesson `h-sched` and its questions link to it.
+A question with code can open the lab right on that code, before answering, to work it out: field
+`lab: { id: 'reorder', cfg: { fwd, br, consts }, from, to }` (lines `from`..`to` of `code`, 0-based, end excluded; all
+by default; the original line numbers show when the code has "# linha n"). "⋮⋮ Reordenar este código aqui" turns the
+code into the lab; it stays open, with its order, after the answer. Not in the mock exam. Engine side: a lab with
+`fromQuestion(q)` and `padBtn` (app-graph.js).
 
 ## Skip, Tudo / Só teoria / Só contas, and theme
 

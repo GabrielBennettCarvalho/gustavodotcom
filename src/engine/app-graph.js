@@ -10,6 +10,10 @@
    A lab that is not a graph brings its own player: mount(el, problem) => { mode, destroy } (problem = what its
    make returns, plus onNew), and the labels of its links, exBtn and practiceBtn (OC's reordering lab).
    The lab screen, the lesson links and the overlay then use it instead of GPLAYER.mount.
+   Such a lab may also take a question's own problem: a question with lab: { id, ... } and a lab with
+   fromQuestion(q) => problem get a button under the code (label padBtn) that opens the lab right there, on that
+   code, to work the answer out. Once open it stays open, with its order, when the question redraws (after the
+   answer, for instance). Never in the mock exam.
    The lab screen is the view 'glab'. Its buttons use data-gl, handled here. */
 const GPLAYER = (() => {
   const NS = 'http://www.w3.org/2000/svg';
@@ -333,6 +337,24 @@ function labLessonBtn(lesId) {
 function labPracticeBtn(lesId) {
   const L = labLink(lesId); return L && L.m.kind ? `<button class="btn small anim-btn" data-gl="lesGo" data-les="${esc(lesId)}">${esc(L.lab.practiceBtn || 'Praticar com uma rede nova')}</button>` : '';
 }
+// A question's own problem in a lab (see the top of the file). Kept per question, in memory: whether the pad is
+// open and its order, so a redraw of the question (after the answer) brings it back as it was.
+const labPads = {};
+const labOfQ = q => q && q.lab ? courseLabs().find(l => l.id === q.lab.id && l.mount && l.fromQuestion) || null : null;
+function labQPad(q) {
+  const lab = labOfQ(q); if (!lab) return '';
+  return `<div class="q-pad" data-id="${esc(q.id)}"${labPads[q.id] ? ' data-open="1"' : ''}><button class="btn small anim-btn" data-gl="qPad" data-id="${esc(q.id)}">${esc(lab.padBtn || 'Experimentar aqui')}</button></div>`;
+}
+function labQPadOpen(box) {
+  const q = BYID[box.dataset.id], lab = labOfQ(q); if (!lab) return;
+  const P = lab.fromQuestion(q); if (!P) return;
+  const st = labPads[q.id] || (labPads[q.id] = { order: null });
+  box.innerHTML = ''; lab.mount(box, Object.assign({}, P, { order: st.order, onOrder: o => { st.order = o; } }));
+  // the pad holds every line of the code: the plain copy above goes away while it is open
+  const code = box.previousElementSibling; if (P.whole && code && code.matches('pre.codeblk')) code.hidden = true;
+}
+// after the question is drawn: reopen a pad that was open
+function labQPadRestore() { document.querySelectorAll('.q-pad[data-open]').forEach(labQPadOpen); }
 function GraphLab() {
   const lab = courseLabs().find(l => l.id === view.lab); if (!lab) return Home();
   if (!view.kind && !view.ex) view.kind = lab.kinds[0].id;
@@ -372,6 +394,7 @@ document.addEventListener('click', ev => {
     case 'opt': view.opt = Object.assign({}, view.opt, { [b.dataset.k]: !view.opt[b.dataset.k] }); view.mode = mode; renderView(); break;
     case 'anim': { const q = BYID[b.dataset.id]; if (q && q.anim) GPLAYER.overlay(Object.assign({ title: 'Resolução animada' }, q.anim)); break; }
     case 'lesEx': { const L = labLink(b.dataset.les); if (L) GPLAYER.overlay(Object.assign(glabProblem(L.lab, { ex: L.m.ex }), { mode: 'watch', mount: L.lab.mount })); break; }
+    case 'qPad': { const box = b.closest('.q-pad'); if (box) labQPadOpen(box); break; }
     case 'lesGo': { const L = labLink(b.dataset.les); if (!L) break;
       const next = () => glabProblem(L.lab, { kind: L.m.kind, seed: GRAPH.newSeed() });
       GPLAYER.overlay(Object.assign(next(), { mode: 'play', next, mount: L.lab.mount })); break; }
